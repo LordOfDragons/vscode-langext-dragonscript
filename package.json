@@ -1,7 +1,8 @@
 {
 	"name": "dragonscript-language-support",
 	"displayName": "DragonScript Language Support",
-	"description": "",
+	"publisher": "dragondreams",
+	"description": "DragonScript Language Support",
 	"version": "1.0.0",
 	"engines": {
 		"vscode": "^1.33.0"
@@ -10,28 +11,16 @@
 		"Programming Languages"
 	],
 	"contributes": {
-		"languages": [
-			{
-				"id": "dragonscript",
-				"aliases": [
-					"DragonScript",
-					"dragonscript"
-				],
-				"extensions": [
-					".ds"
-				],
-				"configuration": "./language-configuration.json"
-			}
-		],
-		"grammars": [
-			{
-				"language": "dragonscript",
-				"scopeName": "source.dragonscript",
-				"path": "./syntaxes/dragonscript.tmLanguage.json"
-			}
-		]
-	},
-	"dependencies": {
-		"vsce": "^1.77.0"
+		"languages": [{
+			"id": "dragonscript",
+			"aliases": ["DragonScript", "dragonscript"],
+			"extensions": [".ds"],
+			"configuration": "./language-configuration.json"
+		}],
+		"grammars": [{
+			"language": "dragonscript",
+			"scopeName": "source.dragonscript",
+			"path": "./syntaxes/dragonscript.tmLanguage.json"
+		}]
 	}
 }
