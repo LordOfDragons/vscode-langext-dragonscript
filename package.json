@@ -12,7 +12,7 @@
 		"color": "#C80000",
 		"theme": "dark"
 	},
-	"icon": "https://github.com/LordOfDragons/vscode-langext-dragonscript/images/icon.png",
+	"icon": "https://raw.githubusercontent.com/LordOfDragons/vscode-langext-dragonscript/master/images/icon.png",
 	"keywords": [
 		"dragonscript",
 		"dragengine"
