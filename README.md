@@ -25,9 +25,7 @@ The Language is `strong typed`, `object oriented` and uses a `forward parsing on
 
 ## Preview Images
 
-\!\(images/preview1.png\)
-
-\!\(images/preview2.png\)
+![Preview Image](images/preview1.png)
 
 ## Requirements
 
