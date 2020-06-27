@@ -10,16 +10,28 @@
 		"Programming Languages"
 	],
 	"contributes": {
-		"languages": [{
-			"id": "dragonscript",
-			"aliases": ["DragonScript", "dragonscript"],
-			"extensions": [".ds"],
-			"configuration": "./language-configuration.json"
-		}],
-		"grammars": [{
-			"language": "dragonscript",
-			"scopeName": "source.dragonscript",
-			"path": "./syntaxes/dragonscript.tmLanguage.json"
-		}]
+		"languages": [
+			{
+				"id": "dragonscript",
+				"aliases": [
+					"DragonScript",
+					"dragonscript"
+				],
+				"extensions": [
+					".ds"
+				],
+				"configuration": "./language-configuration.json"
+			}
+		],
+		"grammars": [
+			{
+				"language": "dragonscript",
+				"scopeName": "source.dragonscript",
+				"path": "./syntaxes/dragonscript.tmLanguage.json"
+			}
+		]
+	},
+	"dependencies": {
+		"vsce": "^1.77.0"
 	}
 }
