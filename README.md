@@ -25,7 +25,7 @@ The Language is `strong typed`, `object oriented` and uses a `forward parsing on
 
 ## Preview Images
 
-![Preview Image](images/preview1.png)
+![Preview Image](https://github.com/LordOfDragons/vscode-langext-dragonscript/blob/master/images/preview1.png)
 
 ## Requirements
 

@@ -2,7 +2,21 @@
 	"name": "dragonscript-language-support",
 	"displayName": "DragonScript Language Support",
 	"publisher": "dragondreams",
-	"description": "DragonScript Language Support",
+	"description": "Provides Syntax Hilighting support for DragonScript Script Language files (*.ds).",
+	"license": "SEE LICENSE IN License",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/LordOfDragons/vscode-langext-dragonscript"
+	},
+	"galleryBanner": {
+		"color": "#C80000",
+		"theme": "dark"
+	},
+	"icon": "https://github.com/LordOfDragons/vscode-langext-dragonscript/images/icon.png",
+	"keywords": [
+		"dragonscript",
+		"dragengine"
+	],
 	"version": "1.0.0",
 	"engines": {
 		"vscode": "^1.33.0"
