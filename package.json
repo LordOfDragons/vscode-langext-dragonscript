@@ -9,7 +9,7 @@
 		"url": "https://github.com/LordOfDragons/vscode-langext-dragonscript"
 	},
 	"galleryBanner": {
-		"color": "#C80000",
+		"color": "#7dafff",
 		"theme": "dark"
 	},
 	"icon": "images/icon.png",
