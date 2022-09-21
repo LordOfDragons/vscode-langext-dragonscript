@@ -1,4 +1,4 @@
-node_modules/
-package-lock.json 
-*.vsix
-*.code-workspace
+out
+node_modules
+client/server
+.vscode-test

@@ -6,13 +6,49 @@
 	"version": "0.2.0",
     "configurations": [
         {
-            "name": "Extension",
+            "name": "Launch Client",
             "type": "extensionHost",
             "request": "launch",
             "runtimeExecutable": "${execPath}",
             "args": [
-                "--extensionDevelopmentPath=${workspaceFolder}"
-            ]
-        }
-    ]
+                "--extensionDevelopmentPath=${workspaceFolder}",
+				"${workspaceRoot}/test",
+				"${workspaceRoot}/test/accept.ds"
+            ],
+            "outFiles": ["${workspaceRoot}/client/out/**/*.js"],
+			/*
+			// hangs if used
+			"preLaunchTask": {
+				"type": "npm",
+				"script": "watch"
+			}
+			*/
+        },
+		{
+			"type": "node",
+			"request": "attach",
+			"name": "Attach to Server",
+			"port": 6009,
+			"restart": true,
+			"outFiles": ["${workspaceRoot}/server/out/**/*.js"]
+		},
+		{
+			"name": "Language Server DS Test",
+			"type": "extensionHost",
+			"request": "launch",
+			"runtimeExecutable": "${execPath}",
+			"args": [
+				"--extensionDevelopmentPath=${workspaceRoot}",
+				"--extensionTestsPath=${workspaceRoot}/test",
+				"${workspaceRoot}/test/accept.ds"
+			],
+			"outFiles": ["${workspaceRoot}/client/out/test/**/*.js"]
+		}
+	],
+	"compounds": [
+		{
+			"name": "Client + Server",
+			"configurations": ["Launch Client", "Attach to Server"]
+		}
+	]
 }
