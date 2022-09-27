@@ -535,11 +535,11 @@
 					"name": "constant.numeric.dragonscript"
 				},
 				{
-					"match": "\\b(b[01]+)\\b",
+					"match": "\\b(0b[01]+)\\b",
 					"name": "constant.numeric.binary.dragonscript"
 				},
 				{
-					"match": "\\b(h[0-9a-fA-F]+)\\b",
+					"match": "\\b(0h[0-9a-fA-F]+)\\b",
 					"name": "constant.numeric.hex.dragonscript"
 				}
 			]
