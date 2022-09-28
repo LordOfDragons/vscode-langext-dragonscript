@@ -60,8 +60,8 @@ let hasConfigurationCapability = false;
 let hasWorkspaceFolderCapability = false;
 let hasDiagnosticRelatedInformationCapability = false;
 
-let parser = new DSParser();
 let lexer = new DSLexer();
+let parser = new DSParser();
 
 connection.onInitialize((params: InitializeParams) => {
 	const capabilities = params.capabilities;
@@ -163,11 +163,20 @@ documents.onDidClose(e => {
 // when the text document first opened or when its content has changed.
 documents.onDidChangeContent(change => {
 	validateTextDocument(change.document);
+});
+
+async function validateTextDocument(textDocument: TextDocument): Promise<void> {
+	const settings = await getDocumentSettings(textDocument.uri);
+	const text = textDocument.getText();
+
+	const diagnostics: Diagnostic[] = [];
+
+	// lexing
+	const lexed = lexer.tokenize(text);
 
 	/*
 	connection.console.log('Tokens:');
-	let t = lexer.tokenize(change.document.getText());
-	t.tokens.forEach(each => {
+	lexed.tokens.forEach(each => {
 		let lines = each.image.split('\n')
 		connection.console.log(`${each.tokenType.name.padEnd(22, '.')}: ${lines[0]}`);
 		lines.splice(1).forEach(line => {
@@ -175,30 +184,18 @@ documents.onDidChangeContent(change => {
 		});
 	});
 	*/
-});
 
-async function validateTextDocument(textDocument: TextDocument): Promise<void> {
-	// In this simple example we get the settings for every validate run.
-	const settings = await getDocumentSettings(textDocument.uri);
-
-	// The validator creates diagnostics for all uppercase words length 2 and more
-	const text = textDocument.getText();
-	const pattern = /\b[A-Z]{2,}\b/g;
-	let m: RegExpExecArray | null;
-
-	let problems = 0;
-	const diagnostics: Diagnostic[] = [];
-	while ((m = pattern.exec(text)) && problems < settings.maxNumberOfProblems) {
-		problems++;
+	lexed.errors.slice(0, settings.maxNumberOfProblems).forEach(error => {
 		const diagnostic: Diagnostic = {
-			severity: DiagnosticSeverity.Warning,
+			severity: DiagnosticSeverity.Error,
 			range: {
-				start: textDocument.positionAt(m.index),
-				end: textDocument.positionAt(m.index + m[0].length)
+				start: textDocument.positionAt(error.offset),
+				end: textDocument.positionAt(error.offset + error.length)
 			},
-			message: `${m[0]} is all uppercase.`,
-			source: 'ex'
+			message: error.message,
+			source: 'Lexing'
 		};
+
 		if (hasDiagnosticRelatedInformationCapability) {
 			diagnostic.relatedInformation = [
 				{
@@ -206,22 +203,50 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 						uri: textDocument.uri,
 						range: Object.assign({}, diagnostic.range)
 					},
-					message: 'Spelling matters'
-				},
+					message: 'Lexing Errors'
+				}
+			];
+		}
+
+		diagnostics.push(diagnostic);
+	});
+
+	// grammar
+	parser.input = lexed.tokens
+	connection.console.log('Grammer Begin:')
+	parser.script()
+	connection.console.log('Grammar End:')
+
+	parser.errors.slice(0, settings.maxNumberOfProblems).forEach(error => {
+		const startToken = error.token
+		var endToken = error.resyncedTokens.at(-1) ?? startToken
+
+		const diagnostic: Diagnostic = {
+			severity: DiagnosticSeverity.Error,
+			range: {
+				start: textDocument.positionAt(startToken.startOffset),
+				end: textDocument.positionAt(endToken.endOffset ?? endToken.startOffset)
+			},
+			message: error.message,
+			source: error.name
+		}
+
+		if (hasDiagnosticRelatedInformationCapability) {
+			diagnostic.relatedInformation = [
 				{
 					location: {
 						uri: textDocument.uri,
 						range: Object.assign({}, diagnostic.range)
 					},
-					message: 'Particularly for names'
+					message: 'Grammar Errors'
 				}
-			];
+			]
 		}
-		diagnostics.push(diagnostic);
-	}
 
-	// Send the computed diagnostics to VSCode.
-	connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
+		diagnostics.push(diagnostic)
+	})
+
+	connection.sendDiagnostics({uri: textDocument.uri, diagnostics})
 }
 
 connection.onDidChangeWatchedFiles(_change => {
