@@ -71,6 +71,7 @@ class ClassExtendImplement2 \
 end
 
 interface InterfaceExtend implements ActionListener, ColliderListener
+	func int extendedFunction(int argument)
 end
 
 public class OuterClass extends ClassExtendImplement
