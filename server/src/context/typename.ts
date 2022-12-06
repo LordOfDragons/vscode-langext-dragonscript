@@ -22,28 +22,54 @@
  * SOFTWARE.
  */
 
+import { IToken } from "chevrotain"
 import { FullyQualifiedClassNameCstNode } from "../nodeclasses"
 
-export class TypeName{
+export class TypeNamePart {
+	protected _token: IToken
+	protected _name: String
+	protected _target?: any
+
+	constructor(token: IToken) {
+		this._token = token
+		this._name = token.image
+	}
+
+	dispose(): void {
+		this._target = undefined
+	}
+
+	public get token(): IToken {
+		return this._token
+	}
+
+	public get name(): String {
+		return this._name
+	}
+
+	public get target(): any | undefined {
+		return this._target
+	}
+}
+
+export class TypeName {
 	protected _node: FullyQualifiedClassNameCstNode
-	protected _parts: String[]
-	protected _targets: (any | undefined)[]
+	protected _parts: TypeNamePart[]
 	protected _name: String
 
 	constructor(node: FullyQualifiedClassNameCstNode) {
 		this._node = node
 		this._parts = []
-		this._targets = []
 
 		node.children.identifier.forEach(each => {
-			this._parts.push(each.image)
+			this._parts.push(new TypeNamePart(each))
 		})
 
-		this._name = this._parts.reduce((a, b) => `${a}.${b}`)
+		this._name = this._parts.map(x => x.name).reduce((a, b) => `${a}.${b}`)
 	}
 
 	dispose(): void {
-		this._targets = []
+		this._parts.forEach(each => each.dispose())
 	}
 
 	public get node(): FullyQualifiedClassNameCstNode {
@@ -54,11 +80,7 @@ export class TypeName{
 		return this._name
 	}
 
-	public get parts(): String[] {
+	public get parts(): TypeNamePart[] {
 		return this._parts
-	}
-
-	public get targets(): (any | undefined)[] {
-		return this._targets
 	}
 }

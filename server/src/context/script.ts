@@ -53,8 +53,6 @@ export class ContextScript extends Context{
 				this._children.push(openNamespace)
 			} else if (c.scriptDeclaration) {
 				(openNamespace ? openNamespace.children : this._children).push(new Context(Context.ContextType.Class))
-			} else {
-				(openNamespace ? openNamespace.children : this._children).push(new Context(Context.ContextType.Generic))
 			}
 		});
 	}
