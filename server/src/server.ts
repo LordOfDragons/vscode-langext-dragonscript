@@ -22,11 +22,6 @@
  * SOFTWARE.
  */
 
-
-/* --------------------------------------------------------------------------------------------
- * Copyright (c) Microsoft Corporation. All rights reserved.
- * Licensed under the MIT License. See License.txt in the project root for license information.
- * ------------------------------------------------------------------------------------------ */
 import {
 	createConnection,
 	TextDocuments,
@@ -40,28 +35,30 @@ import {
 	TextDocumentPositionParams,
 	TextDocumentSyncKind,
 	InitializeResult
-} from 'vscode-languageserver/node';
+} from 'vscode-languageserver/node'
 
 import {
 	TextDocument
-} from 'vscode-languageserver-textdocument';
+} from 'vscode-languageserver-textdocument'
 
-import { DSParser } from './parser';
-import { DSLexer } from './lexer';
+import { DSParser } from './parser'
+import { DSLexer } from './lexer'
+import { ContextScript } from "./context/script"
+import { ScriptCstNode } from './nodeclasses'
 
 // Create a connection for the server, using Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
-const connection = createConnection(ProposedFeatures.all);
+const connection = createConnection(ProposedFeatures.all)
 
 // Create a simple text document manager.
-const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
+const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument)
 
-let hasConfigurationCapability = false;
-let hasWorkspaceFolderCapability = false;
-let hasDiagnosticRelatedInformationCapability = false;
+let hasConfigurationCapability = false
+let hasWorkspaceFolderCapability = false
+let hasDiagnosticRelatedInformationCapability = false
 
-let lexer = new DSLexer();
-let parser = new DSParser();
+let lexer = new DSLexer()
+let parser = new DSParser()
 
 connection.onInitialize((params: InitializeParams) => {
 	const capabilities = params.capabilities;
@@ -214,7 +211,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	// grammar
 	parser.input = lexed.tokens
 	connection.console.log('Grammer Begin:')
-	parser.script()
+	const cst = parser.script()
 	connection.console.log('Grammar End:')
 
 	parser.errors.slice(0, settings.maxNumberOfProblems).forEach(error => {
@@ -246,6 +243,11 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 		diagnostics.push(diagnostic)
 	})
 
+	// ast
+	const script = new ContextScript(cst as ScriptCstNode)
+	script.log(connection.console)
+	script.dispose()
+	
 	connection.sendDiagnostics({uri: textDocument.uri, diagnostics})
 }
 
