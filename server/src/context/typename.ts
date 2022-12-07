@@ -26,24 +26,30 @@ import { IToken } from "chevrotain"
 import { FullyQualifiedClassNameCstNode } from "../nodeclasses"
 
 export class TypeNamePart {
-	protected _token: IToken
-	protected _name: String
+	protected _token?: IToken
+	protected _name: string
 	protected _target?: any
 
-	constructor(token: IToken) {
+	constructor(token?: IToken) {
 		this._token = token
-		this._name = token.image
+		this._name = token ? token.image : "";
 	}
 
 	dispose(): void {
 		this._target = undefined
 	}
 
-	public get token(): IToken {
+	public static named(name: string): TypeNamePart {
+		var part = new TypeNamePart();
+		part._name = name;
+		return part;
+	}
+
+	public get token(): IToken | undefined {
 		return this._token
 	}
 
-	public get name(): String {
+	public get name(): string {
 		return this._name
 	}
 
@@ -53,18 +59,23 @@ export class TypeNamePart {
 }
 
 export class TypeName {
-	protected _node: FullyQualifiedClassNameCstNode
+	protected _node?: FullyQualifiedClassNameCstNode
 	protected _parts: TypeNamePart[]
-	protected _name: String
+	protected _name: string
 
-	constructor(node: FullyQualifiedClassNameCstNode) {
+	constructor(node?: FullyQualifiedClassNameCstNode) {
 		this._node = node
 		this._parts = []
+
+		if (!node) {
+			this._name = "";
+			return;
+		}
 
 		node.children.identifier.forEach(each => {
 			this._parts.push(new TypeNamePart(each))
 		})
-
+		
 		this._name = this._parts.map(x => x.name).reduce((a, b) => `${a}.${b}`)
 	}
 
@@ -72,11 +83,24 @@ export class TypeName {
 		this._parts.forEach(each => each.dispose())
 	}
 
-	public get node(): FullyQualifiedClassNameCstNode {
+	public static typeNamed(name: string): TypeName {
+		var tn = new TypeName();
+		tn._name = name;
+		name.split('.').forEach(each => {
+			tn._parts.push(TypeNamePart.named(each));
+		})
+		return tn;
+	}
+
+	public static typeVoid(): TypeName {
+		return this.typeNamed("void");
+	}
+
+	public get node(): FullyQualifiedClassNameCstNode | undefined {
 		return this._node
 	}
 
-	public get name(): String {
+	public get name(): string {
 		return this._name
 	}
 

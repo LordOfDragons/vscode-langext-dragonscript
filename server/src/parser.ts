@@ -447,10 +447,6 @@ export class DSParser extends CstParser{
 	// enumeration entry
 	public enumerationEntry = this.RULE("enumerationEntry", () => {
 		this.CONSUME(DSLexer.tokenIdentifier, {LABEL: "name"})
-		this.OPTION(() => {
-			this.CONSUME(DSLexer.tokenAssign)
-			this.SUBRULE(this.expression, {LABEL: "value"})
-		})
 		this.SUBRULE(this.endOfCommand)
 	})
 

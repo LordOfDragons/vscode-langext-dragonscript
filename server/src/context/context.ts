@@ -22,62 +22,128 @@
  * SOFTWARE.
  */
 
-import { RemoteConsole } from "vscode-languageserver"
+import { RemoteConsole } from "vscode-languageserver";
+import { TypeModifiersCstNode } from "../nodeclasses";
 
 /** Base context. */
 export class Context{
-	protected _type: Context.ContextType
-	public parent: Context | undefined
-	protected _children: Array<Context>
+	protected _type: Context.ContextType;
+	public parent: Context | undefined;
+	protected _children: Array<Context>;
 
 	constructor(type: Context.ContextType){
-		this._type = type
-		this.parent = undefined
-		this._children = []
+		this._type = type;
+		this.parent = undefined;
+		this._children = [];
 	}
 
 	/** Dispose of context. */
 	dispose(){
 		this._children?.forEach(each => each.dispose());
-		this._children?.splice(0)
-		this.parent = undefined
+		this._children?.splice(0);
+		this.parent = undefined;
 	}
 
 	/** Type. */
 	public get type(): Context.ContextType{
-		return this._type
+		return this._type;
 	}
 
 	/** Child contexts. */
 	public get children(): Array<Context>{
-		return this._children
+		return this._children;
 	}
 
 	/** Debug. */
-	log(console: RemoteConsole, prefix: String = "", prefixLines: String = "") {
-		console.log(`${prefix}Context: ${this._type}`)
+	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
+		console.log(`${prefix}Context: ${Context.ContextType[this._type]}`);
 	}
 
 	/** Debug log children. */
-	protected logChildren(console: RemoteConsole, prefix: String) {
-		let prefixChild = `${prefix}- `
-		let prefixLinesChild = `${prefix}  `
+	protected logChildren(console: RemoteConsole, prefix: string) {
+		let prefixChild = `${prefix}- `;
+		let prefixLinesChild = `${prefix}  `;
 		this._children.forEach(each => {
-			each.log(console, prefixChild, prefixLinesChild)
+			each.log(console, prefixChild, prefixLinesChild);
 		})
+	}
+
+	/** Set to log string. */
+	protected logStringSet(set: Set<any>, enumClass: any) {
+		if (set && set.size > 0) {
+			return Array.from(set.values()).map(x => enumClass[x]).reduce((a, b) => `${a}, ${b}`);
+		} else {
+			return "()";
+		}
 	}
 }
 
-export namespace Context{
+export namespace Context {
 	/** Context type. */
-	export enum ContextType{
+	export enum ContextType {
 		Script,
 		Namespace,
 		PinNamespace,
 		Class,
 		Interface,
 		Enumeration,
+		EnumerationEntry,
 		Function,
+		FunctionArgument,
 		Generic
+	}
+
+	/** Type modifier. */
+	export enum TypeModifier {
+		Public,
+		Protected,
+		Private,
+		Abstract,
+		Fixed,
+		Static,
+		Native
+	}
+
+	/** Type modifier set. */
+	export class TypeModifierSet extends Set<Context.TypeModifier> {
+		constructor(node?: TypeModifiersCstNode) {
+			super();
+			if (!node || !node.children.typeModifier) {
+				this.add(Context.TypeModifier.Public);
+				return;
+			}
+
+			node.children.typeModifier.forEach(each => {
+				if (each.children.public) {
+					this.add(Context.TypeModifier.Public);
+
+				} else if (each.children.protected) {
+					this.add(Context.TypeModifier.Protected);
+
+				} else if (each.children.private) {
+					this.add(Context.TypeModifier.Private);
+
+				} else if (each.children.abstract) {
+					this.add(Context.TypeModifier.Abstract);
+
+				} else if (each.children.fixed) {
+					this.add(Context.TypeModifier.Fixed);
+
+				} else if (each.children.static) {
+					this.add(Context.TypeModifier.Static);
+
+				} else if (each.children.native) {
+					this.add(Context.TypeModifier.Native);
+				}
+			})
+		}
+
+		toString() : string {
+			if (this.size > 0) {
+				return "(" + Array.from(this.values()).map(x => Context.TypeModifier[x]).reduce((a, b) => `${a}, ${b}`) + ")";
+			} else {
+				return "()";
+			}
+		}
 	}
 }

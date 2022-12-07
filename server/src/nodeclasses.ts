@@ -22,75 +22,367 @@
  * SOFTWARE.
  */
 
-import { CstNode, IToken } from "chevrotain"
+import { CstNode, CstParser, IToken } from "chevrotain";
 
 // script
 export interface ScriptCstNode extends CstNode {
-	name: "script"
-	children: ScriptCstChildren
+	name: "script";
+	children: ScriptCstChildren;
 }
 
 export type ScriptCstChildren = {
-	scriptStatement: CstNode[]
+	scriptStatement: ScriptStatementCstNode[];
 }
 
 // scriptStatement
 export interface ScriptStatementCstNode extends CstNode {
-	name: "scriptStatement"
-	children: ScriptStatementCstChildren
+	name: "scriptStatement";
+	children: ScriptStatementCstChildren;
 }
 
 export type ScriptStatementCstChildren = {
-	requiresPackage?: CstNode[]
-	openNamespace?: OpenNamespaceCstNode[]
-	pinNamespace?: PinNamespaceCstNode[]
-	scriptDeclaration?: CstNode[]
-	endOfCommand?: CstNode[]
+	requiresPackage?: RequiresPackageCstNode[];
+	openNamespace?: OpenNamespaceCstNode[];
+	pinNamespace?: PinNamespaceCstNode[];
+	scriptDeclaration?: ScriptDeclarationCstNode[];
 }
 
 // requiresPackage
 export interface RequiresPackageCstNode extends CstNode {
-	name: "requiresPackage"
-	children: RequiresPackageCstChildren
+	name: "requiresPackage";
+	children: RequiresPackageCstChildren;
 }
 
 export type RequiresPackageCstChildren = {
-	requires: IToken[]
-	name: IToken[]
-	endOfCommand: CstNode[]
+	name: IToken[];
 }
 
 // pinNamespace
 export interface PinNamespaceCstNode extends CstNode {
-	name: "pinNamespace"
-	children: PinNamespaceCstChildren
+	name: "pinNamespace";
+	children: PinNamespaceCstChildren;
 }
 
 export type PinNamespaceCstChildren = {
-	pin: IToken[]
-	name: FullyQualifiedClassNameCstNode[]
-	endOfCommand: CstNode[]
+	name: FullyQualifiedClassNameCstNode[];
 }
 
 // fullyQualifiedClassName
 export interface FullyQualifiedClassNameCstNode extends CstNode {
-	name: "fullyQualifiedClassName"
-	children: FullyQualifiedClassNameCstChildren
+	name: "fullyQualifiedClassName";
+	children: FullyQualifiedClassNameCstChildren;
 }
 
 export type FullyQualifiedClassNameCstChildren = {
-	period?: IToken[]
-	identifier: IToken[]
+	identifier: IToken[];
 }
 
 // openNamespace
 export interface OpenNamespaceCstNode extends CstNode {
-	name: "openNamespace"
-	children: OpenNamespaceCstChildren
+	name: "openNamespace";
+	children: OpenNamespaceCstChildren;
 }
 
 export type OpenNamespaceCstChildren = {
-	namespace: IToken[]
-	name: FullyQualifiedClassNameCstNode[]
-	endOfCommand: CstNode[]
+	name: FullyQualifiedClassNameCstNode[];
+}
+
+// scriptDeclaration
+export interface ScriptDeclarationCstNode extends CstNode {
+	name: "scriptDeclaration";
+	children: ScriptDeclarationCstChildren;
+}
+
+export type ScriptDeclarationCstChildren = {
+	typeModifiers?: TypeModifiersCstNode[];
+	declareClass?: DeclareClassCstNode[];
+	declareInterface?: DeclareInterfaceCstNode[];
+	declareEnumeration?: DeclareEnumerationCstNode[];
+}
+
+// typeModifiers
+export interface TypeModifiersCstNode extends CstNode {
+	name: "typeModifiers";
+	children: TypeModifiersCstChildren;
+}
+
+export type TypeModifiersCstChildren = {
+	typeModifier: TypeModifierCstNode[];
+}
+
+// typeModifier
+export interface TypeModifierCstNode extends CstNode {
+	name: "typeModifier";
+	children: TypeModifierCstChildren;
+}
+
+export type TypeModifierCstChildren = {
+	public?: IToken[];
+	protected?: IToken[];
+	private?: IToken[];
+	abstract?: IToken[];
+	fixed?: IToken[];
+	static?: IToken[];
+	native?: IToken[];
+}
+
+// declareClass
+export interface DeclareClassCstNode extends CstNode {
+	name: "declareClass";
+	children: DeclareClassCstChildren;
+}
+
+export type DeclareClassCstChildren = {
+	classBegin: ClassBeginCstNode[];
+	classBody: ClassBodyCstNode[];
+}
+
+// classBegin
+export interface ClassBeginCstNode extends CstNode {
+	name: "classBegin";
+	children: ClassBeginCstChildren;
+}
+
+export type ClassBeginCstChildren = {
+	name: IToken[];
+	baseClassName?: FullyQualifiedClassNameCstNode[];
+	interfaceName?: FullyQualifiedClassNameCstNode[];
+}
+
+// classBody
+export interface ClassBodyCstNode extends CstNode {
+	name: "classBody";
+	children: ClassBodyCstChildren;
+}
+
+export type ClassBodyCstChildren = {
+	classBodyDeclaration: ClassBodyDeclarationCstNode[];
+}
+
+// classBodyDeclaration
+export interface ClassBodyDeclarationCstNode extends CstNode {
+	name: "classBodyDeclaration";
+	children: ClassBodyDeclarationCstChildren;
+}
+
+export type ClassBodyDeclarationCstChildren = {
+	typeModifiers?: TypeModifiersCstNode[];
+	declareClass?: DeclareClassCstNode[];
+	declareInterface?: DeclareInterfaceCstNode[];
+	declareEnumeration?: DeclareEnumerationCstNode[];
+	classFunction?: ClassFunctionCstNode[];
+	classVariables?: CstNode[];
+}
+
+// classFunction
+export interface ClassFunctionCstNode extends CstNode {
+	name: "classFunction";
+	children: ClassFunctionCstChildren;
+}
+
+export type ClassFunctionCstChildren = {
+	functionBegin: FunctionBeginCstNode[];
+	statement: CstNode[];
+}
+
+// declareInterface
+export interface DeclareInterfaceCstNode extends CstNode {
+	name: "declareInterface";
+	children: DeclareInterfaceCstChildren;
+}
+
+export type DeclareInterfaceCstChildren = {
+	interfaceBegin: InterfaceBeginCstNode[];
+	interfaceBody: InterfaceBodyCstNode[];
+}
+
+// interfaceBegin
+export interface InterfaceBeginCstNode extends CstNode {
+	name: "interfaceBegin";
+	children: InterfaceBeginCstChildren;
+}
+
+export type InterfaceBeginCstChildren = {
+	name: IToken[];
+	baseInterfaceName?: FullyQualifiedClassNameCstNode[];
+}
+
+// interfaceBody
+export interface InterfaceBodyCstNode extends CstNode {
+	name: "interfaceBody";
+	children: InterfaceBodyCstChildren;
+}
+
+export type InterfaceBodyCstChildren = {
+	interfaceBodyDeclaration?: InterfaceBodyDeclarationCstNode[];
+}
+
+// interfaceBodyDeclaration
+export interface InterfaceBodyDeclarationCstNode extends CstNode {
+	name: "interfaceBodyDeclaration";
+	children: InterfaceBodyDeclarationCstChildren;
+}
+
+export type InterfaceBodyDeclarationCstChildren = {
+	typeModifiers?: TypeModifiersCstNode[];
+	declareClass?: DeclareClassCstNode[];
+	declareInterface?: DeclareInterfaceCstNode[];
+	declareEnumeration?: DeclareEnumerationCstNode[];
+	interfaceFunction?: InterfaceFunctionCstNode[];
+}
+
+// interfaceFunction
+export interface InterfaceFunctionCstNode extends CstNode {
+	name: "interfaceFunction";
+	children: InterfaceFunctionCstChildren;
+}
+
+export type InterfaceFunctionCstChildren = {
+	functionBegin?: FunctionBeginCstNode[];
+}
+
+// functionBegin
+export interface FunctionBeginCstNode extends CstNode {
+	name: "functionBegin";
+	children: FunctionBeginCstChildren;
+}
+
+export type FunctionBeginCstChildren = {
+	classConstructor?: ClassConstructorCstNode[];
+	classDestructor?: CstNode[];
+	regularFunction?: RegularFunctionCstNode[];
+}
+
+// classConstructor
+export interface ClassConstructorCstNode extends CstNode {
+	name: "classConstructor";
+	children: ClassConstructorCstChildren;
+}
+
+export type ClassConstructorCstChildren = {
+	functionArguments: FunctionArgumentsCstNode[];
+	this?: IToken[];
+	super?: IToken[];
+	functionCall?: FunctionCallCstNode[];
+}
+
+// functionCall
+export interface FunctionCallCstNode extends CstNode {
+	name: "functionCall";
+	children: FunctionCallCstChildren;
+}
+
+export type FunctionCallCstChildren = {
+	argument: CstNode[]; // expression
+}
+
+// regularFunction
+export interface RegularFunctionCstNode extends CstNode {
+	name: "regularFunction";
+	children: RegularFunctionCstChildren;
+}
+
+export type RegularFunctionCstChildren = {
+	returnType: FullyQualifiedClassNameCstNode[];
+	name?: IToken[];
+	operator?: FunctionOperatorCstNode[];
+	functionArguments: FunctionArgumentsCstNode[];
+}
+
+// functionOperator
+export interface FunctionOperatorCstNode extends CstNode {
+	name: "functionOperator";
+	children: FunctionOperatorCstChildren;
+}
+
+export type FunctionOperatorCstChildren = {
+	assignMultiply?: IToken[];
+	assignDivide?: IToken[];
+	assignModulus?: IToken[];
+	assignAdd?: IToken[];
+	assignSubtract?: IToken[];
+	assignShiftLeft?: IToken[];
+	assignShiftRight?: IToken[];
+	assignAnd?: IToken[];
+	assignOr?: IToken[];
+	assignXor?: IToken[];
+	and?: IToken[];
+	or?: IToken[];
+	xor?: IToken[];
+	shiftLeft?: IToken[];
+	shiftRight?: IToken[];
+	less?: IToken[];
+	greater?: IToken[];
+	lessEqual?: IToken[];
+	greaterEqual?: IToken[];
+	multiply?: IToken[];
+	divide?: IToken[];
+	modulus?: IToken[];
+	add?: IToken[];
+	subtract?: IToken[];
+	increment?: IToken[];
+	decrement?: IToken[];
+	inverse?: IToken[];
+}
+
+// functionArguments
+export interface FunctionArgumentsCstNode extends CstNode {
+	name: "functionArguments";
+	children: FunctionArgumentsCstChildren;
+}
+
+export type FunctionArgumentsCstChildren = {
+	functionArgument?: FunctionArgumentCstNode[];
+}
+
+// functionArgument
+export interface FunctionArgumentCstNode extends CstNode {
+	name: "functionArgument";
+	children: FunctionArgumentCstChildren;
+}
+
+export type FunctionArgumentCstChildren = {
+	type: FullyQualifiedClassNameCstNode[];
+	name: IToken[];
+}
+
+// declareEnumeration
+export interface DeclareEnumerationCstNode extends CstNode {
+	name: "declareEnumeration";
+	children: DeclareEnumerationCstChildren;
+}
+
+export type DeclareEnumerationCstChildren = {
+	enumerationBegin: EnumerationBeginCstNode[];
+	enumerationBody: EnumerationBodyCstNode[];
+}
+
+// enumerationBegin
+export interface EnumerationBeginCstNode extends CstNode {
+	name: "enumerationBegin";
+	children: EnumerationBeginCstChildren;
+}
+
+export type EnumerationBeginCstChildren = {
+	name: IToken[];
+}
+
+// enumerationBody
+export interface EnumerationBodyCstNode extends CstNode {
+	name: "enumerationBody";
+	children: EnumerationBodyCstChildren;
+}
+
+export type EnumerationBodyCstChildren = {
+	enumerationEntry?: EnumerationEntryCstNode[];
+}
+
+// enumerationEntry
+export interface EnumerationEntryCstNode extends CstNode {
+	name: "enumerationEntry";
+	children: EnumerationEntryCstChildren;
+}
+
+export type EnumerationEntryCstChildren = {
+	name: IToken[];
 }

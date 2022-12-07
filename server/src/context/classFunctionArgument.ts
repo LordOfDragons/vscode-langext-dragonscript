@@ -22,36 +22,41 @@
  * SOFTWARE.
  */
 
-import { Context } from "./context";
-import { OpenNamespaceCstNode } from "../nodeclasses";
-import { RemoteConsole } from "vscode-languageserver";
+import { Context } from "./context"
+import { FunctionArgumentCstNode } from "../nodeclasses"
+import { RemoteConsole } from "vscode-languageserver"
 import { TypeName } from "./typename";
 
-export class ContextNamespace extends Context{
-	protected _node: OpenNamespaceCstNode;
+export class ContextFunctionArgument extends Context{
+	protected _node: FunctionArgumentCstNode;
+	protected _name: string;
 	protected _typename: TypeName;
 
-	constructor(node: OpenNamespaceCstNode) {
-		super(Context.ContextType.Namespace);
-		this._node = node;
-		this._typename = new TypeName(node.children.name[0]);
+	constructor(node: FunctionArgumentCstNode) {
+		super(Context.ContextType.FunctionArgument)
+		this._node = node
+		this._name = node.children.name[0].image;
+		this._typename = new TypeName(node.children.type[0]);
 	}
 
 	dispose(): void {
 		super.dispose()
-		this._typename?.dispose();
+		this._typename.dispose();
 	}
 
-	public get node(): OpenNamespaceCstNode {
-		return this._node;
+	public get node(): FunctionArgumentCstNode {
+		return this._node
+	}
+
+	public get name(): string {
+		return this._name
 	}
 
 	public get typename(): TypeName {
-		return this._typename;
+		return this._typename
 	}
 
 	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
-		console.log(`${prefix}Namespace: ${this._typename.name}`);
-		this.logChildren(console, prefixLines);
+		console.log(`${prefix}Argument ${this._typename.name} ${this._name}`)
 	}
 }

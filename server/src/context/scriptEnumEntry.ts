@@ -22,36 +22,29 @@
  * SOFTWARE.
  */
 
-import { Context } from "./context";
-import { OpenNamespaceCstNode } from "../nodeclasses";
-import { RemoteConsole } from "vscode-languageserver";
-import { TypeName } from "./typename";
+import { Context } from "./context"
+import { EnumerationEntryCstNode } from "../nodeclasses"
+import { RemoteConsole } from "vscode-languageserver"
 
-export class ContextNamespace extends Context{
-	protected _node: OpenNamespaceCstNode;
-	protected _typename: TypeName;
+export class ContextEnumEntry extends Context{
+	protected _node: EnumerationEntryCstNode;
+	protected _name: string;
 
-	constructor(node: OpenNamespaceCstNode) {
-		super(Context.ContextType.Namespace);
-		this._node = node;
-		this._typename = new TypeName(node.children.name[0]);
+	constructor(node: EnumerationEntryCstNode) {
+		super(Context.ContextType.EnumerationEntry)
+		this._node = node
+		this._name = node.children.name[0].image;
 	}
 
-	dispose(): void {
-		super.dispose()
-		this._typename?.dispose();
+	public get node(): EnumerationEntryCstNode {
+		return this._node
 	}
 
-	public get node(): OpenNamespaceCstNode {
-		return this._node;
-	}
-
-	public get typename(): TypeName {
-		return this._typename;
+	public get name(): string {
+		return this._name
 	}
 
 	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
-		console.log(`${prefix}Namespace: ${this._typename.name}`);
-		this.logChildren(console, prefixLines);
+		console.log(`${prefix}Entry ${this._name}`)
 	}
 }

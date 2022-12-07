@@ -22,34 +22,35 @@
  * SOFTWARE.
  */
 
-import { Context } from "./context"
-import { PinNamespaceCstNode } from "../nodeclasses"
-import { RemoteConsole } from "vscode-languageserver"
-import { TypeName } from "./typename"
+import { Context } from "./context";
+import { PinNamespaceCstNode } from "../nodeclasses";
+import { RemoteConsole } from "vscode-languageserver";
+import { TypeName } from "./typename";
 
 export class ContextPinNamespace extends Context{
-	protected _node: PinNamespaceCstNode
-	protected _typename: TypeName
+	protected _node: PinNamespaceCstNode;
+	protected _typename: TypeName;
 
 	constructor(node: PinNamespaceCstNode) {
-		super(Context.ContextType.PinNamespace)
-		this._node = node
-		this._typename = new TypeName(node.children.name[0])
+		super(Context.ContextType.PinNamespace);
+		this._node = node;
+		this._typename = new TypeName(node.children.name[0]);
 	}
 
 	dispose(): void {
-		super.dispose()
+		super.dispose();
+		this._typename?.dispose();
 	}
 
 	public get node(): PinNamespaceCstNode {
-		return this._node
+		return this._node;
 	}
 
 	public get typename(): TypeName {
-		return this._typename
+		return this._typename;
 	}
 
-	log(console: RemoteConsole, prefix: String = "", prefixLines: String = "") {
-		console.log(`${prefix}Pin Namespace: ${this._typename.name}`)
+	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
+		console.log(`${prefix}Pin Namespace: ${this._typename.name}`);
 	}
 }

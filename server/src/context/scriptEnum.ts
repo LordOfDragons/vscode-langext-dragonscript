@@ -22,36 +22,48 @@
  * SOFTWARE.
  */
 
-import { Context } from "./context";
-import { OpenNamespaceCstNode } from "../nodeclasses";
-import { RemoteConsole } from "vscode-languageserver";
-import { TypeName } from "./typename";
+import { Context } from "./context"
+import { DeclareEnumerationCstNode, TypeModifiersCstNode } from "../nodeclasses"
+import { RemoteConsole } from "vscode-languageserver"
+import { ContextEnumEntry } from "./scriptEnumEntry";
 
-export class ContextNamespace extends Context{
-	protected _node: OpenNamespaceCstNode;
-	protected _typename: TypeName;
+export class ContextEnumeration extends Context{
+	protected _node: DeclareEnumerationCstNode;
+	protected _name: string;
+	protected _typeModifiers: Context.TypeModifierSet;
 
-	constructor(node: OpenNamespaceCstNode) {
-		super(Context.ContextType.Namespace);
+	constructor(node: DeclareEnumerationCstNode, typemodNode: TypeModifiersCstNode | undefined) {
+		super(Context.ContextType.Interface);
+
+		let edecl = node.children;
+		let edeclBegin = edecl.enumerationBegin[0].children;
+
 		this._node = node;
-		this._typename = new TypeName(node.children.name[0]);
+		this._name = edeclBegin.name[0].image;
+		this._typeModifiers = new Context.TypeModifierSet(typemodNode);
+
+		if (edecl.enumerationBody) {
+			let nodeBody = edecl.enumerationBody[0].children.enumerationEntry;
+			if (nodeBody) {
+				nodeBody.forEach(each => this._children.push(new ContextEnumEntry(each)));
+			}
+		}
 	}
 
-	dispose(): void {
-		super.dispose()
-		this._typename?.dispose();
-	}
-
-	public get node(): OpenNamespaceCstNode {
+	public get node(): DeclareEnumerationCstNode {
 		return this._node;
 	}
 
-	public get typename(): TypeName {
-		return this._typename;
+	public get name(): string {
+		return this._name;
+	}
+
+	public get typeModifiers(): Context.TypeModifierSet {
+		return this._typeModifiers;
 	}
 
 	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
-		console.log(`${prefix}Namespace: ${this._typename.name}`);
+		console.log(`${prefix}Enumeration: ${this._name} ${this._typeModifiers}`);
 		this.logChildren(console, prefixLines);
 	}
 }
