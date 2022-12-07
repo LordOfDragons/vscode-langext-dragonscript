@@ -171,7 +171,29 @@ export type ClassBodyDeclarationCstChildren = {
 	declareInterface?: DeclareInterfaceCstNode[];
 	declareEnumeration?: DeclareEnumerationCstNode[];
 	classFunction?: ClassFunctionCstNode[];
-	classVariables?: CstNode[];
+	classVariables?: ClassVariablesCstNode[];
+}
+
+// classVariables
+export interface ClassVariablesCstNode extends CstNode {
+	name: "classVariables";
+	children: ClassVariablesCstChildren;
+}
+
+export type ClassVariablesCstChildren = {
+	type: FullyQualifiedClassNameCstNode[];
+	classVariable?: ClassVariableCstNode[];
+}
+
+// classVariable
+export interface ClassVariableCstNode extends CstNode {
+	name: "classVariable";
+	children: ClassVariableCstChildren;
+}
+
+export type ClassVariableCstChildren = {
+	name: IToken[];
+	value?: ExpressionCstNode[];
 }
 
 // classFunction
@@ -182,7 +204,7 @@ export interface ClassFunctionCstNode extends CstNode {
 
 export type ClassFunctionCstChildren = {
 	functionBegin: FunctionBeginCstNode[];
-	statement: CstNode[];
+	statement: StatementCstNode[];
 }
 
 // declareInterface
@@ -273,7 +295,7 @@ export interface FunctionCallCstNode extends CstNode {
 }
 
 export type FunctionCallCstChildren = {
-	argument: CstNode[]; // expression
+	argument: ExpressionCstNode[];
 }
 
 // regularFunction
@@ -385,4 +407,34 @@ export interface EnumerationEntryCstNode extends CstNode {
 
 export type EnumerationEntryCstChildren = {
 	name: IToken[];
+}
+
+// expression
+export interface ExpressionCstNode extends CstNode {
+	name: "expression";
+	children: ExpressionCstChildren;
+}
+
+export type ExpressionCstChildren = {
+	
+}
+
+// statement
+export interface StatementCstNode extends CstNode {
+	name: "statement";
+	children: StatementCstChildren;
+}
+
+export type StatementCstChildren = {
+	statementIf?: CstNode[];
+	statementReturn?: CstNode[];
+	statementSelect?: CstNode[];
+	statementWhile?: CstNode[];
+	statementFor?: CstNode[];
+	break?: IToken[];
+	continue?: IToken[];
+	statementThrow?: CstNode[];
+	statementTry?: CstNode[];
+	statementVariables?: CstNode[];
+	expression?: ExpressionCstNode[];
 }

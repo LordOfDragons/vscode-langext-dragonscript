@@ -29,6 +29,7 @@ import { TypeName } from "./typename"
 import { ContextInterface } from "./scriptInterface";
 import { ContextEnumeration } from "./scriptEnum";
 import { ContextFunction } from "./classFunction";
+import { ContextVariable } from "./classVariable";
 
 export class ContextClass extends Context{
 	protected _node: DeclareClassCstNode;
@@ -69,6 +70,14 @@ export class ContextClass extends Context{
 						this._children.push(new ContextEnumeration(each.children.declareEnumeration[0], typemod));
 					} else if (each.children.classFunction) {
 						this._children.push(new ContextFunction(each.children.classFunction[0], typemod, this._name));
+					} else if (each.children.classVariables) {
+						let vdecls = each.children.classVariables[0].children;
+						if (vdecls.classVariable) {
+							let typeNode = vdecls.type[0];
+							vdecls.classVariable.forEach(each => {
+								this._children.push(new ContextVariable(each, typemod, typeNode));
+							});
+						}
 					}
 				});
 			}

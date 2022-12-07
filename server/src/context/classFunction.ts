@@ -35,8 +35,8 @@ export class ContextFunction extends Context{
 	protected _name: string;
 	protected _returnType?: TypeName;
 	protected _arguments: ContextFunctionArgument[];
-	protected _thisCall?: any[]; // expression
-	protected _superCall?: any[]; // expression
+	protected _thisCall?: Context[];
+	protected _superCall?: Context[];
 
 	constructor(node: InterfaceFunctionCstNode | ClassFunctionCstNode,
 			    typemodNode: TypeModifiersCstNode | undefined, ownerTypeName: string) {
@@ -80,9 +80,9 @@ export class ContextFunction extends Context{
 				let args = fdecl2.functionCall[0].children.argument;
 				if (args) {
 					if (fdecl2.this) {
-						this._thisCall = args.map(each => new Context(Context.ContextType.Generic));
+						this._thisCall = args.map(each => this.createExpression(each));
 					} else if (fdecl2.super) {
-						this._superCall = args.map(each => new Context(Context.ContextType.Generic));
+						this._superCall = args.map(each => this.createExpression(each));
 					}
 				}
 			}
@@ -181,6 +181,10 @@ export class ContextFunction extends Context{
 			this._name = "??";
 			this._returnType = TypeName.typeVoid();
 		}
+
+		if (cfdecl && cfdecl.children.statement) {
+			cfdecl.children.statement.forEach(each => this._children.push(this.createStatement(each)));
+		}
 	}
 
 	dispose(): void {
@@ -215,11 +219,11 @@ export class ContextFunction extends Context{
 		return this._arguments;
 	}
 
-	public get thisCall(): any[] | undefined {
+	public get thisCall(): Context[] | undefined {
 		return this._thisCall;
 	}
 
-	public get superCall(): any[] | undefined{
+	public get superCall(): Context[] | undefined{
 		return this._superCall;
 	}
 
