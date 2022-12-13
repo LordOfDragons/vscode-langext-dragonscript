@@ -23,7 +23,7 @@
  */
 
 import { RemoteConsole } from "vscode-languageserver";
-import { ExpressionCstNode, StatementCstNode, TypeModifiersCstNode } from "../nodeclasses";
+import { TypeModifiersCstNode } from "../nodeclasses";
 
 /** Base context. */
 export class Context{
@@ -53,40 +53,6 @@ export class Context{
 	public get children(): Array<Context>{
 		return this._children;
 	}
-
-	/** Create statement from node. */
-	protected createStatement(node: StatementCstNode): Context {
-		if (node.children.statementIf) {
-
-		} else if (node.children.statementReturn) {
-
-		} else if (node.children.statementSelect) {
-
-		} else if (node.children.statementWhile) {
-
-		} else if (node.children.statementFor) {
-
-		} else if (node.children.break) {
-
-		} else if (node.children.continue) {
-
-		} else if (node.children.statementThrow) {
-
-		} else if (node.children.statementTry) {
-
-		} else if (node.children.statementVariables) {
-
-		} else if (node.children.expression) {
-			return this.createExpression(node.children.expression[0]);
-		}
-		return new Context(Context.ContextType.Generic);
-	}
-
-	/** Create expression from node. */
-	protected createExpression(node: ExpressionCstNode): Context {
-		return new Context(Context.ContextType.Generic);
-	}
-
 
 	/** Debug. */
 	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
@@ -126,6 +92,8 @@ export namespace Context {
 		Function,
 		FunctionArgument,
 		Variable,
+		IfElse,
+		Statements,
 		Generic
 	}
 

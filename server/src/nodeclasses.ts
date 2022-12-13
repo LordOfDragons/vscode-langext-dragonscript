@@ -419,6 +419,16 @@ export type ExpressionCstChildren = {
 	
 }
 
+// statements
+export interface StatementsCstNode extends CstNode {
+	name: "statements";
+	children: StatementsCstChildren;
+}
+
+export type StatementsCstChildren = {
+	statement?: StatementCstNode[];
+}
+
 // statement
 export interface StatementCstNode extends CstNode {
 	name: "statement";
@@ -426,10 +436,10 @@ export interface StatementCstNode extends CstNode {
 }
 
 export type StatementCstChildren = {
-	statementIf?: CstNode[];
-	statementReturn?: CstNode[];
-	statementSelect?: CstNode[];
-	statementWhile?: CstNode[];
+	statementIf?: StatementIfCstNode[];
+	statementReturn?: StatementReturnCstNode[];
+	statementSelect?: StatementSelectCstNode[];
+	statementWhile?: StatementWhileCstNode[];
 	statementFor?: CstNode[];
 	break?: IToken[];
 	continue?: IToken[];
@@ -437,4 +447,122 @@ export type StatementCstChildren = {
 	statementTry?: CstNode[];
 	statementVariables?: CstNode[];
 	expression?: ExpressionCstNode[];
+}
+
+// statementIf
+export interface StatementIfCstNode extends CstNode {
+	name: "statementIf";
+	children: StatementIfCstChildren;
+}
+
+export type StatementIfCstChildren = {
+	statementIfBegin: StatementIfBeginCstNode[];
+	statementElif?: StatementElifCstNode[];
+	statementElse?: StatementElseCstNode[];
+}
+
+// statementIfBegin
+export interface StatementIfBeginCstNode extends CstNode {
+	name: "statementIfBegin";
+	children: StatementIfBeginCstChildren;
+}
+
+export type StatementIfBeginCstChildren = {
+	condition: ExpressionCstNode[];
+	statements: StatementsCstNode[];
+}
+
+// statementElif
+export interface StatementElifCstNode extends CstNode {
+	name: "statementElif";
+	children: StatementElifCstChildren;
+}
+
+export type StatementElifCstChildren = {
+	condition: ExpressionCstNode[];
+	statements: StatementsCstNode[];
+}
+
+// statementElse
+export interface StatementElseCstNode extends CstNode {
+	name: "statementElse";
+	children: StatementElseCstChildren;
+}
+
+export type StatementElseCstChildren = {
+	statements: StatementsCstNode[];
+}
+
+// statementReturn
+export interface StatementReturnCstNode extends CstNode {
+	name: "statementReturn";
+	children: StatementReturnCstChildren;
+}
+
+export type StatementReturnCstChildren = {
+	value?: ExpressionCstNode[];
+}
+
+// statementSelect
+export interface StatementSelectCstNode extends CstNode {
+	name: "statementSelect";
+	children: StatementSelectCstChildren;
+}
+
+export type StatementSelectCstChildren = {
+	statementSelectBegin: StatementSelectBeginCstNode[];
+	statementCase?: StatementCaseCstNode[];
+	statementSelectElse?: StatementSelectElseCstNode[];
+}
+
+// statementSelectBegin
+export interface StatementSelectBeginCstNode extends CstNode {
+	name: "statementSelectBegin";
+	children: StatementSelectBeginCstChildren;
+}
+
+export type StatementSelectBeginCstChildren = {
+	value: ExpressionCstNode[];
+}
+
+// statementCase
+export interface StatementCaseCstNode extends CstNode {
+	name: "statementCase";
+	children: StatementCaseCstChildren;
+}
+
+export type StatementCaseCstChildren = {
+	value?: ExpressionCstNode[];
+	statements: StatementsCstNode[];
+}
+
+// statementSelectElse
+export interface StatementSelectElseCstNode extends CstNode {
+	name: "statementSelectElse";
+	children: StatementSelectElseCstChildren;
+}
+
+export type StatementSelectElseCstChildren = {
+	statements: StatementsCstNode[];
+}
+
+// statementWhile
+export interface StatementWhileCstNode extends CstNode {
+	name: "statementWhile";
+	children: StatementWhileCstChildren;
+}
+
+export type StatementWhileCstChildren = {
+	statementWhileBegin: StatementWhileBeginCstNode[];
+	statements: StatementsCstNode[];
+}
+
+// statementWhileBegin
+export interface StatementWhileBeginCstNode extends CstNode {
+	name: "statementWhileBegin";
+	children: StatementWhileBeginCstChildren;
+}
+
+export type StatementWhileBeginCstChildren = {
+	condition: ExpressionCstNode[];
 }

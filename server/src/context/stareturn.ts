@@ -23,69 +23,28 @@
  */
 
 import { Context } from "./context";
-import { ClassVariableCstNode, FullyQualifiedClassNameCstNode, TypeModifiersCstNode } from "../nodeclasses";
 import { RemoteConsole } from "vscode-languageserver";
-import { TypeName } from "./typename";
 import { ContextBuilder } from "./contextBuilder";
+import { StatementReturnCstNode } from "../nodeclasses";
 
-export class ContextVariable extends Context{
-	protected _node: ClassVariableCstNode;
-	protected _typeModifiers: Context.TypeModifierSet;
-	protected _name: string;
-	protected _typename: TypeName;
-	protected _value?: Context;
+export class ContextReturn extends Context{
+	protected _node: StatementReturnCstNode;
 
-	constructor(node: ClassVariableCstNode,
-			    typemodNode: TypeModifiersCstNode | undefined,
-				typeNode: FullyQualifiedClassNameCstNode) {
-		super(Context.ContextType.Variable);
+	constructor(node: StatementReturnCstNode) {
+		super(Context.ContextType.IfElse);
 		this._node = node;
-		this._typeModifiers = new Context.TypeModifierSet(typemodNode);
-		this._name = node.children.name[0].image;
-		this._typename = new TypeName(typeNode);
-		
+
 		if (node.children.value) {
-			this._value = ContextBuilder.createExpression(node.children.value[0]);
+			this._children.push(ContextBuilder.createExpression(node.children.value[0]));
 		}
 	}
 
-	dispose(): void {
-		super.dispose()
-		this._typename.dispose();
-		this._value?.dispose;
-	}
-
-	public get node(): ClassVariableCstNode {
+	public get node(): StatementReturnCstNode {
 		return this._node;
 	}
 
-	public get typeModifiers(): Context.TypeModifierSet {
-		return this._typeModifiers;
-	}
-
-	public get name(): string {
-		return this._name;
-	}
-
-	public get typename(): TypeName {
-		return this._typename;
-	}
-
-	public get value(): Context | undefined {
-		return this._value;
-	}
-
 	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
-		console.log(`${prefix}Variable ${this._typeModifiers} ${this._typename.name} ${this._name}`);
-	}
-}
-
-export namespace ContextFunction {
-	/** Function type. */
-	export enum ContextFunctionType {
-		Constructor,
-		Destructor,
-		Operator,
-		Regular
+		console.log(`${prefix}Return`);
+		this.logChildren(console, prefixLines);
 	}
 }

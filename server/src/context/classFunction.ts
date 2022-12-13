@@ -27,6 +27,7 @@ import { ClassFunctionCstNode, FunctionBeginCstNode, InterfaceFunctionCstNode, T
 import { RemoteConsole } from "vscode-languageserver";
 import { TypeName } from "./typename";
 import { ContextFunctionArgument } from "./classFunctionArgument";
+import { ContextBuilder } from "./contextBuilder";
 
 export class ContextFunction extends Context{
 	protected _node: InterfaceFunctionCstNode | ClassFunctionCstNode;
@@ -80,9 +81,9 @@ export class ContextFunction extends Context{
 				let args = fdecl2.functionCall[0].children.argument;
 				if (args) {
 					if (fdecl2.this) {
-						this._thisCall = args.map(each => this.createExpression(each));
+						this._thisCall = args.map(each => ContextBuilder.createExpression(each));
 					} else if (fdecl2.super) {
-						this._superCall = args.map(each => this.createExpression(each));
+						this._superCall = args.map(each => ContextBuilder.createExpression(each));
 					}
 				}
 			}
@@ -183,7 +184,7 @@ export class ContextFunction extends Context{
 		}
 
 		if (cfdecl && cfdecl.children.statement) {
-			cfdecl.children.statement.forEach(each => this._children.push(this.createStatement(each)));
+			cfdecl.children.statement.forEach(each => this._children.push(ContextBuilder.createStatement(each)));
 		}
 	}
 
