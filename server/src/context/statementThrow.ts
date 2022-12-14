@@ -22,46 +22,46 @@
  * SOFTWARE.
  */
 
-import { Context } from "./context"
-import { FunctionArgumentCstNode } from "../nodeclasses/declareFunction";
-import { RemoteConsole } from "vscode-languageserver"
-import { TypeName } from "./typename";
-import { Identifier } from "./identifier";
+import { Context } from "./context";
+import { RemoteConsole } from "vscode-languageserver";
+import { ContextBuilder } from "./contextBuilder";
+import { StatementThrowCstNode } from "../nodeclasses/statementThrow";
 
 
-export class ContextFunctionArgument extends Context{
-	protected _node: FunctionArgumentCstNode;
-	protected _name: Identifier;
-	protected _typename: TypeName;
+export class ContextThrow extends Context{
+	protected _node: StatementThrowCstNode;
+	protected _exception?: Context;
 
 
-	constructor(node: FunctionArgumentCstNode) {
-		super(Context.ContextType.FunctionArgument)
-		this._node = node
-		this._name = new Identifier(node.children.name[0]);
-		this._typename = new TypeName(node.children.type[0]);
+	constructor(node: StatementThrowCstNode) {
+		super(Context.ContextType.Throw);
+		this._node = node;
+
+		if (node.children.exception) {
+			this._exception = ContextBuilder.createExpression(node.children.exception[0]);
+		}
 	}
 
-	dispose(): void {
-		super.dispose()
-		this._typename.dispose();
+	public dispose(): void {
+		super.dispose();
+		this._exception?.dispose();
 	}
 
 
-	public get node(): FunctionArgumentCstNode {
-		return this._node
+	public get node(): StatementThrowCstNode {
+		return this._node;
 	}
 
-	public get name(): Identifier {
-		return this._name
-	}
-
-	public get typename(): TypeName {
-		return this._typename
+	public get exception(): Context | undefined {
+		return this._exception;
 	}
 
 	
-	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
-		console.log(`${prefix}Argument ${this._typename.name} ${this._name}`)
+	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
+		if (this._exception) {
+			this._exception?.log(console, `${prefix}Throw: `, `${prefixLines}  `);
+		} else {
+			console.log(`${prefix}Throw`);
+		}
 	}
 }

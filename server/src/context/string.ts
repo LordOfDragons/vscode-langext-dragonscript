@@ -22,29 +22,37 @@
  * SOFTWARE.
  */
 
-import { Context } from "./context"
-import { EnumerationEntryCstNode } from "../nodeclasses"
-import { RemoteConsole } from "vscode-languageserver"
+import { IToken } from "chevrotain"
 
-export class ContextEnumEntry extends Context{
-	protected _node: EnumerationEntryCstNode;
-	protected _name: string;
 
-	constructor(node: EnumerationEntryCstNode) {
-		super(Context.ContextType.EnumerationEntry)
-		this._node = node
-		this._name = node.children.name[0].image;
+export class LiteralString {
+	protected _token?: IToken;
+	protected _string: string;
+
+
+	constructor(token?: IToken, name?: string) {
+		this._token = token;
+
+		if(name) {
+			this._string = name;
+		} else if (token) {
+			this._string = token.image;
+		} else {
+			throw "Token and name can not both be undefined";
+		}
 	}
 
-	public get node(): EnumerationEntryCstNode {
-		return this._node
+
+	public get token(): IToken | undefined {
+		return this._token
 	}
 
 	public get name(): string {
-		return this._name
+		return this._string
 	}
 
-	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
-		console.log(`${prefix}Entry ${this._name}`)
+	
+	toString() : string {
+		return this._string;
 	}
 }

@@ -23,51 +23,85 @@
  */
 
 import { Context } from "./context";
-import { StatementSelectCstNode } from "../nodeclasses";
+import { StatementCaseCstNode, StatementSelectCstNode } from "../nodeclasses/statementSelect";
 import { RemoteConsole } from "vscode-languageserver";
 import { ContextBuilder } from "./contextBuilder";
 import { ContextStatements } from "./statements";
 
-export class ContextSelect extends Context{
+
+export class ContextSelectCase {
+	protected _node: StatementCaseCstNode;
+	protected _values: Context[];
+	protected _statements: ContextStatements;
+
+
+	constructor(node: StatementCaseCstNode) {
+		this._node = node;
+		this._values = [];
+
+		node.children.value?.forEach(each => {
+			this._values.push(ContextBuilder.createExpression(each));
+		});
+		
+		this._statements = new ContextStatements(node.children.statements[0]);
+	}
+
+	public dispose(): void {
+		this._values.forEach(each => each.dispose());
+		this._statements.dispose();
+	}
+
+
+	public get values(): Context[] {
+		return this._values;
+	}
+	
+	public get statements(): ContextStatements {
+		return this._statements;
+	}
+
+
+	log(console: RemoteConsole, prefix: string = ""): void {
+		console.log(`${prefix}- Case`);
+		this._values.forEach(each => each.log(console, `${prefix}  - Val: `, `${prefix}    `));
+		this._statements.log(console, `${prefix}  - `, `${prefix}    `);
+	}
+}
+
+
+export class ContextSelect extends Context {
 	protected _node: StatementSelectCstNode;
 	protected _value: Context;
-	protected _casevalues: Context[][];
-	protected _casestatements: ContextStatements[];
+	protected _cases: ContextSelectCase[];
 	protected _elsestatements?: ContextStatements;
 
+
 	constructor(node: StatementSelectCstNode) {
-		super(Context.ContextType.IfElse);
+		super(Context.ContextType.Select);
 		this._node = node;
-		this._casevalues = [];
-		this._casestatements = [];
+		this._cases = [];
 
 		let selbegin = node.children.statementSelectBegin[0].children;
 		this._value = ContextBuilder.createExpression(selbegin.value[0]);
-		this._children.push(this._value);
 
 		if (node.children.statementCase) {
 			node.children.statementCase.forEach(each => {
-				var values: Context[] = [];
-				if (each.children.value) {
-					each.children.value.forEach(each2 => {
-						let value = ContextBuilder.createExpression(each2);
-						values.push(value);
-						this._children.push(value);
-					})
-				}
-				this._casevalues.push(values);
-				
-				let sta = new ContextStatements(each.children.statements[0]);
-				this._casestatements.push(sta);
-				this._children.push(sta);
+				this._cases.push(new ContextSelectCase(each));
 			});
 		}
 
 		if (node.children.statementSelectElse) {
 			this._elsestatements = new ContextStatements(node.children.statementSelectElse[0].children.statements[0]);
-			this._children.push(this._elsestatements);
 		}
 	}
+
+	public dispose(): void {
+		super.dispose();
+		this._value.dispose();
+		this._cases.forEach(each => each.dispose());
+		this._elsestatements?.dispose();
+	}
+
 
 	public get node(): StatementSelectCstNode {
 		return this._node;
@@ -77,33 +111,22 @@ export class ContextSelect extends Context{
 		return this._value;
 	}
 
-	public get casevalues(): Context[][] {
-		return this._casevalues;
-	}
-
-	public get casestatements(): ContextStatements[] {
-		return this._casestatements;
+	public get cases(): ContextSelectCase[] {
+		return this._cases;
 	}
 
 	public get elsestatements(): ContextStatements | undefined {
 		return this._elsestatements;
 	}
 
-	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
+
+	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
 		console.log(`${prefix}Select`);
-		this._value.log(console, `${prefixLines}- Value: `, `${prefixLines}  `);
-
-		let count = this._casevalues.length;
-		var i;
-		for (i=0; i<count; i++) {
-			this._casevalues[i].forEach(each => {
-				each.log(console, `${prefixLines}- SelVal: `, `${prefixLines}  `);
-			});
-			this._casestatements[i].log(console, `${prefixLines}- SelSta: `, `${prefixLines}  `);
-		}
-
+		this.logChild(this._value, console, prefixLines, "Value: ");
+		this._cases.forEach(each => each.log(console, prefixLines));
 		if (this._elsestatements) {
-			this._elsestatements.log(console, `${prefixLines}- Else: `, `${prefixLines}  `);
+			console.log(`${prefixLines}- Else`);
+			this.logChild(this._elsestatements, console, `${prefixLines}  `);
 		}
 	}
 }

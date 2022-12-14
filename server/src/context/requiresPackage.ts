@@ -24,27 +24,32 @@
 
 import { Context } from "./context";
 import { RemoteConsole } from "vscode-languageserver";
-import { ContextBuilder } from "./contextBuilder";
-import { StatementReturnCstNode } from "../nodeclasses";
+import { RequiresPackageCstNode } from "../nodeclasses/requiresPackage";
+import { LiteralString } from "./string";
 
-export class ContextReturn extends Context{
-	protected _node: StatementReturnCstNode;
 
-	constructor(node: StatementReturnCstNode) {
-		super(Context.ContextType.IfElse);
+export class ContextRequiresPackage extends Context{
+	protected _node: RequiresPackageCstNode;
+	protected _name: LiteralString;
+
+
+	constructor(node: RequiresPackageCstNode) {
+		super(Context.ContextType.PinNamespace);
 		this._node = node;
-
-		if (node.children.value) {
-			this._children.push(ContextBuilder.createExpression(node.children.value[0]));
-		}
+		this._name = new LiteralString(node.children.name[0]);
 	}
 
-	public get node(): StatementReturnCstNode {
+
+	public get node(): RequiresPackageCstNode {
 		return this._node;
 	}
 
-	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
-		console.log(`${prefix}Return`);
-		this.logChildren(console, prefixLines);
+	public get name(): LiteralString {
+		return this._name;
+	}
+
+	
+	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
+		console.log(`${prefix}Requires: ${this._name}`);
 	}
 }

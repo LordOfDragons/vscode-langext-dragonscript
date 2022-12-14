@@ -23,68 +23,80 @@
  */
 
 import { Context } from "./context";
-import { ScriptCstNode } from "../nodeclasses";
+import { ScriptCstNode } from "../nodeclasses/script";
 import { RemoteConsole } from "vscode-languageserver";
 import { ContextPinNamespace } from "./pinNamespace";
 import { ContextNamespace } from "./namespace";
-import { IToken } from "chevrotain";
 import { ContextClass } from "./scriptClass";
 import { ContextInterface } from "./scriptInterface";
 import { ContextEnumeration } from "./scriptEnum";
+import { ContextRequiresPackage } from "./requiresPackage";
+
 
 /** Top level script context. */
 export class ContextScript extends Context{
 	protected _node: ScriptCstNode;
-	protected _requiresPackage: IToken[];
+	protected _statements: Context[];
+	protected _requires: ContextRequiresPackage[];
+
 
 	constructor(node: ScriptCstNode) {
 		super(Context.ContextType.Script);
 		this._node = node;
-		this._requiresPackage = [];
+		this._statements = [];
+		this._requires = [];
 
 		var openNamespace: ContextNamespace | undefined = undefined;
 
 		node.children.scriptStatement.forEach(each => {
 			let c = each.children;
+			let statements = openNamespace ? openNamespace.statements : this._statements;
 
 			if (c.requiresPackage) {
-				this._requiresPackage.push(c.requiresPackage[0].children.name[0]);
+				let reqpack = new ContextRequiresPackage(c.requiresPackage[0]);
+				this._requires.push(reqpack);
+				statements.push(reqpack);
 			} else if(c.pinNamespace) {
-				(openNamespace ? openNamespace.children : this._children).push(new ContextPinNamespace(c.pinNamespace[0]));
+				statements.push(new ContextPinNamespace(c.pinNamespace[0]));
 			} else if (c.openNamespace) {
 				openNamespace = new ContextNamespace(c.openNamespace[0]);
-				this._children.push(openNamespace);
+				this._statements.push(openNamespace);
 			} else if (c.scriptDeclaration) {
 				let declNode = c.scriptDeclaration[0].children;
-				let typemod = declNode.typeModifiers ? declNode.typeModifiers[0] : undefined;
+				let typemod = declNode.typeModifiers?.at(0);
 				if (declNode.declareClass) {
-					(openNamespace ? openNamespace.children : this._children).push(new ContextClass(declNode.declareClass[0], typemod));
+					statements.push(new ContextClass(declNode.declareClass[0], typemod));
 				} else if (declNode.declareInterface) {
-					(openNamespace ? openNamespace.children : this._children).push(new ContextInterface(declNode.declareInterface[0], typemod));
+					statements.push(new ContextInterface(declNode.declareInterface[0], typemod));
 				} else if (declNode.declareEnumeration) {
-					(openNamespace ? openNamespace.children : this._children).push(new ContextEnumeration(declNode.declareEnumeration[0], typemod));
+					statements.push(new ContextEnumeration(declNode.declareEnumeration[0], typemod));
 				}
 			}
 		});
 	}
 
-	dispose(): void {
+	public dispose(): void {
 		super.dispose();
+		this._statements.forEach(each => each.dispose());
 	}
+
 
 	public get node(): ScriptCstNode{
 		return this._node;
 	}
 
-	public get requiresPackage(): IToken[] {
-		return this._requiresPackage;
+	public get requires(): ContextRequiresPackage[] {
+		return this._requires;
 	}
 
-	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
-		console.log(`${prefix}Script:`);
-		this._requiresPackage.forEach(each => {
-			console.log(`${prefix}- Requires ${each.image}`);
-		})
-		this.logChildren(console, prefixLines);
+	public get statements(): Context[] {
+		return this._statements;
+	}
+
+
+	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
+		console.log(`${prefix}Script`);
+		this.logChildren(this._requires, console, prefixLines);
+		this.logChildren(this._statements, console, prefixLines);
 	}
 }

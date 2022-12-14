@@ -22,46 +22,46 @@
  * SOFTWARE.
  */
 
-import { Context } from "./context"
-import { FunctionArgumentCstNode } from "../nodeclasses/declareFunction";
-import { RemoteConsole } from "vscode-languageserver"
-import { TypeName } from "./typename";
-import { Identifier } from "./identifier";
+import { Context } from "./context";
+import { RemoteConsole } from "vscode-languageserver";
+import { ContextBuilder } from "./contextBuilder";
+import { StatementReturnCstNode } from "../nodeclasses/statementReturn";
 
 
-export class ContextFunctionArgument extends Context{
-	protected _node: FunctionArgumentCstNode;
-	protected _name: Identifier;
-	protected _typename: TypeName;
+export class ContextReturn extends Context{
+	protected _node: StatementReturnCstNode;
+	private _value?: Context;
 
 
-	constructor(node: FunctionArgumentCstNode) {
-		super(Context.ContextType.FunctionArgument)
-		this._node = node
-		this._name = new Identifier(node.children.name[0]);
-		this._typename = new TypeName(node.children.type[0]);
+	constructor(node: StatementReturnCstNode) {
+		super(Context.ContextType.Return);
+		this._node = node;
+
+		if (node.children.value) {
+			this._value = ContextBuilder.createExpression(node.children.value[0]);
+		}
 	}
 
-	dispose(): void {
-		super.dispose()
-		this._typename.dispose();
+	public dispose(): void {
+		super.dispose();
+		this._value?.dispose();
 	}
 
 
-	public get node(): FunctionArgumentCstNode {
-		return this._node
+	public get node(): StatementReturnCstNode {
+		return this._node;
 	}
 
-	public get name(): Identifier {
-		return this._name
+	protected get value(): Context | undefined {
+		return this._value;
 	}
 
-	public get typename(): TypeName {
-		return this._typename
-	}
 
-	
-	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
-		console.log(`${prefix}Argument ${this._typename.name} ${this._name}`)
+	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
+		if (this._value) {
+			this._value.log(console, `${prefix}Return: `, `${prefixLines}  `);
+		} else {
+			console.log(`${prefix}Return`);
+		}
 	}
 }

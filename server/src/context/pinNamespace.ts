@@ -23,13 +23,15 @@
  */
 
 import { Context } from "./context";
-import { PinNamespaceCstNode } from "../nodeclasses";
+import { PinNamespaceCstNode } from "../nodeclasses/pinNamespace";
 import { RemoteConsole } from "vscode-languageserver";
 import { TypeName } from "./typename";
+
 
 export class ContextPinNamespace extends Context{
 	protected _node: PinNamespaceCstNode;
 	protected _typename: TypeName;
+
 
 	constructor(node: PinNamespaceCstNode) {
 		super(Context.ContextType.PinNamespace);
@@ -42,6 +44,7 @@ export class ContextPinNamespace extends Context{
 		this._typename?.dispose();
 	}
 
+
 	public get node(): PinNamespaceCstNode {
 		return this._node;
 	}
@@ -50,7 +53,8 @@ export class ContextPinNamespace extends Context{
 		return this._typename;
 	}
 
+
 	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
-		console.log(`${prefix}Pin Namespace: ${this._typename.name}`);
+		console.log(`${prefix}Pin: ${this._typename.name}`);
 	}
 }

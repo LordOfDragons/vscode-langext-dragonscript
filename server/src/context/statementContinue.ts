@@ -22,46 +22,27 @@
  * SOFTWARE.
  */
 
-import { Context } from "./context"
-import { FunctionArgumentCstNode } from "../nodeclasses/declareFunction";
-import { RemoteConsole } from "vscode-languageserver"
-import { TypeName } from "./typename";
-import { Identifier } from "./identifier";
+import { Context } from "./context";
+import { RemoteConsole } from "vscode-languageserver";
+import { IToken } from "chevrotain";
 
 
-export class ContextFunctionArgument extends Context{
-	protected _node: FunctionArgumentCstNode;
-	protected _name: Identifier;
-	protected _typename: TypeName;
+export class ContextContinue extends Context{
+	protected _node: IToken;
 
 
-	constructor(node: FunctionArgumentCstNode) {
-		super(Context.ContextType.FunctionArgument)
-		this._node = node
-		this._name = new Identifier(node.children.name[0]);
-		this._typename = new TypeName(node.children.type[0]);
-	}
-
-	dispose(): void {
-		super.dispose()
-		this._typename.dispose();
+	constructor(node: IToken) {
+		super(Context.ContextType.Continue);
+		this._node = node;
 	}
 
 
-	public get node(): FunctionArgumentCstNode {
-		return this._node
+	public get node(): IToken {
+		return this._node;
 	}
 
-	public get name(): Identifier {
-		return this._name
-	}
 
-	public get typename(): TypeName {
-		return this._typename
-	}
-
-	
 	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
-		console.log(`${prefix}Argument ${this._typename.name} ${this._name}`)
+		console.log(`${prefix}Continue`);
 	}
 }

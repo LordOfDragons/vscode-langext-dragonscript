@@ -224,7 +224,7 @@ export class DSParser extends CstParser{
 		this.OPTION({
 			GATE: () => (this.lastTypeModifiers & DSParser.typeModAbstract) == 0,
 			DEF: () => {
-				this.MANY(() => this.SUBRULE(this.statement))
+				this.SUBRULE(this.statements)
 				this.SUBRULE(this.functionEnd)
 			}
 		})

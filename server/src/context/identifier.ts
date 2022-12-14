@@ -22,46 +22,37 @@
  * SOFTWARE.
  */
 
-import { Context } from "./context"
-import { FunctionArgumentCstNode } from "../nodeclasses/declareFunction";
-import { RemoteConsole } from "vscode-languageserver"
-import { TypeName } from "./typename";
-import { Identifier } from "./identifier";
+import { IToken } from "chevrotain"
 
 
-export class ContextFunctionArgument extends Context{
-	protected _node: FunctionArgumentCstNode;
-	protected _name: Identifier;
-	protected _typename: TypeName;
+export class Identifier {
+	protected _token?: IToken;
+	protected _name: string;
 
 
-	constructor(node: FunctionArgumentCstNode) {
-		super(Context.ContextType.FunctionArgument)
-		this._node = node
-		this._name = new Identifier(node.children.name[0]);
-		this._typename = new TypeName(node.children.type[0]);
-	}
+	constructor(token?: IToken, name?: string) {
+		this._token = token;
 
-	dispose(): void {
-		super.dispose()
-		this._typename.dispose();
+		if(name) {
+			this._name = name;
+		} else if (token) {
+			this._name = token.image;
+		} else {
+			throw "Token and name can not both be undefined";
+		}
 	}
 
 
-	public get node(): FunctionArgumentCstNode {
-		return this._node
+	public get token(): IToken | undefined {
+		return this._token
 	}
 
-	public get name(): Identifier {
+	public get name(): string {
 		return this._name
 	}
 
-	public get typename(): TypeName {
-		return this._typename
-	}
-
 	
-	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
-		console.log(`${prefix}Argument ${this._typename.name} ${this._name}`)
+	toString() : string {
+		return this._name;
 	}
 }

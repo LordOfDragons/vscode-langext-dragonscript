@@ -23,14 +23,45 @@
  */
 
 import { Context } from "./context"
-import { DeclareEnumerationCstNode, TypeModifiersCstNode } from "../nodeclasses"
+import { DeclareEnumerationCstNode, EnumerationEntryCstNode } from "../nodeclasses/declareEnumeration";
+import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
 import { RemoteConsole } from "vscode-languageserver"
-import { ContextEnumEntry } from "./scriptEnumEntry";
+import { Identifier } from "./identifier";
+
+
+export class ContextEnumEntry extends Context{
+	protected _node: EnumerationEntryCstNode;
+	protected _name: Identifier;
+
+
+	constructor(node: EnumerationEntryCstNode) {
+		super(Context.ContextType.EnumerationEntry)
+		this._node = node
+		this._name = new Identifier(node.children.name[0]);
+	}
+
+
+	public get node(): EnumerationEntryCstNode {
+		return this._node
+	}
+
+	public get name(): Identifier {
+		return this._name
+	}
+
+
+	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
+		console.log(`${prefix}Entry ${this._name}`)
+	}
+}
+
 
 export class ContextEnumeration extends Context{
 	protected _node: DeclareEnumerationCstNode;
-	protected _name: string;
+	protected _name: Identifier;
 	protected _typeModifiers: Context.TypeModifierSet;
+	protected _entries: ContextEnumEntry[];
+
 
 	constructor(node: DeclareEnumerationCstNode, typemodNode: TypeModifiersCstNode | undefined) {
 		super(Context.ContextType.Interface);
@@ -39,22 +70,26 @@ export class ContextEnumeration extends Context{
 		let edeclBegin = edecl.enumerationBegin[0].children;
 
 		this._node = node;
-		this._name = edeclBegin.name[0].image;
+		this._name = new Identifier(edeclBegin.name[0]);
 		this._typeModifiers = new Context.TypeModifierSet(typemodNode);
+		this._entries = [];
 
-		if (edecl.enumerationBody) {
-			let nodeBody = edecl.enumerationBody[0].children.enumerationEntry;
-			if (nodeBody) {
-				nodeBody.forEach(each => this._children.push(new ContextEnumEntry(each)));
-			}
-		}
+		edecl.enumerationBody[0].children.enumerationEntry?.forEach(each => {
+			this._entries.push(new ContextEnumEntry(each));
+		});
 	}
+
+	public dispose(): void {
+		super.dispose();
+		this._entries.forEach(each => each.dispose());
+	}
+
 
 	public get node(): DeclareEnumerationCstNode {
 		return this._node;
 	}
 
-	public get name(): string {
+	public get name(): Identifier {
 		return this._name;
 	}
 
@@ -62,8 +97,13 @@ export class ContextEnumeration extends Context{
 		return this._typeModifiers;
 	}
 
-	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
+	public get entries(): ContextEnumEntry[] {
+		return this._entries;
+	}
+
+
+	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
 		console.log(`${prefix}Enumeration: ${this._name} ${this._typeModifiers}`);
-		this.logChildren(console, prefixLines);
+		this.logChildren(this._entries, console, prefixLines);
 	}
 }

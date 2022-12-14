@@ -25,27 +25,39 @@
 import { Context } from "./context";
 import { RemoteConsole } from "vscode-languageserver";
 import { ContextBuilder } from "./contextBuilder";
-import { StatementsCstNode } from "../nodeclasses";
+import { StatementsCstNode } from "../nodeclasses/statement";
+
 
 export class ContextStatements extends Context{
 	protected _node?: StatementsCstNode;
+	protected _statements: Context[];
+
 
 	constructor(node?: StatementsCstNode) {
 		super(Context.ContextType.Statements);
 		this._node = node;
-		if (node && node.children.statement) {
-			node.children.statement.forEach(each => {
-				this._children.push(ContextBuilder.createStatement(each));
-			})
-		}
+		this._statements = [];
+		node?.children.statement?.forEach(each => {
+			this._statements.push(ContextBuilder.createStatement(each));
+		});
 	}
+	
+	public dispose(): void {
+		super.dispose();
+		this._statements.forEach(each => each.dispose());
+	}
+
 
 	public get node(): StatementsCstNode | undefined {
 		return this._node;
 	}
 
-	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
-		console.log(`${prefix}Statements:`);
-		this.logChildren(console, prefixLines);
+	public get statements(): Context[] {
+		return this._statements;
+	}
+
+
+	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
+		this._statements.forEach(each => each.log(console, prefix, prefixLines));
 	}
 }

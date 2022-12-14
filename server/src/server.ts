@@ -44,7 +44,7 @@ import {
 import { DSParser } from './parser'
 import { DSLexer } from './lexer'
 import { ContextScript } from "./context/script"
-import { ScriptCstNode } from './nodeclasses'
+import { ScriptCstNode } from "./nodeclasses/script"
 
 // Create a connection for the server, using Node's IPC as a transport.
 // Also include all preview / proposed LSP features.

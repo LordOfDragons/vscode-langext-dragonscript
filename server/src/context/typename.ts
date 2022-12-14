@@ -23,33 +23,29 @@
  */
 
 import { IToken } from "chevrotain"
-import { FullyQualifiedClassNameCstNode } from "../nodeclasses"
+import { FullyQualifiedClassNameCstNode } from "../nodeclasses/fullyQualifiedClassName"
+import { Identifier } from "./identifier"
+
 
 export class TypeNamePart {
-	protected _token?: IToken
-	protected _name: string
+	protected _name: Identifier;
 	protected _target?: any
 
-	constructor(token?: IToken) {
-		this._token = token
-		this._name = token ? token.image : "";
+
+	constructor(token?: IToken, name?: string) {
+		this._name = new Identifier(token, name);
 	}
 
 	dispose(): void {
 		this._target = undefined
 	}
 
+
 	public static named(name: string): TypeNamePart {
-		var part = new TypeNamePart();
-		part._name = name;
-		return part;
+		return new TypeNamePart(undefined, name);
 	}
 
-	public get token(): IToken | undefined {
-		return this._token
-	}
-
-	public get name(): string {
+	public get name(): Identifier {
 		return this._name
 	}
 
@@ -58,10 +54,12 @@ export class TypeNamePart {
 	}
 }
 
+
 export class TypeName {
 	protected _node?: FullyQualifiedClassNameCstNode
 	protected _parts: TypeNamePart[]
 	protected _name: string
+
 
 	constructor(node?: FullyQualifiedClassNameCstNode) {
 		this._node = node
@@ -76,12 +74,13 @@ export class TypeName {
 			this._parts.push(new TypeNamePart(each))
 		})
 		
-		this._name = this._parts.map(x => x.name).reduce((a, b) => `${a}.${b}`)
+		this._name = this._parts.map(x => x.name.name).reduce((a, b) => `${a}.${b}`)
 	}
 
 	dispose(): void {
 		this._parts.forEach(each => each.dispose())
 	}
+
 
 	public static typeNamed(name: string): TypeName {
 		var tn = new TypeName();
@@ -106,5 +105,10 @@ export class TypeName {
 
 	public get parts(): TypeNamePart[] {
 		return this._parts
+	}
+
+	
+	toString() : string {
+		return this._name;
 	}
 }

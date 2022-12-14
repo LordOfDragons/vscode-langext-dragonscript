@@ -23,77 +23,82 @@
  */
 
 import { Context } from "./context";
-import { ClassVariableCstNode } from "../nodeclasses/declareClass";
-import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
-import { FullyQualifiedClassNameCstNode } from "../nodeclasses/fullyQualifiedClassName";
 import { RemoteConsole } from "vscode-languageserver";
+import { StatementVariableCstNode, StatementVariablesCstNode } from "../nodeclasses/statementVariables";
 import { TypeName } from "./typename";
-import { ContextBuilder } from "./contextBuilder";
 import { Identifier } from "./identifier";
+import { ContextBuilder } from "./contextBuilder";
 
 
-export class ContextVariable extends Context{
-	protected _node: ClassVariableCstNode;
-	protected _typeModifiers: Context.TypeModifierSet;
+export class ContextVariablesVariable {
+	protected _node: StatementVariableCstNode;
 	protected _name: Identifier;
-	protected _typename: TypeName;
 	protected _value?: Context;
 
 
-	constructor(node: ClassVariableCstNode,
-			    typemodNode: TypeModifiersCstNode | undefined,
-				typeNode: FullyQualifiedClassNameCstNode) {
-		super(Context.ContextType.Variable);
+	constructor(node: StatementVariableCstNode) {
 		this._node = node;
-		this._typeModifiers = new Context.TypeModifierSet(typemodNode);
 		this._name = new Identifier(node.children.name[0]);
-		this._typename = new TypeName(typeNode);
-		
 		if (node.children.value) {
 			this._value = ContextBuilder.createExpression(node.children.value[0]);
 		}
 	}
 
-	dispose(): void {
-		super.dispose()
+	public dispose(): void {
+		this._value?.dispose();
+	}
+
+
+	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
+		if (this._value) {
+			this._value.log(console, `${prefix}- ${this._name} = `, `${prefix}  `);
+		} else {
+			console.log(`${prefix}- ${this._name}`);
+		}
+	}
+}
+
+
+export class ContextVariables extends Context {
+	protected _node: StatementVariablesCstNode;
+	protected _typename: TypeName;
+	protected _variables: ContextVariablesVariable[];
+
+
+	constructor(node: StatementVariablesCstNode) {
+		super(Context.ContextType.Break);
+		this._node = node;
+		
+		this._typename = new TypeName(node.children.type[0]);
+		this._variables = [];
+
+		node.children.statementVariable?.forEach(each => {
+			this._variables.push(new ContextVariablesVariable(each));
+		});
+	}
+
+	public dispose(): void {
+		super.dispose();
 		this._typename.dispose();
-		this._value?.dispose;
+		this._variables?.forEach(each => each.dispose);
 	}
 
 
-	public get node(): ClassVariableCstNode {
+	public get node(): StatementVariablesCstNode {
 		return this._node;
-	}
-
-	public get typeModifiers(): Context.TypeModifierSet {
-		return this._typeModifiers;
-	}
-
-	public get name(): Identifier {
-		return this._name;
 	}
 
 	public get typename(): TypeName {
 		return this._typename;
 	}
 
-	public get value(): Context | undefined {
-		return this._value;
+	public get variables(): ContextVariablesVariable[] {
+		return this._variables;
 	}
 
 
 	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
-		console.log(`${prefix}Variable ${this._typeModifiers} ${this._typename.name} ${this._name}`);
-	}
-}
-
-
-export namespace ContextFunction {
-	/** Function type. */
-	export enum ContextFunctionType {
-		Constructor,
-		Destructor,
-		Operator,
-		Regular
+		console.log(`${prefix}Variables ${this._typename}`);
+		this._variables.forEach(each => each.log(console, prefixLines));
 	}
 }

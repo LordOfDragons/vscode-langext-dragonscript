@@ -23,24 +23,33 @@
  */
 
 import { Context } from "./context";
-import { ClassFunctionCstNode, FunctionBeginCstNode, InterfaceFunctionCstNode, TypeModifiersCstNode } from "../nodeclasses";
+import { FunctionBeginCstNode } from "../nodeclasses/declareFunction";
+import { InterfaceFunctionCstNode } from "../nodeclasses/declareInterface";
+import { ClassFunctionCstNode } from "../nodeclasses/declareClass";
+import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
 import { RemoteConsole } from "vscode-languageserver";
 import { TypeName } from "./typename";
 import { ContextFunctionArgument } from "./classFunctionArgument";
 import { ContextBuilder } from "./contextBuilder";
+import { Identifier } from "./identifier";
+import { ContextStatements } from "./statements";
+
 
 export class ContextFunction extends Context{
 	protected _node: InterfaceFunctionCstNode | ClassFunctionCstNode;
 	protected _typeModifiers: Context.TypeModifierSet;
 	protected _functionType: ContextFunction.ContextFunctionType;
-	protected _name: string;
+	protected _name: Identifier;
 	protected _returnType?: TypeName;
 	protected _arguments: ContextFunctionArgument[];
 	protected _thisCall?: Context[];
 	protected _superCall?: Context[];
+	protected _statements?: ContextStatements;
+
 
 	constructor(node: InterfaceFunctionCstNode | ClassFunctionCstNode,
-			    typemodNode: TypeModifiersCstNode | undefined, ownerTypeName: string) {
+			    typemodNode: TypeModifiersCstNode | undefined,
+				ownerTypeName: string) {
 		super(Context.ContextType.Function);
 		this._node = node;
 		this._arguments = [];
@@ -58,7 +67,7 @@ export class ContextFunction extends Context{
 
 		if (!fdecl) {
 			this._functionType = ContextFunction.ContextFunctionType.Regular;
-			this._name = "??";
+			this._name = new Identifier(undefined, "??");
 			this._returnType = TypeName.typeVoid();
 			return;
 		}
@@ -66,7 +75,7 @@ export class ContextFunction extends Context{
 		if (fdecl.children.classConstructor) {
 			let fdecl2 = fdecl.children.classConstructor[0].children;
 			this._functionType = ContextFunction.ContextFunctionType.Constructor;
-			this._name = "new";
+			this._name = new Identifier(undefined, "new");
 			this._returnType = TypeName.typeNamed(ownerTypeName);
 			this._typeModifiers.add(Context.TypeModifier.Static);
 
@@ -90,7 +99,7 @@ export class ContextFunction extends Context{
 
 		} else if (fdecl.children.classDestructor) {
 			this._functionType = ContextFunction.ContextFunctionType.Destructor;
-			this._name = "destructor";
+			this._name = new Identifier(undefined, "destructor");
 			this._returnType = TypeName.typeVoid();
 
 		} else if (fdecl.children.regularFunction) {
@@ -98,7 +107,7 @@ export class ContextFunction extends Context{
 
 			if (fdecl2.name) {
 				this._functionType = ContextFunction.ContextFunctionType.Regular;
-				this._name = fdecl2.name[0].image;
+				this._name = new Identifier(fdecl2.name[0]);
 				this._returnType = new TypeName(fdecl2.returnType[0]);
 
 			} else if(fdecl2.operator) {
@@ -107,66 +116,66 @@ export class ContextFunction extends Context{
 				
 				let odecl = fdecl2.operator[0].children;
 				if (odecl.assignMultiply) {
-					this._name = "*=";
+					this._name = new Identifier(odecl.assignMultiply[0], "*=");
 				} else if(odecl.assignDivide) {
-					this._name = "/=";
+					this._name = new Identifier(odecl.assignDivide[0], "/=");
 				} else if(odecl.assignModulus) {
-					this._name = "%=";
+					this._name = new Identifier(odecl.assignModulus[0], "%=");
 				} else if(odecl.assignAdd) {
-					this._name = "+=";
+					this._name = new Identifier(odecl.assignAdd[0], "+=");
 				} else if(odecl.assignSubtract) {
-					this._name = "-=";
+					this._name = new Identifier(odecl.assignSubtract[0], "-=");
 				} else if(odecl.assignShiftLeft) {
-					this._name = "<<=";
+					this._name = new Identifier(odecl.assignShiftLeft[0], "<<=");
 				} else if(odecl.assignShiftRight) {
-					this._name = ">>=";
+					this._name = new Identifier(odecl.assignShiftRight[0], ">>=");
 				} else if(odecl.assignAnd) {
-					this._name = "&=";
+					this._name = new Identifier(odecl.assignAnd[0], "&=");
 				} else if(odecl.assignOr) {
-					this._name = "|=";
+					this._name = new Identifier(odecl.assignOr[0], "|=");
 				} else if(odecl.assignXor) {
-					this._name = "^=";
+					this._name = new Identifier(odecl.assignXor[0], "^=");
 				} else if(odecl.and) {
-					this._name = "&";
+					this._name = new Identifier(odecl.and[0], "&");
 				} else if(odecl.or) {
-					this._name = "|";
+					this._name = new Identifier(odecl.or[0], "|");
 				} else if(odecl.xor) {
-					this._name = "^";
+					this._name = new Identifier(odecl.xor[0], "^");
 				} else if(odecl.shiftLeft) {
-					this._name = "<<";
+					this._name = new Identifier(odecl.shiftLeft[0], "<<");
 				} else if(odecl.shiftRight) {
-					this._name = ">>";
+					this._name = new Identifier(odecl.shiftRight[0], ">>");
 				} else if(odecl.less) {
-					this._name = "<";
+					this._name = new Identifier(odecl.less[0], "<");
 				} else if(odecl.greater) {
-					this._name = ">";
+					this._name = new Identifier(odecl.greater[0], ">");
 				} else if(odecl.lessEqual) {
-					this._name = "<=";
+					this._name = new Identifier(odecl.lessEqual[0], "<=");
 				} else if(odecl.greaterEqual) {
-					this._name = ">=";
+					this._name = new Identifier(odecl.greaterEqual[0], ">=");
 				} else if(odecl.multiply) {
-					this._name = "*";
+					this._name = new Identifier(odecl.multiply[0], "*");
 				} else if(odecl.divide) {
-					this._name = "/";
+					this._name = new Identifier(odecl.divide[0], "/");
 				} else if(odecl.modulus) {
-					this._name = "%";
+					this._name = new Identifier(odecl.modulus[0], "%");
 				} else if(odecl.add) {
-					this._name = "+";
+					this._name = new Identifier(odecl.add[0], "+");
 				} else if(odecl.subtract) {
-					this._name = "-";
+					this._name = new Identifier(odecl.subtract[0], "-");
 				} else if(odecl.increment) {
-					this._name = "++";
+					this._name = new Identifier(odecl.increment[0], "++");
 				} else if(odecl.decrement) {
-					this._name = "--";
+					this._name = new Identifier(odecl.decrement[0], "--");
 				} else if(odecl.inverse) {
-					this._name = "~";
+					this._name = new Identifier(odecl.inverse[0], "~");
 				} else {
-					this._name = "??";
+					this._name = new Identifier(undefined, "??");
 				}
 
 			} else {
 				this._functionType = ContextFunction.ContextFunctionType.Regular;
-				this._name = "??";
+				this._name = new Identifier(undefined, "??");
 				this._returnType = TypeName.typeVoid();
 			}
 
@@ -179,12 +188,12 @@ export class ContextFunction extends Context{
 
 		} else {
 			this._functionType = ContextFunction.ContextFunctionType.Regular;
-			this._name = "??";
+			this._name = new Identifier(undefined, "??");
 			this._returnType = TypeName.typeVoid();
 		}
 
-		if (cfdecl && cfdecl.children.statement) {
-			cfdecl.children.statement.forEach(each => this._children.push(ContextBuilder.createStatement(each)));
+		if (cfdecl && cfdecl.children.statements) {
+			this._statements = new ContextStatements(cfdecl.children.statements[0]);
 		}
 	}
 
@@ -194,7 +203,9 @@ export class ContextFunction extends Context{
 		this._arguments.forEach(each => each.dispose);
 		this._thisCall?.forEach(each => each.dispose);
 		this._superCall?.forEach(each => each.dispose);
+		this._statements?.dispose();
 	}
+
 
 	public get node(): InterfaceFunctionCstNode | ClassFunctionCstNode {
 		return this._node;
@@ -208,7 +219,7 @@ export class ContextFunction extends Context{
 		return this._functionType;
 	}
 
-	public get name(): string {
+	public get name(): Identifier {
 		return this._name;
 	}
 
@@ -227,6 +238,11 @@ export class ContextFunction extends Context{
 	public get superCall(): Context[] | undefined{
 		return this._superCall;
 	}
+
+	public get statements(): ContextStatements | undefined {
+		return this.statements;
+	}
+
 
 	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
 		var s = `${prefix}Function ${ContextFunction.ContextFunctionType[this._functionType]}: ${this._typeModifiers}`;
@@ -248,9 +264,10 @@ export class ContextFunction extends Context{
 			console.log(`${prefixLines}- super(${this._superCall.length} arguments)`);
 		}
 		
-		this.logChildren(console, prefixLines);
+		this.logChild(this._statements, console, prefixLines);
 	}
 }
+
 
 export namespace ContextFunction {
 	/** Function type. */

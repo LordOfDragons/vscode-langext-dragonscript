@@ -23,48 +23,83 @@
  */
 
 import { Context } from "./context";
-import { StatementIfCstNode } from "../nodeclasses";
+import { StatementElifCstNode, StatementIfCstNode } from "../nodeclasses/statementIf";
 import { RemoteConsole } from "vscode-languageserver";
 import { ContextBuilder } from "./contextBuilder";
 import { ContextStatements } from "./statements";
 
-export class ContextIf extends Context{
+
+export class ContextIfElif {
+	protected _node: StatementElifCstNode;
+	protected _condition: Context;
+	protected _statements: ContextStatements;
+
+
+	constructor(node: StatementElifCstNode) {
+		this._node = node;
+		this._condition = ContextBuilder.createExpression(node.children.condition[0]);
+		this._statements = new ContextStatements(node.children.statements[0]);
+	}
+
+	public dispose(): void {
+		this._condition.dispose()
+		this._statements.dispose()
+	}
+
+
+	public get condition(): Context {
+		return this._condition;
+	}
+
+	public get statements(): ContextStatements {
+		return this._statements;
+	}
+
+
+	log(console: RemoteConsole, prefix: string = "") {
+		console.log(`${prefix}- Elif`);
+		this._condition.log(console, `${prefix}  - Cond: `, `${prefix}    `);
+		this._statements.log(console, `${prefix}  - `, `${prefix}    `);
+	}
+}
+
+
+export class ContextIf extends Context {
 	protected _node: StatementIfCstNode;
 	protected _condition: Context;
 	protected _ifstatements: ContextStatements;
-	protected _elifconditions: Context[];
-	protected _elifstatements: ContextStatements[];
+	protected _elif: ContextIfElif[];
 	protected _elsestatements?: ContextStatements;
 
+
 	constructor(node: StatementIfCstNode) {
-		super(Context.ContextType.IfElse);
+		super(Context.ContextType.If);
 		this._node = node;
-		this._elifconditions = [];
-		this._elifstatements = [];
+		this._elif = [];
 
 		let ifbegin = node.children.statementIfBegin[0].children;
 		this._condition = ContextBuilder.createExpression(ifbegin.condition[0]);
-		this._children.push(this._condition);
 		this._ifstatements = new ContextStatements(ifbegin.statements[0]);
-		this._children.push(this._ifstatements);
 
 		if (node.children.statementElif) {
 			node.children.statementElif.forEach(each => {
-				let cond = ContextBuilder.createExpression(each.children.condition[0]);
-				this._elifconditions.push(cond);
-				this._children.push(cond);
-				
-				let sta = new ContextStatements(each.children.statements[0]);
-				this._elifstatements.push(sta);
-				this._children.push(sta);
+				this._elif.push(new ContextIfElif(each));
 			});
 		}
 
 		if (node.children.statementElse) {
 			this._elsestatements = new ContextStatements(node.children.statementElse[0].children.statements[0]);
-			this._children.push(this._elsestatements);
 		}
 	}
+
+	public dispose(): void {
+		super.dispose();
+		this._condition.dispose();
+		this._ifstatements.dispose();
+		this._elif.forEach(each => each.dispose());
+		this._elsestatements?.dispose();
+	}
+
 
 	public get node(): StatementIfCstNode {
 		return this._node;
@@ -78,32 +113,24 @@ export class ContextIf extends Context{
 		return this._ifstatements;
 	}
 
-	public get elifconditions(): Context[] {
-		return this._elifconditions;
-	}
-
-	public get elifstatements(): ContextStatements[] {
-		return this._elifstatements;
+	public get elif(): ContextIfElif[] {
+		return this._elif;
 	}
 
 	public get elsestatements(): ContextStatements | undefined {
 		return this._elsestatements;
 	}
 
-	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
+
+	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
 		console.log(`${prefix}If-Else`);
-		this._condition.log(console, `${prefixLines}- Cond: `, `${prefixLines}  `);
-		this._ifstatements.log(console, `${prefixLines}- If: `, `${prefixLines}  `);
-
-		let count = this._elifconditions.length;
-		var i;
-		for (i=0; i<count; i++) {
-			this._elifconditions[i].log(console, `${prefixLines}- ElifCond: `, `${prefixLines}  `);
-			this._elifstatements[i].log(console, `${prefixLines}- ElifSta: `, `${prefixLines}  `);
-		}
-
+		this.logChild(this._condition, console, prefixLines, "Cond: ");
+		console.log(`${prefixLines}- If`);
+		this.logChild(this._ifstatements, console, `${prefixLines}  `);
+		this._elif.forEach(each => each.log(console, prefixLines));
 		if (this._elsestatements) {
-			this._elsestatements.log(console, `${prefixLines}- Else: `, `${prefixLines}  `);
+			console.log(`${prefixLines}- Else`);
+			this.logChild(this._elsestatements, console, `${prefixLines}  `);
 		}
 	}
 }

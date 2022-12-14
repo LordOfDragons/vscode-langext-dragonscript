@@ -22,12 +22,20 @@
  * SOFTWARE.
  */
 
-import { ExpressionCstNode, StatementCstNode } from "../nodeclasses";
+import { StatementCstNode } from "../nodeclasses/statement";
+import { ExpressionCstNode } from "../nodeclasses/expression";
 import { Context } from "./context";
-import { ContextIf } from "./staif";
-import { ContextReturn } from "./stareturn";
-import { ContextSelect } from "./staselect";
-import { ContextWhile } from "./stawhile";
+import { ContextIf } from "./statementIf";
+import { ContextReturn } from "./statementReturn";
+import { ContextSelect } from "./statementSelect";
+import { ContextWhile } from "./statementWhile";
+import { ContextFor } from "./statementFor";
+import { ContextTry } from "./statementTry";
+import { ContextThrow } from "./statementThrow";
+import { ContextBreak } from "./statementBreak";
+import { ContextContinue } from "./statementContinue";
+import { ContextVariables } from "./statementVariables";
+
 
 /** Context builder. */
 export class ContextBuilder{
@@ -42,17 +50,17 @@ export class ContextBuilder{
 		} else if (node.children.statementWhile) {
 			return new ContextWhile(node.children.statementWhile[0]);
 		} else if (node.children.statementFor) {
-
+			return new ContextFor(node.children.statementFor[0]);
 		} else if (node.children.break) {
-
+			return new ContextBreak(node.children.break[0]);
 		} else if (node.children.continue) {
-
+			return new ContextContinue(node.children.continue[0]);
 		} else if (node.children.statementThrow) {
-
+			return new ContextThrow(node.children.statementThrow[0]);
 		} else if (node.children.statementTry) {
-
+			return new ContextTry(node.children.statementTry[0]);
 		} else if (node.children.statementVariables) {
-
+			return new ContextVariables(node.children.statementVariables[0]);
 		} else if (node.children.expression) {
 			return ContextBuilder.createExpression(node.children.expression[0]);
 		}

@@ -23,24 +23,30 @@
  */
 
 import { Context } from "./context";
-import { OpenNamespaceCstNode } from "../nodeclasses";
+import { OpenNamespaceCstNode } from "../nodeclasses/openNamespace";
 import { RemoteConsole } from "vscode-languageserver";
 import { TypeName } from "./typename";
+
 
 export class ContextNamespace extends Context{
 	protected _node: OpenNamespaceCstNode;
 	protected _typename: TypeName;
+	protected _statements: Context[];
+
 
 	constructor(node: OpenNamespaceCstNode) {
 		super(Context.ContextType.Namespace);
 		this._node = node;
 		this._typename = new TypeName(node.children.name[0]);
+		this._statements = [];
 	}
 
 	dispose(): void {
 		super.dispose()
 		this._typename?.dispose();
+		this._statements.forEach(each => each.dispose());
 	}
+
 
 	public get node(): OpenNamespaceCstNode {
 		return this._node;
@@ -50,8 +56,13 @@ export class ContextNamespace extends Context{
 		return this._typename;
 	}
 
+	public get statements(): Context[] {
+		return this._statements;
+	}
+
+
 	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
 		console.log(`${prefix}Namespace: ${this._typename.name}`);
-		this.logChildren(console, prefixLines);
+		this.logChildren(this._statements, console, prefixLines);
 	}
 }

@@ -23,61 +23,56 @@
  */
 
 import { RemoteConsole } from "vscode-languageserver";
-import { TypeModifiersCstNode } from "../nodeclasses";
+import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
+
 
 /** Base context. */
-export class Context{
+export class Context {
 	protected _type: Context.ContextType;
-	public parent: Context | undefined;
-	protected _children: Array<Context>;
+	public parent?: Context;
 
-	constructor(type: Context.ContextType){
+
+	constructor(type: Context.ContextType) {
 		this._type = type;
 		this.parent = undefined;
-		this._children = [];
 	}
 
 	/** Dispose of context. */
-	dispose(){
-		this._children?.forEach(each => each.dispose());
-		this._children?.splice(0);
+	dispose(): void {
 		this.parent = undefined;
 	}
+
 
 	/** Type. */
 	public get type(): Context.ContextType{
 		return this._type;
 	}
 
-	/** Child contexts. */
-	public get children(): Array<Context>{
-		return this._children;
-	}
 
 	/** Debug. */
-	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
+	log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
 		console.log(`${prefix}Context: ${Context.ContextType[this._type]}`);
-		this.logChildren(console, prefixLines);
 	}
 
 	/** Debug log children. */
-	protected logChildren(console: RemoteConsole, prefix: string) {
-		let prefixChild = `${prefix}- `;
-		let prefixLinesChild = `${prefix}  `;
-		this._children.forEach(each => {
-			each.log(console, prefixChild, prefixLinesChild);
-		})
+	protected logChildren(children: Context[] | undefined, console: RemoteConsole, prefix: string) {
+		if (children) {
+			let prefixChild = `${prefix}- `;
+			let prefixLinesChild = `${prefix}  `;
+			children.forEach(each => each.log(console, prefixChild, prefixLinesChild));
+		}
 	}
 
-	/** Set to log string. */
-	protected logStringSet(set: Set<any>, enumClass: any) {
-		if (set && set.size > 0) {
-			return Array.from(set.values()).map(x => enumClass[x]).reduce((a, b) => `${a}, ${b}`);
-		} else {
-			return "()";
+	/** Debug log child. */
+	protected logChild(child: Context | undefined, console: RemoteConsole, prefix: string, prefixSuffix: string = "") {
+		if (child) {
+			let prefixChild = `${prefix}- ${prefixSuffix}`;
+			let prefixLinesChild = `${prefix}  `;
+			child.log(console, prefixChild, prefixLinesChild);
 		}
 	}
 }
+
 
 export namespace Context {
 	/** Context type. */
@@ -92,10 +87,18 @@ export namespace Context {
 		Function,
 		FunctionArgument,
 		Variable,
-		IfElse,
+		Return,
+		Break,
+		Continue,
+		If,
+		While,
+		Select,
+		For,
+		Throw,
 		Statements,
 		Generic
 	}
+
 
 	/** Type modifier. */
 	export enum TypeModifier {
@@ -107,6 +110,7 @@ export namespace Context {
 		Static,
 		Native
 	}
+
 
 	/** Type modifier set. */
 	export class TypeModifierSet extends Set<Context.TypeModifier> {
@@ -142,9 +146,12 @@ export namespace Context {
 			})
 		}
 
+
 		toString() : string {
 			if (this.size > 0) {
-				return "(" + Array.from(this.values()).map(x => Context.TypeModifier[x]).reduce((a, b) => `${a}, ${b}`) + ")";
+				return "(" + Array.from(this.values())
+					.map(x => Context.TypeModifier[x])
+					.reduce((a, b) => `${a}, ${b}`) + ")";
 			} else {
 				return "()";
 			}

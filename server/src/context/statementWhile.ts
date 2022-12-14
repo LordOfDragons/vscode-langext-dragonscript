@@ -23,26 +23,32 @@
  */
 
 import { Context } from "./context";
-import { StatementWhileCstNode } from "../nodeclasses";
+import { StatementWhileCstNode } from "../nodeclasses/statementWhile";
 import { RemoteConsole } from "vscode-languageserver";
 import { ContextBuilder } from "./contextBuilder";
 import { ContextStatements } from "./statements";
+
 
 export class ContextWhile extends Context{
 	protected _node: StatementWhileCstNode;
 	protected _condition: Context;
 	protected _statements: ContextStatements;
 	
+
 	constructor(node: StatementWhileCstNode) {
-		super(Context.ContextType.IfElse);
+		super(Context.ContextType.While);
 		this._node = node;
 
 		this._condition = ContextBuilder.createExpression(node.children.statementWhileBegin[0].children.condition[0]);
-		this._children.push(this._condition);
-
 		this._statements = new ContextStatements(node.children.statements[0]);
-		this._children.push(this._statements);
 	}
+
+	public dispose(): void {
+		super.dispose();
+		this._condition.dispose();
+		this._statements.dispose();
+	}
+
 
 	public get node(): StatementWhileCstNode {
 		return this._node;
@@ -56,9 +62,10 @@ export class ContextWhile extends Context{
 		return this._statements;
 	}
 
-	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
+	
+	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
 		console.log(`${prefix}While`);
-		this._condition.log(console, `${prefixLines}- Cond: `, `${prefixLines}  `);
-		this._statements.log(console, `${prefixLines}- Sta: `, `${prefixLines}  `);
+		this.logChild(this._condition, console, prefixLines, "Cond: ");
+		this.logChild(this._statements, console, prefixLines);
 	}
 }

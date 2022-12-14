@@ -23,18 +23,23 @@
  */
 
 import { Context } from "./context"
-import { DeclareInterfaceCstNode, TypeModifiersCstNode } from "../nodeclasses"
+import { DeclareInterfaceCstNode } from "../nodeclasses/declareInterface";
+import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
 import { RemoteConsole } from "vscode-languageserver"
 import { TypeName } from "./typename"
 import { ContextClass } from "./scriptClass";
 import { ContextEnumeration } from "./scriptEnum";
 import { ContextFunction } from "./classFunction";
+import { Identifier } from "./identifier";
+
 
 export class ContextInterface extends Context{
 	protected _node: DeclareInterfaceCstNode;
-	protected _name: string;
+	protected _name: Identifier;
 	protected _typeModifiers: Context.TypeModifierSet;
 	protected _extends?: TypeName;
+	protected _declarations: Context[];
+
 
 	constructor(node: DeclareInterfaceCstNode, typemodNode: TypeModifiersCstNode | undefined) {
 		super(Context.ContextType.Interface);
@@ -43,44 +48,42 @@ export class ContextInterface extends Context{
 		let ideclBegin = idecl.interfaceBegin[0].children;
 
 		this._node = node;
-		this._name = ideclBegin.name[0].image;
+		this._name = new Identifier(ideclBegin.name[0]);
 		this._typeModifiers = new Context.TypeModifierSet(typemodNode);
+		this._declarations = [];
 
 		if (ideclBegin.baseInterfaceName) {
 			this._extends = new TypeName(ideclBegin.baseInterfaceName[0]);
 		}
 
-		if (idecl.interfaceBody) {
-			let nodeBody = idecl.interfaceBody[0].children.interfaceBodyDeclaration;
-			if (nodeBody) {
-				nodeBody.forEach(each => {
-					let typemod = each.children.typeModifiers ? each.children.typeModifiers[0] : undefined;
-					if (each.children.declareClass) {
-						this._children.push(new ContextClass(each.children.declareClass[0], typemod));
-					} else if (each.children.declareInterface) {
-						this._children.push(new ContextInterface(each.children.declareInterface[0], typemod));
-					} else if (each.children.declareEnumeration) {
-						this._children.push(new ContextEnumeration(each.children.declareEnumeration[0], typemod));
-					} else if (each.children.interfaceFunction) {
-						var f = new ContextFunction(each.children.interfaceFunction[0], typemod, this._name);
-						f.typeModifiers.add(Context.TypeModifier.Abstract);
-						this._children.push(f);
-					}
-				});
+		idecl.interfaceBody[0].children.interfaceBodyDeclaration?.forEach(each => {
+			let typemod = each.children.typeModifiers?.at(0);
+			if (each.children.declareClass) {
+				this._declarations.push(new ContextClass(each.children.declareClass[0], typemod));
+			} else if (each.children.declareInterface) {
+				this._declarations.push(new ContextInterface(each.children.declareInterface[0], typemod));
+			} else if (each.children.declareEnumeration) {
+				this._declarations.push(new ContextEnumeration(each.children.declareEnumeration[0], typemod));
+			} else if (each.children.interfaceFunction) {
+				var f = new ContextFunction(each.children.interfaceFunction[0], typemod, this._name.name);
+				f.typeModifiers.add(Context.TypeModifier.Abstract);
+				this._declarations.push(f);
 			}
-		}
+		});
 	}
 
-	dispose(): void {
+	public dispose(): void {
 		super.dispose()
 		this._extends?.dispose()
+		this._declarations.forEach(each => each.dispose());
 	}
+
 
 	public get node(): DeclareInterfaceCstNode {
 		return this._node;
 	}
 
-	public get name(): string {
+	public get name(): Identifier {
 		return this._name;
 	}
 
@@ -92,11 +95,16 @@ export class ContextInterface extends Context{
 		return this._extends;
 	}
 
-	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
+	public get declarations(): Context[] {
+		return this._declarations;
+	}
+
+
+	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
 		console.log(`${prefix}Interface: ${this._typeModifiers} ${this._name}`);
 		if (this._extends) {
 			console.log(`${prefixLines}- Extend ${this._extends.name}`);
 		}
-		this.logChildren(console, prefixLines);
+		this.logChildren(this._declarations, console, prefixLines);
 	}
 }

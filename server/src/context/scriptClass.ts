@@ -23,20 +23,25 @@
  */
 
 import { Context } from "./context"
-import { DeclareClassCstNode, TypeModifiersCstNode } from "../nodeclasses"
+import { DeclareClassCstNode } from "../nodeclasses/declareClass";
+import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
 import { RemoteConsole } from "vscode-languageserver"
 import { TypeName } from "./typename"
 import { ContextInterface } from "./scriptInterface";
 import { ContextEnumeration } from "./scriptEnum";
 import { ContextFunction } from "./classFunction";
 import { ContextVariable } from "./classVariable";
+import { Identifier } from "./identifier";
+
 
 export class ContextClass extends Context{
 	protected _node: DeclareClassCstNode;
-	protected _name: string;
+	protected _name: Identifier;
 	protected _typeModifiers: Context.TypeModifierSet;
 	protected _extends?: TypeName;
 	protected _implements: TypeName[];
+	protected _declarations: Context[];
+
 
 	constructor(node: DeclareClassCstNode, typemodNode: TypeModifiersCstNode | undefined) {
 		super(Context.ContextType.Class);
@@ -45,56 +50,54 @@ export class ContextClass extends Context{
 		let cdeclBegin = cdecl.classBegin[0].children;
 
 		this._node = node;
-		this._name = cdeclBegin.name[0].image;
+		this._name = new Identifier(cdeclBegin.name[0]);
 		this._typeModifiers = new Context.TypeModifierSet(typemodNode);
+		this._declarations = [];
+		this._implements = [];
 
 		if (cdeclBegin.baseClassName) {
 			this._extends = new TypeName(cdeclBegin.baseClassName[0]);
 		}
 
-		this._implements = [];
 		if (cdeclBegin.interfaceName) {
 			cdeclBegin.interfaceName.forEach(each => this._implements.push(new TypeName(each)));
 		}
 
-		if (cdecl.classBody) {
-			let nodeBody = cdecl.classBody[0].children.classBodyDeclaration;
-			if (nodeBody) {
-				nodeBody.forEach(each => {
-					let typemod = each.children.typeModifiers ? each.children.typeModifiers[0] : undefined;
-					if (each.children.declareClass) {
-						this._children.push(new ContextClass(each.children.declareClass[0], typemod));
-					} else if (each.children.declareInterface) {
-						this._children.push(new ContextInterface(each.children.declareInterface[0], typemod));
-					} else if (each.children.declareEnumeration) {
-						this._children.push(new ContextEnumeration(each.children.declareEnumeration[0], typemod));
-					} else if (each.children.classFunction) {
-						this._children.push(new ContextFunction(each.children.classFunction[0], typemod, this._name));
-					} else if (each.children.classVariables) {
-						let vdecls = each.children.classVariables[0].children;
-						if (vdecls.classVariable) {
-							let typeNode = vdecls.type[0];
-							vdecls.classVariable.forEach(each => {
-								this._children.push(new ContextVariable(each, typemod, typeNode));
-							});
-						}
-					}
-				});
+		cdecl.classBody[0].children.classBodyDeclaration?.forEach(each => {
+			let typemod = each.children.typeModifiers ? each.children.typeModifiers[0] : undefined;
+			if (each.children.declareClass) {
+				this._declarations.push(new ContextClass(each.children.declareClass[0], typemod));
+			} else if (each.children.declareInterface) {
+				this._declarations.push(new ContextInterface(each.children.declareInterface[0], typemod));
+			} else if (each.children.declareEnumeration) {
+				this._declarations.push(new ContextEnumeration(each.children.declareEnumeration[0], typemod));
+			} else if (each.children.classFunction) {
+				this._declarations.push(new ContextFunction(each.children.classFunction[0], typemod, this._name.name));
+			} else if (each.children.classVariables) {
+				let vdecls = each.children.classVariables[0].children;
+				if (vdecls.classVariable) {
+					let typeNode = vdecls.type[0];
+					vdecls.classVariable.forEach(each => {
+						this._declarations.push(new ContextVariable(each, typemod, typeNode));
+					});
+				}
 			}
-		}
+		});
 	}
 
-	dispose(): void {
+	public dispose(): void {
 		super.dispose()
 		this._extends?.dispose();
 		this._implements?.forEach(each => each.dispose());
+		this._declarations.forEach(each => each.dispose());
 	}
+
 
 	public get node(): DeclareClassCstNode {
 		return this._node;
 	}
 
-	public get name(): string {
+	public get name(): Identifier {
 		return this._name;
 	}
 
@@ -110,7 +113,12 @@ export class ContextClass extends Context{
 		return this._implements;
 	}
 
-	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
+	public get declarations(): Context[] {
+		return this._declarations;
+	}
+
+
+	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
 		console.log(`${prefix}Class: ${this._typeModifiers} ${this._name}`);
 		if (this._extends) {
 			console.log(`${prefixLines}- Extend ${this._extends.name}`);
@@ -118,6 +126,6 @@ export class ContextClass extends Context{
 		this._implements.forEach(each => {
 			console.log(`${prefixLines}- Implements ${each.name}`);
 		})
-		this.logChildren(console, prefixLines);
+		this.logChildren(this._declarations, console, prefixLines);
 	}
 }
