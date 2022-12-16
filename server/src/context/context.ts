@@ -55,9 +55,9 @@ export class Context {
 	}
 
 	/** Debug log children. */
-	protected logChildren(children: Context[] | undefined, console: RemoteConsole, prefix: string) {
+	protected logChildren(children: Context[] | undefined, console: RemoteConsole, prefix: string, prefixSuffix: string = "") {
 		if (children) {
-			let prefixChild = `${prefix}- `;
+			let prefixChild = `${prefix}- ${prefixSuffix}`;
 			let prefixLinesChild = `${prefix}  `;
 			children.forEach(each => each.log(console, prefixChild, prefixLinesChild));
 		}
@@ -96,6 +96,10 @@ export namespace Context {
 		For,
 		Throw,
 		Statements,
+		FunctionCall,
+		InlineIfElse,
+		Member,
+		Constant,
 		Generic
 	}
 

@@ -1,5 +1,6 @@
 import { CstNode, IToken } from "chevrotain";
 import { ExpressionCstNode } from "./expression";
+import { ExpressionObjectCstNode } from "./expressionObject";
 import { StatementsCstNode } from "./statement";
 
 
@@ -33,7 +34,7 @@ export interface StatementForVariableCstNode extends CstNode {
 }
 
 export type StatementForVariableCstChildren = {
-	variable: ExpressionCstNode[];
+	variable: ExpressionObjectCstNode[];
 };
 
 

@@ -35,41 +35,191 @@ import { ContextThrow } from "./statementThrow";
 import { ContextBreak } from "./statementBreak";
 import { ContextContinue } from "./statementContinue";
 import { ContextVariables } from "./statementVariables";
+import { ExpressionMultiplyCstNode } from "../nodeclasses/expressionMultiply";
+import { ExpressionAdditionCstNode } from "../nodeclasses/expressionAddition";
+import { ExpressionBitOperationCstNode } from "../nodeclasses/expressionBitOperation";
+import { ExpressionCompareCstNode } from "../nodeclasses/expressionCompare";
+import { ExpressionPostfixCstNode } from "../nodeclasses/expressionPostfix";
+import { ExpressionUnaryCstNode } from "../nodeclasses/expressionUnary";
+import { ExpressionSpecialCstNode } from "../nodeclasses/expressionSpecial";
+import { ExpressionBaseObjectCstNode, ExpressionObjectCstNode } from "../nodeclasses/expressionObject";
+import { ExpressionAssignCstNode } from "../nodeclasses/expressionAssign";
+import { ContextFunctionCall } from "./expressionCall";
+import { ExpressionInlineIfElseCstNode } from "../nodeclasses/expressionInlineIfElse";
+import { ExpressionLogicCstNode } from "../nodeclasses/expressionLogic";
+import { ContextInlineIfElse } from "./expressionInlineIfElse";
+import { ContextMember } from "./expressionMember";
+import { ContextConstant } from "./expressionConstant";
+import { ContextBlock } from "./expressionBlock";
+import { integer } from "vscode-languageserver";
+import { assertWarn, debugLogObjProps } from "../server";
 
 
 /** Context builder. */
 export class ContextBuilder{
 	/** Create statement from node. */
-	static createStatement(node: StatementCstNode): Context {
-		if (node.children.statementIf) {
-			return new ContextIf(node.children.statementIf[0]);
-		} else if (node.children.statementReturn) {
-			return new ContextReturn(node.children.statementReturn[0]);
-		} else if (node.children.statementSelect) {
-			return new ContextSelect(node.children.statementSelect[0]);
-		} else if (node.children.statementWhile) {
-			return new ContextWhile(node.children.statementWhile[0]);
-		} else if (node.children.statementFor) {
-			return new ContextFor(node.children.statementFor[0]);
-		} else if (node.children.break) {
-			return new ContextBreak(node.children.break[0]);
-		} else if (node.children.continue) {
-			return new ContextContinue(node.children.continue[0]);
-		} else if (node.children.statementThrow) {
-			return new ContextThrow(node.children.statementThrow[0]);
-		} else if (node.children.statementTry) {
-			return new ContextTry(node.children.statementTry[0]);
-		} else if (node.children.statementVariables) {
-			return new ContextVariables(node.children.statementVariables[0]);
-		} else if (node.children.expression) {
-			return ContextBuilder.createExpression(node.children.expression[0]);
+	public static createStatement(node: StatementCstNode): Context {
+		let c = node.children;
+		if (c.statementIf) {
+			return new ContextIf(c.statementIf[0]);
+		} else if (c.statementReturn) {
+			return new ContextReturn(c.statementReturn[0]);
+		} else if (c.statementSelect) {
+			return new ContextSelect(c.statementSelect[0]);
+		} else if (c.statementWhile) {
+			return new ContextWhile(c.statementWhile[0]);
+		} else if (c.statementFor) {
+			return new ContextFor(c.statementFor[0]);
+		} else if (c.statementBreak) {
+			return new ContextBreak(c.statementBreak[0]);
+		} else if (c.statementContinue) {
+			return new ContextContinue(c.statementContinue[0]);
+		} else if (c.statementThrow) {
+			return new ContextThrow(c.statementThrow[0]);
+		} else if (c.statementTry) {
+			return new ContextTry(c.statementTry[0]);
+		} else if (c.statementVariables) {
+			return new ContextVariables(c.statementVariables[0]);
+		} else if (c.expression) {
+			return this.createExpression(c.expression[0]);
+		} else {
+			assertWarn("Empty statement should not happen!");
+			return new Context(Context.ContextType.Generic);
 		}
-		return new Context(Context.ContextType.Generic);
 	}
 
 	/** Create expression from node. */
-	static createExpression(node: ExpressionCstNode): Context {
-		return new Context(Context.ContextType.Generic);
+	public static createExpression(node: ExpressionCstNode): Context {
+		return this.createExpressionAssign(node.children.expressionAssign[0]);
+	}
+
+	public static createExpressionAssign(node: ExpressionAssignCstNode): Context {
+		let c = node.children;
+		if (c.more) {
+			return ContextFunctionCall.newAssign(node);
+		} else {
+			return this.createExpressionInlineIfElse(c.left[0]);
+		}
+	}
+
+	public static createExpressionInlineIfElse(node: ExpressionInlineIfElseCstNode): Context {
+		let c = node.children;
+		if (c.more) {
+			return new ContextInlineIfElse(node);
+		} else {
+			return this.createExpressionLogic(c.condition[0]);
+		}
+	}
+
+	public static createExpressionLogic(node: ExpressionLogicCstNode): Context {
+		let c = node.children;
+		if (c.more) {
+			return ContextFunctionCall.newLogic(node);
+		} else {
+			return this.createExpressionCompare(c.left[0]);
+		}
+	}
+
+	public static createExpressionCompare(node: ExpressionCompareCstNode): Context {
+		let c = node.children;
+		if (c.more) {
+			return ContextFunctionCall.newCompare(node);
+		} else {
+			return this.createExpressionBitOperation(c.left[0]);
+		}
+	}
+
+	public static createExpressionBitOperation(node: ExpressionBitOperationCstNode): Context {
+		let c = node.children;
+		if (c.more) {
+			return ContextFunctionCall.newBitOperation(node);
+		} else {
+			return this.createExpressionAddition(c.left[0]);
+		}
+	}
+
+	public static createExpressionAddition(node: ExpressionAdditionCstNode): Context {
+		let c = node.children;
+		if (c.more) {
+			return ContextFunctionCall.newAddition(node);
+		} else {
+			return this.createExpressionMultiply(c.left[0]);
+		}
+	}
+
+	public static createExpressionMultiply(node: ExpressionMultiplyCstNode): Context {
+		let c = node.children;
+		if (c.more){
+			return ContextFunctionCall.newMultiply(node);
+		}else{
+			return this.createExpressionPostfix(c.left[0]);
+		}
+	}
+
+	public static createExpressionPostfix(node: ExpressionPostfixCstNode): Context {
+		let c = node.children;
+		if (c.operator){
+			return ContextFunctionCall.newPostfix(node);
+		}else{
+			return this.createExpressionUnary(c.left[0]);
+		}
+	}
+
+	public static createExpressionUnary(node: ExpressionUnaryCstNode): Context {
+		let c = node.children;
+		if (c.operator){
+			return ContextFunctionCall.newUnary(node);
+		}else{
+			return this.createExpressionSpecial(c.right[0]);
+		}
+	}
+
+	public static createExpressionSpecial(node: ExpressionSpecialCstNode): Context {
+		let c = node.children;
+		if (c.more){
+			return ContextFunctionCall.newSpecial(node);
+		}else{
+			return this.createExpressionObject(c.left[0]);
+		}
+	}
+
+	public static createExpressionObject(node: ExpressionObjectCstNode): Context {
+		let c = node.children;
+		if (c.member) {
+			let last: ContextMember | ContextFunctionCall | undefined;
+			let memberIndex: integer = 0;
+			c.member.forEach(each => {
+				if (each.children.functionCall) {
+					last = ContextFunctionCall.newFunctionCall(node, memberIndex++, last);
+				} else {
+					last = ContextMember.newObject(node, memberIndex++, last);
+				}
+			});
+			return last!;
+		} else {
+			return this.createExpressionBaseObject(c.object[0]);
+		}
+	}
+
+	public static createExpressionBaseObject(node: ExpressionBaseObjectCstNode): Context {
+		let c = node.children;
+		if (c.expressionGroup) {
+			return this.createExpression(c.expressionGroup[0].children.expression[0]);
+		} else if (c.expressionConstant) {
+			return new ContextConstant(c.expressionConstant[0]);
+		} else if (c.expressionMember) {
+			let cem = c.expressionMember[0];
+			if (cem.children.functionCall) {
+				return ContextFunctionCall.newFunctionCallDirect(cem);
+			} else {
+				return ContextMember.newMember(cem);
+			}
+		} else if (c.expressionBlock) {
+			return new ContextBlock(c.expressionBlock[0]);
+		} else {
+			assertWarn("Empty expression base object should not happen!");
+			return new Context(Context.ContextType.Generic);
+		}
 	}
 }
  

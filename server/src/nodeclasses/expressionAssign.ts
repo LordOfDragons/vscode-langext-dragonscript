@@ -30,15 +30,15 @@ export interface ExpressionAssignOpMoreCstNode extends CstNode {
 }
 
 export type ExpressionAssignOpCstChildren = {
-	tokenAssign?: IToken[];
-	tokenAssignMultiply?: IToken[];
-	tokenAssignDivide?: IToken[];
-	tokenAssignModulus?: IToken[];
-	tokenAssignAdd?: IToken[];
-	tokenAssignSubtract?: IToken[];
-	tokenAssignShiftLeft?: IToken[];
-	tokenAssignShiftRight?: IToken[];
-	tokenAssignAnd?: IToken[];
-	tokenAssignOr?: IToken[];
-	tokenAssignXor?: IToken[];
+	assign?: IToken[];
+	assignMultiply?: IToken[];
+	assignDivide?: IToken[];
+	assignModulus?: IToken[];
+	assignAdd?: IToken[];
+	assignSubtract?: IToken[];
+	assignShiftLeft?: IToken[];
+	assignShiftRight?: IToken[];
+	assignAnd?: IToken[];
+	assignOr?: IToken[];
+	assignXor?: IToken[];
 };

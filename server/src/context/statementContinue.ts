@@ -24,20 +24,20 @@
 
 import { Context } from "./context";
 import { RemoteConsole } from "vscode-languageserver";
-import { IToken } from "chevrotain";
+import { StatementContinueCstNode } from "../nodeclasses/statementContinue";
 
 
 export class ContextContinue extends Context{
-	protected _node: IToken;
+	protected _node: StatementContinueCstNode;
 
 
-	constructor(node: IToken) {
+	constructor(node: StatementContinueCstNode) {
 		super(Context.ContextType.Continue);
 		this._node = node;
 	}
 
 
-	public get node(): IToken {
+	public get node(): StatementContinueCstNode {
 		return this._node;
 	}
 

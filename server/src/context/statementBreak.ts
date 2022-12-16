@@ -24,20 +24,20 @@
 
 import { Context } from "./context";
 import { RemoteConsole } from "vscode-languageserver";
-import { IToken } from "chevrotain";
+import { StatementBreakCstNode } from "../nodeclasses/statementBreak";
 
 
 export class ContextBreak extends Context{
-	protected _node: IToken;
+	protected _node: StatementBreakCstNode;
 
 
-	constructor(node: IToken) {
+	constructor(node: StatementBreakCstNode) {
 		super(Context.ContextType.Break);
 		this._node = node;
 	}
 
 
-	public get node(): IToken {
+	public get node(): StatementBreakCstNode {
 		return this._node;
 	}
 

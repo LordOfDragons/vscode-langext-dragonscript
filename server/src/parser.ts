@@ -490,8 +490,8 @@ export class DSParser extends CstParser{
 			{ALT: () => this.SUBRULE(this.statementSelect)},
 			{ALT: () => this.SUBRULE(this.statementWhile)},
 			{ALT: () => this.SUBRULE(this.statementFor)},
-			{ALT: () => this.CONSUME(DSLexer.tokenBreak)},
-			{ALT: () => this.CONSUME(DSLexer.tokenContinue)},
+			{ALT: () => this.SUBRULE(this.statementBreak)},
+			{ALT: () => this.SUBRULE(this.statementContinue)},
 			{ALT: () => this.SUBRULE(this.statementThrow)},
 			{ALT: () => this.SUBRULE(this.statementTry)},
 			{ALT: () => this.SUBRULE(this.statementVariables)},
@@ -521,6 +521,7 @@ export class DSParser extends CstParser{
 
 	public statementElse = this.RULE("statementElse", () => {
 		this.CONSUME(DSLexer.tokenElse)
+		this.SUBRULE(this.endOfCommand)
 		this.SUBRULE(this.statements)
 	})
 
@@ -569,6 +570,7 @@ export class DSParser extends CstParser{
 
 	public statementSelectElse = this.RULE("statementSelectElse", () => {
 		this.CONSUME(DSLexer.tokenElse)
+		this.SUBRULE(this.endOfCommand)
 		this.SUBRULE(this.statements)
 	})
 
@@ -635,6 +637,18 @@ export class DSParser extends CstParser{
 
 	public statementForEnd = this.RULE("statementForEnd", () => {
 		this.CONSUME(DSLexer.tokenEnd)
+		this.SUBRULE(this.endOfCommand)
+	})
+
+	// break
+	public statementBreak = this.RULE("statementBreak", () => {
+		this.CONSUME(DSLexer.tokenBreak)
+		this.SUBRULE(this.endOfCommand)
+	})
+
+	// continue
+	public statementContinue = this.RULE("statementContinue", () => {
+		this.CONSUME(DSLexer.tokenContinue)
 		this.SUBRULE(this.endOfCommand)
 	})
 

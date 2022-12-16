@@ -8,7 +8,7 @@ export interface ExpressionUnaryCstNode extends CstNode {
 }
 
 export type ExpressionUnaryCstChildren = {
-	left: ExpressionSpecialCstNode[];
+	right: ExpressionSpecialCstNode[];
 	operator: ExpressionUnaryOpCstNode[];
 };
 

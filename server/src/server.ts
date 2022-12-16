@@ -50,6 +50,27 @@ import { ScriptCstNode } from "./nodeclasses/script"
 // Also include all preview / proposed LSP features.
 const connection = createConnection(ProposedFeatures.all)
 
+export function debugLogObjProps(message: string, obj: any) {
+	if (obj) {
+		let s = Object.keys(obj).reduce((a, b) => `${a}, ${b}`);
+		debugLogMessage(`${message}: (${typeof obj}) ${s}`);
+	} else {
+		debugLogMessage(`${message}: object is undefined`);
+	}
+}
+
+export function debugLogMessage(message: string) {
+	connection.console.log(message);
+}
+
+export function assertWarn(message: string) {
+	connection.console.log(message);
+	let st = new Error().stack;
+	if (st) {
+		debugLogMessage(st);
+	}
+}
+
 // Create a simple text document manager.
 const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument)
 

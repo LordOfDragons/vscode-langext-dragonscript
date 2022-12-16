@@ -38,7 +38,7 @@ import { ContextStatements } from "./statements";
 export class ContextFunction extends Context{
 	protected _node: InterfaceFunctionCstNode | ClassFunctionCstNode;
 	protected _typeModifiers: Context.TypeModifierSet;
-	protected _functionType: ContextFunction.ContextFunctionType;
+	protected _functionType: ContextFunction.Type;
 	protected _name: Identifier;
 	protected _returnType?: TypeName;
 	protected _arguments: ContextFunctionArgument[];
@@ -66,7 +66,7 @@ export class ContextFunction extends Context{
 		}
 
 		if (!fdecl) {
-			this._functionType = ContextFunction.ContextFunctionType.Regular;
+			this._functionType = ContextFunction.Type.Regular;
 			this._name = new Identifier(undefined, "??");
 			this._returnType = TypeName.typeVoid();
 			return;
@@ -74,7 +74,7 @@ export class ContextFunction extends Context{
 
 		if (fdecl.children.classConstructor) {
 			let fdecl2 = fdecl.children.classConstructor[0].children;
-			this._functionType = ContextFunction.ContextFunctionType.Constructor;
+			this._functionType = ContextFunction.Type.Constructor;
 			this._name = new Identifier(undefined, "new");
 			this._returnType = TypeName.typeNamed(ownerTypeName);
 			this._typeModifiers.add(Context.TypeModifier.Static);
@@ -98,7 +98,7 @@ export class ContextFunction extends Context{
 			}
 
 		} else if (fdecl.children.classDestructor) {
-			this._functionType = ContextFunction.ContextFunctionType.Destructor;
+			this._functionType = ContextFunction.Type.Destructor;
 			this._name = new Identifier(undefined, "destructor");
 			this._returnType = TypeName.typeVoid();
 
@@ -106,12 +106,12 @@ export class ContextFunction extends Context{
 			let fdecl2 = fdecl.children.regularFunction[0].children;
 
 			if (fdecl2.name) {
-				this._functionType = ContextFunction.ContextFunctionType.Regular;
+				this._functionType = ContextFunction.Type.Regular;
 				this._name = new Identifier(fdecl2.name[0]);
 				this._returnType = new TypeName(fdecl2.returnType[0]);
 
 			} else if(fdecl2.operator) {
-				this._functionType = ContextFunction.ContextFunctionType.Operator;
+				this._functionType = ContextFunction.Type.Operator;
 				this._returnType = TypeName.typeNamed(ownerTypeName);
 				
 				let odecl = fdecl2.operator[0].children;
@@ -174,7 +174,7 @@ export class ContextFunction extends Context{
 				}
 
 			} else {
-				this._functionType = ContextFunction.ContextFunctionType.Regular;
+				this._functionType = ContextFunction.Type.Regular;
 				this._name = new Identifier(undefined, "??");
 				this._returnType = TypeName.typeVoid();
 			}
@@ -187,7 +187,7 @@ export class ContextFunction extends Context{
 			}
 
 		} else {
-			this._functionType = ContextFunction.ContextFunctionType.Regular;
+			this._functionType = ContextFunction.Type.Regular;
 			this._name = new Identifier(undefined, "??");
 			this._returnType = TypeName.typeVoid();
 		}
@@ -215,7 +215,7 @@ export class ContextFunction extends Context{
 		return this._typeModifiers;
 	}
 
-	public get functionType(): ContextFunction.ContextFunctionType {
+	public get functionType(): ContextFunction.Type {
 		return this._functionType;
 	}
 
@@ -245,7 +245,7 @@ export class ContextFunction extends Context{
 
 
 	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
-		var s = `${prefix}Function ${ContextFunction.ContextFunctionType[this._functionType]}: ${this._typeModifiers}`;
+		var s = `${prefix}Function ${ContextFunction.Type[this._functionType]}: ${this._typeModifiers}`;
 		if (this._returnType) {
 			s = `${s} ${this._returnType.name}`;
 		}
@@ -259,9 +259,11 @@ export class ContextFunction extends Context{
 		console.log(s);
 
 		if (this._thisCall) {
-			console.log(`${prefixLines}- this(${this._thisCall.length} arguments)`);
+			console.log(`${prefixLines}- this`);
+			this.logChildren(this._thisCall, console, `${prefixLines}  `, "Arg: ");
 		} else if (this._superCall) {
-			console.log(`${prefixLines}- super(${this._superCall.length} arguments)`);
+			console.log(`${prefixLines}- super`);
+			this.logChildren(this._superCall, console, `${prefixLines}  `, "Arg: ");
 		}
 		
 		this.logChild(this._statements, console, prefixLines);
@@ -271,7 +273,7 @@ export class ContextFunction extends Context{
 
 export namespace ContextFunction {
 	/** Function type. */
-	export enum ContextFunctionType {
+	export enum Type {
 		Constructor,
 		Destructor,
 		Operator,

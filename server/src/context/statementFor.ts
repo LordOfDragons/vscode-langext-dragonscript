@@ -46,8 +46,8 @@ export class ContextFor extends Context{
 		let forBegin = node.children.statementForBegin[0].children;
 		let forTo = forBegin.statementForTo[0].children;
 
-		this._variable = ContextBuilder.createExpression(forBegin.statementForFrom[0].children.value[0]);
-		this._from = ContextBuilder.createExpression(forBegin.statementForVariable[0].children.variable[0]);
+		this._variable = ContextBuilder.createExpressionObject(forBegin.statementForVariable[0].children.variable[0]);
+		this._from = ContextBuilder.createExpression(forBegin.statementForFrom[0].children.value[0]);
 		this._to = ContextBuilder.createExpression(forTo.value[0]);
 		this._downto = forTo.downto !== undefined;
 
@@ -101,7 +101,7 @@ export class ContextFor extends Context{
 		console.log(`${prefix}For`);
 		this.logChild(this._variable, console, prefixLines, "Var: ");
 		this.logChild(this._from, console, prefixLines, "From: ");
-		this.logChild(this._to, console, prefixLines, this._downto ? "DownTo" : "To");
+		this.logChild(this._to, console, prefixLines, this._downto ? "DownTo: " : "To: ");
 		this.logChild(this._step, console, prefixLines, "Step: ");
 		this.logChild(this._statements, console, prefixLines);
 	}

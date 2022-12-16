@@ -84,6 +84,7 @@ export class ContextVariable extends Context{
 
 	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
 		console.log(`${prefix}Variable ${this._typeModifiers} ${this._typename.name} ${this._name}`);
+		this._value?.log(console, `${prefixLines}- Value: `, `${prefixLines}  `);
 	}
 }
 

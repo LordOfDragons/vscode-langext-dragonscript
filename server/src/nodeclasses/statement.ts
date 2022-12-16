@@ -1,5 +1,7 @@
 import { CstNode, IToken } from "chevrotain";
 import { ExpressionCstNode } from "./expression";
+import { StatementBreakCstNode } from "./statementBreak";
+import { StatementContinueCstNode } from "./statementContinue";
 import { StatementForCstNode } from "./statementFor";
 import { StatementIfCstNode } from "./statementIf";
 import { StatementReturnCstNode } from "./statementReturn";
@@ -31,8 +33,8 @@ export type StatementCstChildren = {
 	statementSelect?: StatementSelectCstNode[];
 	statementWhile?: StatementWhileCstNode[];
 	statementFor?: StatementForCstNode[];
-	break?: IToken[];
-	continue?: IToken[];
+	statementBreak?: StatementBreakCstNode[];
+	statementContinue?: StatementContinueCstNode[];
 	statementThrow?: StatementThrowCstNode[];
 	statementTry?: StatementTryCstNode[];
 	statementVariables?: StatementVariablesCstNode[];
