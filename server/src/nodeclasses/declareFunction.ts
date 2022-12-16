@@ -10,7 +10,7 @@ export interface FunctionBeginCstNode extends CstNode {
 
 export type FunctionBeginCstChildren = {
 	classConstructor?: ClassConstructorCstNode[];
-	classDestructor?: CstNode[];
+	classDestructor?: CstNode[];  // only presence of node is important
 	regularFunction?: RegularFunctionCstNode[];
 };
 

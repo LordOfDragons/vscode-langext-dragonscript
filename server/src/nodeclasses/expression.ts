@@ -1,4 +1,5 @@
 import { CstNode } from "chevrotain";
+import { ExpressionAssignCstNode } from "./expressionAssign";
 
 
 export interface ExpressionCstNode extends CstNode {
@@ -7,5 +8,5 @@ export interface ExpressionCstNode extends CstNode {
 }
 
 export type ExpressionCstChildren = {
-	
+	expressionAssign: ExpressionAssignCstNode[];
 };
