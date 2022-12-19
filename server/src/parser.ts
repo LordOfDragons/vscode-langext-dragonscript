@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-import { CstNode, CstParser, ParserMethod } from "chevrotain"
+import { CstParser } from "chevrotain"
 import { DSLexer } from "./lexer"
 
 export class DSParser extends CstParser{

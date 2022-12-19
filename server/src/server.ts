@@ -26,7 +26,6 @@ import {
 	createConnection,
 	TextDocuments,
 	Diagnostic,
-	DiagnosticSeverity,
 	ProposedFeatures,
 	InitializeParams,
 	DidChangeConfigurationNotification,
@@ -41,10 +40,12 @@ import {
 	TextDocument
 } from 'vscode-languageserver-textdocument'
 
-import { DSParser } from './parser'
-import { DSLexer } from './lexer'
 import { ContextScript } from "./context/script"
-import { ScriptCstNode } from "./nodeclasses/script"
+import { ScriptDocuments } from './scriptDocuments'
+import { ScriptValidator } from './scriptValidator'
+import { DSSettings } from './settings'
+import { DSCapabilities } from './capabilities'
+import { ScriptDocument } from './scriptDocument'
 
 // Create a connection for the server, using Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -72,31 +73,18 @@ export function assertWarn(message: string) {
 }
 
 // Create a simple text document manager.
-const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument)
+const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
+const capabilities: DSCapabilities = new DSCapabilities;
+const validator = new ScriptValidator(capabilities);
+const scriptDocuments: ScriptDocuments = new ScriptDocuments(connection.console);
 
-let hasConfigurationCapability = false
-let hasWorkspaceFolderCapability = false
-let hasDiagnosticRelatedInformationCapability = false
-
-let lexer = new DSLexer()
-let parser = new DSParser()
 
 connection.onInitialize((params: InitializeParams) => {
-	const capabilities = params.capabilities;
-
-	// Does the client support the `workspace/configuration` request?
-	// If not, we fall back using global settings.
-	hasConfigurationCapability = !!(
-		capabilities.workspace && !!capabilities.workspace.configuration
-	);
-	hasWorkspaceFolderCapability = !!(
-		capabilities.workspace && !!capabilities.workspace.workspaceFolders
-	);
-	hasDiagnosticRelatedInformationCapability = !!(
-		capabilities.textDocument &&
-		capabilities.textDocument.publishDiagnostics &&
-		capabilities.textDocument.publishDiagnostics.relatedInformation
-	);
+	capabilities.init(params.capabilities);
+	connection.console.log(`Capabilities:`)
+	connection.console.log(`- hasConfiguration: ${capabilities.hasConfiguration}`)
+	connection.console.log(`- hasWorkspaceFolder: ${capabilities.hasWorkspaceFolder}`)
+	connection.console.log(`- hasDiagnosticRelatedInformation: ${capabilities.hasDiagnosticRelatedInformation}`)
 
 	const result: InitializeResult = {
 		capabilities: {
@@ -107,7 +95,8 @@ connection.onInitialize((params: InitializeParams) => {
 			}
 		}
 	};
-	if (hasWorkspaceFolderCapability) {
+
+	if (capabilities.hasWorkspaceFolder) {
 		result.capabilities.workspace = {
 			workspaceFolders: {
 				supported: true
@@ -118,38 +107,33 @@ connection.onInitialize((params: InitializeParams) => {
 });
 
 connection.onInitialized(() => {
-	if (hasConfigurationCapability) {
+	if (capabilities.hasConfiguration) {
 		// Register for all configuration changes.
 		connection.client.register(DidChangeConfigurationNotification.type, undefined);
 	}
-	if (hasWorkspaceFolderCapability) {
+	if (capabilities.hasWorkspaceFolder) {
 		connection.workspace.onDidChangeWorkspaceFolders(_event => {
 			connection.console.log('Workspace folder change event received.');
 		});
 	}
 });
 
-// The example settings
-interface ExampleSettings {
-	maxNumberOfProblems: number;
-}
-
 // The global settings, used when the `workspace/configuration` request is not supported by the client.
 // Please note that this is not the case when using this server with the client provided in this example
 // but could happen with other clients.
-const defaultSettings: ExampleSettings = { maxNumberOfProblems: 1000 };
-let globalSettings: ExampleSettings = defaultSettings;
+const defaultSettings: DSSettings = { maxNumberOfProblems: 1000 };
+let globalSettings: DSSettings = defaultSettings;
 
 // Cache the settings of all open documents
-const documentSettings: Map<string, Thenable<ExampleSettings>> = new Map();
+const documentSettings: Map<string, Thenable<DSSettings>> = new Map();
 
 connection.onDidChangeConfiguration(change => {
-	if (hasConfigurationCapability) {
+	if (capabilities.hasConfiguration) {
 		// Reset all cached document settings
 		documentSettings.clear();
 	} else {
-		globalSettings = <ExampleSettings>(
-			(change.settings.languageServerExample || defaultSettings)
+		globalSettings = <DSSettings>(
+			(change.settings.dragonscriptLanguage || defaultSettings)
 		);
 	}
 
@@ -157,19 +141,15 @@ connection.onDidChangeConfiguration(change => {
 	documents.all().forEach(validateTextDocument);
 });
 
-function getDocumentSettings(resource: string): Thenable<ExampleSettings> {
-	if (!hasConfigurationCapability) {
+function getDocumentSettings(resource: string): Thenable<DSSettings> {
+	if (!capabilities.hasConfiguration) {
 		return Promise.resolve(globalSettings);
-	}
-	let result = documentSettings.get(resource);
-	if (!result) {
-		result = connection.workspace.getConfiguration({
+	} else {
+		return connection.workspace.getConfiguration({
 			scopeUri: resource,
-			section: 'languageServerExample'
+			section: 'dragonscriptLanguage'
 		});
-		documentSettings.set(resource, result);
 	}
-	return result;
 }
 
 // Only keep settings for open documents
@@ -184,90 +164,23 @@ documents.onDidChangeContent(change => {
 });
 
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
-	const settings = await getDocumentSettings(textDocument.uri);
-	const text = textDocument.getText();
+	let scriptDocument = scriptDocuments.get(textDocument.uri);
+	if (!scriptDocument) {
+		const settings = await getDocumentSettings(textDocument.uri);
+		scriptDocument = new ScriptDocument(textDocument.uri, connection.console, settings);
+		scriptDocuments.add(scriptDocument);
+	}
 
 	const diagnostics: Diagnostic[] = [];
+	validator.parse(scriptDocument, textDocument, diagnostics);
 
-	// lexing
-	const lexed = lexer.tokenize(text);
+	if (scriptDocument.node) {
+		scriptDocument.context = new ContextScript(scriptDocument.node);
+	} else {
+		scriptDocument.context = undefined;
+	}
 
-	/*
-	connection.console.log('Tokens:');
-	lexed.tokens.forEach(each => {
-		let lines = each.image.split('\n')
-		connection.console.log(`${each.tokenType.name.padEnd(22, '.')}: ${lines[0]}`);
-		lines.splice(1).forEach(line => {
-			connection.console.log(`${"".padEnd(22, " ")}  ${line}`);
-		});
-	});
-	*/
-
-	lexed.errors.slice(0, settings.maxNumberOfProblems).forEach(error => {
-		const diagnostic: Diagnostic = {
-			severity: DiagnosticSeverity.Error,
-			range: {
-				start: textDocument.positionAt(error.offset),
-				end: textDocument.positionAt(error.offset + error.length)
-			},
-			message: error.message,
-			source: 'Lexing'
-		};
-
-		if (hasDiagnosticRelatedInformationCapability) {
-			diagnostic.relatedInformation = [
-				{
-					location: {
-						uri: textDocument.uri,
-						range: Object.assign({}, diagnostic.range)
-					},
-					message: 'Lexing Errors'
-				}
-			];
-		}
-
-		diagnostics.push(diagnostic);
-	});
-
-	// grammar
-	parser.input = lexed.tokens
-	connection.console.log('Grammer Begin:')
-	const cst = parser.script()
-	connection.console.log('Grammar End:')
-
-	parser.errors.slice(0, settings.maxNumberOfProblems).forEach(error => {
-		const startToken = error.token
-		var endToken = error.resyncedTokens.at(-1) ?? startToken
-
-		const diagnostic: Diagnostic = {
-			severity: DiagnosticSeverity.Error,
-			range: {
-				start: textDocument.positionAt(startToken.startOffset),
-				end: textDocument.positionAt(endToken.endOffset ?? endToken.startOffset)
-			},
-			message: error.message,
-			source: error.name
-		}
-
-		if (hasDiagnosticRelatedInformationCapability) {
-			diagnostic.relatedInformation = [
-				{
-					location: {
-						uri: textDocument.uri,
-						range: Object.assign({}, diagnostic.range)
-					},
-					message: 'Grammar Errors'
-				}
-			]
-		}
-
-		diagnostics.push(diagnostic)
-	})
-
-	// ast
-	const script = new ContextScript(cst as ScriptCstNode)
-	script.log(connection.console)
-	script.dispose()
+	scriptDocument.context?.log(connection.console);
 	
 	connection.sendDiagnostics({uri: textDocument.uri, diagnostics})
 }
