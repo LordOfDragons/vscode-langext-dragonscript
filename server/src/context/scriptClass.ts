@@ -25,7 +25,7 @@
 import { Context } from "./context"
 import { DeclareClassCstNode } from "../nodeclasses/declareClass";
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
-import { RemoteConsole } from "vscode-languageserver"
+import { DocumentSymbol, Range, RemoteConsole, SymbolKind } from "vscode-languageserver"
 import { TypeName } from "./typename"
 import { ContextInterface } from "./scriptInterface";
 import { ContextEnumeration } from "./scriptEnum";
@@ -41,6 +41,8 @@ export class ContextClass extends Context{
 	protected _extends?: TypeName;
 	protected _implements: TypeName[];
 	protected _declarations: Context[];
+	protected _documentSymbolRange: Range;
+	protected _documentSymbolRangeSelection: Range;
 
 
 	constructor(node: DeclareClassCstNode, typemodNode: TypeModifiersCstNode | undefined) {
@@ -48,12 +50,16 @@ export class ContextClass extends Context{
 
 		let cdecl = node.children;
 		let cdeclBegin = cdecl.classBegin[0].children;
+		let cdeclEnd = cdecl.classEnd[0].children.end[0];
+		let tokClass = cdeclBegin.class[0]
 
 		this._node = node;
 		this._name = new Identifier(cdeclBegin.name[0]);
 		this._typeModifiers = new Context.TypeModifierSet(typemodNode);
 		this._declarations = [];
 		this._implements = [];
+		this._documentSymbolRange = this.rangeFrom(tokClass, cdeclEnd, true, false);
+		this._documentSymbolRangeSelection = this.rangeFrom(tokClass, cdeclEnd, false, true);
 
 		if (cdeclBegin.baseClassName) {
 			this._extends = new TypeName(cdeclBegin.baseClassName[0]);
@@ -115,6 +121,12 @@ export class ContextClass extends Context{
 
 	public get declarations(): Context[] {
 		return this._declarations;
+	}
+
+	/** Get document symbol. */
+	public get documentSymbol(): DocumentSymbol | undefined {
+		return DocumentSymbol.create(this._name.name, undefined, SymbolKind.Class,
+			this._documentSymbolRange, this._documentSymbolRangeSelection, []);
 	}
 
 

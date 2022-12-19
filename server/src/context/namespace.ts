@@ -24,14 +24,17 @@
 
 import { Context } from "./context";
 import { OpenNamespaceCstNode } from "../nodeclasses/openNamespace";
-import { RemoteConsole } from "vscode-languageserver";
+import { DocumentSymbol, Position, Range, RemoteConsole, SymbolKind } from "vscode-languageserver";
 import { TypeName } from "./typename";
+import { IToken } from "chevrotain";
 
 
 export class ContextNamespace extends Context{
 	protected _node: OpenNamespaceCstNode;
 	protected _typename: TypeName;
 	protected _statements: Context[];
+	protected _documentSymbolRange: Range;
+	protected _documentSymbolRangeSelection: Range;
 
 
 	constructor(node: OpenNamespaceCstNode) {
@@ -39,6 +42,11 @@ export class ContextNamespace extends Context{
 		this._node = node;
 		this._typename = new TypeName(node.children.name[0]);
 		this._statements = [];
+
+		let tokNS = node.children.namespace[0];
+		let tokName = this._typename.lastToken || tokNS;
+		this._documentSymbolRange = this.rangeFrom(tokNS, tokName, true, false);
+		this._documentSymbolRangeSelection = this.rangeFrom(tokName, tokName, false, true);
 	}
 
 	dispose(): void {
@@ -58,6 +66,31 @@ export class ContextNamespace extends Context{
 
 	public get statements(): Context[] {
 		return this._statements;
+	}
+
+
+	public nextNamespace(namespace: ContextNamespace): void {
+		let s = namespace._documentSymbolRange.start;
+		this._documentSymbolRange.end = s;
+		this._documentSymbolRangeSelection.end = s;
+	}
+
+	public lastNamespace(position: Position) {
+		this._documentSymbolRange.end = position;
+		this._documentSymbolRangeSelection.end = position;
+	}
+
+	/** Get document symbol. */
+	public get documentSymbol(): DocumentSymbol | undefined {
+		let list: DocumentSymbol[] = [];
+		this._statements.forEach(each => {
+			let s = each.documentSymbol;
+			if (s) {
+				list.push(s);
+			}
+		});
+		return DocumentSymbol.create(this._typename.lastPart.name.name, undefined, SymbolKind.Namespace,
+			this._documentSymbolRange, this._documentSymbolRangeSelection, list);
 	}
 
 

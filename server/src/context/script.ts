@@ -24,13 +24,15 @@
 
 import { Context } from "./context";
 import { ScriptCstNode } from "../nodeclasses/script";
-import { RemoteConsole } from "vscode-languageserver";
+import { DocumentSymbol, Range, RemoteConsole, SymbolKind } from "vscode-languageserver";
 import { ContextPinNamespace } from "./pinNamespace";
 import { ContextNamespace } from "./namespace";
 import { ContextClass } from "./scriptClass";
 import { ContextInterface } from "./scriptInterface";
 import { ContextEnumeration } from "./scriptEnum";
 import { ContextRequiresPackage } from "./requiresPackage";
+import { TextDocument } from "vscode-languageserver-textdocument";
+import { debugLogMessage } from "../server";
 
 
 /** Top level script context. */
@@ -40,12 +42,13 @@ export class ContextScript extends Context{
 	protected _requires: ContextRequiresPackage[];
 
 
-	constructor(node: ScriptCstNode) {
+	constructor(node: ScriptCstNode, textDocument: TextDocument) {
 		super(Context.ContextType.Script);
 		this._node = node;
 		this._statements = [];
 		this._requires = [];
 
+		let lastPosition = textDocument.positionAt(textDocument.getText().length);
 		var openNamespace: ContextNamespace | undefined = undefined;
 
 		node.children.scriptStatement.forEach(each => {
@@ -59,8 +62,13 @@ export class ContextScript extends Context{
 			} else if(c.pinNamespace) {
 				statements.push(new ContextPinNamespace(c.pinNamespace[0]));
 			} else if (c.openNamespace) {
+				let prevNamespace = openNamespace;
 				openNamespace = new ContextNamespace(c.openNamespace[0]);
+				openNamespace.lastNamespace(lastPosition);
 				this._statements.push(openNamespace);
+				if (prevNamespace) {
+					prevNamespace.nextNamespace(openNamespace);
+				}
 			} else if (c.scriptDeclaration) {
 				let declNode = c.scriptDeclaration[0].children;
 				let typemod = declNode.typeModifiers?.at(0);
@@ -91,6 +99,18 @@ export class ContextScript extends Context{
 
 	public get statements(): Context[] {
 		return this._statements;
+	}
+
+	/** Get document symbols. */
+	public get documentSymbols(): DocumentSymbol[] {
+		let list: DocumentSymbol[] = [];
+		this._statements.forEach(each => {
+			let s = each.documentSymbol;
+			if (s) {
+				list.push(s);
+			}
+		});
+		return list;
 	}
 
 

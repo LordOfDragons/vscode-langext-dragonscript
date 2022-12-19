@@ -33,7 +33,9 @@ import {
 	CompletionItemKind,
 	TextDocumentPositionParams,
 	TextDocumentSyncKind,
-	InitializeResult
+	InitializeResult,
+	DocumentSymbolParams,
+	DocumentSymbol
 } from 'vscode-languageserver/node'
 
 import {
@@ -89,9 +91,11 @@ connection.onInitialize((params: InitializeParams) => {
 	const result: InitializeResult = {
 		capabilities: {
 			textDocumentSync: TextDocumentSyncKind.Incremental,
-			// Tell the client that this server supports code completion.
 			completionProvider: {
 				resolveProvider: true
+			},
+			documentSymbolProvider: {
+				label: "DragonScript"
 			}
 		}
 	};
@@ -175,7 +179,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	validator.parse(scriptDocument, textDocument, diagnostics);
 
 	if (scriptDocument.node) {
-		scriptDocument.context = new ContextScript(scriptDocument.node);
+		scriptDocument.context = new ContextScript(scriptDocument.node, textDocument);
 	} else {
 		scriptDocument.context = undefined;
 	}
@@ -190,7 +194,12 @@ connection.onDidChangeWatchedFiles(_change => {
 	connection.console.log('We received an file change event');
 });
 
-// This handler provides the initial list of the completion items.
+connection.onDocumentSymbol(
+	(params: DocumentSymbolParams): DocumentSymbol[] => {
+		return scriptDocuments.get(params.textDocument.uri)?.context?.documentSymbols || [];
+	}
+);
+
 connection.onCompletion(
 	(_textDocumentPosition: TextDocumentPositionParams): CompletionItem[] => {
 		// The pass parameter contains the position of the text document in

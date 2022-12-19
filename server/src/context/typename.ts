@@ -107,6 +107,18 @@ export class TypeName {
 		return this._parts
 	}
 
+	public get lastPart(): TypeNamePart {
+		return this._parts[this._parts.length - 1];
+	}
+
+	public get firstToken(): IToken | undefined {
+		return this._parts[0].name.token;
+	}
+
+	public get lastToken(): IToken | undefined {
+		return this.lastPart.name.token;
+	}
+
 	
 	toString() : string {
 		return this._name;

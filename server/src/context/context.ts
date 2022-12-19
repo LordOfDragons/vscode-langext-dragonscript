@@ -22,7 +22,8 @@
  * SOFTWARE.
  */
 
-import { RemoteConsole } from "vscode-languageserver";
+import { IToken } from "chevrotain";
+import { DocumentSymbol, Range, RemoteConsole } from "vscode-languageserver";
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
 
 
@@ -48,6 +49,11 @@ export class Context {
 		return this._type;
 	}
 
+	/** Get document symbol. */
+	public get documentSymbol(): DocumentSymbol | undefined {
+		return undefined;
+	}
+
 
 	/** Debug. */
 	log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
@@ -70,6 +76,26 @@ export class Context {
 			let prefixLinesChild = `${prefix}  `;
 			child.log(console, prefixChild, prefixLinesChild);
 		}
+	}
+
+	/**
+	 * Range from start and end token.
+	 * If end is undefined start is used as end token.
+	 */
+	protected rangeFrom(start: IToken, end: IToken | undefined,
+			startAtLeft: boolean = true, endAtLeft: boolean = false): Range {
+		// note: end column ist at the left side of the last character hence (+1 -1) cancels out
+		let a = start;
+		let b = end || start;
+		
+		let startLine = a.startLine || 1;
+		let endLine = b.endLine || startLine;
+		
+		let startColumn = startAtLeft ? (a.startColumn || 1) : (a.endColumn || 1) + 1;
+		let endColumn = endAtLeft ? (b.startColumn || 1) : (b.endColumn || 1) + 1;
+		
+		// note: line/column in chevrotain is base-1 and in vs base-0
+		return Range.create(startLine - 1, startColumn - 1, endLine - 1, endColumn - 1);
 	}
 }
 
