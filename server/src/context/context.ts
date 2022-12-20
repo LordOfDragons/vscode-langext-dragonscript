@@ -31,6 +31,7 @@ import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
 export class Context {
 	protected _type: Context.ContextType;
 	public parent?: Context;
+	public documentSymbol?: DocumentSymbol;
 
 
 	constructor(type: Context.ContextType) {
@@ -48,10 +49,22 @@ export class Context {
 	public get type(): Context.ContextType{
 		return this._type;
 	}
+	
+	public addChildDocumentSymbols(list: Context[]) {
+		if (!this.documentSymbol || list.length == 0) {
+			return;
+		}
 
-	/** Get document symbol. */
-	public get documentSymbol(): DocumentSymbol | undefined {
-		return undefined;
+		if (!this.documentSymbol.children) {
+			this.documentSymbol.children = [];
+		}
+
+		let docSyms = this.documentSymbol.children;
+		list.forEach(each => {
+			if (each.documentSymbol) {
+				docSyms.push(each.documentSymbol);
+			}
+		});
 	}
 
 

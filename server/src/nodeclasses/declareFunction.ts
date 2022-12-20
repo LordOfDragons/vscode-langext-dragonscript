@@ -1,6 +1,7 @@
 import { CstNode, IToken } from "chevrotain";
 import { FullyQualifiedClassNameCstNode } from "./fullyQualifiedClassName";
 import { ExpressionCstNode } from "./expression";
+import { EndOfCommandCstNode } from "./endOfCommand";
 
 
 export interface FunctionBeginCstNode extends CstNode {
@@ -10,7 +11,7 @@ export interface FunctionBeginCstNode extends CstNode {
 
 export type FunctionBeginCstChildren = {
 	classConstructor?: ClassConstructorCstNode[];
-	classDestructor?: CstNode[];  // only presence of node is important
+	classDestructor?: ClassDestructorCstNode[];
 	regularFunction?: RegularFunctionCstNode[];
 };
 
@@ -21,10 +22,23 @@ export interface ClassConstructorCstNode extends CstNode {
 }
 
 export type ClassConstructorCstChildren = {
+	identifier: IToken[]; // is always "new"
 	functionArguments: FunctionArgumentsCstNode[];
 	this?: IToken[];
 	super?: IToken[];
 	functionCall?: FunctionCallCstNode[];
+	endOfCommand: EndOfCommandCstNode[];
+};
+
+
+export interface ClassDestructorCstNode extends CstNode {
+	name: "classDestructor";
+	children: ClassDestructorCstChildren;
+}
+
+export type ClassDestructorCstChildren = {
+	identifier: IToken[];  // is always "destructor"
+	endOfCommand: EndOfCommandCstNode[];
 };
 
 
@@ -48,6 +62,7 @@ export type RegularFunctionCstChildren = {
 	name?: IToken[];
 	operator?: FunctionOperatorCstNode[];
 	functionArguments: FunctionArgumentsCstNode[];
+	endOfCommand: EndOfCommandCstNode[];
 };
 
 
@@ -105,4 +120,16 @@ export interface FunctionArgumentCstNode extends CstNode {
 export type FunctionArgumentCstChildren = {
 	type: FullyQualifiedClassNameCstNode[];
 	name: IToken[];
+};
+
+
+
+export interface FunctionEndCstNode extends CstNode {
+	name: "functionEnd";
+	children: FunctionEndCstChildren;
+}
+
+export type FunctionEndCstChildren = {
+	end: IToken[];
+	endOfCommand: EndOfCommandCstNode[];
 };

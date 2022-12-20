@@ -25,7 +25,7 @@
 import { Context } from "./context"
 import { DeclareInterfaceCstNode } from "../nodeclasses/declareInterface";
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
-import { RemoteConsole } from "vscode-languageserver"
+import { DocumentSymbol, RemoteConsole, SymbolKind } from "vscode-languageserver"
 import { TypeName } from "./typename"
 import { ContextClass } from "./scriptClass";
 import { ContextEnumeration } from "./scriptEnum";
@@ -38,7 +38,7 @@ export class ContextInterface extends Context{
 	protected _name: Identifier;
 	protected _typeModifiers: Context.TypeModifierSet;
 	protected _extends?: TypeName;
-	protected _declarations: Context[];
+	protected _declarations: Context[] = [];
 
 
 	constructor(node: DeclareInterfaceCstNode, typemodNode: TypeModifiersCstNode | undefined) {
@@ -50,26 +50,37 @@ export class ContextInterface extends Context{
 		this._node = node;
 		this._name = new Identifier(ideclBegin.name[0]);
 		this._typeModifiers = new Context.TypeModifierSet(typemodNode);
-		this._declarations = [];
 
+		let tokIf = ideclBegin.interface[0];
+		let tokEnd = idecl.interfaceEnd[0].children.end[0];
+		this.documentSymbol = DocumentSymbol.create(this._name.name, undefined,
+			SymbolKind.Interface, this.rangeFrom(tokIf, tokEnd, true, false),
+			this.rangeFrom(ideclBegin.name[0], tokEnd, true, true));
+		
 		if (ideclBegin.baseInterfaceName) {
 			this._extends = new TypeName(ideclBegin.baseInterfaceName[0]);
 		}
 
 		idecl.interfaceBody[0].children.interfaceBodyDeclaration?.forEach(each => {
 			let typemod = each.children.typeModifiers?.at(0);
+
 			if (each.children.declareClass) {
 				this._declarations.push(new ContextClass(each.children.declareClass[0], typemod));
+
 			} else if (each.children.declareInterface) {
 				this._declarations.push(new ContextInterface(each.children.declareInterface[0], typemod));
+
 			} else if (each.children.declareEnumeration) {
 				this._declarations.push(new ContextEnumeration(each.children.declareEnumeration[0], typemod));
+				
 			} else if (each.children.interfaceFunction) {
 				var f = new ContextFunction(each.children.interfaceFunction[0], typemod, this._name.name);
 				f.typeModifiers.add(Context.TypeModifier.Abstract);
 				this._declarations.push(f);
 			}
 		});
+
+		this.addChildDocumentSymbols(this._declarations);
 	}
 
 	public dispose(): void {

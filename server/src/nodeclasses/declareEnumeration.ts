@@ -1,4 +1,5 @@
 import { CstNode, IToken } from "chevrotain";
+import { EndOfCommandCstNode } from "./endOfCommand";
 
 
 export interface DeclareEnumerationCstNode extends CstNode {
@@ -9,6 +10,7 @@ export interface DeclareEnumerationCstNode extends CstNode {
 export type DeclareEnumerationCstChildren = {
 	enumerationBegin: EnumerationBeginCstNode[];
 	enumerationBody: EnumerationBodyCstNode[];
+	enumerationEnd: EnumerationEndCstNode[];
 };
 
 
@@ -18,6 +20,7 @@ export interface EnumerationBeginCstNode extends CstNode {
 }
 
 export type EnumerationBeginCstChildren = {
+	enum: IToken[];
 	name: IToken[];
 };
 
@@ -39,4 +42,15 @@ export interface EnumerationEntryCstNode extends CstNode {
 
 export type EnumerationEntryCstChildren = {
 	name: IToken[];
+	endOfCommand: EndOfCommandCstNode[];
+};
+
+
+export interface EnumerationEndCstNode extends CstNode {
+	name: "enumerationEnd";
+	children: EnumerationEndCstChildren;
+}
+
+export type EnumerationEndCstChildren = {
+	end: IToken[];
 };

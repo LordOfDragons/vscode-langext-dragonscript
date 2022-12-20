@@ -26,10 +26,11 @@ import { Context } from "./context";
 import { ClassVariableCstNode } from "../nodeclasses/declareClass";
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
 import { FullyQualifiedClassNameCstNode } from "../nodeclasses/fullyQualifiedClassName";
-import { RemoteConsole } from "vscode-languageserver";
+import { DocumentSymbol, RemoteConsole, SymbolKind } from "vscode-languageserver";
 import { TypeName } from "./typename";
 import { ContextBuilder } from "./contextBuilder";
 import { Identifier } from "./identifier";
+import { IToken } from "chevrotain";
 
 
 export class ContextVariable extends Context{
@@ -42,7 +43,8 @@ export class ContextVariable extends Context{
 
 	constructor(node: ClassVariableCstNode,
 			    typemodNode: TypeModifiersCstNode | undefined,
-				typeNode: FullyQualifiedClassNameCstNode) {
+				typeNode: FullyQualifiedClassNameCstNode,
+				endToken: IToken) {
 		super(Context.ContextType.Variable);
 		this._node = node;
 		this._typeModifiers = new Context.TypeModifierSet(typemodNode);
@@ -51,6 +53,13 @@ export class ContextVariable extends Context{
 		
 		if (node.children.value) {
 			this._value = ContextBuilder.createExpression(node.children.value[0]);
+		}
+
+		let tokBegin = this._name.token;
+		if (tokBegin) {
+			this.documentSymbol = DocumentSymbol.create(this._name.name, this._typename.name,
+				this._typeModifiers.has(Context.TypeModifier.Fixed) ? SymbolKind.Constant : SymbolKind.Variable,
+				this.rangeFrom(tokBegin, endToken, true, false), this.rangeFrom(tokBegin, endToken, true, true));
 		}
 	}
 

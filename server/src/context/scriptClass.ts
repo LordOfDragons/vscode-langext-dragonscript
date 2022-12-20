@@ -39,10 +39,8 @@ export class ContextClass extends Context{
 	protected _name: Identifier;
 	protected _typeModifiers: Context.TypeModifierSet;
 	protected _extends?: TypeName;
-	protected _implements: TypeName[];
-	protected _declarations: Context[];
-	protected _documentSymbolRange: Range;
-	protected _documentSymbolRangeSelection: Range;
+	protected _implements: TypeName[] = [];
+	protected _declarations: Context[] = [];
 
 
 	constructor(node: DeclareClassCstNode, typemodNode: TypeModifiersCstNode | undefined) {
@@ -50,17 +48,17 @@ export class ContextClass extends Context{
 
 		let cdecl = node.children;
 		let cdeclBegin = cdecl.classBegin[0].children;
-		let cdeclEnd = cdecl.classEnd[0].children.end[0];
-		let tokClass = cdeclBegin.class[0]
-
+		
 		this._node = node;
 		this._name = new Identifier(cdeclBegin.name[0]);
 		this._typeModifiers = new Context.TypeModifierSet(typemodNode);
-		this._declarations = [];
-		this._implements = [];
-		this._documentSymbolRange = this.rangeFrom(tokClass, cdeclEnd, true, false);
-		this._documentSymbolRangeSelection = this.rangeFrom(tokClass, cdeclEnd, false, true);
-
+		
+		let tokEnd = cdecl.classEnd[0].children.end[0];
+		let tokClass = cdeclBegin.class[0];
+		this.documentSymbol = DocumentSymbol.create(this._name.name, undefined,
+			SymbolKind.Class, this.rangeFrom(tokClass, tokEnd, true, false),
+			this.rangeFrom(cdeclBegin.name[0], tokEnd, true, true));
+		
 		if (cdeclBegin.baseClassName) {
 			this._extends = new TypeName(cdeclBegin.baseClassName[0]);
 		}
@@ -71,24 +69,37 @@ export class ContextClass extends Context{
 
 		cdecl.classBody[0].children.classBodyDeclaration?.forEach(each => {
 			let typemod = each.children.typeModifiers ? each.children.typeModifiers[0] : undefined;
+
 			if (each.children.declareClass) {
 				this._declarations.push(new ContextClass(each.children.declareClass[0], typemod));
+
 			} else if (each.children.declareInterface) {
 				this._declarations.push(new ContextInterface(each.children.declareInterface[0], typemod));
+
 			} else if (each.children.declareEnumeration) {
 				this._declarations.push(new ContextEnumeration(each.children.declareEnumeration[0], typemod));
+
 			} else if (each.children.classFunction) {
 				this._declarations.push(new ContextFunction(each.children.classFunction[0], typemod, this._name.name));
+
 			} else if (each.children.classVariables) {
 				let vdecls = each.children.classVariables[0].children;
 				if (vdecls.classVariable) {
 					let typeNode = vdecls.type[0];
-					vdecls.classVariable.forEach(each => {
-						this._declarations.push(new ContextVariable(each, typemod, typeNode));
-					});
+					let count = vdecls.classVariable.length;
+					let commaCount = vdecls.comma?.length || 0;
+					let declEnd = vdecls.endOfCommand[0].children;
+					let tokEnd = (declEnd.newline || declEnd.commandSeparator)![0];
+
+					for (let i = 0; i < count; i++) {
+						this._declarations.push(new ContextVariable(vdecls.classVariable[i],
+							typemod, typeNode, i < commaCount ? vdecls.comma![i] : tokEnd));
+					}
 				}
 			}
 		});
+
+		this.addChildDocumentSymbols(this._declarations);
 	}
 
 	public dispose(): void {
@@ -121,12 +132,6 @@ export class ContextClass extends Context{
 
 	public get declarations(): Context[] {
 		return this._declarations;
-	}
-
-	/** Get document symbol. */
-	public get documentSymbol(): DocumentSymbol | undefined {
-		return DocumentSymbol.create(this._name.name, undefined, SymbolKind.Class,
-			this._documentSymbolRange, this._documentSymbolRangeSelection, []);
 	}
 
 

@@ -32,53 +32,72 @@ import { ContextInterface } from "./scriptInterface";
 import { ContextEnumeration } from "./scriptEnum";
 import { ContextRequiresPackage } from "./requiresPackage";
 import { TextDocument } from "vscode-languageserver-textdocument";
-import { debugLogMessage } from "../server";
 
 
 /** Top level script context. */
 export class ContextScript extends Context{
 	protected _node: ScriptCstNode;
-	protected _statements: Context[];
-	protected _requires: ContextRequiresPackage[];
+	protected _statements: Context[] = [];
+	protected _requires: ContextRequiresPackage[] = [];
+	protected _namespaces: ContextNamespace[] = [];
+	
+	public documentSymbols: DocumentSymbol[] = [];
 
 
 	constructor(node: ScriptCstNode, textDocument: TextDocument) {
 		super(Context.ContextType.Script);
 		this._node = node;
-		this._statements = [];
-		this._requires = [];
 
 		let lastPosition = textDocument.positionAt(textDocument.getText().length);
 		var openNamespace: ContextNamespace | undefined = undefined;
+		var statements = this._statements;
 
 		node.children.scriptStatement.forEach(each => {
 			let c = each.children;
-			let statements = openNamespace ? openNamespace.statements : this._statements;
 
 			if (c.requiresPackage) {
 				let reqpack = new ContextRequiresPackage(c.requiresPackage[0]);
 				this._requires.push(reqpack);
 				statements.push(reqpack);
+
 			} else if(c.pinNamespace) {
 				statements.push(new ContextPinNamespace(c.pinNamespace[0]));
+
 			} else if (c.openNamespace) {
 				let prevNamespace = openNamespace;
+
 				openNamespace = new ContextNamespace(c.openNamespace[0]);
 				openNamespace.lastNamespace(lastPosition);
 				this._statements.push(openNamespace);
+				this._namespaces.push(openNamespace);
+
 				if (prevNamespace) {
 					prevNamespace.nextNamespace(openNamespace);
 				}
+
+				statements = openNamespace.statements;
+
 			} else if (c.scriptDeclaration) {
 				let declNode = c.scriptDeclaration[0].children;
 				let typemod = declNode.typeModifiers?.at(0);
+
 				if (declNode.declareClass) {
 					statements.push(new ContextClass(declNode.declareClass[0], typemod));
+
 				} else if (declNode.declareInterface) {
 					statements.push(new ContextInterface(declNode.declareInterface[0], typemod));
+
 				} else if (declNode.declareEnumeration) {
 					statements.push(new ContextEnumeration(declNode.declareEnumeration[0], typemod));
 				}
+			}
+		});
+
+		this._namespaces.forEach(each => each.addChildDocumentSymbols(each.statements));
+
+		this._statements.forEach(each => {
+			if (each.documentSymbol) {
+				this.documentSymbols.push(each.documentSymbol);
 			}
 		});
 	}
@@ -99,18 +118,6 @@ export class ContextScript extends Context{
 
 	public get statements(): Context[] {
 		return this._statements;
-	}
-
-	/** Get document symbols. */
-	public get documentSymbols(): DocumentSymbol[] {
-		let list: DocumentSymbol[] = [];
-		this._statements.forEach(each => {
-			let s = each.documentSymbol;
-			if (s) {
-				list.push(s);
-			}
-		});
-		return list;
 	}
 
 

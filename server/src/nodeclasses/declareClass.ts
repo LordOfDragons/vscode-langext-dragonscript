@@ -1,7 +1,8 @@
 import { CstNode, IToken } from "chevrotain";
 import { DeclareEnumerationCstNode } from "./declareEnumeration";
-import { FunctionBeginCstNode } from "./declareFunction";
+import { FunctionBeginCstNode, FunctionEndCstNode } from "./declareFunction";
 import { DeclareInterfaceCstNode } from "./declareInterface";
+import { EndOfCommandCstNode } from "./endOfCommand";
 import { ExpressionCstNode } from "./expression";
 import { FullyQualifiedClassNameCstNode } from "./fullyQualifiedClassName";
 import { StatementsCstNode } from "./statement";
@@ -64,8 +65,11 @@ export interface ClassVariablesCstNode extends CstNode {
 }
 
 export type ClassVariablesCstChildren = {
+	var: IToken[];
 	type: FullyQualifiedClassNameCstNode[];
+	comma?: IToken[];
 	classVariable?: ClassVariableCstNode[];
+	endOfCommand: EndOfCommandCstNode[];
 };
 
 
@@ -86,8 +90,10 @@ export interface ClassFunctionCstNode extends CstNode {
 }
 
 export type ClassFunctionCstChildren = {
+	func: IToken[];
 	functionBegin: FunctionBeginCstNode[];
-	statements: StatementsCstNode[];
+	statements?: StatementsCstNode[];
+	functionEnd?: FunctionEndCstNode[];
 };
 
 

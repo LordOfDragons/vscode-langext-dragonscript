@@ -27,12 +27,13 @@ import { FunctionBeginCstNode } from "../nodeclasses/declareFunction";
 import { InterfaceFunctionCstNode } from "../nodeclasses/declareInterface";
 import { ClassFunctionCstNode } from "../nodeclasses/declareClass";
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
-import { RemoteConsole } from "vscode-languageserver";
+import { DocumentSymbol, RemoteConsole, SymbolKind } from "vscode-languageserver";
 import { TypeName } from "./typename";
 import { ContextFunctionArgument } from "./classFunctionArgument";
 import { ContextBuilder } from "./contextBuilder";
 import { Identifier } from "./identifier";
 import { ContextStatements } from "./statements";
+import { IToken } from "chevrotain";
 
 
 export class ContextFunction extends Context{
@@ -55,14 +56,32 @@ export class ContextFunction extends Context{
 		this._arguments = [];
 		this._typeModifiers = new Context.TypeModifierSet(typemodNode);
 
+		var tokBegin: IToken | undefined;
+		let typeMods = typemodNode?.children.typeModifier;
+		if (typeMods && typeMods.length > 0) {
+			let tmnode = typeMods[0].children;
+			tokBegin = (tmnode.abstract || tmnode.fixed || tmnode.native || tmnode.private
+				|| tmnode.protected || tmnode.public || tmnode.static)![0];
+		}
+
+		var tokEnd: IToken | undefined;
+
 		let ifdecl = node as InterfaceFunctionCstNode;
 		let cfdecl = node as ClassFunctionCstNode;
 		var fdecl: FunctionBeginCstNode | undefined;
+		var docSymKind: SymbolKind = SymbolKind.Method;
 
 		if (ifdecl && ifdecl.children.functionBegin) {
 			fdecl = ifdecl.children.functionBegin[0];
+			if (!tokBegin) {
+				tokBegin = ifdecl.children.func[0];
+			}
+
 		} else if (cfdecl && cfdecl.children.functionBegin) {
 			fdecl = cfdecl.children.functionBegin[0];
+			if (!tokBegin) {
+				tokBegin = cfdecl.children.func[0];
+			}
 		}
 
 		if (!fdecl) {
@@ -75,7 +94,7 @@ export class ContextFunction extends Context{
 		if (fdecl.children.classConstructor) {
 			let fdecl2 = fdecl.children.classConstructor[0].children;
 			this._functionType = ContextFunction.Type.Constructor;
-			this._name = new Identifier(undefined, "new");
+			this._name = new Identifier(fdecl2.identifier[0]); // is always "new"
 			this._returnType = TypeName.typeNamed(ownerTypeName);
 			this._typeModifiers.add(Context.TypeModifier.Static);
 
@@ -97,10 +116,18 @@ export class ContextFunction extends Context{
 				}
 			}
 
+			let declEnd = fdecl2.endOfCommand[0].children;
+			tokEnd = (declEnd.newline || declEnd.commandSeparator)![0];
+			docSymKind = SymbolKind.Constructor;
+
 		} else if (fdecl.children.classDestructor) {
+			let fdecl2 = fdecl.children.classDestructor[0].children;
 			this._functionType = ContextFunction.Type.Destructor;
-			this._name = new Identifier(undefined, "destructor");
+			this._name = new Identifier(fdecl2.identifier[0]); // is always "destructor"
 			this._returnType = TypeName.typeVoid();
+
+			let declEnd = fdecl2.endOfCommand[0].children;
+			tokEnd = (declEnd.newline || declEnd.commandSeparator)![0];
 
 		} else if (fdecl.children.regularFunction) {
 			let fdecl2 = fdecl.children.regularFunction[0].children;
@@ -113,6 +140,7 @@ export class ContextFunction extends Context{
 			} else if(fdecl2.operator) {
 				this._functionType = ContextFunction.Type.Operator;
 				this._returnType = TypeName.typeNamed(ownerTypeName);
+				docSymKind = SymbolKind.Operator;
 				
 				let odecl = fdecl2.operator[0].children;
 				if (odecl.assignMultiply) {
@@ -186,6 +214,9 @@ export class ContextFunction extends Context{
 				}
 			}
 
+			let declEnd = fdecl2.endOfCommand[0].children;
+			tokEnd = (declEnd.newline || declEnd.commandSeparator)![0];
+
 		} else {
 			this._functionType = ContextFunction.Type.Regular;
 			this._name = new Identifier(undefined, "??");
@@ -194,6 +225,22 @@ export class ContextFunction extends Context{
 
 		if (cfdecl && cfdecl.children.statements) {
 			this._statements = new ContextStatements(cfdecl.children.statements[0]);
+
+			let declEnd = cfdecl.children.functionEnd;
+			if (declEnd) {
+				tokEnd = (declEnd[0].children.end || declEnd[0].children.endOfCommand)![0];
+			}
+		}
+
+		if (tokBegin && tokEnd && this._name.token) {
+			let args = this._arguments.map(each => `${each.typename.name} ${each.name.name}`);
+			let argText = args.length > 0 ? args.reduce((a,b) => `${a}, ${b}`) : "";
+			let retText = this._returnType?.name || "void";
+			let extText = `(${argText}): ${retText}`;
+
+			this.documentSymbol = DocumentSymbol.create(this._name.name, extText,
+				docSymKind, this.rangeFrom(tokBegin, tokEnd, true, false),
+				this.rangeFrom(this._name.token, tokEnd, true, true));
 		}
 	}
 

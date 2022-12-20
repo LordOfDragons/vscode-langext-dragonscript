@@ -25,7 +25,7 @@
 import { Context } from "./context"
 import { DeclareEnumerationCstNode, EnumerationEntryCstNode } from "../nodeclasses/declareEnumeration";
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
-import { RemoteConsole } from "vscode-languageserver"
+import { DocumentSymbol, RemoteConsole, SymbolKind } from "vscode-languageserver"
 import { Identifier } from "./identifier";
 
 
@@ -34,10 +34,19 @@ export class ContextEnumEntry extends Context{
 	protected _name: Identifier;
 
 
-	constructor(node: EnumerationEntryCstNode) {
+	constructor(node: EnumerationEntryCstNode, docTextExt?: string) {
 		super(Context.ContextType.EnumerationEntry)
 		this._node = node
 		this._name = new Identifier(node.children.name[0]);
+
+		let eoc = node.children.endOfCommand[0].children;
+		let tokBegin = this._name.token;
+		if (tokBegin) {
+			let tokEnd = eoc.newline ? eoc.newline[0] : eoc.commandSeparator![0];
+			let range = this.rangeFrom(tokBegin, tokEnd);
+			this.documentSymbol = DocumentSymbol.create(this._name.name, docTextExt,
+				SymbolKind.EnumMember, range, range);
+		}
 	}
 
 
@@ -60,7 +69,7 @@ export class ContextEnumeration extends Context{
 	protected _node: DeclareEnumerationCstNode;
 	protected _name: Identifier;
 	protected _typeModifiers: Context.TypeModifierSet;
-	protected _entries: ContextEnumEntry[];
+	protected _entries: ContextEnumEntry[] = [];
 
 
 	constructor(node: DeclareEnumerationCstNode, typemodNode: TypeModifiersCstNode | undefined) {
@@ -72,11 +81,19 @@ export class ContextEnumeration extends Context{
 		this._node = node;
 		this._name = new Identifier(edeclBegin.name[0]);
 		this._typeModifiers = new Context.TypeModifierSet(typemodNode);
-		this._entries = [];
 
+		let tokEnd = edecl.enumerationEnd[0].children.end[0];
+		let tokEnum = edeclBegin.enum[0];
+		this.documentSymbol = DocumentSymbol.create(this._name.name, undefined,
+			SymbolKind.Enum, this.rangeFrom(tokEnum, tokEnd, true, false),
+			this.rangeFrom(edeclBegin.name[0], tokEnd, true, true));
+
+		let docTextExt = this._name.name;
 		edecl.enumerationBody[0].children.enumerationEntry?.forEach(each => {
-			this._entries.push(new ContextEnumEntry(each));
+			this._entries.push(new ContextEnumEntry(each, docTextExt));
 		});
+
+		this.addChildDocumentSymbols(this._entries);
 	}
 
 	public dispose(): void {
