@@ -23,7 +23,7 @@
  */
 
 import { IToken } from "chevrotain";
-import { DocumentSymbol, Range, RemoteConsole } from "vscode-languageserver";
+import { DocumentSymbol, Hover, Position, Range, RemoteConsole } from "vscode-languageserver";
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
 
 
@@ -32,6 +32,7 @@ export class Context {
 	protected _type: Context.ContextType;
 	public parent?: Context;
 	public documentSymbol?: DocumentSymbol;
+	protected _hover: Hover | null | undefined;
 
 
 	constructor(type: Context.ContextType) {
@@ -67,6 +68,67 @@ export class Context {
 		});
 	}
 
+	public get hover(): Hover | null {
+		if (this._hover === undefined) {
+			this._hover = this.updateHover();
+		}
+		return this._hover;
+	}
+
+	protected updateHover(): Hover | null {
+		return null;
+	}
+
+	public contextAtPosition(position: Position): Context | undefined {
+		return undefined;
+	}
+
+	protected contextAtPositionList(list: Context[], position: Position): Context | undefined {
+		var context: Context | undefined;
+		list.find(each => context = each.contextAtPosition(position));
+		return context;
+	}
+
+	public isPositionInsideRange(range: Range, position: Position): boolean {
+		if (position.line < range.start.line) {
+			return false;
+		} else if (position.line == range.start.line) {
+			if (position.character < range.start.character) {
+				return false;
+			}
+		}
+
+		if (position.line > range.end.line) {
+			return false;
+		} else if (position.line == range.end.line) {
+			if (position.character > range.end.character) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+
+	/**
+	 * Range from start and end token.
+	 * If end is undefined start is used as end token.
+	 */
+	protected rangeFrom(start: IToken, end?: IToken, startAtLeft: boolean = true, endAtLeft: boolean = false): Range {
+		// note: end column ist at the left side of the last character hence (+1 -1) cancels out
+		let a = start;
+		let b = end || start;
+		
+		let startLine = a.startLine || 1;
+		let endLine = b.endLine || startLine;
+		
+		let startColumn = startAtLeft ? (a.startColumn || 1) : (a.endColumn || 1) + 1;
+		let endColumn = endAtLeft ? (b.startColumn || 1) : (b.endColumn || 1) + 1;
+		
+		// note: line/column in chevrotain is base-1 and in vs base-0
+		return Range.create(startLine - 1, startColumn - 1, endLine - 1, endColumn - 1);
+	}
+
 
 	/** Debug. */
 	log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
@@ -89,26 +151,6 @@ export class Context {
 			let prefixLinesChild = `${prefix}  `;
 			child.log(console, prefixChild, prefixLinesChild);
 		}
-	}
-
-	/**
-	 * Range from start and end token.
-	 * If end is undefined start is used as end token.
-	 */
-	protected rangeFrom(start: IToken, end: IToken | undefined,
-			startAtLeft: boolean = true, endAtLeft: boolean = false): Range {
-		// note: end column ist at the left side of the last character hence (+1 -1) cancels out
-		let a = start;
-		let b = end || start;
-		
-		let startLine = a.startLine || 1;
-		let endLine = b.endLine || startLine;
-		
-		let startColumn = startAtLeft ? (a.startColumn || 1) : (a.endColumn || 1) + 1;
-		let endColumn = endAtLeft ? (b.startColumn || 1) : (b.endColumn || 1) + 1;
-		
-		// note: line/column in chevrotain is base-1 and in vs base-0
-		return Range.create(startLine - 1, startColumn - 1, endLine - 1, endColumn - 1);
 	}
 }
 

@@ -25,7 +25,7 @@
 import { Context } from "./context"
 import { DeclareInterfaceCstNode } from "../nodeclasses/declareInterface";
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
-import { DocumentSymbol, RemoteConsole, SymbolKind } from "vscode-languageserver"
+import { DocumentSymbol, Position, RemoteConsole, SymbolKind } from "vscode-languageserver"
 import { TypeName } from "./typename"
 import { ContextClass } from "./scriptClass";
 import { ContextEnumeration } from "./scriptEnum";
@@ -108,6 +108,17 @@ export class ContextInterface extends Context{
 
 	public get declarations(): Context[] {
 		return this._declarations;
+	}
+
+	public contextAtPosition(position: Position): Context | undefined {
+		if (this.isPositionInsideRange(this.documentSymbol!.range, position)) {
+			if (this._name.token && this.isPositionInsideRange(this.rangeFrom(this._name.token), position)) {
+				return this;
+			} else {
+				return this.contextAtPositionList(this._declarations, position);
+			}
+		}
+		return undefined;
 	}
 
 

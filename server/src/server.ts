@@ -35,7 +35,8 @@ import {
 	TextDocumentSyncKind,
 	InitializeResult,
 	DocumentSymbolParams,
-	DocumentSymbol
+	DocumentSymbol,
+	Hover
 } from 'vscode-languageserver/node'
 
 import {
@@ -96,7 +97,8 @@ connection.onInitialize((params: InitializeParams) => {
 			},
 			documentSymbolProvider: {
 				label: "DragonScript"
-			}
+			},
+			hoverProvider: true
 		}
 	};
 
@@ -197,6 +199,13 @@ connection.onDidChangeWatchedFiles(_change => {
 connection.onDocumentSymbol(
 	(params: DocumentSymbolParams): DocumentSymbol[] => {
 		return scriptDocuments.get(params.textDocument.uri)?.context?.documentSymbols || [];
+	}
+);
+
+connection.onHover(
+	(params: TextDocumentPositionParams): Hover | null => {
+		return scriptDocuments.get(params.textDocument.uri)?.context?.
+			contextAtPosition(params.position)?.hover || null;
 	}
 );
 

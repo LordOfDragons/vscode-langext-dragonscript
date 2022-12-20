@@ -67,6 +67,13 @@ export class ContextNamespace extends Context{
 		return this._statements;
 	}
 
+	public contextAtPosition(position: Position): Context | undefined {
+		if (this.isPositionInsideRange(this.documentSymbol!.range, position)) {
+			return this.contextAtPositionList(this._statements, position);
+		}
+		return undefined;
+	}
+
 
 	public nextNamespace(namespace: ContextNamespace): void {
 		let s = namespace.documentSymbol?.range.start;

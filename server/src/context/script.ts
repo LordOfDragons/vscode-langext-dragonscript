@@ -24,7 +24,7 @@
 
 import { Context } from "./context";
 import { ScriptCstNode } from "../nodeclasses/script";
-import { DocumentSymbol, Range, RemoteConsole, SymbolKind } from "vscode-languageserver";
+import { DocumentSymbol, Position, Range, RemoteConsole, SymbolKind } from "vscode-languageserver";
 import { ContextPinNamespace } from "./pinNamespace";
 import { ContextNamespace } from "./namespace";
 import { ContextClass } from "./scriptClass";
@@ -40,7 +40,6 @@ export class ContextScript extends Context{
 	protected _statements: Context[] = [];
 	protected _requires: ContextRequiresPackage[] = [];
 	protected _namespaces: ContextNamespace[] = [];
-	
 	public documentSymbols: DocumentSymbol[] = [];
 
 
@@ -118,6 +117,10 @@ export class ContextScript extends Context{
 
 	public get statements(): Context[] {
 		return this._statements;
+	}
+
+	public contextAtPosition(position: Position): Context | undefined {
+		return this.contextAtPositionList(this._statements, position);
 	}
 
 

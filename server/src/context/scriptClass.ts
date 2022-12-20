@@ -25,13 +25,14 @@
 import { Context } from "./context"
 import { DeclareClassCstNode } from "../nodeclasses/declareClass";
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
-import { DocumentSymbol, Range, RemoteConsole, SymbolKind } from "vscode-languageserver"
+import { DocumentSymbol, Hover, MarkupKind, Position, Range, RemoteConsole, SymbolKind } from "vscode-languageserver"
 import { TypeName } from "./typename"
 import { ContextInterface } from "./scriptInterface";
 import { ContextEnumeration } from "./scriptEnum";
 import { ContextFunction } from "./classFunction";
 import { ContextVariable } from "./classVariable";
 import { Identifier } from "./identifier";
+import { HoverInfo } from "../hoverinfo";
 
 
 export class ContextClass extends Context{
@@ -132,6 +133,27 @@ export class ContextClass extends Context{
 
 	public get declarations(): Context[] {
 		return this._declarations;
+	}
+
+	public contextAtPosition(position: Position): Context | undefined {
+		if (this.isPositionInsideRange(this.documentSymbol!.range, position)) {
+			if (this._name.token && this.isPositionInsideRange(this.rangeFrom(this._name.token), position)) {
+				return this;
+			} else {
+				return this.contextAtPositionList(this._declarations, position);
+			}
+		}
+		return undefined;
+	}
+
+	protected updateHover(): Hover | null {
+		if (!this._name.token) {
+			return null;
+		}
+
+		// hover would contain class documentation and such. the rest comes from vs
+		//return new HoverInfo(content, this.rangeFrom(this._name.token));
+		return null;
 	}
 
 

@@ -25,7 +25,7 @@
 import { Context } from "./context"
 import { DeclareEnumerationCstNode, EnumerationEntryCstNode } from "../nodeclasses/declareEnumeration";
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
-import { DocumentSymbol, RemoteConsole, SymbolKind } from "vscode-languageserver"
+import { DocumentSymbol, Position, RemoteConsole, SymbolKind } from "vscode-languageserver"
 import { Identifier } from "./identifier";
 
 
@@ -116,6 +116,17 @@ export class ContextEnumeration extends Context{
 
 	public get entries(): ContextEnumEntry[] {
 		return this._entries;
+	}
+
+	public contextAtPosition(position: Position): Context | undefined {
+		if (this.isPositionInsideRange(this.documentSymbol!.range, position)) {
+			if (this._name.token && this.isPositionInsideRange(this.rangeFrom(this._name.token), position)) {
+				return this;
+			} else {
+				return this.contextAtPositionList(this._entries, position);
+			}
+		}
+		return undefined;
 	}
 
 
