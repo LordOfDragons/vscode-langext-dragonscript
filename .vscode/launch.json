@@ -12,8 +12,7 @@
             "runtimeExecutable": "${execPath}",
             "args": [
                 "--extensionDevelopmentPath=${workspaceFolder}",
-				"${workspaceRoot}/test",
-				"${workspaceRoot}/test/accept.ds"
+				"${workspaceRoot}/test/test.code-workspace"
             ],
             "outFiles": ["${workspaceRoot}/client/out/**/*.js"],
 			/*
@@ -40,7 +39,7 @@
 			"args": [
 				"--extensionDevelopmentPath=${workspaceRoot}",
 				"--extensionTestsPath=${workspaceRoot}/test",
-				"${workspaceRoot}/test/accept.ds"
+				"${workspaceRoot}/est/test.code-workspace"
 			],
 			"outFiles": ["${workspaceRoot}/client/out/test/**/*.js"]
 		}

@@ -28,8 +28,11 @@ import { TextDocument } from "vscode-languageserver-textdocument";
 import { DSCapabilities } from "./capabilities";
 import { DSLexer } from "./lexer";
 import { ScriptCstNode } from "./nodeclasses/script";
+import { PackageDEModule } from "./package/dragenginemodule";
+import { Package } from "./package/package";
 import { DSParser } from "./parser";
 import { ScriptDocument } from "./scriptDocument";
+import { packages } from "./server";
 import { DSSettings } from "./settings";
 
 export class ScriptValidator {
@@ -56,10 +59,18 @@ export class ScriptValidator {
 
 
 	public parse(scriptDocument: ScriptDocument, textDocument: TextDocument, diagnostics: Diagnostic[]): void {
+		this.doRequires(scriptDocument, diagnostics);
 		const lexed = this.doLex(textDocument, scriptDocument.settings, diagnostics);
 		scriptDocument.node = this.doParse(textDocument, scriptDocument.settings, lexed, diagnostics);
 	}
 
+
+	protected doRequires(scriptDocument: ScriptDocument, diagnostics: Diagnostic[]): void {
+		if (scriptDocument.settings.requiresPackageDragengine) {
+			let pkg: Package = packages.get(PackageDEModule.PACKAGE_ID)!;
+			pkg.load();
+		}
+	}
 
 	protected doLex(textDocument: TextDocument, settings: DSSettings,
 			diagnostics: Diagnostic[]): ILexingResult {

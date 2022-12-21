@@ -22,12 +22,30 @@
 * SOFTWARE.
 */
 
-export interface DSSettings {
-	maxNumberOfProblems: number;
+import { RemoteConsole } from "vscode-languageserver";
 
-	/** Path to Drag[en]gine installation. Empty string to auto-detect. */
-	pathDragengine: string;
+export class Package {
+	protected _console: RemoteConsole;
+	protected _id: string;
 
-	/** Workspace required Drag[en]gine DragonScript Module Package. */
-	requiresPackageDragengine: boolean
+
+	constructor(console: RemoteConsole, id: string) {
+		this._console = console;
+		this._id = id;
+	}
+
+
+	public get console(): RemoteConsole {
+		return this._console;
+	}
+
+	public get id(): string {
+		return this._id;
+	}
+
+	public load(): void {
+	}
+
+	public reload(): void {
+	}
 }

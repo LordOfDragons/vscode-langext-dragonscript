@@ -54,6 +54,18 @@
 			"type": "object",
 			"title": "DragonScript configuration",
 			"properties": {
+				"dragonscriptLanguage.pathDragengine": {
+					"scope": "application",
+					"type": "string",
+					"default": "",
+					"description": "Path to Drag[en]gine installation. Use empty string to auto-detect."
+				},
+				"dragonscriptLanguage.requiresPackageDragengine": {
+					"scope": "resource",
+					"type": "boolean",
+					"default": false,
+					"description": "Workspace requires Drag[en]gine DragonScript Module Package."
+				},
 				"dragonscriptLanguage.maxNumberOfProblems": {
 					"scope": "resource",
 					"type": "number",

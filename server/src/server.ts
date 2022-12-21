@@ -49,6 +49,8 @@ import { ScriptValidator } from './scriptValidator'
 import { DSSettings } from './settings'
 import { DSCapabilities } from './capabilities'
 import { ScriptDocument } from './scriptDocument'
+import { Packages } from './package/packages'
+import { PackageDEModule } from './package/dragenginemodule'
 
 // Create a connection for the server, using Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -114,7 +116,6 @@ connection.onInitialize((params: InitializeParams) => {
 
 connection.onInitialized(() => {
 	if (capabilities.hasConfiguration) {
-		// Register for all configuration changes.
 		connection.client.register(DidChangeConfigurationNotification.type, undefined);
 	}
 	if (capabilities.hasWorkspaceFolder) {
@@ -122,27 +123,40 @@ connection.onInitialized(() => {
 			connection.console.log('Workspace folder change event received.');
 		});
 	}
+
+	packages.add(new PackageDEModule(connection.console));
+
+	if (capabilities.hasConfiguration) {
+		connection.workspace.getConfiguration('dragonscriptLanguage').then(settings => {
+			(<PackageDEModule>packages.get(PackageDEModule.PACKAGE_ID)).pathDragengine = settings.pathDragengine;
+		});
+	}
 });
 
 // The global settings, used when the `workspace/configuration` request is not supported by the client.
-// Please note that this is not the case when using this server with the client provided in this example
-// but could happen with other clients.
-const defaultSettings: DSSettings = { maxNumberOfProblems: 1000 };
+const defaultSettings: DSSettings = {
+	maxNumberOfProblems: 1000,
+	pathDragengine: "",
+	requiresPackageDragengine: false
+};
 let globalSettings: DSSettings = defaultSettings;
 
 // Cache the settings of all open documents
 const documentSettings: Map<string, Thenable<DSSettings>> = new Map();
+
+export const packages: Packages = new Packages();
 
 connection.onDidChangeConfiguration(change => {
 	if (capabilities.hasConfiguration) {
 		// Reset all cached document settings
 		documentSettings.clear();
 	} else {
-		globalSettings = <DSSettings>(
-			(change.settings.dragonscriptLanguage || defaultSettings)
-		);
+		globalSettings = <DSSettings>(change.settings.dragonscriptLanguage || defaultSettings);
 	}
 
+	(<PackageDEModule>packages.get(PackageDEModule.PACKAGE_ID)).pathDragengine =
+		(change.settings.dragonscriptLanguage || defaultSettings).pathDragengine;
+	
 	// Revalidate all open text documents
 	documents.all().forEach(validateTextDocument);
 });
@@ -186,7 +200,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 		scriptDocument.context = undefined;
 	}
 
-	scriptDocument.context?.log(connection.console);
+	//scriptDocument.context?.log(connection.console);
 	
 	connection.sendDiagnostics({uri: textDocument.uri, diagnostics})
 }

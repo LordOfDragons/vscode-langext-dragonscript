@@ -22,12 +22,28 @@
 * SOFTWARE.
 */
 
-export interface DSSettings {
-	maxNumberOfProblems: number;
+import { Package } from "./package";
 
-	/** Path to Drag[en]gine installation. Empty string to auto-detect. */
-	pathDragengine: string;
+export class Packages {
+	protected _packages: Map<string,Package> = new Map<string,Package>();
 
-	/** Workspace required Drag[en]gine DragonScript Module Package. */
-	requiresPackageDragengine: boolean
+
+	constructor() {
+	}
+
+
+	public get(id: string): Package | undefined {
+		if (this._packages.has(id)) {
+			return this._packages.get(id);
+		}
+		return undefined;
+	}
+
+	public add(apackage: Package): void {
+		if (this._packages.has(apackage.id)) {
+			throw Error("Package exists already");
+		}
+
+		this._packages.set(apackage.id, apackage);
+	}
 }
