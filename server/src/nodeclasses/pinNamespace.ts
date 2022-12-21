@@ -1,4 +1,4 @@
-import { CstNode } from "chevrotain";
+import { CstNode, IToken } from "chevrotain";
 import { FullyQualifiedClassNameCstNode } from "./fullyQualifiedClassName";
 
 
@@ -8,5 +8,6 @@ export interface PinNamespaceCstNode extends CstNode {
 }
 
 export type PinNamespaceCstChildren = {
+	pin: IToken[];
 	name: FullyQualifiedClassNameCstNode[];
 };

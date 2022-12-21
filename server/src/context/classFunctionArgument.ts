@@ -35,8 +35,8 @@ export class ContextFunctionArgument extends Context{
 	protected _typename: TypeName;
 
 
-	constructor(node: FunctionArgumentCstNode) {
-		super(Context.ContextType.FunctionArgument)
+	constructor(node: FunctionArgumentCstNode, parent: Context) {
+		super(Context.ContextType.FunctionArgument, parent)
 		this._node = node
 		this._name = new Identifier(node.children.name[0]);
 		this._typename = new TypeName(node.children.type[0]);
@@ -58,6 +58,10 @@ export class ContextFunctionArgument extends Context{
 
 	public get typename(): TypeName {
 		return this._typename
+	}
+
+	public get fullyQualifiedName(): string {
+		return this._name.name;
 	}
 
 	

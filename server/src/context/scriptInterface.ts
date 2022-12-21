@@ -25,12 +25,13 @@
 import { Context } from "./context"
 import { DeclareInterfaceCstNode } from "../nodeclasses/declareInterface";
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
-import { DocumentSymbol, Position, RemoteConsole, SymbolKind } from "vscode-languageserver"
+import { DocumentSymbol, Hover, Position, RemoteConsole, SymbolKind } from "vscode-languageserver"
 import { TypeName } from "./typename"
 import { ContextClass } from "./scriptClass";
 import { ContextEnumeration } from "./scriptEnum";
 import { ContextFunction } from "./classFunction";
 import { Identifier } from "./identifier";
+import { HoverInfo } from "../hoverinfo";
 
 
 export class ContextInterface extends Context{
@@ -41,8 +42,8 @@ export class ContextInterface extends Context{
 	protected _declarations: Context[] = [];
 
 
-	constructor(node: DeclareInterfaceCstNode, typemodNode: TypeModifiersCstNode | undefined) {
-		super(Context.ContextType.Interface);
+	constructor(node: DeclareInterfaceCstNode, typemodNode: TypeModifiersCstNode | undefined, parent: Context) {
+		super(Context.ContextType.Interface, parent);
 
 		let idecl = node.children;
 		let ideclBegin = idecl.interfaceBegin[0].children;
@@ -65,16 +66,16 @@ export class ContextInterface extends Context{
 			let typemod = each.children.typeModifiers?.at(0);
 
 			if (each.children.declareClass) {
-				this._declarations.push(new ContextClass(each.children.declareClass[0], typemod));
+				this._declarations.push(new ContextClass(each.children.declareClass[0], typemod, this));
 
 			} else if (each.children.declareInterface) {
-				this._declarations.push(new ContextInterface(each.children.declareInterface[0], typemod));
+				this._declarations.push(new ContextInterface(each.children.declareInterface[0], typemod, this));
 
 			} else if (each.children.declareEnumeration) {
-				this._declarations.push(new ContextEnumeration(each.children.declareEnumeration[0], typemod));
+				this._declarations.push(new ContextEnumeration(each.children.declareEnumeration[0], typemod, this));
 				
 			} else if (each.children.interfaceFunction) {
-				var f = new ContextFunction(each.children.interfaceFunction[0], typemod, this._name.name);
+				var f = new ContextFunction(each.children.interfaceFunction[0], typemod, this._name.name, this);
 				f.typeModifiers.add(Context.TypeModifier.Abstract);
 				this._declarations.push(f);
 			}
@@ -110,6 +111,11 @@ export class ContextInterface extends Context{
 		return this._declarations;
 	}
 
+	public get fullyQualifiedName(): string {
+		let n = this.parent?.fullyQualifiedName || "";
+		return n ? `${n}.${this._name}` : this._name.name;
+	}
+
 	public contextAtPosition(position: Position): Context | undefined {
 		if (this.isPositionInsideRange(this.documentSymbol!.range, position)) {
 			if (this._name.token && this.isPositionInsideRange(this.rangeFrom(this._name.token), position)) {
@@ -119,6 +125,16 @@ export class ContextInterface extends Context{
 			}
 		}
 		return undefined;
+	}
+
+	protected updateHover(): Hover | null {
+		if (!this._name.token) {
+			return null;
+		}
+
+		let content = [];
+		content.push(`${this._typeModifiers.typestring} **interface** *${this.parent!.fullyQualifiedName}*.**${this.name}**`);
+		return new HoverInfo(content, this.rangeFrom(this._name.token));
 	}
 
 

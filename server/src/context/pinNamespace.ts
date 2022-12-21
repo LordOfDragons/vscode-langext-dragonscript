@@ -24,8 +24,9 @@
 
 import { Context } from "./context";
 import { PinNamespaceCstNode } from "../nodeclasses/pinNamespace";
-import { RemoteConsole } from "vscode-languageserver";
+import { DocumentSymbol, Hover, Position, RemoteConsole, SymbolKind } from "vscode-languageserver";
 import { TypeName } from "./typename";
+import { HoverInfo } from "../hoverinfo";
 
 
 export class ContextPinNamespace extends Context{
@@ -33,10 +34,18 @@ export class ContextPinNamespace extends Context{
 	protected _typename: TypeName;
 
 
-	constructor(node: PinNamespaceCstNode) {
-		super(Context.ContextType.PinNamespace);
+	constructor(node: PinNamespaceCstNode, parent: Context) {
+		super(Context.ContextType.PinNamespace, parent);
 		this._node = node;
 		this._typename = new TypeName(node.children.name[0]);
+
+		let tokPin = node.children.pin[0];
+		let tokBegin = this._typename.firstToken || tokPin;
+		let tokEnd = this._typename.lastToken || tokBegin;
+		
+		this.documentSymbol = DocumentSymbol.create(this._typename.name,
+			this._typename.name, SymbolKind.Namespace, this.rangeFrom(tokPin, tokEnd, true, false),
+			this.rangeFrom(tokBegin, tokEnd, true, true));
 	}
 
 	dispose(): void {
@@ -51,6 +60,31 @@ export class ContextPinNamespace extends Context{
 
 	public get typename(): TypeName {
 		return this._typename;
+	}
+
+	public get fullyQualifiedName(): string {
+		return this._typename.name;
+	}
+
+	public contextAtPosition(position: Position): Context | undefined {
+		if (this.isPositionInsideRange(this.documentSymbol!.range, position)) {
+			let ft = this._typename.firstToken;
+			let lt = this._typename.lastToken;
+			if (ft && lt && this.isPositionInsideRange(this.rangeFrom(ft, lt), position)) {
+				return this;
+			}
+		}
+		return undefined;
+	}
+
+	protected updateHover(): Hover | null {
+		if (!this._typename.firstToken || !this._typename.lastToken) {
+			return null;
+		}
+
+		let content = [];
+		content.push(`**pin** **${this._typename}**`);
+		return new HoverInfo(content, this.rangeFrom(this._typename.firstToken, this._typename.lastToken));
 	}
 
 

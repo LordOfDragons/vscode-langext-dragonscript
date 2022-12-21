@@ -39,23 +39,23 @@ export class ContextFor extends Context{
 	protected _statements: ContextStatements;
 	
 
-	constructor(node: StatementForCstNode) {
-		super(Context.ContextType.For);
+	constructor(node: StatementForCstNode, parent: Context) {
+		super(Context.ContextType.For, parent);
 		this._node = node;
 
 		let forBegin = node.children.statementForBegin[0].children;
 		let forTo = forBegin.statementForTo[0].children;
 
-		this._variable = ContextBuilder.createExpressionObject(forBegin.statementForVariable[0].children.variable[0]);
-		this._from = ContextBuilder.createExpression(forBegin.statementForFrom[0].children.value[0]);
-		this._to = ContextBuilder.createExpression(forTo.value[0]);
+		this._variable = ContextBuilder.createExpressionObject(forBegin.statementForVariable[0].children.variable[0], this);
+		this._from = ContextBuilder.createExpression(forBegin.statementForFrom[0].children.value[0], this);
+		this._to = ContextBuilder.createExpression(forTo.value[0], this);
 		this._downto = forTo.downto !== undefined;
 
 		if (forBegin.statementForStep) {
-			this._step = ContextBuilder.createExpression(forBegin.statementForStep[0].children.value[0]);
+			this._step = ContextBuilder.createExpression(forBegin.statementForStep[0].children.value[0], this);
 		}
 
-		this._statements = new ContextStatements(node.children.statements[0]);
+		this._statements = new ContextStatements(node.children.statements[0], this);
 	}
 
 	public dispose(): void {

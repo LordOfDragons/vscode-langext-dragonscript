@@ -24,8 +24,9 @@
 
 import { Context } from "./context";
 import { OpenNamespaceCstNode } from "../nodeclasses/openNamespace";
-import { DocumentSymbol, Position, Range, RemoteConsole, SymbolKind } from "vscode-languageserver";
+import { DocumentSymbol, Hover, Position, Range, RemoteConsole, SymbolKind } from "vscode-languageserver";
 import { TypeName } from "./typename";
+import { HoverInfo } from "../hoverinfo";
 
 
 export class ContextNamespace extends Context{
@@ -34,8 +35,8 @@ export class ContextNamespace extends Context{
 	protected _statements: Context[];
 
 
-	constructor(node: OpenNamespaceCstNode) {
-		super(Context.ContextType.Namespace);
+	constructor(node: OpenNamespaceCstNode, parent: Context) {
+		super(Context.ContextType.Namespace, parent);
 		this._node = node;
 		this._typename = new TypeName(node.children.name[0]);
 		this._statements = [];
@@ -69,7 +70,12 @@ export class ContextNamespace extends Context{
 
 	public contextAtPosition(position: Position): Context | undefined {
 		if (this.isPositionInsideRange(this.documentSymbol!.range, position)) {
-			return this.contextAtPositionList(this._statements, position);
+			let lt = this._typename.lastToken;
+			if (lt && this.isPositionInsideRange(this.rangeFrom(lt), position)) {
+				return this;
+			} else {
+				return this.contextAtPositionList(this._statements, position);
+			}
 		}
 		return undefined;
 	}
@@ -88,6 +94,28 @@ export class ContextNamespace extends Context{
 			this.documentSymbol.range.end = position;
 			this.documentSymbol.selectionRange.end = position;
 		}
+	}
+
+	public get fullyQualifiedName(): string {
+		return this._typename.name;
+	}
+
+	protected updateHover(): Hover | null {
+		if (!this._typename.lastToken) {
+			return null;
+		}
+		
+		let content = [];
+
+		let parts = this._typename.parts;
+		if (parts.length > 1) {
+			let pn = parts.slice(0, parts.length - 1).map(x => x.name.name).reduce((a, b) => `${a}.${b}`);
+			content.push(`**namespace** *${pn}*.**${parts[parts.length - 1].name}**`);	
+		} else {
+			content.push(`**namespace** **${this.typename.name}**`);
+		}
+		
+		return new HoverInfo(content, this.rangeFrom(this._typename.lastToken));
 	}
 
 

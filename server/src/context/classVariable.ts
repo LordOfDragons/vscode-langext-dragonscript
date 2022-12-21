@@ -26,11 +26,12 @@ import { Context } from "./context";
 import { ClassVariableCstNode } from "../nodeclasses/declareClass";
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
 import { FullyQualifiedClassNameCstNode } from "../nodeclasses/fullyQualifiedClassName";
-import { DocumentSymbol, RemoteConsole, SymbolKind } from "vscode-languageserver";
+import { DocumentSymbol, Hover, Position, RemoteConsole, SymbolKind } from "vscode-languageserver";
 import { TypeName } from "./typename";
 import { ContextBuilder } from "./contextBuilder";
 import { Identifier } from "./identifier";
 import { IToken } from "chevrotain";
+import { HoverInfo } from "../hoverinfo";
 
 
 export class ContextVariable extends Context{
@@ -44,15 +45,15 @@ export class ContextVariable extends Context{
 	constructor(node: ClassVariableCstNode,
 			    typemodNode: TypeModifiersCstNode | undefined,
 				typeNode: FullyQualifiedClassNameCstNode,
-				endToken: IToken) {
-		super(Context.ContextType.Variable);
+				endToken: IToken, parent: Context) {
+		super(Context.ContextType.Variable, parent);
 		this._node = node;
 		this._typeModifiers = new Context.TypeModifierSet(typemodNode);
 		this._name = new Identifier(node.children.name[0]);
 		this._typename = new TypeName(typeNode);
 		
 		if (node.children.value) {
-			this._value = ContextBuilder.createExpression(node.children.value[0]);
+			this._value = ContextBuilder.createExpression(node.children.value[0], this);
 		}
 
 		let tokBegin = this._name.token;
@@ -88,6 +89,30 @@ export class ContextVariable extends Context{
 
 	public get value(): Context | undefined {
 		return this._value;
+	}
+
+	public get fullyQualifiedName(): string {
+		let n = this.parent?.fullyQualifiedName || "";
+		return n ? `${n}.${this._name}` : this._name.name;
+	}
+
+	public contextAtPosition(position: Position): Context | undefined {
+		if (this.isPositionInsideRange(this.documentSymbol!.range, position)) {
+			if (this._name.token && this.isPositionInsideRange(this.rangeFrom(this._name.token), position)) {
+				return this;
+			}
+		}
+		return undefined;
+	}
+
+	protected updateHover(): Hover | null {
+		if (!this._name.token) {
+			return null;
+		}
+
+		let content = [];
+		content.push(`${this._typeModifiers.typestring} **variable** *${this._typename}* *${this.parent!.fullyQualifiedName}*.**${this._name}**`);
+		return new HoverInfo(content, this.rangeFrom(this._name.token));
 	}
 
 

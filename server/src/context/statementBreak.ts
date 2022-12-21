@@ -31,8 +31,8 @@ export class ContextBreak extends Context{
 	protected _node: StatementBreakCstNode;
 
 
-	constructor(node: StatementBreakCstNode) {
-		super(Context.ContextType.Break);
+	constructor(node: StatementBreakCstNode, parent: Context) {
+		super(Context.ContextType.Break, parent);
 		this._node = node;
 	}
 

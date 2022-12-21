@@ -37,21 +37,23 @@ export class ContextMember extends Context{
 	protected _name?: Identifier;
 
 
-	protected constructor(node: ExpressionObjectCstNode | ExpressionMemberCstNode, memberIndex: integer) {
-		super(Context.ContextType.Member);
+	protected constructor(node: ExpressionObjectCstNode | ExpressionMemberCstNode,
+			memberIndex: integer, parent: Context) {
+		super(Context.ContextType.Member, parent);
 		this._node = node;
 		this._memberIndex = memberIndex;
 	}
 
-	public static newObject(node: ExpressionObjectCstNode, memberIndex: integer, object?: Context) {
-		let cm = new ContextMember(node, memberIndex);
-		cm._object = object ? object : ContextBuilder.createExpressionBaseObject(node.children.object[0]);
+	public static newObject(node: ExpressionObjectCstNode, memberIndex: integer,
+			object: Context | undefined, parent: Context) {
+		let cm = new ContextMember(node, memberIndex, parent);
+		cm._object = object ? object : ContextBuilder.createExpressionBaseObject(node.children.object[0], cm);
 		cm._name = new Identifier(node.children.member![memberIndex].children.name[0]);
 		return cm;
 	}
 
-	public static newMember(node: ExpressionMemberCstNode) {
-		let cm = new ContextMember(node, 0);
+	public static newMember(node: ExpressionMemberCstNode, parent: Context) {
+		let cm = new ContextMember(node, 0, parent);
 		cm._name = new Identifier(node.children.name[0]);
 		return cm;
 	}

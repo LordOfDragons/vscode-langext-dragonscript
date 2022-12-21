@@ -33,12 +33,12 @@ export class ContextReturn extends Context{
 	private _value?: Context;
 
 
-	constructor(node: StatementReturnCstNode) {
-		super(Context.ContextType.Return);
+	constructor(node: StatementReturnCstNode, parent: Context) {
+		super(Context.ContextType.Return, parent);
 		this._node = node;
 
 		if (node.children.value) {
-			this._value = ContextBuilder.createExpression(node.children.value[0]);
+			this._value = ContextBuilder.createExpression(node.children.value[0], this);
 		}
 	}
 

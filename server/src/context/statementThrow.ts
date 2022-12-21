@@ -33,12 +33,12 @@ export class ContextThrow extends Context{
 	protected _exception?: Context;
 
 
-	constructor(node: StatementThrowCstNode) {
-		super(Context.ContextType.Throw);
+	constructor(node: StatementThrowCstNode, parent: Context) {
+		super(Context.ContextType.Throw, parent);
 		this._node = node;
 
 		if (node.children.exception) {
-			this._exception = ContextBuilder.createExpression(node.children.exception[0]);
+			this._exception = ContextBuilder.createExpression(node.children.exception[0], this);
 		}
 	}
 

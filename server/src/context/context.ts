@@ -35,9 +35,9 @@ export class Context {
 	protected _hover: Hover | null | undefined;
 
 
-	constructor(type: Context.ContextType) {
+	constructor(type: Context.ContextType, parent?: Context) {
 		this._type = type;
-		this.parent = undefined;
+		this.parent = parent;
 	}
 
 	/** Dispose of context. */
@@ -67,6 +67,11 @@ export class Context {
 			}
 		});
 	}
+
+	public get fullyQualifiedName(): string {
+		return this.parent?.fullyQualifiedName || "";
+	}
+
 
 	public get hover(): Hover | null {
 		if (this._hover === undefined) {
@@ -199,6 +204,9 @@ export namespace Context {
 
 	/** Type modifier set. */
 	export class TypeModifierSet extends Set<Context.TypeModifier> {
+		protected _canonical?: Context.TypeModifier[];
+		protected _typestring?: string;
+
 		constructor(node?: TypeModifiersCstNode) {
 			super();
 			if (!node || !node.children.typeModifier) {
@@ -209,22 +217,16 @@ export namespace Context {
 			node.children.typeModifier.forEach(each => {
 				if (each.children.public) {
 					this.add(Context.TypeModifier.Public);
-
 				} else if (each.children.protected) {
 					this.add(Context.TypeModifier.Protected);
-
 				} else if (each.children.private) {
 					this.add(Context.TypeModifier.Private);
-
 				} else if (each.children.abstract) {
 					this.add(Context.TypeModifier.Abstract);
-
 				} else if (each.children.fixed) {
 					this.add(Context.TypeModifier.Fixed);
-
 				} else if (each.children.static) {
 					this.add(Context.TypeModifier.Static);
-
 				} else if (each.children.native) {
 					this.add(Context.TypeModifier.Native);
 				}
@@ -232,11 +234,66 @@ export namespace Context {
 		}
 
 
+		public get canonical(): Context.TypeModifier[] {
+			if (!this._canonical) {
+				this._canonical = [];
+				if (this.has(Context.TypeModifier.Native)) {
+					this._canonical.push(Context.TypeModifier.Native);
+				}
+				if (this.has(Context.TypeModifier.Static)) {
+					this._canonical.push(Context.TypeModifier.Static);
+				}
+				if (this.has(Context.TypeModifier.Fixed)) {
+					this._canonical.push(Context.TypeModifier.Fixed);
+				}
+				if (this.has(Context.TypeModifier.Abstract)) {
+					this._canonical.push(Context.TypeModifier.Abstract);
+				}
+				if (this.has(Context.TypeModifier.Public)) {
+					this._canonical.push(Context.TypeModifier.Public);
+				}
+				if (this.has(Context.TypeModifier.Protected)) {
+					this._canonical.push(Context.TypeModifier.Protected);
+				}
+				if (this.has(Context.TypeModifier.Private)) {
+					this._canonical.push(Context.TypeModifier.Private);
+				}
+			}
+			return this._canonical;
+		}
+
+		public get typestring(): string {
+			if (!this._typestring) {
+				let parts = [];
+				if (this.has(Context.TypeModifier.Native)) {
+					parts.push('native');
+				}
+				if (this.has(Context.TypeModifier.Static)) {
+					parts.push('static');
+				}
+				if (this.has(Context.TypeModifier.Fixed)) {
+					parts.push('fixed');
+				}
+				if (this.has(Context.TypeModifier.Abstract)) {
+					parts.push('abstract');
+				}
+				if (this.has(Context.TypeModifier.Public)) {
+					parts.push('public');
+				}
+				if (this.has(Context.TypeModifier.Protected)) {
+					parts.push('protected');
+				}
+				if (this.has(Context.TypeModifier.Private)) {
+					parts.push('private');
+				}
+				this._typestring = parts.length > 0 ? parts.reduce((a, b) => `${a} ${b}`) : "";
+			}
+			return this._typestring;
+		}
+		
 		toString() : string {
 			if (this.size > 0) {
-				return "(" + Array.from(this.values())
-					.map(x => Context.TypeModifier[x])
-					.reduce((a, b) => `${a}, ${b}`) + ")";
+				return "(" + this.canonical.map(x => Context.TypeModifier[x]).reduce((a, b) => `${a}, ${b}`) + ")";
 			} else {
 				return "()";
 			}

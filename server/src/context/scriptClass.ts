@@ -33,6 +33,7 @@ import { ContextFunction } from "./classFunction";
 import { ContextVariable } from "./classVariable";
 import { Identifier } from "./identifier";
 import { HoverInfo } from "../hoverinfo";
+import { ContextNamespace } from "./namespace";
 
 
 export class ContextClass extends Context{
@@ -44,8 +45,8 @@ export class ContextClass extends Context{
 	protected _declarations: Context[] = [];
 
 
-	constructor(node: DeclareClassCstNode, typemodNode: TypeModifiersCstNode | undefined) {
-		super(Context.ContextType.Class);
+	constructor(node: DeclareClassCstNode, typemodNode: TypeModifiersCstNode | undefined, parent: Context) {
+		super(Context.ContextType.Class, parent);
 
 		let cdecl = node.children;
 		let cdeclBegin = cdecl.classBegin[0].children;
@@ -72,16 +73,16 @@ export class ContextClass extends Context{
 			let typemod = each.children.typeModifiers ? each.children.typeModifiers[0] : undefined;
 
 			if (each.children.declareClass) {
-				this._declarations.push(new ContextClass(each.children.declareClass[0], typemod));
+				this._declarations.push(new ContextClass(each.children.declareClass[0], typemod, this));
 
 			} else if (each.children.declareInterface) {
-				this._declarations.push(new ContextInterface(each.children.declareInterface[0], typemod));
+				this._declarations.push(new ContextInterface(each.children.declareInterface[0], typemod, this));
 
 			} else if (each.children.declareEnumeration) {
-				this._declarations.push(new ContextEnumeration(each.children.declareEnumeration[0], typemod));
+				this._declarations.push(new ContextEnumeration(each.children.declareEnumeration[0], typemod, this));
 
 			} else if (each.children.classFunction) {
-				this._declarations.push(new ContextFunction(each.children.classFunction[0], typemod, this._name.name));
+				this._declarations.push(new ContextFunction(each.children.classFunction[0], typemod, this._name.name, this));
 
 			} else if (each.children.classVariables) {
 				let vdecls = each.children.classVariables[0].children;
@@ -94,7 +95,7 @@ export class ContextClass extends Context{
 
 					for (let i = 0; i < count; i++) {
 						this._declarations.push(new ContextVariable(vdecls.classVariable[i],
-							typemod, typeNode, i < commaCount ? vdecls.comma![i] : tokEnd));
+							typemod, typeNode, i < commaCount ? vdecls.comma![i] : tokEnd, this));
 					}
 				}
 			}
@@ -146,14 +147,24 @@ export class ContextClass extends Context{
 		return undefined;
 	}
 
+	public get fullyQualifiedName(): string {
+		let n = this.parent?.fullyQualifiedName || "";
+		return n ? `${n}.${this._name}` : this._name.name;
+	}
+
 	protected updateHover(): Hover | null {
 		if (!this._name.token) {
 			return null;
 		}
 
-		// hover would contain class documentation and such. the rest comes from vs
-		//return new HoverInfo(content, this.rangeFrom(this._name.token));
-		return null;
+		let content = [];
+		//content.push("```dragonscript");
+		content.push(`${this._typeModifiers.typestring} **class** *${this.parent!.fullyQualifiedName}*.**${this.name}**`);
+		//content.push("```");
+		/*ontent.push(...[
+			"___",
+			"This is a test"]);*/
+		return new HoverInfo(content, this.rangeFrom(this._name.token));
 	}
 
 

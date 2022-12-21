@@ -37,13 +37,13 @@ export class ContextTryCatch {
 	protected _statements: ContextStatements;
 
 
-	constructor(node: StatementCatchCstNode) {
+	constructor(node: StatementCatchCstNode, parent: Context) {
 		let c = node.children;
 
 		this._node = node;
 		this._type = new TypeName(c.type[0]);
 		this._variable = new Identifier(c.variable[0]);
-		this._statements = new ContextStatements(c.statements[0]);
+		this._statements = new ContextStatements(c.statements[0], parent);
 	}
 
 	public dispose(): void {
@@ -65,15 +65,15 @@ export class ContextTry extends Context {
 	protected _catches: ContextTryCatch[];
 
 
-	constructor(node: StatementTryCstNode) {
-		super(Context.ContextType.Select);
+	constructor(node: StatementTryCstNode, parent: Context) {
+		super(Context.ContextType.Select, parent);
 		this._node = node;
 		this._catches = [];
 
-		this._statements = new ContextStatements(node.children.statements[0]);
+		this._statements = new ContextStatements(node.children.statements[0], this);
 
 		node.children.statementCatch?.forEach(each => {
-			this._catches.push(new ContextTryCatch(each));
+			this._catches.push(new ContextTryCatch(each, this));
 		});
 	}
 

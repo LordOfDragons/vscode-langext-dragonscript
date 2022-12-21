@@ -35,10 +35,10 @@ export class ContextIfElif {
 	protected _statements: ContextStatements;
 
 
-	constructor(node: StatementElifCstNode) {
+	constructor(node: StatementElifCstNode, parent: Context) {
 		this._node = node;
-		this._condition = ContextBuilder.createExpression(node.children.condition[0]);
-		this._statements = new ContextStatements(node.children.statements[0]);
+		this._condition = ContextBuilder.createExpression(node.children.condition[0], parent);
+		this._statements = new ContextStatements(node.children.statements[0], parent);
 	}
 
 	public dispose(): void {
@@ -72,23 +72,23 @@ export class ContextIf extends Context {
 	protected _elsestatements?: ContextStatements;
 
 
-	constructor(node: StatementIfCstNode) {
-		super(Context.ContextType.If);
+	constructor(node: StatementIfCstNode, parent: Context) {
+		super(Context.ContextType.If, parent);
 		this._node = node;
 		this._elif = [];
 
 		let ifbegin = node.children.statementIfBegin[0].children;
-		this._condition = ContextBuilder.createExpression(ifbegin.condition[0]);
-		this._ifstatements = new ContextStatements(ifbegin.statements[0]);
+		this._condition = ContextBuilder.createExpression(ifbegin.condition[0], this);
+		this._ifstatements = new ContextStatements(ifbegin.statements[0], this);
 
 		if (node.children.statementElif) {
 			node.children.statementElif.forEach(each => {
-				this._elif.push(new ContextIfElif(each));
+				this._elif.push(new ContextIfElif(each, this));
 			});
 		}
 
 		if (node.children.statementElse) {
-			this._elsestatements = new ContextStatements(node.children.statementElse[0].children.statements[0]);
+			this._elsestatements = new ContextStatements(node.children.statementElse[0].children.statements[0], this);
 		}
 	}
 

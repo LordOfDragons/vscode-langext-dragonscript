@@ -35,12 +35,12 @@ export class ContextWhile extends Context{
 	protected _statements: ContextStatements;
 	
 
-	constructor(node: StatementWhileCstNode) {
-		super(Context.ContextType.While);
+	constructor(node: StatementWhileCstNode, parent: Context) {
+		super(Context.ContextType.While, parent);
 		this._node = node;
 
-		this._condition = ContextBuilder.createExpression(node.children.statementWhileBegin[0].children.condition[0]);
-		this._statements = new ContextStatements(node.children.statements[0]);
+		this._condition = ContextBuilder.createExpression(node.children.statementWhileBegin[0].children.condition[0], this);
+		this._statements = new ContextStatements(node.children.statements[0], this);
 	}
 
 	public dispose(): void {

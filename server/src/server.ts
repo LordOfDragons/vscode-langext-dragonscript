@@ -204,8 +204,21 @@ connection.onDocumentSymbol(
 
 connection.onHover(
 	(params: TextDocumentPositionParams): Hover | null => {
-		return scriptDocuments.get(params.textDocument.uri)?.context?.
-			contextAtPosition(params.position)?.hover || null;
+		try {
+			return scriptDocuments.get(params.textDocument.uri)?.context?.
+				contextAtPosition(params.position)?.hover || null;
+		} catch (error) {
+			if (error instanceof Error) {
+				let err = error as Error;
+				connection.console.error(error.name);
+				if (error.stack) {
+					connection.console.error(error.stack);
+				}
+			} else {
+				connection.console.error(`${error}`);
+			}
+			return null;
+		}
 	}
 );
 

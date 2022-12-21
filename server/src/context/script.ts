@@ -50,22 +50,23 @@ export class ContextScript extends Context{
 		let lastPosition = textDocument.positionAt(textDocument.getText().length);
 		var openNamespace: ContextNamespace | undefined = undefined;
 		var statements = this._statements;
+		var parentContext: Context = this;
 
 		node.children.scriptStatement.forEach(each => {
 			let c = each.children;
 
 			if (c.requiresPackage) {
-				let reqpack = new ContextRequiresPackage(c.requiresPackage[0]);
+				let reqpack = new ContextRequiresPackage(c.requiresPackage[0], parentContext);
 				this._requires.push(reqpack);
 				statements.push(reqpack);
 
 			} else if(c.pinNamespace) {
-				statements.push(new ContextPinNamespace(c.pinNamespace[0]));
+				statements.push(new ContextPinNamespace(c.pinNamespace[0], parentContext));
 
 			} else if (c.openNamespace) {
 				let prevNamespace = openNamespace;
 
-				openNamespace = new ContextNamespace(c.openNamespace[0]);
+				openNamespace = new ContextNamespace(c.openNamespace[0], this);
 				openNamespace.lastNamespace(lastPosition);
 				this._statements.push(openNamespace);
 				this._namespaces.push(openNamespace);
@@ -75,19 +76,20 @@ export class ContextScript extends Context{
 				}
 
 				statements = openNamespace.statements;
+				parentContext = openNamespace;
 
 			} else if (c.scriptDeclaration) {
 				let declNode = c.scriptDeclaration[0].children;
 				let typemod = declNode.typeModifiers?.at(0);
 
 				if (declNode.declareClass) {
-					statements.push(new ContextClass(declNode.declareClass[0], typemod));
+					statements.push(new ContextClass(declNode.declareClass[0], typemod, parentContext));
 
 				} else if (declNode.declareInterface) {
-					statements.push(new ContextInterface(declNode.declareInterface[0], typemod));
+					statements.push(new ContextInterface(declNode.declareInterface[0], typemod, parentContext));
 
 				} else if (declNode.declareEnumeration) {
-					statements.push(new ContextEnumeration(declNode.declareEnumeration[0], typemod));
+					statements.push(new ContextEnumeration(declNode.declareEnumeration[0], typemod, parentContext));
 				}
 			}
 		});

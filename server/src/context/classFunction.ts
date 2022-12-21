@@ -27,13 +27,14 @@ import { FunctionBeginCstNode } from "../nodeclasses/declareFunction";
 import { InterfaceFunctionCstNode } from "../nodeclasses/declareInterface";
 import { ClassFunctionCstNode } from "../nodeclasses/declareClass";
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
-import { DocumentSymbol, RemoteConsole, SymbolKind } from "vscode-languageserver";
+import { DocumentSymbol, Hover, Position, RemoteConsole, SymbolKind } from "vscode-languageserver";
 import { TypeName } from "./typename";
 import { ContextFunctionArgument } from "./classFunctionArgument";
 import { ContextBuilder } from "./contextBuilder";
 import { Identifier } from "./identifier";
 import { ContextStatements } from "./statements";
 import { IToken } from "chevrotain";
+import { HoverInfo } from "../hoverinfo";
 
 
 export class ContextFunction extends Context{
@@ -50,8 +51,8 @@ export class ContextFunction extends Context{
 
 	constructor(node: InterfaceFunctionCstNode | ClassFunctionCstNode,
 			    typemodNode: TypeModifiersCstNode | undefined,
-				ownerTypeName: string) {
-		super(Context.ContextType.Function);
+				ownerTypeName: string, parent: Context) {
+		super(Context.ContextType.Function, parent);
 		this._node = node;
 		this._arguments = [];
 		this._typeModifiers = new Context.TypeModifierSet(typemodNode);
@@ -101,7 +102,7 @@ export class ContextFunction extends Context{
 			if (fdecl2.functionArguments) {
 				let args = fdecl2.functionArguments[0].children.functionArgument;
 				if (args) {
-					args.forEach(each => this._arguments.push(new ContextFunctionArgument(each)));
+					args.forEach(each => this._arguments.push(new ContextFunctionArgument(each, this)));
 				}
 			}
 			
@@ -109,9 +110,9 @@ export class ContextFunction extends Context{
 				let args = fdecl2.functionCall[0].children.argument;
 				if (args) {
 					if (fdecl2.this) {
-						this._thisCall = args.map(each => ContextBuilder.createExpression(each));
+						this._thisCall = args.map(each => ContextBuilder.createExpression(each, this));
 					} else if (fdecl2.super) {
-						this._superCall = args.map(each => ContextBuilder.createExpression(each));
+						this._superCall = args.map(each => ContextBuilder.createExpression(each, this));
 					}
 				}
 			}
@@ -210,7 +211,7 @@ export class ContextFunction extends Context{
 			if (fdecl2.functionArguments) {
 				let args = fdecl2.functionArguments[0].children.functionArgument;
 				if (args) {
-					args.forEach(each => this._arguments.push(new ContextFunctionArgument(each)));
+					args.forEach(each => this._arguments.push(new ContextFunctionArgument(each, this)));
 				}
 			}
 
@@ -224,7 +225,7 @@ export class ContextFunction extends Context{
 		}
 
 		if (cfdecl && cfdecl.children.statements) {
-			this._statements = new ContextStatements(cfdecl.children.statements[0]);
+			this._statements = new ContextStatements(cfdecl.children.statements[0], this);
 
 			let declEnd = cfdecl.children.functionEnd;
 			if (declEnd) {
@@ -288,6 +289,60 @@ export class ContextFunction extends Context{
 
 	public get statements(): ContextStatements | undefined {
 		return this.statements;
+	}
+
+	public get fullyQualifiedName(): string {
+		let n = this.parent?.fullyQualifiedName || "";
+		return n ? `${n}.${this._name}` : this._name.name;
+	}
+
+	public contextAtPosition(position: Position): Context | undefined {
+		if (this.isPositionInsideRange(this.documentSymbol!.range, position)) {
+			if (this._name.token && this.isPositionInsideRange(this.rangeFrom(this._name.token), position)) {
+				return this;
+			} else {
+				return this.contextAtPositionList(this._arguments, position);
+			}
+		}
+		return undefined;
+	}
+
+	protected updateHover(): Hover | null {
+		if (!this._name.token) {
+			return null;
+		}
+
+		let parts = [];
+		parts.push(this._typeModifiers.typestring);
+		switch (this._functionType) {
+			case ContextFunction.Type.Constructor:
+				parts.push(" **constructor** ");
+				break;
+
+			case ContextFunction.Type.Destructor:
+				parts.push(" **destructor** ");
+				break;
+
+			case ContextFunction.Type.Operator:
+				parts.push(` **operator** *${this._returnType}* `);
+				break;
+
+			case ContextFunction.Type.Regular:
+			default:
+				parts.push(` **function** *${this._returnType}* `);
+		}
+		parts.push(`*${this.parent!.fullyQualifiedName}*.**${this._name}**(`);
+
+		let args = this._arguments.map(each => `*${each.typename}* ${each.name}`);
+		if (args.length > 0) {
+			parts.push(args.join(", "));
+		}
+		parts.push(")");
+
+		let content = [];
+		content.push(parts.join(""));
+
+		return new HoverInfo(content, this.rangeFrom(this._name.token));
 	}
 
 

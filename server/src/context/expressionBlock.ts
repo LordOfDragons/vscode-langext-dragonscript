@@ -35,16 +35,16 @@ export class ContextBlock extends Context{
 	protected _statements: ContextStatements;
 
 
-	constructor(node: ExpressionBlockCstNode) {
-		super(Context.ContextType.FunctionCall);
+	constructor(node: ExpressionBlockCstNode, parent: Context) {
+		super(Context.ContextType.FunctionCall, parent);
 		this._node = node;
 		this._arguments = [];
 
 		node.children.expressionBlockBegin[0].children.functionArgument?.forEach(each => {
-			this._arguments.push(new ContextFunctionArgument(each));
+			this._arguments.push(new ContextFunctionArgument(each, this));
 		});
 
-		this._statements = new ContextStatements(node.children.statements[0]);
+		this._statements = new ContextStatements(node.children.statements[0], this);
 	}
 
 	public dispose(): void {

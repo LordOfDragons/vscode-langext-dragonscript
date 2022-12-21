@@ -31,8 +31,8 @@ export class ContextContinue extends Context{
 	protected _node: StatementContinueCstNode;
 
 
-	constructor(node: StatementContinueCstNode) {
-		super(Context.ContextType.Continue);
+	constructor(node: StatementContinueCstNode, parent: Context) {
+		super(Context.ContextType.Continue, parent);
 		this._node = node;
 	}
 

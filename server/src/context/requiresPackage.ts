@@ -33,8 +33,8 @@ export class ContextRequiresPackage extends Context{
 	protected _name: LiteralString;
 
 
-	constructor(node: RequiresPackageCstNode) {
-		super(Context.ContextType.PinNamespace);
+	constructor(node: RequiresPackageCstNode, parent: Context) {
+		super(Context.ContextType.PinNamespace, parent);
 		this._node = node;
 		this._name = new LiteralString(node.children.name[0]);
 	}

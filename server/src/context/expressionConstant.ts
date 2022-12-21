@@ -33,8 +33,8 @@ export class ContextConstant extends Context{
 	protected _name: Identifier;
 
 
-	constructor(node: ExpressionConstantCstNode) {
-		super(Context.ContextType.Constant);
+	constructor(node: ExpressionConstantCstNode, parent: Context) {
+		super(Context.ContextType.Constant, parent);
 		this._node = node;
 
 		let c = node.children;

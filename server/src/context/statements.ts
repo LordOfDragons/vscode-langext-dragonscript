@@ -33,12 +33,12 @@ export class ContextStatements extends Context{
 	protected _statements: Context[];
 
 
-	constructor(node?: StatementsCstNode) {
-		super(Context.ContextType.Statements);
+	constructor(node: StatementsCstNode | undefined, parent: Context) {
+		super(Context.ContextType.Statements, parent);
 		this._node = node;
 		this._statements = [];
 		node?.children.statement?.forEach(each => {
-			this._statements.push(ContextBuilder.createStatement(each));
+			this._statements.push(ContextBuilder.createStatement(each, this));
 		});
 	}
 	

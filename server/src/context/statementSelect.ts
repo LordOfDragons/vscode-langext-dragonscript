@@ -35,15 +35,15 @@ export class ContextSelectCase {
 	protected _statements: ContextStatements;
 
 
-	constructor(node: StatementCaseCstNode) {
+	constructor(node: StatementCaseCstNode, parent: Context) {
 		this._node = node;
 		this._values = [];
 
 		node.children.value?.forEach(each => {
-			this._values.push(ContextBuilder.createExpression(each));
+			this._values.push(ContextBuilder.createExpression(each, parent));
 		});
 		
-		this._statements = new ContextStatements(node.children.statements[0]);
+		this._statements = new ContextStatements(node.children.statements[0], parent);
 	}
 
 	public dispose(): void {
@@ -76,22 +76,22 @@ export class ContextSelect extends Context {
 	protected _elsestatements?: ContextStatements;
 
 
-	constructor(node: StatementSelectCstNode) {
-		super(Context.ContextType.Select);
+	constructor(node: StatementSelectCstNode, parent: Context) {
+		super(Context.ContextType.Select, parent);
 		this._node = node;
 		this._cases = [];
 
 		let selbegin = node.children.statementSelectBegin[0].children;
-		this._value = ContextBuilder.createExpression(selbegin.value[0]);
+		this._value = ContextBuilder.createExpression(selbegin.value[0], this);
 
 		if (node.children.statementCase) {
 			node.children.statementCase.forEach(each => {
-				this._cases.push(new ContextSelectCase(each));
+				this._cases.push(new ContextSelectCase(each, this));
 			});
 		}
 
 		if (node.children.statementSelectElse) {
-			this._elsestatements = new ContextStatements(node.children.statementSelectElse[0].children.statements[0]);
+			this._elsestatements = new ContextStatements(node.children.statementSelectElse[0].children.statements[0], this);
 		}
 	}
 

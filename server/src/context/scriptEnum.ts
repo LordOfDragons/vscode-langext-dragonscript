@@ -25,8 +25,9 @@
 import { Context } from "./context"
 import { DeclareEnumerationCstNode, EnumerationEntryCstNode } from "../nodeclasses/declareEnumeration";
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
-import { DocumentSymbol, Position, RemoteConsole, SymbolKind } from "vscode-languageserver"
+import { DocumentSymbol, Hover, Position, RemoteConsole, SymbolKind } from "vscode-languageserver"
 import { Identifier } from "./identifier";
+import { HoverInfo } from "../hoverinfo";
 
 
 export class ContextEnumEntry extends Context{
@@ -34,8 +35,8 @@ export class ContextEnumEntry extends Context{
 	protected _name: Identifier;
 
 
-	constructor(node: EnumerationEntryCstNode, docTextExt?: string) {
-		super(Context.ContextType.EnumerationEntry)
+	constructor(node: EnumerationEntryCstNode, docTextExt: string | undefined, parent: Context) {
+		super(Context.ContextType.EnumerationEntry, parent)
 		this._node = node
 		this._name = new Identifier(node.children.name[0]);
 
@@ -58,6 +59,30 @@ export class ContextEnumEntry extends Context{
 		return this._name
 	}
 
+	public get fullyQualifiedName(): string {
+		let n = this.parent?.fullyQualifiedName || "";
+		return n ? `${n}.${this._name}` : this._name.name;
+	}
+
+	public contextAtPosition(position: Position): Context | undefined {
+		if (this.isPositionInsideRange(this.documentSymbol!.range, position)) {
+			if (this._name.token && this.isPositionInsideRange(this.rangeFrom(this._name.token), position)) {
+				return this;
+			}
+		}
+		return undefined;
+	}
+
+	protected updateHover(): Hover | null {
+		if (!this._name.token) {
+			return null;
+		}
+
+		let content = [];
+		content.push(`static fixed public **variable** *${this.parent!.fullyQualifiedName}*.**${this.name}**`);
+		return new HoverInfo(content, this.rangeFrom(this._name.token));
+	}
+
 
 	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
 		console.log(`${prefix}Entry ${this._name}`)
@@ -72,8 +97,8 @@ export class ContextEnumeration extends Context{
 	protected _entries: ContextEnumEntry[] = [];
 
 
-	constructor(node: DeclareEnumerationCstNode, typemodNode: TypeModifiersCstNode | undefined) {
-		super(Context.ContextType.Interface);
+	constructor(node: DeclareEnumerationCstNode, typemodNode: TypeModifiersCstNode | undefined, parent: Context) {
+		super(Context.ContextType.Interface, parent);
 
 		let edecl = node.children;
 		let edeclBegin = edecl.enumerationBegin[0].children;
@@ -90,7 +115,7 @@ export class ContextEnumeration extends Context{
 
 		let docTextExt = this._name.name;
 		edecl.enumerationBody[0].children.enumerationEntry?.forEach(each => {
-			this._entries.push(new ContextEnumEntry(each, docTextExt));
+			this._entries.push(new ContextEnumEntry(each, docTextExt, this));
 		});
 
 		this.addChildDocumentSymbols(this._entries);
@@ -118,6 +143,11 @@ export class ContextEnumeration extends Context{
 		return this._entries;
 	}
 
+	public get fullyQualifiedName(): string {
+		let n = this.parent?.fullyQualifiedName || "";
+		return n ? `${n}.${this._name}` : this._name.name;
+	}
+
 	public contextAtPosition(position: Position): Context | undefined {
 		if (this.isPositionInsideRange(this.documentSymbol!.range, position)) {
 			if (this._name.token && this.isPositionInsideRange(this.rangeFrom(this._name.token), position)) {
@@ -127,6 +157,16 @@ export class ContextEnumeration extends Context{
 			}
 		}
 		return undefined;
+	}
+
+	protected updateHover(): Hover | null {
+		if (!this._name.token) {
+			return null;
+		}
+
+		let content = [];
+		content.push(`${this._typeModifiers.typestring} **enumeration** ${this.parent!.fullyQualifiedName}.**${this.name}**`);
+		return new HoverInfo(content, this.rangeFrom(this._name.token));
 	}
 
 

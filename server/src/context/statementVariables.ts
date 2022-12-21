@@ -36,11 +36,11 @@ export class ContextVariablesVariable {
 	protected _value?: Context;
 
 
-	constructor(node: StatementVariableCstNode) {
+	constructor(node: StatementVariableCstNode, parent: Context) {
 		this._node = node;
 		this._name = new Identifier(node.children.name[0]);
 		if (node.children.value) {
-			this._value = ContextBuilder.createExpression(node.children.value[0]);
+			this._value = ContextBuilder.createExpression(node.children.value[0], parent);
 		}
 	}
 
@@ -65,15 +65,15 @@ export class ContextVariables extends Context {
 	protected _variables: ContextVariablesVariable[];
 
 
-	constructor(node: StatementVariablesCstNode) {
-		super(Context.ContextType.Break);
+	constructor(node: StatementVariablesCstNode, parent: Context) {
+		super(Context.ContextType.Variable, parent);
 		this._node = node;
 		
 		this._typename = new TypeName(node.children.type[0]);
 		this._variables = [];
 
 		node.children.statementVariable?.forEach(each => {
-			this._variables.push(new ContextVariablesVariable(each));
+			this._variables.push(new ContextVariablesVariable(each, this));
 		});
 	}
 

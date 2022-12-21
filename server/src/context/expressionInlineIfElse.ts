@@ -35,15 +35,15 @@ export class ContextInlineIfElse extends Context{
 	protected _elsevalue: Context;
 
 
-	constructor(node: ExpressionInlineIfElseCstNode) {
-		super(Context.ContextType.InlineIfElse);
+	constructor(node: ExpressionInlineIfElseCstNode, parent: Context) {
+		super(Context.ContextType.InlineIfElse, parent);
 		this._node = node;
 
 		let c = node.children;
 		let m = c.more![0].children;
-		this._condition = ContextBuilder.createExpressionLogic(c.condition[0]);
-		this._ifvalue = ContextBuilder.createExpressionLogic(m.expressionIf[0]);
-		this._elsevalue = ContextBuilder.createExpressionLogic(m.expressionElse[0]);
+		this._condition = ContextBuilder.createExpressionLogic(c.condition[0], this);
+		this._ifvalue = ContextBuilder.createExpressionLogic(m.expressionIf[0], this);
+		this._elsevalue = ContextBuilder.createExpressionLogic(m.expressionElse[0], this);
 	}
 
 	public dispose(): void {
