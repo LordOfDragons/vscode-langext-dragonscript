@@ -22,7 +22,8 @@
 * SOFTWARE.
 */
 
-import { readdirSync, statSync } from "fs";
+import { statSync } from "fs";
+import { readdir } from "fs/promises";
 import { platform } from "os";
 import { join } from "path";
 import { RemoteConsole } from "vscode-languageserver";
@@ -32,8 +33,6 @@ export class PackageDEModule extends Package {
 	protected _pathDragengine: string = "";
 	protected _moduleVersion?: string;
 	protected _pathModule?: string;
-
-	protected _loaded: boolean = false;
 
 
 	constructor(console: RemoteConsole) {
@@ -61,20 +60,34 @@ export class PackageDEModule extends Package {
 		}
 	}
 
-	public load(): void {
-		if (!this._loaded) {
-			this.reload();
+	protected clear(): void {
+		this._pathModule = undefined;
+		super.clear();
+	}
+
+	protected async loadPackage(): Promise<void> {
+		await this.findPathModule();
+
+		if (!this._pathModule) {
+			this._console.log(`Package '${this._id}': Module path not found.`);
+			return;
 		}
+
+		this._console.log(`Package '${this._id}': Scan package`);
+		let startTime = Date.now();
+		await Promise.all([
+			this.scanPackage(this._files, join(this._pathModule, "dsinstall")),
+			this.scanPackage(this._files, join(this._pathModule, "native")),
+			this.scanPackage(this._files, join(this._pathModule, "scripts"))
+		]);
+		let elapsedTime = Date.now() - startTime;
+		this._console.log(`Package '${this._id}': Package scanned in ${elapsedTime / 1000}s found ${this._files.length} files`);
+
+		await this.loadFiles();
+		this.loadingFinished();
 	}
 
-	public reload(): void {
-		this._loaded = true;
-		this._console.log(`PackageDEModule: ${this._loaded ? "Reload" : "Load"}`);
-		this.findPathModule();
-		this.scanPackage();
-	}
-
-	protected findPathModule(): void {
+	protected async findPathModule(): Promise<void> {
 		this._moduleVersion = undefined;
 		this._pathModule = undefined;
 
@@ -90,11 +103,12 @@ export class PackageDEModule extends Package {
 			}
 		}
 
-		readdirSync(pathEngine).forEach(each => {
+		var files = await readdir(pathEngine);
+		files.forEach(each => {
 			let modpath = join(pathEngine, each);
 			let stats = statSync(modpath);
 			if (stats.isDirectory()) {
-				this._console.log(`PackageDEModule: Found Module Version ${each}`);
+				this._console.log(`Package '${this._id}': Found Module Version ${each}`);
 
 				let better: boolean = false;
 
@@ -122,11 +136,6 @@ export class PackageDEModule extends Package {
 			}
 		});
 
-		this._console.log(`PackageDEModule: Using Module Version ${this._moduleVersion}`);
-	}
-
-	protected scanPackage(): void {
-		this._console.log("PackageDEModule: Scan package");
-		this._console.log(`PackageDEModule: Path: '${this._pathModule}'`);
+		this._console.log(`Package '${this._id}': Using Module Version ${this._moduleVersion}`);
 	}
 }

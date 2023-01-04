@@ -43,11 +43,14 @@ export class ContextScript extends Context{
 	public documentSymbols: DocumentSymbol[] = [];
 
 
-	constructor(node: ScriptCstNode, textDocument: TextDocument) {
+	constructor(node: ScriptCstNode, textDocument?: TextDocument, lineCount?: number) {
 		super(Context.ContextType.Script);
 		this._node = node;
 
-		let lastPosition = textDocument.positionAt(textDocument.getText().length);
+		let lastPosition = textDocument
+			? textDocument.positionAt(textDocument.getText().length)
+			: Position.create(lineCount ?? 1, 1);
+		
 		var openNamespace: ContextNamespace | undefined = undefined;
 		var statements = this._statements;
 		var parentContext: Context = this;

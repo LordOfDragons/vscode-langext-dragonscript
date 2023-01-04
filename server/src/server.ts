@@ -51,6 +51,7 @@ import { DSCapabilities } from './capabilities'
 import { ScriptDocument } from './scriptDocument'
 import { Packages } from './package/packages'
 import { PackageDEModule } from './package/dragenginemodule'
+import { PackageDSLanguage } from './package/dslanguage'
 
 // Create a connection for the server, using Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -80,11 +81,13 @@ export function assertWarn(message: string) {
 // Create a simple text document manager.
 const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
 const capabilities: DSCapabilities = new DSCapabilities;
-const validator = new ScriptValidator(capabilities);
-const scriptDocuments: ScriptDocuments = new ScriptDocuments(connection.console);
+export const validator = new ScriptValidator(capabilities);
+export const scriptDocuments: ScriptDocuments = new ScriptDocuments(connection.console);
 
 
 connection.onInitialize((params: InitializeParams) => {
+	Error.stackTraceLimit = 50; // 10 is default but too short to debug lexing/parsing problems
+
 	capabilities.init(params.capabilities);
 	connection.console.log(`Capabilities:`)
 	connection.console.log(`- hasConfiguration: ${capabilities.hasConfiguration}`)
@@ -124,6 +127,7 @@ connection.onInitialized(() => {
 		});
 	}
 
+	packages.add(new PackageDSLanguage(connection.console));
 	packages.add(new PackageDEModule(connection.console));
 
 	if (capabilities.hasConfiguration) {
@@ -139,7 +143,7 @@ const defaultSettings: DSSettings = {
 	pathDragengine: "",
 	requiresPackageDragengine: false
 };
-let globalSettings: DSSettings = defaultSettings;
+export let globalSettings: DSSettings = defaultSettings;
 
 // Cache the settings of all open documents
 const documentSettings: Map<string, Thenable<DSSettings>> = new Map();
@@ -161,7 +165,7 @@ connection.onDidChangeConfiguration(change => {
 	documents.all().forEach(validateTextDocument);
 });
 
-function getDocumentSettings(resource: string): Thenable<DSSettings> {
+export function getDocumentSettings(resource: string): Thenable<DSSettings> {
 	if (!capabilities.hasConfiguration) {
 		return Promise.resolve(globalSettings);
 	} else {
@@ -184,6 +188,7 @@ documents.onDidChangeContent(change => {
 });
 
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
+	let startTime = Date.now();
 	let scriptDocument = scriptDocuments.get(textDocument.uri);
 	if (!scriptDocument) {
 		const settings = await getDocumentSettings(textDocument.uri);
@@ -192,16 +197,19 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	}
 
 	const diagnostics: Diagnostic[] = [];
-	validator.parse(scriptDocument, textDocument, diagnostics);
+	await validator.parse(scriptDocument, textDocument, diagnostics);
 
 	if (scriptDocument.node) {
 		scriptDocument.context = new ContextScript(scriptDocument.node, textDocument);
 	} else {
 		scriptDocument.context = undefined;
 	}
+	
+	let elapsedTime = Date.now() - startTime;
+	connection.console.info(`Parsed '${scriptDocument.uri}' in ${elapsedTime / 1000}s`);
 
 	//scriptDocument.context?.log(connection.console);
-	
+
 	connection.sendDiagnostics({uri: textDocument.uri, diagnostics})
 }
 

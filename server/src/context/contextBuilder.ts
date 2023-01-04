@@ -58,7 +58,7 @@ import { assertWarn } from "../server";
 /** Context builder. */
 export class ContextBuilder{
 	/** Create statement from node. */
-	public static createStatement(node: StatementCstNode, parent: Context): Context {
+	public static createStatement(node: StatementCstNode, parent: Context): Context | undefined {
 		let c = node.children;
 		if (c.statementIf) {
 			return new ContextIf(c.statementIf[0], parent);
@@ -83,8 +83,7 @@ export class ContextBuilder{
 		} else if (c.expression) {
 			return this.createExpression(c.expression[0], parent);
 		} else {
-			assertWarn("Empty statement should not happen!");
-			return new Context(Context.ContextType.Generic, parent);
+			return undefined;
 		}
 	}
 
@@ -217,9 +216,7 @@ export class ContextBuilder{
 		} else if (c.expressionBlock) {
 			return new ContextBlock(c.expressionBlock[0], parent);
 		} else {
-			assertWarn("Empty expression base object should not happen!");
-			return new Context(Context.ContextType.Generic, parent);
+			throw Error("Empty expression base object!");
 		}
 	}
 }
- 

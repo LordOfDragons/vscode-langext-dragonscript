@@ -38,7 +38,10 @@ export class ContextStatements extends Context{
 		this._node = node;
 		this._statements = [];
 		node?.children.statement?.forEach(each => {
-			this._statements.push(ContextBuilder.createStatement(each, this));
+			let statement = ContextBuilder.createStatement(each, this);
+			if (statement) {
+				this._statements.push(statement);
+			}
 		});
 	}
 	

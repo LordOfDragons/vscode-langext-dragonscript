@@ -32,7 +32,7 @@ export class ScriptDocuments {
 
 	constructor(console: RemoteConsole) {
 		this._console = console;
-		this._documents = new Map<string, ScriptDocument>;
+		this._documents = new Map<string, ScriptDocument>();
 	}
 
 	public dispose(): void {

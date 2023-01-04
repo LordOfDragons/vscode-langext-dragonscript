@@ -29,6 +29,7 @@ export class DSParser extends CstParser{
 	constructor() {
 		super(DSLexer.allTokens, {
 			recoveryEnabled: true
+			/* , nodeLocationTracking: "full" */
 		})
 
 		this.performSelfAnalysis()
@@ -540,7 +541,7 @@ export class DSParser extends CstParser{
 	// return
 	public statementReturn = this.RULE("statementReturn", () => {
 		this.CONSUME(DSLexer.tokenReturn)
-		this.SUBRULE(this.expression, {LABEL: "value"})
+		this.OPTION(() => this.SUBRULE(this.expression, {LABEL: "value"}))
 		this.SUBRULE(this.endOfCommand)
 	})
 

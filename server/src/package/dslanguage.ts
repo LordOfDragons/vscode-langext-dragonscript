@@ -22,32 +22,28 @@
 * SOFTWARE.
 */
 
+import { join } from "path";
+import { RemoteConsole } from "vscode-languageserver";
 import { Package } from "./package";
 
-export class Packages {
-	protected _packages: Map<string,Package> = new Map<string,Package>();
-
-
-	constructor() {
-	}
-
-	public dispose(): void {
-		this._packages.forEach(each => each.dispose());
+export class PackageDSLanguage extends Package {
+	constructor(console: RemoteConsole) {
+		super(console, PackageDSLanguage.PACKAGE_ID);
+		this._console.log(`Package '${this._id}': Created`);
 	}
 
 
-	public get(id: string): Package | undefined {
-		if (this._packages.has(id)) {
-			return this._packages.get(id);
-		}
-		return undefined;
-	}
+	public static readonly PACKAGE_ID: string = "DragonScript";
 
-	public add(apackage: Package): void {
-		if (this._packages.has(apackage.id)) {
-			throw Error("Package exists already");
-		}
 
-		this._packages.set(apackage.id, apackage);
+	protected async loadPackage(): Promise<void> {
+		this._console.log(`Package '${this._id}': Scan package`);
+		let startTime = Date.now();
+		await this.scanPackage(this._files, join(__dirname, "..", "data", "dslanguage"));
+		let elapsedTime = Date.now() - startTime;
+		this._console.log(`Package '${this._id}': Package scanned in ${elapsedTime / 1000}s found ${this._files.length} files`);
+
+		await this.loadFiles();
+		this.loadingFinished();
 	}
 }

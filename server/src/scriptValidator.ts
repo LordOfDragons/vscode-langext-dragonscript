@@ -29,6 +29,7 @@ import { DSCapabilities } from "./capabilities";
 import { DSLexer } from "./lexer";
 import { ScriptCstNode } from "./nodeclasses/script";
 import { PackageDEModule } from "./package/dragenginemodule";
+import { PackageDSLanguage } from "./package/dslanguage";
 import { Package } from "./package/package";
 import { DSParser } from "./parser";
 import { ScriptDocument } from "./scriptDocument";
@@ -58,22 +59,35 @@ export class ScriptValidator {
 	}
 
 
-	public parse(scriptDocument: ScriptDocument, textDocument: TextDocument, diagnostics: Diagnostic[]): void {
-		this.doRequires(scriptDocument, diagnostics);
+	public async parse(scriptDocument: ScriptDocument, textDocument: TextDocument, diagnostics: Diagnostic[]): Promise<void> {
+		await this.doRequires(scriptDocument, diagnostics);
 		const lexed = this.doLex(textDocument, scriptDocument.settings, diagnostics);
 		scriptDocument.node = this.doParse(textDocument, scriptDocument.settings, lexed, diagnostics);
 	}
 
+	public async parseLog(scriptDocument: ScriptDocument, text: string, logs: string[]): Promise<void> {
+		await this.doRequiresLog(scriptDocument, logs);
+		const lexed = this.doLexLog(scriptDocument, text, scriptDocument.settings, logs);
+		scriptDocument.node = this.doParseLog(scriptDocument, scriptDocument.settings, lexed, logs);
+	}
 
-	protected doRequires(scriptDocument: ScriptDocument, diagnostics: Diagnostic[]): void {
+
+	protected async doRequires(scriptDocument: ScriptDocument, diagnostics: Diagnostic[]): Promise<void> {
+		let pkg: Package = packages.get(PackageDSLanguage.PACKAGE_ID)!;
+		await pkg.load();
+		
 		if (scriptDocument.settings.requiresPackageDragengine) {
 			let pkg: Package = packages.get(PackageDEModule.PACKAGE_ID)!;
-			pkg.load();
+			await pkg.load();
 		}
 	}
 
-	protected doLex(textDocument: TextDocument, settings: DSSettings,
-			diagnostics: Diagnostic[]): ILexingResult {
+	protected async doRequiresLog(scriptDocument: ScriptDocument, logs: string[]): Promise<void> {
+		//let pkg: Package = packages.get(PackageDSLanguage.PACKAGE_ID)!;
+		//pkg.load();
+	}
+
+	protected doLex(textDocument: TextDocument, settings: DSSettings, diagnostics: Diagnostic[]): ILexingResult {
 		const lexed = this._lexer.tokenize(textDocument.getText());
 
 		lexed.errors.slice(0, settings.maxNumberOfProblems).forEach(error => {
@@ -100,6 +114,17 @@ export class ScriptValidator {
 			}
 
 			diagnostics.push(diagnostic);
+		});
+
+		return lexed;
+	}
+
+	protected doLexLog(document: ScriptDocument, text: string,
+			settings: DSSettings, logs: string[]): ILexingResult {
+		const lexed = this._lexer.tokenize(text);
+
+		lexed.errors.slice(0, settings.maxNumberOfProblems).forEach(error => {
+			logs.push(`[EE] ${document.uri}:? : ${error.message}`);
 		});
 
 		return lexed;
@@ -137,6 +162,17 @@ export class ScriptValidator {
 			}
 
 			diagnostics.push(diagnostic)
+		})
+		return node;
+	}
+
+	protected doParseLog(document: ScriptDocument, settings: DSSettings,
+			lexed: ILexingResult, logs: string[]): ScriptCstNode {
+		this._parser.input = lexed.tokens;
+		const node = this._parser.script() as ScriptCstNode;
+
+		this._parser.errors.slice(0, settings.maxNumberOfProblems).forEach(error => {
+			logs.push(`[EE] ${document.uri}:? : ${error.message}`);
 		})
 		return node;
 	}
