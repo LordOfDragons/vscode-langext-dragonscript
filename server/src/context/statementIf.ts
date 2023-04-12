@@ -82,9 +82,9 @@ export class ContextIf extends Context {
 		this._ifstatements = new ContextStatements(ifbegin.statements[0], this);
 
 		if (node.children.statementElif) {
-			node.children.statementElif.forEach(each => {
+			for (const each of node.children.statementElif) {
 				this._elif.push(new ContextIfElif(each, this));
-			});
+			}
 		}
 
 		if (node.children.statementElse) {
@@ -96,7 +96,9 @@ export class ContextIf extends Context {
 		super.dispose();
 		this._condition.dispose();
 		this._ifstatements.dispose();
-		this._elif.forEach(each => each.dispose());
+		for (const each of this._elif) {
+			each.dispose();
+		}
 		this._elsestatements?.dispose();
 	}
 
@@ -127,7 +129,9 @@ export class ContextIf extends Context {
 		this.logChild(this._condition, console, prefixLines, "Cond: ");
 		console.log(`${prefixLines}- If`);
 		this.logChild(this._ifstatements, console, `${prefixLines}  `);
-		this._elif.forEach(each => each.log(console, prefixLines));
+		for (const each of this._elif) {
+			each.log(console, prefixLines);
+		}
 		if (this._elsestatements) {
 			console.log(`${prefixLines}- Else`);
 			this.logChild(this._elsestatements, console, `${prefixLines}  `);

@@ -23,8 +23,12 @@
  */
 
 import { IToken } from "chevrotain";
-import { DocumentSymbol, Hover, Position, Range, RemoteConsole } from "vscode-languageserver";
+import { Diagnostic, DiagnosticSeverity, DocumentSymbol, Hover, Position, Range, RemoteConsole } from "vscode-languageserver";
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
+import { ResolveNamespace } from "../resolve/namespace";
+import { capabilities } from "../server";
+import { ContextNamespace } from "./namespace";
+import { ResolveState } from "../resolve/state";
 
 
 /** Base context. */
@@ -61,26 +65,31 @@ export class Context {
 		}
 
 		let docSyms = this.documentSymbol.children;
-		list.forEach(each => {
+		for (const each of list) {
 			if (each.documentSymbol) {
 				docSyms.push(each.documentSymbol);
 			}
-		});
+		}
 	}
 
 	public get fullyQualifiedName(): string {
 		return this.parent?.fullyQualifiedName || "";
 	}
 
+	public resolveClasses(state: ResolveState): void {
+	}
 
-	public get hover(): Hover | null {
-		if (this._hover === undefined) {
-			this._hover = this.updateHover();
+	public resolveStatements(state: ResolveState): void {
+	}
+
+	public hover(position: Position): Hover | null {
+		if (!this._hover || (this._hover!.range && !this.isPositionInsideRange(this._hover!.range!, position))) {
+			this._hover = this.updateHover(position);
 		}
 		return this._hover;
 	}
 
-	protected updateHover(): Hover | null {
+	protected updateHover(position: Position): Hover | null {
 		return null;
 	}
 
@@ -114,6 +123,14 @@ export class Context {
 		return true;
 	}
 
+	public isPositionInsideToken(token: IToken, position: Position): boolean {
+		return this.isPositionInsideRange(this.rangeFrom(token), position);
+	}
+
+	public isPositionInsideTokens(start: IToken, end: IToken, position: Position): boolean {
+		return this.isPositionInsideRange(this.rangeFrom(start, end), position);
+	}
+
 
 	/**
 	 * Range from start and end token.
@@ -134,6 +151,45 @@ export class Context {
 		return Range.create(startLine - 1, startColumn - 1, endLine - 1, endColumn - 1);
 	}
 
+	protected reportError(diagnostics: Diagnostic[], uri: string, range: Range, message: string) {
+		this.reportDiagnostic(diagnostics, uri, DiagnosticSeverity.Error, range, message);
+	}
+
+	protected reportWarning(diagnostics: Diagnostic[], uri: string, range: Range, message: string) {
+		this.reportDiagnostic(diagnostics, uri, DiagnosticSeverity.Warning, range, message);
+	}
+
+	protected reportInfo(diagnostics: Diagnostic[], uri: string, range: Range, message: string) {
+		this.reportDiagnostic(diagnostics, uri, DiagnosticSeverity.Information, range, message);
+	}
+
+	protected reportHint(diagnostics: Diagnostic[], uri: string, range: Range, message: string) {
+		this.reportDiagnostic(diagnostics, uri, DiagnosticSeverity.Hint, range, message);
+	}
+
+	protected reportDiagnostic(diagnostics: Diagnostic[], uri: string, severity: DiagnosticSeverity, range: Range, message: string) {
+		const diagnostic: Diagnostic = {
+			severity: severity,
+			range: range,
+			message: message,
+			source: 'Semantics'
+		};
+
+		if (capabilities.hasDiagnosticRelatedInformation) {
+			diagnostic.relatedInformation = [
+				{
+					location: {
+						uri: uri,
+						range: Object.assign({}, range)
+					},
+					message: 'Semantics'
+				}
+			];
+		}
+
+		diagnostics.push(diagnostic);
+	}
+
 
 	/** Debug. */
 	log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
@@ -145,7 +201,9 @@ export class Context {
 		if (children) {
 			let prefixChild = `${prefix}- ${prefixSuffix}`;
 			let prefixLinesChild = `${prefix}  `;
-			children.forEach(each => each.log(console, prefixChild, prefixLinesChild));
+			for (const each of children) {
+				each.log(console, prefixChild, prefixLinesChild);
+			}
 		}
 	}
 
@@ -214,7 +272,7 @@ export namespace Context {
 				return;
 			}
 
-			node.children.typeModifier.forEach(each => {
+			for (const each of node.children.typeModifier) {
 				if (each.children.public) {
 					this.add(Context.TypeModifier.Public);
 				} else if (each.children.protected) {
@@ -230,7 +288,7 @@ export namespace Context {
 				} else if (each.children.native) {
 					this.add(Context.TypeModifier.Native);
 				}
-			})
+			}
 		}
 
 

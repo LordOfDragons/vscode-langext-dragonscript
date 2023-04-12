@@ -187,13 +187,13 @@ export class ContextBuilder{
 		if (c.member) {
 			let last: ContextMember | ContextFunctionCall | undefined;
 			let memberIndex: integer = 0;
-			c.member.forEach(each => {
+			for (const each of c.member) {
 				if (each.children.functionCall) {
 					last = ContextFunctionCall.newFunctionCall(node, memberIndex++, last, parent);
 				} else {
 					last = ContextMember.newObject(node, memberIndex++, last, parent);
 				}
-			});
+			}
 			return last!;
 		} else {
 			return this.createExpressionBaseObject(c.object[0], parent);

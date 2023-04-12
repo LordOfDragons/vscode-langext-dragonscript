@@ -72,15 +72,20 @@ export class ContextTry extends Context {
 
 		this._statements = new ContextStatements(node.children.statements[0], this);
 
-		node.children.statementCatch?.forEach(each => {
-			this._catches.push(new ContextTryCatch(each, this));
-		});
+		const catches = node.children.statementCatch;
+		if (catches) {
+			for (const each of catches) {
+				this._catches.push(new ContextTryCatch(each, this));
+			}
+		}
 	}
 
 	public dispose(): void {
 		super.dispose();
 		this._statements.dispose();
-		this._catches.forEach(each => each.dispose());
+		for (const each of this._catches) {
+			each.dispose();
+		}
 	}
 
 
@@ -100,6 +105,8 @@ export class ContextTry extends Context {
 	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
 		console.log(`${prefix}Try`);
 		this.logChild(this._statements, console, prefixLines);
-		this._catches.forEach(each => each.log(console, prefixLines));
+		for (const each of this._catches) {
+			each.log(console, prefixLines);
+		}
 	}
 }

@@ -71,7 +71,7 @@ export class ContextFunctionCall extends Context{
 	public static newAddition(node: ExpressionAdditionCstNode, parent: Context): ContextFunctionCall {
 		let last: ContextFunctionCall | undefined;
 		let moreIndex: integer = 0;
-		node.children.more!.forEach(each => {
+		for (const each of node.children.more!) {
 			let cfc = new ContextFunctionCall(node, moreIndex++, parent);
 			cfc._object = last ? last : ContextBuilder.createExpressionMultiply(node.children.left[0], cfc);
 	
@@ -85,14 +85,14 @@ export class ContextFunctionCall extends Context{
 			
 			cfc._arguments.push(ContextBuilder.createExpressionMultiply(each.children.right[0], cfc));
 			last = cfc;
-		});
+		}
 		return last!;
 	}
 
 	public static newBitOperation(node: ExpressionBitOperationCstNode, parent: Context): ContextFunctionCall {
 		let last: ContextFunctionCall | undefined;
 		let moreIndex: integer = 0;
-		node.children.more!.forEach(each => {
+		for (const each of node.children.more!) {
 			let cfc = new ContextFunctionCall(node, moreIndex++, parent);
 			cfc._object = last ? last : ContextBuilder.createExpressionAddition(node.children.left[0], cfc);
 
@@ -112,14 +112,14 @@ export class ContextFunctionCall extends Context{
 
 			cfc._arguments.push(ContextBuilder.createExpressionAddition(each.children.right[0], cfc));
 			last = cfc;
-		});
+		}
 		return last!;
 	}
 
 	public static newCompare(node: ExpressionCompareCstNode, parent: Context): ContextFunctionCall {
 		let last: ContextFunctionCall | undefined;
 		let moreIndex: integer = 0;
-		node.children.more!.forEach(each => {
+		for (const each of node.children.more!) {
 			let cfc = new ContextFunctionCall(node, moreIndex++, parent);
 			cfc._object = last ? last : ContextBuilder.createExpressionBitOperation(node.children.left[0], cfc);
 
@@ -141,14 +141,14 @@ export class ContextFunctionCall extends Context{
 
 			cfc._arguments.push(ContextBuilder.createExpressionBitOperation(each.children.right[0], cfc));
 			last = cfc;
-		});
+		}
 		return last!;
 	}
 
 	public static newLogic(node: ExpressionLogicCstNode, parent: Context): ContextFunctionCall {
 		let last: ContextFunctionCall | undefined;
 		let moreIndex: integer = 0;
-		node.children.more!.forEach(each => {
+		for (const each of node.children.more!) {
 			let cfc = new ContextFunctionCall(node, moreIndex++, parent);
 			cfc._object = last ? last : ContextBuilder.createExpressionCompare(node.children.left[0], cfc);
 
@@ -162,14 +162,14 @@ export class ContextFunctionCall extends Context{
 
 			cfc._arguments.push(ContextBuilder.createExpressionCompare(each.children.right[0], cfc));
 			last = cfc;
-		});
+		}
 		return last!;
 	}
 
 	public static newMultiply(node: ExpressionMultiplyCstNode, parent: Context): ContextFunctionCall {
 		let last: ContextFunctionCall | undefined;
 		let moreIndex: integer = 0;
-		node.children.more!.forEach(each => {
+		for (const each of node.children.more!) {
 			let cfc = new ContextFunctionCall(node, moreIndex++, parent);
 			cfc._object = last ? last : ContextBuilder.createExpressionPostfix(node.children.left[0], cfc);
 
@@ -185,14 +185,14 @@ export class ContextFunctionCall extends Context{
 
 			cfc._arguments.push(ContextBuilder.createExpressionPostfix(each.children.right[0], cfc));
 			last = cfc;
-		});
+		}
 		return last!;
 	}
 
 	public static newPostfix(node: ExpressionPostfixCstNode, parent: Context): ContextFunctionCall {
 		let last: ContextFunctionCall | undefined;
 		let moreIndex: integer = 0;
-		node.children.operator!.forEach(each => {
+		for (const each of node.children.operator!) {
 			let cfc = new ContextFunctionCall(node, moreIndex++, parent);
 			cfc._object = last ? last : ContextBuilder.createExpressionUnary(node.children.left[0], cfc);
 
@@ -204,14 +204,14 @@ export class ContextFunctionCall extends Context{
 			}
 			cfc._operator = true;
 			last = cfc;
-		});
+		}
 		return last!;
 	}
 
 	public static newUnary(node: ExpressionUnaryCstNode, parent: Context): ContextFunctionCall {
 		let last: ContextFunctionCall | undefined;
 		let moreIndex: integer = 0;
-		node.children.operator!.forEach(each => {
+		for (const each of node.children.operator!) {
 			let cfc = new ContextFunctionCall(node, moreIndex++, parent);
 			cfc._object = last ? last : ContextBuilder.createExpressionSpecial(node.children.right[0], cfc);
 
@@ -229,7 +229,7 @@ export class ContextFunctionCall extends Context{
 			}
 			cfc._operator = true;
 			last = cfc;
-		});
+		}
 		return last!;
 	}
 
@@ -242,9 +242,12 @@ export class ContextFunctionCall extends Context{
 		cfc._name = new Identifier(member.name[0]);
 		cfc._operator = false;
 
-		member.functionCall![0].children.argument?.forEach(each => {
-			cfc._arguments.push(ContextBuilder.createExpressionAssign(each.children.expressionAssign[0], cfc));
-		});
+		const args = member.functionCall![0].children.argument;
+		if (args) {
+			for (const each of args) {
+				cfc._arguments.push(ContextBuilder.createExpressionAssign(each.children.expressionAssign[0], cfc));
+			}
+		}
 		return cfc;
 	}
 
@@ -254,16 +257,19 @@ export class ContextFunctionCall extends Context{
 		cfc._name = new Identifier(node.children.name[0]);
 		cfc._operator = false;
 
-		node.children.functionCall![0].children.argument?.forEach(each => {
-			cfc._arguments.push(ContextBuilder.createExpressionAssign(each.children.expressionAssign[0], cfc));
-		});
+		const args = node.children.functionCall![0].children.argument;
+		if (args) {
+			for (const each of args) {
+				cfc._arguments.push(ContextBuilder.createExpressionAssign(each.children.expressionAssign[0], cfc));
+			}
+		}
 		return cfc;
 	}
 
 	public static newAssign(node: ExpressionAssignCstNode, parent: Context): ContextFunctionCall {
 		let last: ContextFunctionCall | undefined;
 		let moreIndex: integer = 0;
-		node.children.more!.forEach(each => {
+		for (const each of node.children.more!) {
 			let cfc = new ContextFunctionCall(node, moreIndex++, parent);
 			cfc._object = last ? last : ContextBuilder.createExpressionInlineIfElse(node.children.left[0], cfc);
 			
@@ -295,14 +301,14 @@ export class ContextFunctionCall extends Context{
 
 			cfc._arguments.push(ContextBuilder.createExpressionInlineIfElse(each.children.right[0], cfc));
 			last = cfc;
-		});
+		}
 		return last!;
 	}
 
 	public static newSpecial(node: ExpressionSpecialCstNode, parent: Context): ContextFunctionCall {
 		let last: ContextFunctionCall | undefined;
 		let moreIndex: integer = 0;
-		node.children.more!.forEach(each => {
+		for (const each of node.children.more!) {
 			let cfc = new ContextFunctionCall(node, moreIndex++, parent);
 			cfc._object = last ? last : ContextBuilder.createExpressionObject(node.children.left[0], cfc);
 
@@ -318,14 +324,16 @@ export class ContextFunctionCall extends Context{
 
 			cfc._typename = new TypeName(each.children.type[0]);
 			last = cfc;
-		});
+		}
 		return last!;
 	}
 
 	public dispose(): void {
 		super.dispose();
 		this._object?.dispose();
-		this._arguments.forEach(each => each.dispose());
+		for (const each of this._arguments) {
+			each.dispose();
+		}
 		this._typename?.dispose();
 	}
 
@@ -363,7 +371,9 @@ export class ContextFunctionCall extends Context{
 	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
 		console.log(`${prefix}Call ${this._name}`);
 		this._object?.log(console, `${prefixLines}- Obj: `, `${prefixLines}  `);
-		this._arguments.forEach(each => each.log(console, `${prefixLines}- Arg: `, `${prefixLines}  `));
+		for (const each of this._arguments) {
+			each.log(console, `${prefixLines}- Arg: `, `${prefixLines}  `);
+		}
 		if (this._typename) {
 			console.log(`${prefixLines}- Type ${this._typename}`);
 		}

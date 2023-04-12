@@ -27,6 +27,7 @@ import { PinNamespaceCstNode } from "../nodeclasses/pinNamespace";
 import { DocumentSymbol, Hover, Position, RemoteConsole, SymbolKind } from "vscode-languageserver";
 import { TypeName } from "./typename";
 import { HoverInfo } from "../hoverinfo";
+import { ResolveState } from "../resolve/state";
 
 
 export class ContextPinNamespace extends Context{
@@ -66,6 +67,13 @@ export class ContextPinNamespace extends Context{
 		return this._typename.name;
 	}
 
+	public resolveStatements(state: ResolveState): void {
+		const ns = this._typename.resolveNamespace(state);
+		if (ns) {
+			state.pins.push(ns);
+		}
+	}
+
 	public contextAtPosition(position: Position): Context | undefined {
 		if (this.isPositionInsideRange(this.documentSymbol!.range, position)) {
 			let ft = this._typename.firstToken;
@@ -77,7 +85,7 @@ export class ContextPinNamespace extends Context{
 		return undefined;
 	}
 
-	protected updateHover(): Hover | null {
+	protected updateHover(position: Position): Hover | null {
 		if (!this._typename.firstToken || !this._typename.lastToken) {
 			return null;
 		}

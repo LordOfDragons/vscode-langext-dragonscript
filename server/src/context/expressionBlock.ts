@@ -40,16 +40,21 @@ export class ContextBlock extends Context{
 		this._node = node;
 		this._arguments = [];
 
-		node.children.expressionBlockBegin[0].children.functionArgument?.forEach(each => {
-			this._arguments.push(new ContextFunctionArgument(each, this));
-		});
+		const funcArgs = node.children.expressionBlockBegin[0].children.functionArgument;
+		if (funcArgs) {
+			for (const each of funcArgs) {
+				this._arguments.push(new ContextFunctionArgument(each, this));
+			}
+		}
 
 		this._statements = new ContextStatements(node.children.statements[0], this);
 	}
 
 	public dispose(): void {
 		super.dispose();
-		this._arguments.forEach(each => each.dispose());
+		for (const each of this._arguments) {
+			each.dispose();
+		}
 		this._statements?.dispose();
 	}
 
@@ -70,10 +75,10 @@ export class ContextBlock extends Context{
 	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
 		var s = `${prefix}Block (`;
 		var delimiter = "";
-		this._arguments.forEach(each => {
+		for (const each of this._arguments) {
 			s = `${s}${delimiter}${each.typename.name} ${each.name}`;
 			delimiter = ", ";
-		});
+		}
 		s = `${s})`;
 		console.log(s);
 

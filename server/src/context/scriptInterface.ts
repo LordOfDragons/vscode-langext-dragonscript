@@ -32,6 +32,7 @@ import { ContextEnumeration } from "./scriptEnum";
 import { ContextFunction } from "./classFunction";
 import { Identifier } from "./identifier";
 import { HoverInfo } from "../hoverinfo";
+import { ResolveState } from "../resolve/state";
 
 
 export class ContextInterface extends Context{
@@ -62,24 +63,27 @@ export class ContextInterface extends Context{
 			this._extends = new TypeName(ideclBegin.baseInterfaceName[0]);
 		}
 
-		idecl.interfaceBody[0].children.interfaceBodyDeclaration?.forEach(each => {
-			let typemod = each.children.typeModifiers?.at(0);
+		const decls = idecl.interfaceBody[0].children.interfaceBodyDeclaration;
+		if (decls) {
+			for (const each of decls) {
+				let typemod = each.children.typeModifiers?.at(0);
 
-			if (each.children.declareClass) {
-				this._declarations.push(new ContextClass(each.children.declareClass[0], typemod, this));
+				if (each.children.declareClass) {
+					this._declarations.push(new ContextClass(each.children.declareClass[0], typemod, this));
 
-			} else if (each.children.declareInterface) {
-				this._declarations.push(new ContextInterface(each.children.declareInterface[0], typemod, this));
+				} else if (each.children.declareInterface) {
+					this._declarations.push(new ContextInterface(each.children.declareInterface[0], typemod, this));
 
-			} else if (each.children.declareEnumeration) {
-				this._declarations.push(new ContextEnumeration(each.children.declareEnumeration[0], typemod, this));
-				
-			} else if (each.children.interfaceFunction) {
-				var f = new ContextFunction(each.children.interfaceFunction[0], typemod, this._name.name, this);
-				f.typeModifiers.add(Context.TypeModifier.Abstract);
-				this._declarations.push(f);
+				} else if (each.children.declareEnumeration) {
+					this._declarations.push(new ContextEnumeration(each.children.declareEnumeration[0], typemod, this));
+					
+				} else if (each.children.interfaceFunction) {
+					var f = new ContextFunction(each.children.interfaceFunction[0], typemod, this._name.name, this);
+					f.typeModifiers.add(Context.TypeModifier.Abstract);
+					this._declarations.push(f);
+				}
 			}
-		});
+		}
 
 		this.addChildDocumentSymbols(this._declarations);
 	}
@@ -87,7 +91,9 @@ export class ContextInterface extends Context{
 	public dispose(): void {
 		super.dispose()
 		this._extends?.dispose()
-		this._declarations.forEach(each => each.dispose());
+		for (const each of this._declarations) {
+			each.dispose();
+		}
 	}
 
 
@@ -116,6 +122,14 @@ export class ContextInterface extends Context{
 		return n ? `${n}.${this._name}` : this._name.name;
 	}
 
+	public resolveStatements(state: ResolveState): void {
+		state.parentInterface = this;
+		for (const each of this._declarations) {
+			each.resolveStatements(state);
+		}
+		state.parentInterface = undefined;
+	}
+
 	public contextAtPosition(position: Position): Context | undefined {
 		if (this.isPositionInsideRange(this.documentSymbol!.range, position)) {
 			if (this._name.token && this.isPositionInsideRange(this.rangeFrom(this._name.token), position)) {
@@ -127,8 +141,8 @@ export class ContextInterface extends Context{
 		return undefined;
 	}
 
-	protected updateHover(): Hover | null {
-		if (!this._name.token) {
+	protected updateHover(position: Position): Hover | null {
+		if (!this._name.token || !this.isPositionInsideToken(this._name.token, position)) {
 			return null;
 		}
 

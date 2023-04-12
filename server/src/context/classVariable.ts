@@ -26,12 +26,14 @@ import { Context } from "./context";
 import { ClassVariableCstNode } from "../nodeclasses/declareClass";
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
 import { FullyQualifiedClassNameCstNode } from "../nodeclasses/fullyQualifiedClassName";
-import { DocumentSymbol, Hover, Position, RemoteConsole, SymbolKind } from "vscode-languageserver";
+import { Diagnostic, DocumentSymbol, Hover, Position, RemoteConsole, SymbolKind } from "vscode-languageserver";
 import { TypeName } from "./typename";
 import { ContextBuilder } from "./contextBuilder";
 import { Identifier } from "./identifier";
 import { IToken } from "chevrotain";
 import { HoverInfo } from "../hoverinfo";
+import { ContextClass } from "./scriptClass";
+import { ResolveState } from "../resolve/state";
 
 
 export class ContextVariable extends Context{
@@ -40,23 +42,25 @@ export class ContextVariable extends Context{
 	protected _name: Identifier;
 	protected _typename: TypeName;
 	protected _value?: Context;
+	protected _firstVariable: boolean;
 
 
 	constructor(node: ClassVariableCstNode,
 			    typemodNode: TypeModifiersCstNode | undefined,
 				typeNode: FullyQualifiedClassNameCstNode,
-				endToken: IToken, parent: Context) {
+				firstVar: boolean, endToken: IToken, parent: Context) {
 		super(Context.ContextType.Variable, parent);
 		this._node = node;
 		this._typeModifiers = new Context.TypeModifierSet(typemodNode);
 		this._name = new Identifier(node.children.name[0]);
 		this._typename = new TypeName(typeNode);
+		this._firstVariable = firstVar;
 		
 		if (node.children.value) {
 			this._value = ContextBuilder.createExpression(node.children.value[0], this);
 		}
 
-		let tokBegin = this._name.token;
+		let tokBegin = firstVar ? typeNode.children.identifier[0] : this._name.token;
 		if (tokBegin) {
 			this.documentSymbol = DocumentSymbol.create(this._name.name, this._typename.name,
 				this._typeModifiers.has(Context.TypeModifier.Fixed) ? SymbolKind.Constant : SymbolKind.Variable,
@@ -96,23 +100,38 @@ export class ContextVariable extends Context{
 		return n ? `${n}.${this._name}` : this._name.name;
 	}
 
-	public contextAtPosition(position: Position): Context | undefined {
-		if (this.isPositionInsideRange(this.documentSymbol!.range, position)) {
-			if (this._name.token && this.isPositionInsideRange(this.rangeFrom(this._name.token), position)) {
-				return this;
-			}
+	public resolveStatements(state: ResolveState): void {
+		if (this._firstVariable) {
+			this._typename.resolveType(state);
 		}
-		return undefined;
 	}
 
-	protected updateHover(): Hover | null {
-		if (!this._name.token) {
-			return null;
+	public contextAtPosition(position: Position): Context | undefined {
+		if (!this.isPositionInsideRange(this.documentSymbol!.range, position)) {
+			return undefined;
 		}
 
-		let content = [];
-		content.push(`${this._typeModifiers.typestring} **variable** *${this._typename}* *${this.parent!.fullyQualifiedName}*.**${this._name}**`);
-		return new HoverInfo(content, this.rangeFrom(this._name.token));
+		if (this._name.token && this.isPositionInsideToken(this._name.token, position)) {
+			return this;
+		}
+		if (this._typename.isPositionInside(position)) {
+			return this;
+		}
+		return this._value?.contextAtPosition(position);
+	}
+
+	protected updateHover(position: Position): Hover | null {
+		if (this._name.token && this.isPositionInsideToken(this._name.token, position)) {
+			let content = [];
+			content.push(`${this._typeModifiers.typestring} **variable** *${this._typename}* *${this.parent!.fullyQualifiedName}*.**${this._name}**`);
+			return new HoverInfo(content, this.rangeFrom(this._name.token));
+		}
+
+		if (this._typename.isPositionInside(position)) {
+			return this._typename.hover(position);
+		}
+
+		return null;
 	}
 
 

@@ -64,7 +64,9 @@ export class ScriptDocuments {
 
 	/** Remove all documents. */
 	public removeAll(): void {
-		this._documents.forEach((value, key) => value.dispose());
+		for (const each of this._documents.values()) {
+			each.dispose();
+		}
 		this._documents.clear();
 	}
 }

@@ -37,17 +37,23 @@ export class ContextStatements extends Context{
 		super(Context.ContextType.Statements, parent);
 		this._node = node;
 		this._statements = [];
-		node?.children.statement?.forEach(each => {
-			let statement = ContextBuilder.createStatement(each, this);
-			if (statement) {
-				this._statements.push(statement);
+
+		const stas = node?.children.statement;
+		if (stas) {
+			for (const each of stas) {
+				let statement = ContextBuilder.createStatement(each, this);
+				if (statement) {
+					this._statements.push(statement);
+				}
 			}
-		});
+		}
 	}
 	
 	public dispose(): void {
 		super.dispose();
-		this._statements.forEach(each => each.dispose());
+		for (const each of this._statements) {
+			each.dispose();
+		}
 	}
 
 
@@ -61,6 +67,8 @@ export class ContextStatements extends Context{
 
 
 	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
-		this._statements.forEach(each => each.log(console, prefix, prefixLines));
+		for (const each of this._statements) {
+			each.log(console, prefix, prefixLines);
+		}
 	}
 }

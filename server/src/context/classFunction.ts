@@ -67,21 +67,26 @@ export class ContextFunction extends Context{
 
 		var tokEnd: IToken | undefined;
 
-		let ifdecl = node as InterfaceFunctionCstNode;
-		let cfdecl = node as ClassFunctionCstNode;
 		var fdecl: FunctionBeginCstNode | undefined;
+		let cfdecl: ClassFunctionCstNode | undefined;
 		var docSymKind: SymbolKind = SymbolKind.Method;
-
-		if (ifdecl && ifdecl.children.functionBegin) {
-			fdecl = ifdecl.children.functionBegin[0];
-			if (!tokBegin) {
-				tokBegin = ifdecl.children.func[0];
+		
+		if (node.name === 'interfaceFunction') {
+			let ifdecl = node as InterfaceFunctionCstNode;
+			if (ifdecl.children.functionBegin) {
+				fdecl = ifdecl.children.functionBegin[0];
+				if (!tokBegin) {
+					tokBegin = ifdecl.children.func[0];
+				}
 			}
-
-		} else if (cfdecl && cfdecl.children.functionBegin) {
-			fdecl = cfdecl.children.functionBegin[0];
-			if (!tokBegin) {
-				tokBegin = cfdecl.children.func[0];
+			
+		} else if (node.name === 'classFunction') {
+			cfdecl = node as ClassFunctionCstNode;
+			if (cfdecl.children.functionBegin) {
+				fdecl = cfdecl.children.functionBegin[0];
+				if (!tokBegin) {
+					tokBegin = cfdecl.children.func[0];
+				}
 			}
 		}
 
@@ -102,7 +107,9 @@ export class ContextFunction extends Context{
 			if (fdecl2.functionArguments) {
 				let args = fdecl2.functionArguments[0].children.functionArgument;
 				if (args) {
-					args.forEach(each => this._arguments.push(new ContextFunctionArgument(each, this)));
+					for (const each of args) {
+						this._arguments.push(new ContextFunctionArgument(each, this));
+					}
 				}
 			}
 			
@@ -211,7 +218,9 @@ export class ContextFunction extends Context{
 			if (fdecl2.functionArguments) {
 				let args = fdecl2.functionArguments[0].children.functionArgument;
 				if (args) {
-					args.forEach(each => this._arguments.push(new ContextFunctionArgument(each, this)));
+					for (const each of args) {
+						this._arguments.push(new ContextFunctionArgument(each, this));
+					}
 				}
 			}
 
@@ -224,7 +233,7 @@ export class ContextFunction extends Context{
 			this._returnType = TypeName.typeVoid();
 		}
 
-		if (cfdecl && cfdecl.children.statements) {
+		if (cfdecl?.children.statements) {
 			this._statements = new ContextStatements(cfdecl.children.statements[0], this);
 
 			let declEnd = cfdecl.children.functionEnd;
@@ -248,9 +257,19 @@ export class ContextFunction extends Context{
 	dispose(): void {
 		super.dispose()
 		this._returnType?.dispose();
-		this._arguments.forEach(each => each.dispose);
-		this._thisCall?.forEach(each => each.dispose);
-		this._superCall?.forEach(each => each.dispose);
+		for (const each of this._arguments) {
+			each.dispose();
+		}
+		if (this._thisCall) {
+			for (const each of this._thisCall) {
+				each.dispose();
+			}
+		}
+		if (this._superCall) {
+			for (const each of this._superCall) {
+				each.dispose();
+			}
+		}
 		this._statements?.dispose();
 	}
 
@@ -307,8 +326,8 @@ export class ContextFunction extends Context{
 		return undefined;
 	}
 
-	protected updateHover(): Hover | null {
-		if (!this._name.token) {
+	protected updateHover(position: Position): Hover | null {
+		if (!this._name.token || !this.isPositionInsideToken(this._name.token, position)) {
 			return null;
 		}
 
@@ -353,10 +372,10 @@ export class ContextFunction extends Context{
 		}
 		s = `${s} ${this._name}(`;
 		var delimiter = "";
-		this._arguments.forEach(each => {
+		for (const each of this._arguments) {
 			s = `${s}${delimiter}${each.typename.name} ${each.name}`;
 			delimiter = ", ";
-		});
+		}
 		s = `${s})`;
 		console.log(s);
 

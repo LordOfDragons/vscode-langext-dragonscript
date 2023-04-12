@@ -32,7 +32,9 @@ export class Packages {
 	}
 
 	public dispose(): void {
-		this._packages.forEach(each => each.dispose());
+		for (const each of this._packages.values()) {
+			each.dispose();
+		}
 	}
 
 

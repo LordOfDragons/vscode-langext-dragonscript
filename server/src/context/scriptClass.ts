@@ -25,7 +25,7 @@
 import { Context } from "./context"
 import { DeclareClassCstNode } from "../nodeclasses/declareClass";
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
-import { DocumentSymbol, Hover, MarkupKind, Position, Range, RemoteConsole, SymbolKind } from "vscode-languageserver"
+import { Diagnostic, DocumentSymbol, Hover, Position, RemoteConsole, SymbolKind } from "vscode-languageserver"
 import { TypeName } from "./typename"
 import { ContextInterface } from "./scriptInterface";
 import { ContextEnumeration } from "./scriptEnum";
@@ -33,7 +33,11 @@ import { ContextFunction } from "./classFunction";
 import { ContextVariable } from "./classVariable";
 import { Identifier } from "./identifier";
 import { HoverInfo } from "../hoverinfo";
+import { ResolveClass } from "../resolve/class";
 import { ContextNamespace } from "./namespace";
+import { ResolveNamespace } from "../resolve/namespace";
+import { ResolveState } from "../resolve/state";
+import { ContextScript } from "./script";
 
 
 export class ContextClass extends Context{
@@ -43,6 +47,7 @@ export class ContextClass extends Context{
 	protected _extends?: TypeName;
 	protected _implements: TypeName[] = [];
 	protected _declarations: Context[] = [];
+	protected _resolveClass?: ResolveClass;
 
 
 	constructor(node: DeclareClassCstNode, typemodNode: TypeModifiersCstNode | undefined, parent: Context) {
@@ -66,49 +71,63 @@ export class ContextClass extends Context{
 		}
 
 		if (cdeclBegin.interfaceName) {
-			cdeclBegin.interfaceName.forEach(each => this._implements.push(new TypeName(each)));
+			for (const each of cdeclBegin.interfaceName) {
+				this._implements.push(new TypeName(each));
+			}
 		}
 
-		cdecl.classBody[0].children.classBodyDeclaration?.forEach(each => {
-			let typemod = each.children.typeModifiers ? each.children.typeModifiers[0] : undefined;
+		const decls = cdecl.classBody[0].children.classBodyDeclaration;
+		if (decls) {
+			for (const each of decls) {
+				let typemod = each.children.typeModifiers ? each.children.typeModifiers[0] : undefined;
 
-			if (each.children.declareClass) {
-				this._declarations.push(new ContextClass(each.children.declareClass[0], typemod, this));
+				if (each.children.declareClass) {
+					this._declarations.push(new ContextClass(each.children.declareClass[0], typemod, this));
 
-			} else if (each.children.declareInterface) {
-				this._declarations.push(new ContextInterface(each.children.declareInterface[0], typemod, this));
+				} else if (each.children.declareInterface) {
+					this._declarations.push(new ContextInterface(each.children.declareInterface[0], typemod, this));
 
-			} else if (each.children.declareEnumeration) {
-				this._declarations.push(new ContextEnumeration(each.children.declareEnumeration[0], typemod, this));
+				} else if (each.children.declareEnumeration) {
+					this._declarations.push(new ContextEnumeration(each.children.declareEnumeration[0], typemod, this));
 
-			} else if (each.children.classFunction) {
-				this._declarations.push(new ContextFunction(each.children.classFunction[0], typemod, this._name.name, this));
+				} else if (each.children.classFunction) {
+					this._declarations.push(new ContextFunction(each.children.classFunction[0], typemod, this._name.name, this));
 
-			} else if (each.children.classVariables) {
-				let vdecls = each.children.classVariables[0].children;
-				if (vdecls.classVariable) {
-					let typeNode = vdecls.type[0];
-					let count = vdecls.classVariable.length;
-					let commaCount = vdecls.comma?.length || 0;
-					let declEnd = vdecls.endOfCommand[0].children;
-					let tokEnd = (declEnd.newline || declEnd.commandSeparator)![0];
+				} else if (each.children.classVariables) {
+					let vdecls = each.children.classVariables[0].children;
+					if (vdecls.classVariable) {
+						let typeNode = vdecls.type[0];
+						let count = vdecls.classVariable.length;
+						let commaCount = vdecls.comma?.length || 0;
+						let declEnd = vdecls.endOfCommand[0].children;
+						let tokEnd = (declEnd.newline || declEnd.commandSeparator)![0];
 
-					for (let i = 0; i < count; i++) {
-						this._declarations.push(new ContextVariable(vdecls.classVariable[i],
-							typemod, typeNode, i < commaCount ? vdecls.comma![i] : tokEnd, this));
+						for (let i = 0; i < count; i++) {
+							this._declarations.push(new ContextVariable(vdecls.classVariable[i],
+								typemod, typeNode, i == 0, i < commaCount ? vdecls.comma![i] : tokEnd, this));
+						}
 					}
 				}
 			}
-		});
+		}
 
 		this.addChildDocumentSymbols(this._declarations);
 	}
 
 	public dispose(): void {
+		this._resolveClass?.dispose();
+		this._resolveClass = undefined;
+
 		super.dispose()
 		this._extends?.dispose();
-		this._implements?.forEach(each => each.dispose());
-		this._declarations.forEach(each => each.dispose());
+		if (this._implements) {
+			for (const each of this._implements) {
+				each.dispose();
+			}
+		}
+		for (const each of this._declarations) {
+			each.dispose();
+		}
 	}
 
 
@@ -135,6 +154,10 @@ export class ContextClass extends Context{
 	public get declarations(): Context[] {
 		return this._declarations;
 	}
+	
+	public get resolveClass(): ResolveClass | undefined {
+		return this._resolveClass;
+	}
 
 	public contextAtPosition(position: Position): Context | undefined {
 		if (this.isPositionInsideRange(this.documentSymbol!.range, position)) {
@@ -152,8 +175,36 @@ export class ContextClass extends Context{
 		return n ? `${n}.${this._name}` : this._name.name;
 	}
 
-	protected updateHover(): Hover | null {
-		if (!this._name.token) {
+	public resolveClasses(state: ResolveState): void {
+		this._resolveClass?.dispose();
+		this._resolveClass = undefined;
+
+		this._resolveClass = new ResolveClass(this._name.name);
+		if (this.parent) {
+			if (this.parent instanceof ContextClass) {
+				(this.parent as ContextClass).resolveClass?.addClass(this._resolveClass);
+			} else if (this.parent instanceof ContextNamespace) {
+				(this.parent as ContextNamespace).resolveNamespace?.addClass(this._resolveClass);
+			} else if (this.parent instanceof ContextScript) {
+				ResolveNamespace.root.addClass(this._resolveClass);
+			}
+		}
+		
+		for (const each of this._declarations) {
+			each.resolveClasses(state);
+		}
+	}
+
+	public resolveStatements(state: ResolveState): void {
+		state.parentClass = this;
+		for (const each of this._declarations) {
+			each.resolveStatements(state);
+		}
+		state.parentClass = undefined;
+	}
+
+	protected updateHover(position: Position): Hover | null {
+		if (!this._name.token || !this.isPositionInsideToken(this._name.token, position)) {
 			return null;
 		}
 
@@ -161,7 +212,7 @@ export class ContextClass extends Context{
 		//content.push("```dragonscript");
 		content.push(`${this._typeModifiers.typestring} **class** *${this.parent!.fullyQualifiedName}*.**${this.name}**`);
 		//content.push("```");
-		/*ontent.push(...[
+		/*content.push(...[
 			"___",
 			"This is a test"]);*/
 		return new HoverInfo(content, this.rangeFrom(this._name.token));
@@ -173,9 +224,9 @@ export class ContextClass extends Context{
 		if (this._extends) {
 			console.log(`${prefixLines}- Extend ${this._extends.name}`);
 		}
-		this._implements.forEach(each => {
+		for (const each of this._implements) {
 			console.log(`${prefixLines}- Implements ${each.name}`);
-		})
+		}
 		this.logChildren(this._declarations, console, prefixLines);
 	}
 }

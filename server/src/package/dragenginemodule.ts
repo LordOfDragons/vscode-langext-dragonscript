@@ -76,7 +76,6 @@ export class PackageDEModule extends Package {
 		this._console.log(`Package '${this._id}': Scan package`);
 		let startTime = Date.now();
 		await Promise.all([
-			this.scanPackage(this._files, join(this._pathModule, "dsinstall")),
 			this.scanPackage(this._files, join(this._pathModule, "native")),
 			this.scanPackage(this._files, join(this._pathModule, "scripts"))
 		]);
@@ -104,7 +103,7 @@ export class PackageDEModule extends Package {
 		}
 
 		var files = await readdir(pathEngine);
-		files.forEach(each => {
+		for (const each of files) {
 			let modpath = join(pathEngine, each);
 			let stats = statSync(modpath);
 			if (stats.isDirectory()) {
@@ -134,7 +133,7 @@ export class PackageDEModule extends Package {
 					this._pathModule = modpath;
 				}
 			}
-		});
+		}
 
 		this._console.log(`Package '${this._id}': Using Module Version ${this._moduleVersion}`);
 	}

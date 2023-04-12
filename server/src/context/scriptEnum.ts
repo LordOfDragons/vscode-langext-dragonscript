@@ -28,6 +28,7 @@ import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
 import { DocumentSymbol, Hover, Position, RemoteConsole, SymbolKind } from "vscode-languageserver"
 import { Identifier } from "./identifier";
 import { HoverInfo } from "../hoverinfo";
+import { ResolveState } from "../resolve/state";
 
 
 export class ContextEnumEntry extends Context{
@@ -73,8 +74,8 @@ export class ContextEnumEntry extends Context{
 		return undefined;
 	}
 
-	protected updateHover(): Hover | null {
-		if (!this._name.token) {
+	protected updateHover(position: Position): Hover | null {
+		if (!this._name.token || !this.isPositionInsideToken(this._name.token, position)) {
 			return null;
 		}
 
@@ -114,16 +115,21 @@ export class ContextEnumeration extends Context{
 			this.rangeFrom(edeclBegin.name[0], tokEnd, true, true));
 
 		let docTextExt = this._name.name;
-		edecl.enumerationBody[0].children.enumerationEntry?.forEach(each => {
-			this._entries.push(new ContextEnumEntry(each, docTextExt, this));
-		});
+		const entries = edecl.enumerationBody[0].children.enumerationEntry;
+		if (entries) {
+			for (const each of entries) {
+				this._entries.push(new ContextEnumEntry(each, docTextExt, this));
+			}
+		}
 
 		this.addChildDocumentSymbols(this._entries);
 	}
 
 	public dispose(): void {
 		super.dispose();
-		this._entries.forEach(each => each.dispose());
+		for (const each of this._entries) {
+			each.dispose();
+		}
 	}
 
 
@@ -148,6 +154,14 @@ export class ContextEnumeration extends Context{
 		return n ? `${n}.${this._name}` : this._name.name;
 	}
 
+	public resolveStatements(state: ResolveState): void {
+		state.parentEnumeration = this;
+		for (const each of this._entries) {
+			each.resolveStatements(state);
+		}
+		state.parentEnumeration = undefined;
+	}
+
 	public contextAtPosition(position: Position): Context | undefined {
 		if (this.isPositionInsideRange(this.documentSymbol!.range, position)) {
 			if (this._name.token && this.isPositionInsideRange(this.rangeFrom(this._name.token), position)) {
@@ -159,8 +173,8 @@ export class ContextEnumeration extends Context{
 		return undefined;
 	}
 
-	protected updateHover(): Hover | null {
-		if (!this._name.token) {
+	protected updateHover(position: Position): Hover | null {
+		if (!this._name.token || !this.isPositionInsideToken(this._name.token, position)) {
 			return null;
 		}
 

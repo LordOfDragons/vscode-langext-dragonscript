@@ -22,9 +22,10 @@
  * SOFTWARE.
  */
 
-import { RemoteConsole } from "vscode-languageserver";
+import { Diagnostic, RemoteConsole } from "vscode-languageserver";
 import { ContextScript } from "./context/script";
 import { ScriptCstNode } from "./nodeclasses/script";
+import { ResolveState } from "./resolve/state";
 import { DSSettings } from "./settings";
 
 export class ScriptDocument {
@@ -86,5 +87,20 @@ export class ScriptDocument {
 		this._context?.dispose();
 		this._context = context;
 		// TODO invalidate
+	}
+
+
+	public async resolve(): Promise<Diagnostic[]> {
+		let diagnostics: Diagnostic[] = [];
+		
+		if (this.context) {
+			let state = new ResolveState(diagnostics, this.uri);
+			this.context.resolveClasses(state);
+
+			state.reset();
+			this.context.resolveStatements(state);
+		}
+
+		return diagnostics;
 	}
 }

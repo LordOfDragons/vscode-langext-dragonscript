@@ -24,7 +24,7 @@
 
 import { Context } from "./context";
 import { ScriptCstNode } from "../nodeclasses/script";
-import { DocumentSymbol, Position, Range, RemoteConsole, SymbolKind } from "vscode-languageserver";
+import { Diagnostic, DocumentSymbol, Position, Range, RemoteConsole, SymbolKind } from "vscode-languageserver";
 import { ContextPinNamespace } from "./pinNamespace";
 import { ContextNamespace } from "./namespace";
 import { ContextClass } from "./scriptClass";
@@ -32,6 +32,7 @@ import { ContextInterface } from "./scriptInterface";
 import { ContextEnumeration } from "./scriptEnum";
 import { ContextRequiresPackage } from "./requiresPackage";
 import { TextDocument } from "vscode-languageserver-textdocument";
+import { ResolveState } from "../resolve/state";
 
 
 /** Top level script context. */
@@ -55,7 +56,7 @@ export class ContextScript extends Context{
 		var statements = this._statements;
 		var parentContext: Context = this;
 
-		node.children.scriptStatement.forEach(each => {
+		for (const each of node.children.scriptStatement) {
 			let c = each.children;
 
 			if (c.requiresPackage) {
@@ -95,20 +96,24 @@ export class ContextScript extends Context{
 					statements.push(new ContextEnumeration(declNode.declareEnumeration[0], typemod, parentContext));
 				}
 			}
-		});
+		}
 
-		this._namespaces.forEach(each => each.addChildDocumentSymbols(each.statements));
+		for (const each of this._namespaces) {
+			each.addChildDocumentSymbols(each.statements);
+		}
 
-		this._statements.forEach(each => {
+		for (const each of this._statements) {
 			if (each.documentSymbol) {
 				this.documentSymbols.push(each.documentSymbol);
 			}
-		});
+		}
 	}
 
 	public dispose(): void {
 		super.dispose();
-		this._statements.forEach(each => each.dispose());
+		for (const each of this._statements) {
+			each.dispose();
+		}
 	}
 
 
@@ -126,6 +131,19 @@ export class ContextScript extends Context{
 
 	public contextAtPosition(position: Position): Context | undefined {
 		return this.contextAtPositionList(this._statements, position);
+	}
+
+
+	public resolveClasses(state: ResolveState): void {
+		for (const each of this._statements) {
+			each.resolveClasses(state);
+		}
+	}
+	
+	public resolveStatements(state: ResolveState): void {
+		for (const each of this._statements) {
+			each.resolveStatements(state);
+		}
 	}
 
 

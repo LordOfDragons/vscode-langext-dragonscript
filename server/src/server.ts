@@ -43,15 +43,16 @@ import {
 	TextDocument
 } from 'vscode-languageserver-textdocument'
 
-import { ContextScript } from "./context/script"
-import { ScriptDocuments } from './scriptDocuments'
-import { ScriptValidator } from './scriptValidator'
-import { DSSettings } from './settings'
-import { DSCapabilities } from './capabilities'
-import { ScriptDocument } from './scriptDocument'
-import { Packages } from './package/packages'
-import { PackageDEModule } from './package/dragenginemodule'
-import { PackageDSLanguage } from './package/dslanguage'
+import { ContextScript } from "./context/script";
+import { ScriptDocuments } from "./scriptDocuments";
+import { ScriptValidator } from "./scriptValidator";
+import { DSSettings } from "./settings";
+import { DSCapabilities } from "./capabilities";
+import { ScriptDocument } from "./scriptDocument";
+import { Packages } from "./package/packages";
+import { PackageDEModule } from "./package/dragenginemodule";
+import { PackageDSLanguage } from "./package/dslanguage";
+import { ResolveNamespace } from './resolve/namespace';
 
 // Create a connection for the server, using Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -80,7 +81,7 @@ export function assertWarn(message: string) {
 
 // Create a simple text document manager.
 const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
-const capabilities: DSCapabilities = new DSCapabilities;
+export const capabilities: DSCapabilities = new DSCapabilities;
 export const validator = new ScriptValidator(capabilities);
 export const scriptDocuments: ScriptDocuments = new ScriptDocuments(connection.console);
 
@@ -162,7 +163,9 @@ connection.onDidChangeConfiguration(change => {
 		(change.settings.dragonscriptLanguage || defaultSettings).pathDragengine;
 	
 	// Revalidate all open text documents
-	documents.all().forEach(validateTextDocument);
+	for (const each of documents.all()) {
+		validateTextDocument(each);
+	}
 });
 
 export function getDocumentSettings(resource: string): Thenable<DSSettings> {
@@ -187,8 +190,16 @@ documents.onDidChangeContent(change => {
 	validateTextDocument(change.document);
 });
 
+function test(n: ResolveNamespace, i: string) {
+	connection.console.log(`${i}Namespace '${n.name}'`);
+	for (const each of n.namespaces.values()) {
+		test(each, `${i}  `);
+	}
+}
+
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
-	let startTime = Date.now();
+	//let startTime = Date.now();
+
 	let scriptDocument = scriptDocuments.get(textDocument.uri);
 	if (!scriptDocument) {
 		const settings = await getDocumentSettings(textDocument.uri);
@@ -205,12 +216,18 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 		scriptDocument.context = undefined;
 	}
 	
-	let elapsedTime = Date.now() - startTime;
-	connection.console.info(`Parsed '${scriptDocument.uri}' in ${elapsedTime / 1000}s`);
+	for (const each of await scriptDocument.resolve()) {
+		diagnostics.push(each)
+	}
+
+	//let elapsedTime = Date.now() - startTime;
+	//connection.console.info(`Parsed '${scriptDocument.uri}' in ${elapsedTime / 1000}s`);
 
 	//scriptDocument.context?.log(connection.console);
 
 	connection.sendDiagnostics({uri: textDocument.uri, diagnostics})
+
+	test(ResolveNamespace.root, "");
 }
 
 connection.onDidChangeWatchedFiles(_change => {
@@ -228,7 +245,7 @@ connection.onHover(
 	(params: TextDocumentPositionParams): Hover | null => {
 		try {
 			return scriptDocuments.get(params.textDocument.uri)?.context?.
-				contextAtPosition(params.position)?.hover || null;
+				contextAtPosition(params.position)?.hover(params.position) || null;
 		} catch (error) {
 			if (error instanceof Error) {
 				let err = error as Error;

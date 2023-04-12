@@ -72,15 +72,22 @@ export class ContextVariables extends Context {
 		this._typename = new TypeName(node.children.type[0]);
 		this._variables = [];
 
-		node.children.statementVariable?.forEach(each => {
-			this._variables.push(new ContextVariablesVariable(each, this));
-		});
+		const vars = node.children.statementVariable;
+		if (vars) {
+			for (const each of vars) {
+				this._variables.push(new ContextVariablesVariable(each, this));
+			}
+		}
 	}
 
 	public dispose(): void {
 		super.dispose();
 		this._typename.dispose();
-		this._variables?.forEach(each => each.dispose);
+		if (this._variables) {
+			for (const each of this._variables) {
+				each.dispose();
+			}
+		}
 	}
 
 
@@ -99,6 +106,8 @@ export class ContextVariables extends Context {
 
 	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
 		console.log(`${prefix}Variables ${this._typename}`);
-		this._variables.forEach(each => each.log(console, prefixLines));
+		for (const each of this._variables) {
+			each.log(console, prefixLines);
+		}
 	}
 }

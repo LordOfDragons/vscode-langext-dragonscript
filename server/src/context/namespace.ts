@@ -24,15 +24,18 @@
 
 import { Context } from "./context";
 import { OpenNamespaceCstNode } from "../nodeclasses/openNamespace";
-import { DocumentSymbol, Hover, Position, Range, RemoteConsole, SymbolKind } from "vscode-languageserver";
+import { Diagnostic, DocumentSymbol, Hover, Position, Range, RemoteConsole, SymbolKind } from "vscode-languageserver";
 import { TypeName } from "./typename";
 import { HoverInfo } from "../hoverinfo";
+import { ResolveNamespace } from "../resolve/namespace";
+import { ResolveState } from "../resolve/state";
 
 
 export class ContextNamespace extends Context{
 	protected _node: OpenNamespaceCstNode;
 	protected _typename: TypeName;
 	protected _statements: Context[];
+	protected _resolveNamespace?: ResolveNamespace;
 
 
 	constructor(node: OpenNamespaceCstNode, parent: Context) {
@@ -50,9 +53,15 @@ export class ContextNamespace extends Context{
 	}
 
 	dispose(): void {
+		this._resolveNamespace?.removeContext(this);
+		this._resolveNamespace = undefined;
+
 		super.dispose()
+
 		this._typename?.dispose();
-		this._statements.forEach(each => each.dispose());
+		for (const each of this._statements) {
+			each.dispose();
+		}
 	}
 
 
@@ -68,16 +77,26 @@ export class ContextNamespace extends Context{
 		return this._statements;
 	}
 
+	public get parentNamespace(): ContextNamespace | undefined {
+		return this;
+	}
+	
+	public get resolveNamespace(): ResolveNamespace | undefined {
+		return this._resolveNamespace;
+	}
+
 	public contextAtPosition(position: Position): Context | undefined {
-		if (this.isPositionInsideRange(this.documentSymbol!.range, position)) {
-			let lt = this._typename.lastToken;
-			if (lt && this.isPositionInsideRange(this.rangeFrom(lt), position)) {
-				return this;
-			} else {
-				return this.contextAtPositionList(this._statements, position);
-			}
+		if (!this.isPositionInsideRange(this.documentSymbol!.range, position)) {
+			return undefined;
 		}
-		return undefined;
+
+		let ft = this._typename.firstToken;
+		let lt = this._typename.lastToken;
+		if (ft && lt && this.isPositionInsideRange(this.rangeFrom(ft, lt), position)) {
+			return this;
+		} else {
+			return this.contextAtPositionList(this._statements, position);
+		}
 	}
 
 
@@ -100,22 +119,60 @@ export class ContextNamespace extends Context{
 		return this._typename.name;
 	}
 
-	protected updateHover(): Hover | null {
+	public resolveClasses(state: ResolveState): void {
+		this._resolveNamespace?.removeContext(this);
+		this._resolveNamespace = this._typename.resolveNamespace(state);
+		this._resolveNamespace?.addContext(this);
+
+		for (const each of this._statements) {
+			each.resolveClasses(state);
+		}
+	}
+	
+	public resolveStatements(state: ResolveState): void {
+		state.clearPins();
+		state.parentNamespace = this;
+
+		for (const each of this._statements) {
+			each.resolveStatements(state);
+		}
+
+		state.parentNamespace = undefined;
+	}
+
+	protected updateHover(position: Position): Hover | null {
 		if (!this._typename.lastToken) {
+			return null;
+		}
+		
+		let parts = this._typename.parts;
+		let plen = parts.length;
+		if (plen == 0) {
 			return null;
 		}
 		
 		let content = [];
 
-		let parts = this._typename.parts;
-		if (parts.length > 1) {
-			let pn = parts.slice(0, parts.length - 1).map(x => x.name.name).reduce((a, b) => `${a}.${b}`);
-			content.push(`**namespace** *${pn}*.**${parts[parts.length - 1].name}**`);	
-		} else {
-			content.push(`**namespace** **${this.typename.name}**`);
+		while (plen > 1) {
+			plen--;
+			let tok = parts[plen].name.token;
+
+			if (!tok || !this.isPositionInsideToken(tok, position)) {
+				continue;
+			}
+
+			let pn = parts.slice(0, plen).map(x => x.name.name).reduce((a, b) => `${a}.${b}`);
+			content.push(`**namespace** *${pn}*.**${parts[plen].name}**`);	
+			return new HoverInfo(content, this.rangeFrom(tok));
 		}
-		
-		return new HoverInfo(content, this.rangeFrom(this._typename.lastToken));
+
+		let tok = parts[0].name.token;
+		if (tok && this.isPositionInsideToken(tok, position)) {
+			content.push(`**namespace** **${parts[0].name}**`);
+			return new HoverInfo(content, this.rangeFrom(tok));
+		}
+
+		return null;
 	}
 
 

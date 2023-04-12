@@ -39,15 +39,20 @@ export class ContextSelectCase {
 		this._node = node;
 		this._values = [];
 
-		node.children.value?.forEach(each => {
-			this._values.push(ContextBuilder.createExpression(each, parent));
-		});
+		const values = node.children.value;
+		if (values) {
+			for (const each of values) {
+				this._values.push(ContextBuilder.createExpression(each, parent));
+			}
+		}
 		
 		this._statements = new ContextStatements(node.children.statements[0], parent);
 	}
 
 	public dispose(): void {
-		this._values.forEach(each => each.dispose());
+		for (const each of this._values) {
+			each.dispose();
+		}
 		this._statements.dispose();
 	}
 
@@ -63,7 +68,9 @@ export class ContextSelectCase {
 
 	log(console: RemoteConsole, prefix: string = ""): void {
 		console.log(`${prefix}- Case`);
-		this._values.forEach(each => each.log(console, `${prefix}  - Val: `, `${prefix}    `));
+		for (const each of this._values) {
+			each.log(console, `${prefix}  - Val: `, `${prefix}    `);
+		}
 		this._statements.log(console, `${prefix}  - `, `${prefix}    `);
 	}
 }
@@ -85,9 +92,9 @@ export class ContextSelect extends Context {
 		this._value = ContextBuilder.createExpression(selbegin.value[0], this);
 
 		if (node.children.statementCase) {
-			node.children.statementCase.forEach(each => {
+			for (const each of node.children.statementCase) {
 				this._cases.push(new ContextSelectCase(each, this));
-			});
+			}
 		}
 
 		if (node.children.statementSelectElse) {
@@ -98,7 +105,9 @@ export class ContextSelect extends Context {
 	public dispose(): void {
 		super.dispose();
 		this._value.dispose();
-		this._cases.forEach(each => each.dispose());
+		for (const each of this._cases) {
+			each.dispose();
+		}
 		this._elsestatements?.dispose();
 	}
 
@@ -123,7 +132,9 @@ export class ContextSelect extends Context {
 	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
 		console.log(`${prefix}Select`);
 		this.logChild(this._value, console, prefixLines, "Value: ");
-		this._cases.forEach(each => each.log(console, prefixLines));
+		for (const each of this._cases) {
+			each.log(console, prefixLines);
+		}
 		if (this._elsestatements) {
 			console.log(`${prefixLines}- Else`);
 			this.logChild(this._elsestatements, console, `${prefixLines}  `);

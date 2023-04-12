@@ -90,7 +90,7 @@ export class ScriptValidator {
 	protected doLex(textDocument: TextDocument, settings: DSSettings, diagnostics: Diagnostic[]): ILexingResult {
 		const lexed = this._lexer.tokenize(textDocument.getText());
 
-		lexed.errors.slice(0, settings.maxNumberOfProblems).forEach(error => {
+		for (const error of lexed.errors.slice(0, settings.maxNumberOfProblems)) {
 			const diagnostic: Diagnostic = {
 				severity: DiagnosticSeverity.Error,
 				range: {
@@ -114,7 +114,7 @@ export class ScriptValidator {
 			}
 
 			diagnostics.push(diagnostic);
-		});
+		}
 
 		return lexed;
 	}
@@ -123,9 +123,9 @@ export class ScriptValidator {
 			settings: DSSettings, logs: string[]): ILexingResult {
 		const lexed = this._lexer.tokenize(text);
 
-		lexed.errors.slice(0, settings.maxNumberOfProblems).forEach(error => {
+		for (const error of lexed.errors.slice(0, settings.maxNumberOfProblems)) {
 			logs.push(`[EE] ${document.uri}:? : ${error.message}`);
-		});
+		};
 
 		return lexed;
 	}
@@ -135,7 +135,7 @@ export class ScriptValidator {
 		this._parser.input = lexed.tokens;
 		const node = this._parser.script() as ScriptCstNode;
 
-		this._parser.errors.slice(0, settings.maxNumberOfProblems).forEach(error => {
+		for (const error of this._parser.errors.slice(0, settings.maxNumberOfProblems)) {
 			const startToken = error.token
 			var endToken = error.resyncedTokens.at(-1) ?? startToken
 
@@ -162,7 +162,7 @@ export class ScriptValidator {
 			}
 
 			diagnostics.push(diagnostic)
-		})
+		}
 		return node;
 	}
 
@@ -171,9 +171,9 @@ export class ScriptValidator {
 		this._parser.input = lexed.tokens;
 		const node = this._parser.script() as ScriptCstNode;
 
-		this._parser.errors.slice(0, settings.maxNumberOfProblems).forEach(error => {
+		for (const error of this._parser.errors.slice(0, settings.maxNumberOfProblems)) {
 			logs.push(`[EE] ${document.uri}:? : ${error.message}`);
-		})
+		}
 		return node;
 	}
 }

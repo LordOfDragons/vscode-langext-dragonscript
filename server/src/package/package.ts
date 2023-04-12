@@ -25,7 +25,7 @@
 import { statSync } from "fs";
 import { readdir, readFile } from "fs/promises";
 import { join } from "path";
-import { RemoteConsole } from "vscode-languageserver";
+import { Diagnostic, DiagnosticSeverity, RemoteConsole } from "vscode-languageserver";
 import { ContextScript } from "../context/script";
 import { ScriptDocument } from "../scriptDocument";
 import { getDocumentSettings, globalSettings, scriptDocuments, validator } from "../server";
@@ -138,7 +138,9 @@ export class Package {
 			throw error;
 		}
 
-		logs.forEach(log => this._console.log(path));
+		for (const each of logs) {
+			this._console.log(each);
+		}
 
 		if (scriptDocument.node) {
 			let lineCount = (text.match(/\n/g) || '').length + 1;
@@ -170,13 +172,44 @@ export class Package {
 
 		//this._finishedCounter++;
 		//scriptDocument.console.info(`Package '${this._id}' (${this._finishedCounter}/${this._files.length}): Parsed '${path}' in ${elapsedTime / 1000}s`);
+
+		// this can run asynchronous
+		this.resolveFile(scriptDocument);
 	}
 
+	protected async resolveFile(document: ScriptDocument): Promise<void> {
+		for (const each of await document.resolve()) {
+			var severity;
+			switch (each.severity ?? DiagnosticSeverity.Information) {
+				case DiagnosticSeverity.Error:
+					severity = "[EE]";
+					break;
+
+				case DiagnosticSeverity.Warning:
+					severity = "[WW]";
+					break;
+
+				case DiagnosticSeverity.Information:
+					severity = "[II]";
+					break;
+
+				case DiagnosticSeverity.Hint:
+					severity = "[HH]";
+					break;
+
+				default:
+					severity = "[II]";
+			}
+
+			this._console.log(`Package '${this._id}' ${severity}: ${document.uri}:${each.range.start.line}:${each.range.start.character}: ${each.message}`);
+		}
+	}
+	
 	protected async scanPackage(list: string[], path: string): Promise<void> {
 		let files = await readdir(path);
 		let directories: string[] = []
 
-		files.forEach(each => {
+		for (const each of files) {
 			let childpath = join(path, each);
 			let stats = statSync(childpath);
 			if (stats.isDirectory()) {
@@ -186,7 +219,7 @@ export class Package {
 					list.push(childpath);
 				}
 			}
-		});
+		}
 
 		await Promise.all(directories.map(each => this.scanPackage(list, each)));
 	}
