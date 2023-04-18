@@ -24,18 +24,19 @@
 
 import { ResolveClass } from './class';
 import { ResolveInterface } from './interface'
+import { ResolveEnumeration } from './enumeration'
 
 
 /**
- * Base class for types (namespace, class, interface, enumeration) containing inner
- * classes, interfaces and enumerations.
+ * Base class for types (namespace, class, interface, enumeration) potentially
+ * containing inner classes, interfaces and enumerations.
  */
 export class ResolveType{
 	protected _type: ResolveType.Type;
 	protected _name: string;
 	protected _classes: Map<string, ResolveClass> = new Map();
 	protected _interfaces: Map<string, ResolveInterface> = new Map();
-	protected _enumerations: any[] = [];
+	protected _enumerations: Map<string, ResolveEnumeration> = new Map();
 	protected _valid: boolean = true;
 	protected _fullyQualifiedName?: string
 	protected _displayName?: string
@@ -52,6 +53,9 @@ export class ResolveType{
 			each.dispose();
 		}
 		for (const each of this._interfaces.values()) {
+			each.dispose();
+		}
+		for (const each of this._enumerations.values()) {
 			each.dispose();
 		}
 		this.removeFromParent();
@@ -141,8 +145,32 @@ export class ResolveType{
 	}
 
 
+	public get enumerations(): Map<string, ResolveEnumeration> {
+		this.validate();
+		return this._enumerations;
+	}
+
+	public enumeration(name: string): ResolveEnumeration | undefined {
+		let i = this._enumerations.get(name);
+		i?.validate();
+		return i;
+	}
+
+	public addEnumeration(enumeration: ResolveEnumeration): void {
+		this.removeEnumeration(enumeration);
+		enumeration.parent = this;
+		this._enumerations.set(enumeration.name, enumeration);
+	}
+
+	public removeEnumeration(enumeration: ResolveEnumeration): void {
+		if (this._enumerations.delete(enumeration.name)) {
+			enumeration.parent = undefined;
+		}
+	}
+
+
 	public findType(name: string): ResolveType | undefined {
-		return this.class(name) || this.interface(name);
+		return this.class(name) || this.interface(name) || this.enumeration(name);
 	}
 
 
@@ -155,8 +183,8 @@ export class ResolveType{
 		for (const each of this._interfaces.values()) {
 			each.invalidate();
 		}
-		for (const each of this._enumerations) {
-			
+		for (const each of this._enumerations.values()) {
+			each.invalidate();
 		}
 
 		this.onInvalidate();
@@ -185,6 +213,7 @@ export namespace ResolveType {
 	export enum Type {
 		Namespace,
 		Class,
-		Interface
+		Interface,
+		Enumeration
 	}
 }

@@ -29,6 +29,12 @@ import { DocumentSymbol, Hover, Position, RemoteConsole, SymbolKind } from "vsco
 import { Identifier } from "./identifier";
 import { HoverInfo } from "../hoverinfo";
 import { ResolveState } from "../resolve/state";
+import { ResolveEnumeration } from "../resolve/enumeration";
+import { ResolveType } from "../resolve/type";
+import { ContextClass } from "./scriptClass";
+import { ContextInterface } from "./scriptInterface";
+import { ContextNamespace } from "./namespace";
+import { ResolveNamespace } from "../resolve/namespace";
 
 
 export class ContextEnumEntry extends Context{
@@ -96,6 +102,7 @@ export class ContextEnumeration extends Context{
 	protected _name: Identifier;
 	protected _typeModifiers: Context.TypeModifierSet;
 	protected _entries: ContextEnumEntry[] = [];
+	protected _resolveEnum?: ResolveEnumeration;
 
 
 	constructor(node: DeclareEnumerationCstNode, typemodNode: TypeModifiersCstNode | undefined, parent: Context) {
@@ -126,6 +133,9 @@ export class ContextEnumeration extends Context{
 	}
 
 	public dispose(): void {
+		this._resolveEnum?.dispose();
+		this._resolveEnum = undefined;
+
 		super.dispose();
 		for (const each of this._entries) {
 			each.dispose();
@@ -152,6 +162,30 @@ export class ContextEnumeration extends Context{
 	public get fullyQualifiedName(): string {
 		let n = this.parent?.fullyQualifiedName || "";
 		return n ? `${n}.${this._name}` : this._name.name;
+	}
+	
+	public get resolveEnumeration(): ResolveEnumeration | undefined {
+		return this._resolveEnum;
+	}
+
+	public resolveClasses(state: ResolveState): void {
+		this._resolveEnum?.dispose();
+		this._resolveEnum = undefined;
+
+		this._resolveEnum = new ResolveEnumeration(this);
+		if (this.parent) {
+			var container: ResolveType | undefined;
+			if (this.parent.type == Context.ContextType.Class) {
+				container = (this.parent as ContextClass).resolveClass;
+			} else if (this.parent.type == Context.ContextType.Interface) {
+				container = (this.parent as ContextInterface).resolveInterface;
+			} else if (this.parent.type == Context.ContextType.Namespace) {
+				container = (this.parent as ContextNamespace).resolveNamespace;
+			} else if (this.parent.type == Context.ContextType.Script) {
+				container = ResolveNamespace.root;
+			}
+			container?.addEnumeration(this._resolveEnum);
+		}
 	}
 
 	public resolveStatements(state: ResolveState): void {

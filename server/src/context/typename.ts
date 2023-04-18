@@ -33,7 +33,7 @@ import { Identifier } from "./identifier"
 import { debugLogMessage } from "../server";
 import { ResolveType } from "../resolve/type";
 import { ResolveInterface } from "../resolve/interface";
-import { assert } from "console";
+import { ResolveEnumeration } from "../resolve/enumeration";
 
 
 export class TypeNamePart {
@@ -152,18 +152,6 @@ export class TypeName {
 	}
 
 	public resolveType(state: ResolveState): ResolveType | undefined {
-		const dodebug = ["BaseGameApp"].includes(state.parentClass?.name.name || "") && this._parts[0].name.name == "Desktop";
-		if (dodebug) {
-			debugLogMessage(`resolveType: "${this._parts[0].name}" IN ${state.parentClass?.name.name}`);
-			const ns = state.parentNamespace?.resolveNamespace;
-			if (ns) {
-				debugLogMessage(`- namespace "${ns.fullyQualifiedName}"`);
-			}
-			for (const each of state.pins) {
-				debugLogMessage(`- pin "${each.fullyQualifiedName}"`);
-			}
-		}
-
 		if (this._parts.length == 0) {
 			return undefined;
 		}
@@ -187,14 +175,7 @@ export class TypeName {
 
 			// all other parts have to be direct children
 			} else {
-				var nextType: ResolveType | undefined = type!.class(each.name.name);
-				if (!nextType) {
-					nextType = type!.interface(each.name.name);
-				}
-				if (!nextType && type!.type == ResolveType.Type.Namespace) {
-					nextType = (type as ResolveNamespace).namespace(each.name.name);
-				}
-
+				const nextType = type!.findType(each.name.name);
 				if (nextType) {
 					each.resolve = nextType;
 					type = nextType;
@@ -213,18 +194,6 @@ export class TypeName {
 	}
 
 	protected resolveBaseType(state: ResolveState): ResolveType | undefined {
-		const dodebug = ["BaseGameApp"].includes(state.parentClass?.name.name || "") && this._parts[0].name.name == "Desktop";
-		if (dodebug) {
-			debugLogMessage(`resolveBaseType: "${this._parts[0].name}" IN ${state.parentClass?.name.name}`);
-			const ns = state.parentNamespace?.resolveNamespace;
-			if (ns) {
-				debugLogMessage(`- namespace "${ns.fullyQualifiedName}"`);
-			}
-			for (const each of state.pins) {
-				debugLogMessage(`- pin "${each.fullyQualifiedName}"`);
-			}
-		}
-
 		// first part has to be:
 		var part = this._parts[0];
 		const name = part.name.name;
@@ -273,16 +242,16 @@ export class TypeName {
 		return undefined;
 	}
 
-	protected resolveTypeInClassChain(state: ResolveState, cls: ResolveClass, name: string): ResolveType | undefined {
-		const t = cls.findType(name);
+	protected resolveTypeInClassChain(state: ResolveState, rclass: ResolveClass, name: string): ResolveType | undefined {
+		const t = rclass.findType(name);
 		if (t) {
 			return t;
 		}
 	
 		// TODO: if variable or function fail
 
-		if (cls.context) {
-			const t2 = cls.context.extends?.resolve;
+		if (rclass.context) {
+			const t2 = rclass.context.extends?.resolve;
 			if (t2?.type == ResolveType.Type.Class) {
 				const t3 = this.resolveTypeInClassChain(state, t2 as ResolveClass, name);
 				if (t3) {
@@ -290,7 +259,7 @@ export class TypeName {
 				}
 			}
 
-			for (const each of cls.context.implements) {
+			for (const each of rclass.context.implements) {
 				const t2 = each.resolve;
 				if (t2?.type == ResolveType.Type.Interface) {
 					const t3 = this.resolveTypeInInterfaceChain(state, t2 as ResolveInterface, name);
@@ -298,6 +267,15 @@ export class TypeName {
 						return t3;
 					}
 				}
+			}
+		}
+
+		if (rclass.parent) {
+			switch (rclass.parent.type) {
+				case ResolveType.Type.Class:
+					return this.resolveTypeInClassChain(state, rclass.parent as ResolveClass, name);
+				case ResolveType.Type.Interface:
+					return this.resolveTypeInInterfaceChain(state, rclass.parent as ResolveInterface, name);
 			}
 		}
 
@@ -329,11 +307,6 @@ export class TypeName {
 
 	protected resolveTypeInNamespaceChain(state: ResolveState, ns: ResolveNamespace, name: string):
 			ResolveType | undefined {
-		const dodebug = ["BaseGameApp"].includes(state.parentClass?.name.name || "") && this._parts[0].name.name == "Desktop";
-		if (dodebug) {
-			debugLogMessage(`resolveNamespaceChain: "${this._parts[0].name}" IN ${ns.fullyQualifiedName} (${ns.classes.size}) => ${ns.class(name)}`);
-		}
-
 		const t = ns.findType(name);
 		if (t) {
 			return t;
@@ -379,6 +352,11 @@ export class TypeName {
 						const i = part.resolve as ResolveInterface;
 						content.push(`**interface ${i.name}**`);
 						this.hoverAddParent(content, i.parent);
+
+					} else if (part.resolve.type == ResolveType.Type.Enumeration) {
+						const e = part.resolve as ResolveEnumeration;
+						content.push(`**enumeration ${e.name}**`);
+						this.hoverAddParent(content, e.parent);
 
 					} else if (part.resolve.type == ResolveType.Type.Namespace) {
 						const ns = part.resolve as ResolveNamespace;
