@@ -23,6 +23,7 @@
  */
 
 import { ContextNamespace } from '../context/namespace';
+import { ResolveClass } from './class';
 import { ResolveType } from './type';
 
 
@@ -33,6 +34,11 @@ export class ResolveNamespace extends ResolveType {
 
 	constructor (name: string) {
 		super(name, ResolveType.Type.Namespace);
+
+		if (name == "") {
+			// for the root namespace add some special classes
+			this.addClass(new ResolveClass(undefined, "void"));
+		}
 	}
 
 	public dispose(): void {

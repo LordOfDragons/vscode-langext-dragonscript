@@ -24,9 +24,11 @@
 
 import { Context } from "./context"
 import { FunctionArgumentCstNode } from "../nodeclasses/declareFunction";
-import { RemoteConsole } from "vscode-languageserver"
+import { DocumentSymbol, Hover, Position, RemoteConsole, SymbolKind } from "vscode-languageserver"
 import { TypeName } from "./typename";
 import { Identifier } from "./identifier";
+import { ResolveState } from "../resolve/state";
+import { HoverInfo } from "../hoverinfo";
 
 
 export class ContextFunctionArgument extends Context{
@@ -40,6 +42,12 @@ export class ContextFunctionArgument extends Context{
 		this._node = node
 		this._name = new Identifier(node.children.name[0]);
 		this._typename = new TypeName(node.children.type[0]);
+
+		let tokBegin = node.children.type[0].children.identifier[0];
+		let tokEnd = node.children.name[0];
+		this.documentSymbol = DocumentSymbol.create(this._name.name, this._typename.name,
+			SymbolKind.Variable, this.rangeFrom(tokBegin, tokEnd, true, false),
+			this.rangeFrom(tokBegin, tokEnd, true, true));
 	}
 
 	dispose(): void {
@@ -62,6 +70,40 @@ export class ContextFunctionArgument extends Context{
 
 	public get fullyQualifiedName(): string {
 		return this._name.name;
+	}
+
+	public resolveStatements(state: ResolveState): void {
+		if (this._typename) {
+			this._typename.resolveType(state);
+		}
+	}
+
+	public contextAtPosition(position: Position): Context | undefined {
+		if (!this.isPositionInsideRange(this.documentSymbol!.range, position)) {
+			return undefined;
+		}
+
+		if (this._name.token && this.isPositionInsideToken(this._name.token, position)) {
+			return this;
+		}
+		if (this._typename.isPositionInside(position)) {
+			return this;
+		}
+		return undefined;
+	}
+
+	protected updateHover(position: Position): Hover | null {
+		if (this._name.token && this.isPositionInsideToken(this._name.token, position)) {
+			let content = [];
+			content.push(`**parameter** *${this._typename}* **${this._name}**`);
+			return new HoverInfo(content, this.rangeFrom(this._name.token));
+		}
+
+		if (this._typename.isPositionInside(position)) {
+			return this._typename.hover(position);
+		}
+
+		return null;
 	}
 
 	

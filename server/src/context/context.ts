@@ -99,9 +99,13 @@ export class Context {
 	}
 
 	protected contextAtPositionList(list: Context[], position: Position): Context | undefined {
-		var context: Context | undefined;
-		list.find(each => context = each.contextAtPosition(position));
-		return context;
+		for (const each of list) {
+			const context = each.contextAtPosition(position);
+			if (context) {
+				return context;
+			}
+		}
+		return undefined;
 	}
 
 	public isPositionInsideRange(range: Range, position: Position): boolean {

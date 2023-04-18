@@ -35,6 +35,7 @@ import { Identifier } from "./identifier";
 import { ContextStatements } from "./statements";
 import { IToken } from "chevrotain";
 import { HoverInfo } from "../hoverinfo";
+import { ResolveState } from "../resolve/state";
 
 
 export class ContextFunction extends Context{
@@ -315,53 +316,76 @@ export class ContextFunction extends Context{
 		return n ? `${n}.${this._name}` : this._name.name;
 	}
 
-	public contextAtPosition(position: Position): Context | undefined {
-		if (this.isPositionInsideRange(this.documentSymbol!.range, position)) {
-			if (this._name.token && this.isPositionInsideRange(this.rangeFrom(this._name.token), position)) {
-				return this;
-			} else {
-				return this.contextAtPositionList(this._arguments, position);
-			}
+	public resolveStatements(state: ResolveState): void {
+		if (this._returnType) {
+			this._returnType.resolveType(state);
 		}
-		return undefined;
+
+		for (const each of this._arguments) {
+			each.resolveStatements(state);
+		}
+	}
+
+	public contextAtPosition(position: Position): Context | undefined {
+		if (!this.isPositionInsideRange(this.documentSymbol!.range, position)) {
+			return undefined;
+		}
+
+		if (this._name.token && this.isPositionInsideToken(this._name.token, position)) {
+			return this;
+		}
+		if (this._returnType?.isPositionInside(position)) {
+			return this;
+		}
+
+		return this.contextAtPositionList(this._arguments, position);
 	}
 
 	protected updateHover(position: Position): Hover | null {
-		if (!this._name.token || !this.isPositionInsideToken(this._name.token, position)) {
-			return null;
+		if (this._name.token && this.isPositionInsideToken(this._name.token, position)) {
+			let parts = [];
+			parts.push(this._typeModifiers.typestring);
+			switch (this._functionType) {
+				case ContextFunction.Type.Constructor:
+					parts.push(" **constructor** ");
+					break;
+				case ContextFunction.Type.Destructor:
+					parts.push(" **destructor** ");
+					break;
+				case ContextFunction.Type.Operator:
+					parts.push(` **operator** *${this._returnType}* `);
+					break;
+				case ContextFunction.Type.Regular:
+				default:
+					parts.push(` **function** *${this._returnType}* `);
+			}
+			parts.push(`*${this.parent!.fullyQualifiedName}*.**${this._name}**(`);
+	
+			var args = [];
+			for (const each of this._arguments) {
+				args.push(`*${each.typename}* ${each.name}`);
+			}
+			if (args.length > 0) {
+				parts.push(args.join(", "));
+			}
+			parts.push(")");
+	
+			let content = [];
+			content.push(parts.join(""));
+	
+			return new HoverInfo(content, this.rangeFrom(this._name.token));
 		}
 
-		let parts = [];
-		parts.push(this._typeModifiers.typestring);
-		switch (this._functionType) {
-			case ContextFunction.Type.Constructor:
-				parts.push(" **constructor** ");
-				break;
-
-			case ContextFunction.Type.Destructor:
-				parts.push(" **destructor** ");
-				break;
-
-			case ContextFunction.Type.Operator:
-				parts.push(` **operator** *${this._returnType}* `);
-				break;
-
-			case ContextFunction.Type.Regular:
-			default:
-				parts.push(` **function** *${this._returnType}* `);
+		if (this._returnType?.isPositionInside(position)) {
+			return this._returnType.hover(position);
 		}
-		parts.push(`*${this.parent!.fullyQualifiedName}*.**${this._name}**(`);
 
-		let args = this._arguments.map(each => `*${each.typename}* ${each.name}`);
-		if (args.length > 0) {
-			parts.push(args.join(", "));
+		const context = this.contextAtPositionList(this._arguments, position);
+		if (context) {
+			return context.hover(position);
 		}
-		parts.push(")");
 
-		let content = [];
-		content.push(parts.join(""));
-
-		return new HoverInfo(content, this.rangeFrom(this._name.token));
+		return null;
 	}
 
 

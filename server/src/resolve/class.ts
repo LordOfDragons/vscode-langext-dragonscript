@@ -30,8 +30,8 @@ export class ResolveClass extends ResolveType {
 	protected _context?: ContextClass;
 
 
-	constructor (context: ContextClass) {
-		super(context.name.name, ResolveType.Type.Class);
+	constructor (context?: ContextClass, name?: string) {
+		super(context?.name.name || name || "??", ResolveType.Type.Class);
 		this._context = context;
 	}
 

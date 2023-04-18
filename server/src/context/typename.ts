@@ -200,8 +200,8 @@ export class TypeName {
 		
 		const pc = state.parentClass?.resolveClass;
 		if (pc) {
-			// 1) an inner type of the parent class
-			// 2) an inner type of the super class chain
+			// - an inner type of the parent class
+			// - an inner type of the super class chain
 			const t = this.resolveTypeInClassChain(state, pc, name);
 			if (t) {
 				part.resolve = t;
@@ -211,8 +211,8 @@ export class TypeName {
 		
 		const pi = state.parentInterface?.resolveInterface;
 		if (pi) {
-			// 1) an inner type of the parent interface
-			// 2) an inner type of the super interface chain
+			// - an inner type of the parent interface
+			// - an inner type of the super interface chain
 			const t = this.resolveTypeInInterfaceChain(state, pi, name);
 			if (t) {
 				part.resolve = t;
@@ -233,6 +233,25 @@ export class TypeName {
 		// - a type of a pinned namespace chain
 		for (const pin of state.pins) {
 			const t = this.resolveTypeInNamespaceChain(state, pin, name);
+			if (t) {
+				part.resolve = t;
+				return t;
+			}
+		}
+
+		// - a namespace of the parent namespace chain
+		var ns2 = state.parentNamespace?.resolveNamespace;
+		if (ns2) {
+			const t = this.resolveNamespaceInNamespaceChain(state, ns, name);
+			if (t) {
+				part.resolve = t;
+				return t;
+			}
+		}
+
+		// - a namespace of a pinned namespace chain
+		for (const pin of state.pins) {
+			const t = this.resolveNamespaceInNamespaceChain(state, pin, name);
 			if (t) {
 				part.resolve = t;
 				return t;
@@ -316,6 +335,20 @@ export class TypeName {
 
 		if (ns.parent?.type == ResolveType.Type.Namespace) {
 			return this.resolveTypeInNamespaceChain(state, ns.parent as ResolveNamespace, name);
+		}
+
+		return undefined;
+	}
+
+	protected resolveNamespaceInNamespaceChain(state: ResolveState, ns: ResolveNamespace, name: string):
+			ResolveNamespace | undefined {
+		const ns2 = ns.namespace(name);
+		if (ns2) {
+			return ns2;
+		}
+
+		if (ns.parent?.type == ResolveType.Type.Namespace) {
+			return this.resolveNamespaceInNamespaceChain(state, ns.parent as ResolveNamespace, name);
 		}
 
 		return undefined;
