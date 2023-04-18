@@ -106,7 +106,17 @@ export class Package {
 	}
 
 	protected async loadFiles(): Promise<void> {
+		// loading files does "resolveClasses" on all documents individually
 		await Promise.all(this._files.map(each => this.loadFile(each)));
+
+		// calling "resolveInheritance" and "resolveStatements" requires all files to be present
+		await Promise.all(this._scriptDocuments.map(each => {
+			this.resolveLogDiagnostics(each.resolveInheritance(), each.uri);
+		}));
+		
+		await Promise.all(this._scriptDocuments.map(each => {
+			this.resolveLogDiagnostics(each.resolveStatements(), each.uri);
+		}));
 	}
 
 	protected async loadFile(path: string): Promise<void> {
@@ -174,11 +184,11 @@ export class Package {
 		//scriptDocument.console.info(`Package '${this._id}' (${this._finishedCounter}/${this._files.length}): Parsed '${path}' in ${elapsedTime / 1000}s`);
 
 		// this can run asynchronous
-		this.resolveFile(scriptDocument);
+		this.resolveLogDiagnostics(scriptDocument.resolveClasses(), scriptDocument.uri);
 	}
 
-	protected async resolveFile(document: ScriptDocument): Promise<void> {
-		for (const each of await document.resolve()) {
+	protected async resolveLogDiagnostics(diagnostics: Promise<Diagnostic[]>, uri: string): Promise<void> {
+		for (const each of await diagnostics) {
 			var severity;
 			switch (each.severity ?? DiagnosticSeverity.Information) {
 				case DiagnosticSeverity.Error:
@@ -201,7 +211,7 @@ export class Package {
 					severity = "[II]";
 			}
 
-			this._console.log(`Package '${this._id}' ${severity}: ${document.uri}:${each.range.start.line}:${each.range.start.character}: ${each.message}`);
+			this._console.log(`Package '${this._id}' ${severity}: ${uri}:${each.range.start.line}:${each.range.start.character}: ${each.message}`);
 		}
 	}
 	

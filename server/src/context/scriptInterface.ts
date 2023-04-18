@@ -33,14 +33,19 @@ import { ContextFunction } from "./classFunction";
 import { Identifier } from "./identifier";
 import { HoverInfo } from "../hoverinfo";
 import { ResolveState } from "../resolve/state";
+import { ResolveInterface } from "../resolve/interface";
+import { ContextNamespace } from "./namespace";
+import { ResolveNamespace } from "../resolve/namespace";
+import { ResolveType } from "../resolve/type";
 
 
 export class ContextInterface extends Context{
 	protected _node: DeclareInterfaceCstNode;
 	protected _name: Identifier;
 	protected _typeModifiers: Context.TypeModifierSet;
-	protected _extends?: TypeName;
+	protected _implements: TypeName[] = [];
 	protected _declarations: Context[] = [];
+	protected _resolveInterface?: ResolveInterface;
 
 
 	constructor(node: DeclareInterfaceCstNode, typemodNode: TypeModifiersCstNode | undefined, parent: Context) {
@@ -60,7 +65,9 @@ export class ContextInterface extends Context{
 			this.rangeFrom(ideclBegin.name[0], tokEnd, true, true));
 		
 		if (ideclBegin.baseInterfaceName) {
-			this._extends = new TypeName(ideclBegin.baseInterfaceName[0]);
+			for (const each of ideclBegin.baseInterfaceName) {
+				this._implements.push(new TypeName(each));
+			}
 		}
 
 		const decls = idecl.interfaceBody[0].children.interfaceBodyDeclaration;
@@ -89,8 +96,13 @@ export class ContextInterface extends Context{
 	}
 
 	public dispose(): void {
-		super.dispose()
-		this._extends?.dispose()
+		this._resolveInterface?.dispose();
+		this._resolveInterface = undefined;
+
+		super.dispose();
+		for (const each of this._implements) {
+			each.dispose();
+		}
 		for (const each of this._declarations) {
 			each.dispose();
 		}
@@ -109,17 +121,66 @@ export class ContextInterface extends Context{
 		return this._typeModifiers;
 	}
 
-	public get extends(): TypeName | undefined {
-		return this._extends;
+	public get implements(): TypeName[] {
+		return this._implements;
 	}
 
 	public get declarations(): Context[] {
 		return this._declarations;
 	}
+	
+	public get resolveInterface(): ResolveInterface | undefined {
+		return this._resolveInterface;
+	}
 
 	public get fullyQualifiedName(): string {
 		let n = this.parent?.fullyQualifiedName || "";
 		return n ? `${n}.${this._name}` : this._name.name;
+	}
+
+	public resolveClasses(state: ResolveState): void {
+		this._resolveInterface?.dispose();
+		this._resolveInterface = undefined;
+
+		this._resolveInterface = new ResolveInterface(this);
+		if (this.parent) {
+			var container: ResolveType | undefined;
+			if (this.parent.type == Context.ContextType.Class) {
+				container = (this.parent as ContextClass).resolveClass;
+			} else if (this.parent.type == Context.ContextType.Interface) {
+				container = (this.parent as ContextInterface).resolveInterface;
+			} else if (this.parent.type == Context.ContextType.Namespace) {
+				container = (this.parent as ContextNamespace).resolveNamespace;
+			} else if (this.parent.type == Context.ContextType.Script) {
+				container = ResolveNamespace.root;
+			}
+			container?.addInterface(this._resolveInterface);
+		}
+		
+		for (const each of this._declarations) {
+			each.resolveClasses(state);
+		}
+	}
+
+	public resolveInheritance(state: ResolveState): void {
+		for (const each of this._implements) {
+			const t = each.resolveType(state);
+			if (t && !(t.type == ResolveType.Type.Interface)) {
+				const r = each.range;
+				if (r) {
+					state.reportError(r, `${each.name} is not an interface.`);
+				}
+			}
+		}
+		
+		const ppi = state.parentInterface;
+		state.parentInterface = this;
+
+		for (const each of this._declarations) {
+			each.resolveInheritance(state);
+		}
+
+		state.parentInterface = ppi;
 	}
 
 	public resolveStatements(state: ResolveState): void {
@@ -135,6 +196,11 @@ export class ContextInterface extends Context{
 			if (this._name.token && this.isPositionInsideRange(this.rangeFrom(this._name.token), position)) {
 				return this;
 			} else {
+				for (const each of this._implements) {
+					if (each.isPositionInside(position)) {
+						return this;
+					}
+				}
 				return this.contextAtPositionList(this._declarations, position);
 			}
 		}
@@ -142,20 +208,31 @@ export class ContextInterface extends Context{
 	}
 
 	protected updateHover(position: Position): Hover | null {
-		if (!this._name.token || !this.isPositionInsideToken(this._name.token, position)) {
-			return null;
+		if (this._name.token && this.isPositionInsideRange(this.rangeFrom(this._name.token), position)) {
+			let content = [];
+			content.push(`${this._typeModifiers.typestring} **interface** `);
+			if (this.parent) {
+				content.push(`*${this.parent.fullyQualifiedName}*.`);
+			}
+			content.push(`**${this.name}**`);
+			return new HoverInfo(content, this.rangeFrom(this._name.token));
+
+		} else {
+			for (const each of this._implements) {
+				if (each.isPositionInside(position)) {
+					return each.hover(position);
+				}
+			}
 		}
 
-		let content = [];
-		content.push(`${this._typeModifiers.typestring} **interface** *${this.parent!.fullyQualifiedName}*.**${this.name}**`);
-		return new HoverInfo(content, this.rangeFrom(this._name.token));
+		return null;
 	}
 
 
 	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
 		console.log(`${prefix}Interface: ${this._typeModifiers} ${this._name}`);
-		if (this._extends) {
-			console.log(`${prefixLines}- Extend ${this._extends.name}`);
+		for (const each of this._implements) {
+			console.log(`${prefixLines}- Implements ${each.name}`);
 		}
 		this.logChildren(this._declarations, console, prefixLines);
 	}

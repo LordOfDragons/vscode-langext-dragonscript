@@ -28,6 +28,7 @@ import { DocumentSymbol, Hover, Position, RemoteConsole, SymbolKind } from "vsco
 import { TypeName } from "./typename";
 import { HoverInfo } from "../hoverinfo";
 import { ResolveState } from "../resolve/state";
+import { ResolveNamespace } from "../resolve/namespace";
 
 
 export class ContextPinNamespace extends Context{
@@ -41,12 +42,11 @@ export class ContextPinNamespace extends Context{
 		this._typename = new TypeName(node.children.name[0]);
 
 		let tokPin = node.children.pin[0];
-		let tokBegin = this._typename.firstToken || tokPin;
-		let tokEnd = this._typename.lastToken || tokBegin;
+		let tokName = this._typename.lastToken || tokPin;
 		
-		this.documentSymbol = DocumentSymbol.create(this._typename.name,
-			this._typename.name, SymbolKind.Namespace, this.rangeFrom(tokPin, tokEnd, true, false),
-			this.rangeFrom(tokBegin, tokEnd, true, true));
+		this.documentSymbol = DocumentSymbol.create(this._typename.lastPart.name.name,
+			this._typename.name, SymbolKind.Namespace, this.rangeFrom(tokPin, tokName, true, false),
+			this.rangeFrom(tokPin, tokName, true, true));
 	}
 
 	dispose(): void {
@@ -67,32 +67,71 @@ export class ContextPinNamespace extends Context{
 		return this._typename.name;
 	}
 
+	public resolveClasses(state: ResolveState): void {
+		this._typename.resolveNamespace(state);
+	}
+
+	public resolveInheritance(state: ResolveState): void {
+		const ns = this._typename.lastPart?.resolve;
+		if (ns && ns instanceof ResolveNamespace) {
+			state.pins.push(ns);
+		}
+	}
+
 	public resolveStatements(state: ResolveState): void {
-		const ns = this._typename.resolveNamespace(state);
-		if (ns) {
+		const ns = this._typename.lastPart?.resolve;
+		if (ns && ns instanceof ResolveNamespace) {
 			state.pins.push(ns);
 		}
 	}
 
 	public contextAtPosition(position: Position): Context | undefined {
-		if (this.isPositionInsideRange(this.documentSymbol!.range, position)) {
-			let ft = this._typename.firstToken;
-			let lt = this._typename.lastToken;
-			if (ft && lt && this.isPositionInsideRange(this.rangeFrom(ft, lt), position)) {
-				return this;
-			}
+		if (!this.isPositionInsideRange(this.documentSymbol!.range, position)) {
+			return undefined;
 		}
+
+		let ft = this._typename.firstToken;
+		let lt = this._typename.lastToken;
+		if (ft && lt && this.isPositionInsideRange(this.rangeFrom(ft, lt), position)) {
+			return this;
+		}
+
 		return undefined;
 	}
 
 	protected updateHover(position: Position): Hover | null {
-		if (!this._typename.firstToken || !this._typename.lastToken) {
+		if (!this._typename.lastToken) {
 			return null;
 		}
-
+		
+		let parts = this._typename.parts;
+		let plen = parts.length;
+		if (plen == 0) {
+			return null;
+		}
+		
 		let content = [];
-		content.push(`**pin** **${this._typename}**`);
-		return new HoverInfo(content, this.rangeFrom(this._typename.firstToken, this._typename.lastToken));
+
+		while (plen > 1) {
+			plen--;
+			let tok = parts[plen].name.token;
+
+			if (!tok || !this.isPositionInsideToken(tok, position)) {
+				continue;
+			}
+
+			let pn = parts.slice(0, plen).map(x => x.name.name).reduce((a, b) => `${a}.${b}`);
+			content.push(`**namespace** *${pn}*.**${parts[plen].name}**`);	
+			return new HoverInfo(content, this.rangeFrom(tok));
+		}
+
+		let tok = parts[0].name.token;
+		if (tok && this.isPositionInsideToken(tok, position)) {
+			content.push(`**namespace** **${parts[0].name}**`);
+			return new HoverInfo(content, this.rangeFrom(tok));
+		}
+
+		return null;
 	}
 
 

@@ -25,9 +25,7 @@
 import { IToken } from "chevrotain";
 import { Diagnostic, DiagnosticSeverity, DocumentSymbol, Hover, Position, Range, RemoteConsole } from "vscode-languageserver";
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
-import { ResolveNamespace } from "../resolve/namespace";
 import { capabilities } from "../server";
-import { ContextNamespace } from "./namespace";
 import { ResolveState } from "../resolve/state";
 
 
@@ -77,6 +75,9 @@ export class Context {
 	}
 
 	public resolveClasses(state: ResolveState): void {
+	}
+
+	public resolveInheritance(state: ResolveState): void {
 	}
 
 	public resolveStatements(state: ResolveState): void {

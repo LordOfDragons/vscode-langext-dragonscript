@@ -23,7 +23,6 @@
  */
 
 import { IToken } from "chevrotain";
-import { Context } from "mocha";
 import { Diagnostic, DiagnosticSeverity, Range } from "vscode-languageserver"
 import { ContextNamespace } from "../context/namespace";
 import { ContextClass } from "../context/scriptClass";

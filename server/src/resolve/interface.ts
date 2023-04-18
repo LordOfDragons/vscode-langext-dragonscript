@@ -22,16 +22,16 @@
  * SOFTWARE.
  */
 
-import { ContextClass } from '../context/scriptClass';
-import { ResolveType } from './type'
+import { ContextInterface } from '../context/scriptInterface';
+import { ResolveType } from './type';
 
 
-export class ResolveClass extends ResolveType {
-	protected _context?: ContextClass;
+export class ResolveInterface extends ResolveType {
+	protected _context?: ContextInterface;
 
 
-	constructor (context: ContextClass) {
-		super(context.name.name, ResolveType.Type.Class);
+	constructor (context: ContextInterface) {
+		super(context.name.name, ResolveType.Type.Interface);
 		this._context = context;
 	}
 
@@ -41,17 +41,18 @@ export class ResolveClass extends ResolveType {
 	}
 
 
-	public get context(): ContextClass | undefined {
+	public get context(): ContextInterface | undefined {
 		return this._context;
 	}
 
-	public set context(context: ContextClass | undefined) {
+	public set context(context: ContextInterface | undefined) {
 		this._context = context;
 		this.invalidate();
 	}
 
+
 	public removeFromParent(): void {
-		this.parent?.removeClass(this);
+		this.parent?.removeInterface(this);
 		this.parent = undefined;
 	}
 

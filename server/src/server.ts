@@ -190,12 +190,14 @@ documents.onDidChangeContent(change => {
 	validateTextDocument(change.document);
 });
 
+/*
 function test(n: ResolveNamespace, i: string) {
 	connection.console.log(`${i}Namespace '${n.name}'`);
 	for (const each of n.namespaces.values()) {
 		test(each, `${i}  `);
 	}
 }
+*/
 
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	//let startTime = Date.now();
@@ -216,7 +218,13 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 		scriptDocument.context = undefined;
 	}
 	
-	for (const each of await scriptDocument.resolve()) {
+	for (const each of await scriptDocument.resolveClasses()) {
+		diagnostics.push(each)
+	}
+	for (const each of await scriptDocument.resolveInheritance()) {
+		diagnostics.push(each)
+	}
+	for (const each of await scriptDocument.resolveStatements()) {
 		diagnostics.push(each)
 	}
 
@@ -227,7 +235,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 
 	connection.sendDiagnostics({uri: textDocument.uri, diagnostics})
 
-	test(ResolveNamespace.root, "");
+	//test(ResolveNamespace.root, "");
 }
 
 connection.onDidChangeWatchedFiles(_change => {

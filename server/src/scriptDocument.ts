@@ -26,6 +26,7 @@ import { Diagnostic, RemoteConsole } from "vscode-languageserver";
 import { ContextScript } from "./context/script";
 import { ScriptCstNode } from "./nodeclasses/script";
 import { ResolveState } from "./resolve/state";
+import { debugLogMessage } from "./server";
 import { DSSettings } from "./settings";
 
 export class ScriptDocument {
@@ -90,14 +91,33 @@ export class ScriptDocument {
 	}
 
 
-	public async resolve(): Promise<Diagnostic[]> {
+	public async resolveClasses(): Promise<Diagnostic[]> {
 		let diagnostics: Diagnostic[] = [];
 		
 		if (this.context) {
 			let state = new ResolveState(diagnostics, this.uri);
 			this.context.resolveClasses(state);
+		}
 
-			state.reset();
+		return diagnostics;
+	}
+
+	public async resolveInheritance(): Promise<Diagnostic[]> {
+		let diagnostics: Diagnostic[] = [];
+		
+		if (this.context) {
+			let state = new ResolveState(diagnostics, this.uri);
+			this.context.resolveInheritance(state);
+		}
+
+		return diagnostics;
+	}
+
+	public async resolveStatements(): Promise<Diagnostic[]> {
+		let diagnostics: Diagnostic[] = [];
+		
+		if (this.context) {
+			let state = new ResolveState(diagnostics, this.uri);
 			this.context.resolveStatements(state);
 		}
 

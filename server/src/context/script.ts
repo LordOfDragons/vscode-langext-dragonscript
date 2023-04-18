@@ -139,6 +139,12 @@ export class ContextScript extends Context{
 			each.resolveClasses(state);
 		}
 	}
+
+	public resolveInheritance(state: ResolveState): void {
+		for (const each of this._statements) {
+			each.resolveInheritance(state);
+		}
+	}
 	
 	public resolveStatements(state: ResolveState): void {
 		for (const each of this._statements) {

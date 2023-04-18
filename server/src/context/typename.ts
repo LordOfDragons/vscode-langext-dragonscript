@@ -23,14 +23,17 @@
  */
 
 import { IToken } from "chevrotain"
-import { Diagnostic, DiagnosticSeverity, Hover, Position, Range } from "vscode-languageserver";
+import { Hover, Position, Range } from "vscode-languageserver";
 import { HoverInfo } from "../hoverinfo";
 import { FullyQualifiedClassNameCstNode } from "../nodeclasses/fullyQualifiedClassName"
 import { ResolveNamespace } from "../resolve/namespace";
 import { ResolveClass } from "../resolve/class";
 import { ResolveState } from "../resolve/state";
-import { capabilities, debugLogMessage } from "../server";
 import { Identifier } from "./identifier"
+import { debugLogMessage } from "../server";
+import { ResolveType } from "../resolve/type";
+import { ResolveInterface } from "../resolve/interface";
+import { assert } from "console";
 
 
 export class TypeNamePart {
@@ -62,6 +65,7 @@ export class TypeName {
 	protected _node?: FullyQualifiedClassNameCstNode
 	protected _parts: TypeNamePart[]
 	protected _name: string
+	protected _resolve?: any
 
 
 	constructor(node?: FullyQualifiedClassNameCstNode) {
@@ -124,6 +128,10 @@ export class TypeName {
 		return this.lastPart.name.token;
 	}
 
+	public get resolve(): any {
+		return this._resolve;
+	}
+
 	
 	public resolveNamespace(state: ResolveState): ResolveNamespace | undefined {
 		var ns = ResolveNamespace.root;
@@ -139,95 +147,82 @@ export class TypeName {
 			ns = ns.namespaceOrAdd(each.name.name);
 			each.resolve = ns;
 		}
-		return ns;
+
+		return this._resolve = ns;
 	}
 
-	public resolveType(state: ResolveState): ResolveClass | ResolveNamespace | undefined {
+	public resolveType(state: ResolveState): ResolveType | undefined {
+		const dodebug = ["BaseGameApp"].includes(state.parentClass?.name.name || "") && this._parts[0].name.name == "Desktop";
+		if (dodebug) {
+			debugLogMessage(`resolveType: "${this._parts[0].name}" IN ${state.parentClass?.name.name}`);
+			const ns = state.parentNamespace?.resolveNamespace;
+			if (ns) {
+				debugLogMessage(`- namespace "${ns.fullyQualifiedName}"`);
+			}
+			for (const each of state.pins) {
+				debugLogMessage(`- pin "${each.fullyQualifiedName}"`);
+			}
+		}
+
 		if (this._parts.length == 0) {
 			return undefined;
 		}
 
-		var ns: ResolveNamespace | undefined;
-		var c: ResolveClass | undefined;
+		var type: ResolveType | undefined;
 		var first = true;
 
 		for (const each of this._parts) {
 			// first entry has to resolve to a basic class
 			if (first) {
-				const bt = this.resolveBaseType(state);
-				if (!bt) {
+				const nextType = this.resolveBaseType(state);
+				if (!nextType) {
 					if (each.name.token) {
 						state.reportError(state.rangeFrom(each.name.token), `"${each.name.name}" not found.`);
 					}
 					return undefined;
 				}
 
-				if (bt instanceof ResolveClass) {
-					c = bt as ResolveClass;
-				} else if (bt instanceof ResolveNamespace) {
-					ns = bt as ResolveNamespace;
-				} else {
-					return undefined;
-				}
+				type = nextType;
 				first = false;
 
 			// all other parts have to be direct children
 			} else {
-				if (c) {
-					const nextC = c.class(each.name.name);
-					if (!nextC) {
-						if (each.name.token) {
-							state.reportError(state.rangeFrom(each.name.token),
-								`Class "${each.name.name}" not found in "${c.name}".`);
-						}
-						return undefined;
-					}
-	
-					each.resolve = nextC;
-					c = nextC;
-					continue;
-					
-				} else if (ns) {
-					c = ns.class(each.name.name);
-					if (c) {
-						each.resolve = c;
-						continue;
-					}
-					
-					const nextNS = ns.namespace(each.name.name);
-					if (!nextNS) {
-						if (each.name.token) {
-							state.reportError(state.rangeFrom(each.name.token),
-								`Namespace "${each.name.name}" not found in "${ns.name}".`);
-						}
-						return undefined;
-					}
-	
-					each.resolve = nextNS;
-					ns = nextNS;
-	
-				} else {
-					return undefined;
+				var nextType: ResolveType | undefined = type!.class(each.name.name);
+				if (!nextType) {
+					nextType = type!.interface(each.name.name);
 				}
+				if (!nextType && type!.type == ResolveType.Type.Namespace) {
+					nextType = (type as ResolveNamespace).namespace(each.name.name);
+				}
+
+				if (nextType) {
+					each.resolve = nextType;
+					type = nextType;
+					continue;
+				}
+				
+				if (each.name.token) {
+					state.reportError(state.rangeFrom(each.name.token),
+						`Type "${each.name.name}" not found in "${type!.name}".`);
+				}
+				return undefined;
 			}
 		}		
 
-		return c ?? ns;
+		return this._resolve = type;
 	}
 
-	protected resolveBaseType(state: ResolveState): ResolveClass | ResolveNamespace | undefined {
-		const dodebug = ["Math"].includes(state.parentClass?.name.name || "");
+	protected resolveBaseType(state: ResolveState): ResolveType | undefined {
+		const dodebug = ["BaseGameApp"].includes(state.parentClass?.name.name || "") && this._parts[0].name.name == "Desktop";
 		if (dodebug) {
-			/*
-			debugLogMessage(`resolveBaseType: IN ${state.parentClass?.name.name}`);
+			debugLogMessage(`resolveBaseType: "${this._parts[0].name}" IN ${state.parentClass?.name.name}`);
 			const ns = state.parentNamespace?.resolveNamespace;
 			if (ns) {
-				debugLogMessage(`- namespace "${ns.name}" (${ns.classes.size}) "${ns.parent?.name}" (${ns.parent?.classes.size})`);
+				debugLogMessage(`- namespace "${ns.fullyQualifiedName}"`);
 			}
 			for (const each of state.pins) {
-				debugLogMessage(`- pin "${each.name}"`);
+				debugLogMessage(`- pin "${each.fullyQualifiedName}"`);
 			}
-			*/
 		}
 
 		// first part has to be:
@@ -236,28 +231,39 @@ export class TypeName {
 		
 		const pc = state.parentClass?.resolveClass;
 		if (pc) {
-			// 1) an inner class of the parent class
-			// 2) an inner class of the super class chain
-			const t = this.resolveClassChain(state, pc, name);
+			// 1) an inner type of the parent class
+			// 2) an inner type of the super class chain
+			const t = this.resolveTypeInClassChain(state, pc, name);
 			if (t) {
 				part.resolve = t;
 				return t;
 			}
-		}	
+		}
 		
-		// - a class of the parent namespace chain
-		var ns = state.parentNamespace ? state.parentNamespace.resolveNamespace : ResolveNamespace.root;
+		const pi = state.parentInterface?.resolveInterface;
+		if (pi) {
+			// 1) an inner type of the parent interface
+			// 2) an inner type of the super interface chain
+			const t = this.resolveTypeInInterfaceChain(state, pi, name);
+			if (t) {
+				part.resolve = t;
+				return t;
+			}
+		}
+		
+		// - a type of the parent namespace chain
+		var ns = state.parentNamespace?.resolveNamespace || ResolveNamespace.root;
 		if (ns) {
-			var t = this.resolveNamespaceChain(state, ns, name);
+			const t = this.resolveTypeInNamespaceChain(state, ns, name);
 			if (t) {
 				part.resolve = t;
 				return t;
 			}
 		}
 
-		// - a class of a pinned namespace chain
+		// - a type of a pinned namespace chain
 		for (const pin of state.pins) {
-			var t = this.resolveNamespaceChain(state, pin, name);
+			const t = this.resolveTypeInNamespaceChain(state, pin, name);
 			if (t) {
 				part.resolve = t;
 				return t;
@@ -267,41 +273,93 @@ export class TypeName {
 		return undefined;
 	}
 
-	protected resolveClassChain(state: ResolveState, cls: ResolveClass, name: string):
-			ResolveClass | undefined {
-		const c = cls.class(name);
-		if (c) {
-			return c;
+	protected resolveTypeInClassChain(state: ResolveState, cls: ResolveClass, name: string): ResolveType | undefined {
+		const t = cls.findType(name);
+		if (t) {
+			return t;
 		}
 	
-		// TODO: interface, enumeration
-
 		// TODO: if variable or function fail
 
+		if (cls.context) {
+			const t2 = cls.context.extends?.resolve;
+			if (t2?.type == ResolveType.Type.Class) {
+				const t3 = this.resolveTypeInClassChain(state, t2 as ResolveClass, name);
+				if (t3) {
+					return t3;
+				}
+			}
+
+			for (const each of cls.context.implements) {
+				const t2 = each.resolve;
+				if (t2?.type == ResolveType.Type.Interface) {
+					const t3 = this.resolveTypeInInterfaceChain(state, t2 as ResolveInterface, name);
+					if (t3) {
+						return t3;
+					}
+				}
+			}
+		}
+
 		return undefined;
 	}
 
-	protected resolveNamespaceChain(state: ResolveState, ns: ResolveNamespace, name: string):
-			ResolveClass | ResolveNamespace | undefined {
-		const c = ns.class(name)
-		if (c) {
-			return c;
+	protected resolveTypeInInterfaceChain(state: ResolveState, iface: ResolveInterface, name: string): ResolveType | undefined {
+		const t = iface.findType(name);
+		if (t) {
+			return t;
+		}
+	
+		// TODO: if variable or function fail
+
+		if (iface.context) {
+			for (const each of iface.context.implements) {
+				const t2 = each.resolve;
+				if (t2?.type == ResolveType.Type.Interface) {
+					const t3 = this.resolveTypeInInterfaceChain(state, t2 as ResolveInterface, name);
+					if (t3) {
+						return t3;
+					}
+				}
+			}
+		}
+
+		return undefined;
+	}
+
+	protected resolveTypeInNamespaceChain(state: ResolveState, ns: ResolveNamespace, name: string):
+			ResolveType | undefined {
+		const dodebug = ["BaseGameApp"].includes(state.parentClass?.name.name || "") && this._parts[0].name.name == "Desktop";
+		if (dodebug) {
+			debugLogMessage(`resolveNamespaceChain: "${this._parts[0].name}" IN ${ns.fullyQualifiedName} (${ns.classes.size}) => ${ns.class(name)}`);
+		}
+
+		const t = ns.findType(name);
+		if (t) {
+			return t;
 		}
 
 		// TODO: interface, enumeration
 
-		if (ns.parent) {
-			return this.resolveNamespaceChain(state, ns.parent, name);
+		if (ns.parent?.type == ResolveType.Type.Namespace) {
+			return this.resolveTypeInNamespaceChain(state, ns.parent as ResolveNamespace, name);
 		}
 
 		return undefined;
 	}
 
-	public isPositionInside(position: Position): boolean {
+	public get range(): Range | undefined {
 		let ft = this.firstToken;
 		let lt = this.lastToken;
-		return ft !== undefined && lt !== undefined
-			&& this.isPositionInsideRange(this.rangeFrom(ft, lt), position);
+		if (ft !== undefined && lt !== undefined) {
+			return this.rangeFrom(ft, lt);
+		}
+		return undefined;
+	}
+	
+	public isPositionInside(position: Position): boolean {
+		const range = this.range;
+		return range !== undefined && this.isPositionInsideRange(range, position);
 	}
 
 	public hover(position: Position): Hover | null {
@@ -312,25 +370,20 @@ export class TypeName {
 				let content = [];
 
 				if (part.resolve) {
-					if (part.resolve instanceof ResolveClass) {
+					if (part.resolve.type == ResolveType.Type.Class) {
 						const c = part.resolve as ResolveClass;
 						content.push(`**class ${c.name}**`);
-						if (c.parent) {
-							if (c.parent instanceof ResolveClass) {
-								const cc = (c.parent as ResolveClass).context;
-								if (cc) {
-									content.push(`\nparent class *${cc.fullyQualifiedName}*`);
-								}
+						this.hoverAddParent(content, c.parent);
 
-							} else if (c.parent instanceof ResolveNamespace) {
-								content.push(`\nnamespace *${(c.parent as ResolveNamespace).displayName}*`);
-							}
-						}
+					} else if (part.resolve.type == ResolveType.Type.Interface) {
+						const i = part.resolve as ResolveInterface;
+						content.push(`**interface ${i.name}**`);
+						this.hoverAddParent(content, i.parent);
 
-					} else if (part.resolve instanceof ResolveNamespace) {
+					} else if (part.resolve.type == ResolveType.Type.Namespace) {
 						const ns = part.resolve as ResolveNamespace;
 						content.push(`**namespace ${ns.name}**`);
-						content.push(`\nparent namespace *${ns.displayName}*`);
+						this.hoverAddParent(content, ns);
 					}
 
 				} else {
@@ -342,6 +395,12 @@ export class TypeName {
 		};
 
 		return null;
+	}
+
+	protected hoverAddParent(content: string[], type?: ResolveType) {
+		if (type) {
+			content.push(`\nparent class *${type.displayName}*`);
+		}
 	}
 
 	toString() : string {

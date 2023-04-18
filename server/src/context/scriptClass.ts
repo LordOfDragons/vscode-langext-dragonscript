@@ -25,7 +25,7 @@
 import { Context } from "./context"
 import { DeclareClassCstNode } from "../nodeclasses/declareClass";
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
-import { Diagnostic, DocumentSymbol, Hover, Position, RemoteConsole, SymbolKind } from "vscode-languageserver"
+import { DocumentSymbol, Hover, Position, RemoteConsole, SymbolKind } from "vscode-languageserver"
 import { TypeName } from "./typename"
 import { ContextInterface } from "./scriptInterface";
 import { ContextEnumeration } from "./scriptEnum";
@@ -37,7 +37,7 @@ import { ResolveClass } from "../resolve/class";
 import { ContextNamespace } from "./namespace";
 import { ResolveNamespace } from "../resolve/namespace";
 import { ResolveState } from "../resolve/state";
-import { ContextScript } from "./script";
+import { ResolveType } from "../resolve/type";
 
 
 export class ContextClass extends Context{
@@ -163,7 +163,14 @@ export class ContextClass extends Context{
 		if (this.isPositionInsideRange(this.documentSymbol!.range, position)) {
 			if (this._name.token && this.isPositionInsideRange(this.rangeFrom(this._name.token), position)) {
 				return this;
+			} else if (this._extends?.isPositionInside(position)) {
+				return this;
 			} else {
+				for (const each of this._implements) {
+					if (each.isPositionInside(position)) {
+						return this;
+					}
+				}
 				return this.contextAtPositionList(this._declarations, position);
 			}
 		}
@@ -179,15 +186,19 @@ export class ContextClass extends Context{
 		this._resolveClass?.dispose();
 		this._resolveClass = undefined;
 
-		this._resolveClass = new ResolveClass(this._name.name);
+		this._resolveClass = new ResolveClass(this);
 		if (this.parent) {
-			if (this.parent instanceof ContextClass) {
-				(this.parent as ContextClass).resolveClass?.addClass(this._resolveClass);
-			} else if (this.parent instanceof ContextNamespace) {
-				(this.parent as ContextNamespace).resolveNamespace?.addClass(this._resolveClass);
-			} else if (this.parent instanceof ContextScript) {
-				ResolveNamespace.root.addClass(this._resolveClass);
+			var container: ResolveType | undefined;
+			if (this.parent.type == Context.ContextType.Class) {
+				container = (this.parent as ContextClass).resolveClass;
+			} else if (this.parent.type == Context.ContextType.Interface) {
+				container = (this.parent as ContextInterface).resolveInterface;
+			} else if (this.parent.type == Context.ContextType.Namespace) {
+				container = (this.parent as ContextNamespace).resolveNamespace;
+			} else if (this.parent.type == Context.ContextType.Script) {
+				container = ResolveNamespace.root;
 			}
+			container?.addClass(this._resolveClass);
 		}
 		
 		for (const each of this._declarations) {
@@ -195,27 +206,75 @@ export class ContextClass extends Context{
 		}
 	}
 
-	public resolveStatements(state: ResolveState): void {
+	public resolveInheritance(state: ResolveState): void {
+		if (this._extends) {
+			const t = this._extends.resolveType(state);
+			if (t?.type != ResolveType.Type.Class) {
+				const r = this._extends.range;
+				if (r) {
+					state.reportError(r, `${this._extends.name} is not a class.`);
+				}
+			}
+		}
+		
+		for (const each of this._implements) {
+			const t = each.resolveType(state);
+			if (t?.type != ResolveType.Type.Interface) {
+				const r = each.range;
+				if (r) {
+					state.reportError(r, `${each.name} is not an interface.`);
+				}
+			}
+		}
+		
+		const ppc = state.parentClass;
 		state.parentClass = this;
+
+		for (const each of this._declarations) {
+			each.resolveInheritance(state);
+		}
+
+		state.parentClass = ppc;
+	}
+
+	public resolveStatements(state: ResolveState): void {
+		const ppc = state.parentClass;
+		state.parentClass = this;
+
 		for (const each of this._declarations) {
 			each.resolveStatements(state);
 		}
-		state.parentClass = undefined;
+		
+		state.parentClass = ppc;
 	}
 
 	protected updateHover(position: Position): Hover | null {
-		if (!this._name.token || !this.isPositionInsideToken(this._name.token, position)) {
-			return null;
+		if (this._name.token && this.isPositionInsideRange(this.rangeFrom(this._name.token), position)) {
+			let content = [];
+			//content.push("```dragonscript");
+			content.push(`${this._typeModifiers.typestring} **class** `);
+			if (this.parent) {
+				content.push(`*${this.parent.fullyQualifiedName}*.`);
+			}
+			content.push(`**${this.name}**`);
+			//content.push("```");
+			/*content.push(...[
+				"___",
+				"This is a test"]);*/
+			return new HoverInfo(content, this.rangeFrom(this._name.token));
+
+		} else if (this._extends?.isPositionInside(position)) {
+			return this._extends.hover(position);
+
+		} else {
+			for (const each of this._implements) {
+				if (each.isPositionInside(position)) {
+					return each.hover(position);
+				}
+			}
 		}
 
-		let content = [];
-		//content.push("```dragonscript");
-		content.push(`${this._typeModifiers.typestring} **class** *${this.parent!.fullyQualifiedName}*.**${this.name}**`);
-		//content.push("```");
-		/*content.push(...[
-			"___",
-			"This is a test"]);*/
-		return new HoverInfo(content, this.rangeFrom(this._name.token));
+		return null;
 	}
 
 

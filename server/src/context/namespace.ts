@@ -129,14 +129,21 @@ export class ContextNamespace extends Context{
 		}
 	}
 	
+	public resolveInheritance(state: ResolveState): void {
+		state.clearPins();
+		state.parentNamespace = this;
+		for (const each of this._statements) {
+			each.resolveInheritance(state);
+		}
+		state.parentNamespace = undefined;
+	}
+
 	public resolveStatements(state: ResolveState): void {
 		state.clearPins();
 		state.parentNamespace = this;
-
 		for (const each of this._statements) {
 			each.resolveStatements(state);
 		}
-
 		state.parentNamespace = undefined;
 	}
 

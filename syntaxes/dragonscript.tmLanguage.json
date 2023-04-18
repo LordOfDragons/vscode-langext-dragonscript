@@ -87,7 +87,7 @@
 				{"include": "#linesplice"},
 				{"include": "#endofcommand"},
 				{
-					"match": "\\b(extends|public|protected|private|native)\\b",
+					"match": "\\b(implements|public|protected|private|native)\\b",
 					"name": "keyword.control.dragonscript"
 				},
 				{"include": "#interface"},
