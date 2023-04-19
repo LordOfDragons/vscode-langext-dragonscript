@@ -100,7 +100,7 @@ export class ContextVariable extends Context{
 		return n ? `${n}.${this._name}` : this._name.name;
 	}
 
-	public resolveStatements(state: ResolveState): void {
+	public resolveMembers(state: ResolveState): void {
 		if (this._firstVariable) {
 			this._typename.resolveType(state);
 		}

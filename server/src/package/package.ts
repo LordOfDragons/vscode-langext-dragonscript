@@ -115,6 +115,10 @@ export class Package {
 		}));
 		
 		await Promise.all(this._scriptDocuments.map(each => {
+			this.resolveLogDiagnostics(each.resolveMembers(), each.uri);
+		}));
+		
+		await Promise.all(this._scriptDocuments.map(each => {
 			this.resolveLogDiagnostics(each.resolveStatements(), each.uri);
 		}));
 	}

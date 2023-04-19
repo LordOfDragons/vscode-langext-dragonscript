@@ -24,6 +24,7 @@
 
 import { IToken } from "chevrotain";
 import { Diagnostic, DiagnosticSeverity, Range } from "vscode-languageserver"
+import { ContextFunction } from "../context/classFunction";
 import { ContextNamespace } from "../context/namespace";
 import { ContextClass } from "../context/scriptClass";
 import { ContextEnumeration } from "../context/scriptEnum";
@@ -64,6 +65,7 @@ export class ResolveState {
 	public parentClass?: ContextClass;
 	public parentInterface?: ContextInterface;
 	public parentEnumeration?: ContextEnumeration;
+	public parentFunction?: ContextFunction;
 
 	public reset(): void {
 		this._pins.length = 0;
@@ -71,6 +73,7 @@ export class ResolveState {
 		this.parentClass = undefined;
 		this.parentInterface = undefined;
 		this.parentEnumeration = undefined;
+		this.parentFunction = undefined;
 	}
 
 

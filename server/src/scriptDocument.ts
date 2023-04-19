@@ -113,6 +113,17 @@ export class ScriptDocument {
 		return diagnostics;
 	}
 
+	public async resolveMembers(): Promise<Diagnostic[]> {
+		let diagnostics: Diagnostic[] = [];
+		
+		if (this.context) {
+			let state = new ResolveState(diagnostics, this.uri);
+			this.context.resolveMembers(state);
+		}
+
+		return diagnostics;
+	}
+
 	public async resolveStatements(): Promise<Diagnostic[]> {
 		let diagnostics: Diagnostic[] = [];
 		

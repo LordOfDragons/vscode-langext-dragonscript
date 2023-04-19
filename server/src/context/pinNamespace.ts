@@ -72,13 +72,18 @@ export class ContextPinNamespace extends Context{
 	}
 
 	public resolveInheritance(state: ResolveState): void {
-		const ns = this._typename.lastPart?.resolve;
-		if (ns && ns instanceof ResolveNamespace) {
-			state.pins.push(ns);
-		}
+		this.addPinToState(state);
+	}
+
+	public resolveMembers(state: ResolveState): void {
+		this.addPinToState(state);
 	}
 
 	public resolveStatements(state: ResolveState): void {
+		this.addPinToState(state);
+	}
+
+	protected addPinToState(state: ResolveState): void {
 		const ns = this._typename.lastPart?.resolve;
 		if (ns && ns instanceof ResolveNamespace) {
 			state.pins.push(ns);

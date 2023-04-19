@@ -246,6 +246,17 @@ export class ContextClass extends Context{
 		state.parentClass = ppc;
 	}
 
+	public resolveMembers(state: ResolveState): void {
+		const ppc = state.parentClass;
+		state.parentClass = this;
+
+		for (const each of this._declarations) {
+			each.resolveMembers(state);
+		}
+		
+		state.parentClass = ppc;
+	}
+
 	public resolveStatements(state: ResolveState): void {
 		const ppc = state.parentClass;
 		state.parentClass = this;

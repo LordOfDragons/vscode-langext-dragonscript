@@ -36,6 +36,10 @@ import { ContextStatements } from "./statements";
 import { IToken } from "chevrotain";
 import { HoverInfo } from "../hoverinfo";
 import { ResolveState } from "../resolve/state";
+import { ResolveFunction } from "../resolve/function";
+import { ResolveType } from "../resolve/type";
+import { ContextClass } from "./scriptClass";
+import { ContextInterface } from "./scriptInterface";
 
 
 export class ContextFunction extends Context{
@@ -48,6 +52,7 @@ export class ContextFunction extends Context{
 	protected _thisCall?: Context[];
 	protected _superCall?: Context[];
 	protected _statements?: ContextStatements;
+	protected _resolveFunction?: ResolveFunction;
 
 
 	constructor(node: InterfaceFunctionCstNode | ClassFunctionCstNode,
@@ -256,6 +261,9 @@ export class ContextFunction extends Context{
 	}
 
 	dispose(): void {
+		this._resolveFunction?.dispose();
+		this._resolveFunction = undefined;
+
 		super.dispose()
 		this._returnType?.dispose();
 		for (const each of this._arguments) {
@@ -315,15 +323,52 @@ export class ContextFunction extends Context{
 		let n = this.parent?.fullyQualifiedName || "";
 		return n ? `${n}.${this._name}` : this._name.name;
 	}
+	
+	public get resolveFunction(): ResolveFunction | undefined {
+		return this._resolveFunction;
+	}
 
-	public resolveStatements(state: ResolveState): void {
+	public resolveMembers(state: ResolveState): void {
 		if (this._returnType) {
 			this._returnType.resolveType(state);
 		}
+		
+		const pf = state.parentFunction;
+		state.parentFunction = this;
+		for (const each of this._arguments) {
+			each.resolveMembers(state);
+		}
+		state.parentFunction = pf;
+		
+		this._resolveFunction?.dispose();
+		this._resolveFunction = undefined;
 
+		this._resolveFunction = new ResolveFunction(this);
+		if (this.parent) {
+			var container: ResolveType | undefined;
+			if (this.parent.type == Context.ContextType.Class) {
+				container = (this.parent as ContextClass).resolveClass;
+			} else if (this.parent.type == Context.ContextType.Interface) {
+				container = (this.parent as ContextInterface).resolveInterface;
+			}
+
+			if (container) {
+				if (!container.addFunction(this._resolveFunction)) {
+					if (this._name.token) {
+						state.reportError(state.rangeFrom(this._name.token), `Duplicate function ${this._name}`);
+					}
+				}
+			}
+		}
+	}
+	
+	public resolveStatements(state: ResolveState): void {
+		const pf = state.parentFunction;
+		state.parentFunction = this;
 		for (const each of this._arguments) {
 			each.resolveStatements(state);
 		}
+		state.parentFunction = pf;
 	}
 
 	public contextAtPosition(position: Position): Context | undefined {

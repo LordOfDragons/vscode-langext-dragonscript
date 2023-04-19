@@ -80,6 +80,9 @@ export class Context {
 	public resolveInheritance(state: ResolveState): void {
 	}
 
+	public resolveMembers(state: ResolveState): void {
+	}
+
 	public resolveStatements(state: ResolveState): void {
 	}
 

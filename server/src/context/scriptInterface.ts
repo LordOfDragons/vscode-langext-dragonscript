@@ -192,6 +192,14 @@ export class ContextInterface extends Context{
 		state.parentInterface = ppi;
 	}
 
+	public resolveMembers(state: ResolveState): void {
+		state.parentInterface = this;
+		for (const each of this._declarations) {
+			each.resolveMembers(state);
+		}
+		state.parentInterface = undefined;
+	}
+
 	public resolveStatements(state: ResolveState): void {
 		state.parentInterface = this;
 		for (const each of this._declarations) {

@@ -237,6 +237,9 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	for (const each of await scriptDocument.resolveInheritance()) {
 		diagnostics.push(each)
 	}
+	for (const each of await scriptDocument.resolveMembers()) {
+		diagnostics.push(each)
+	}
 	for (const each of await scriptDocument.resolveStatements()) {
 		diagnostics.push(each)
 	}

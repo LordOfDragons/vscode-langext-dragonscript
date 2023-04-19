@@ -25,6 +25,8 @@
 import { ResolveClass } from './class';
 import { ResolveInterface } from './interface'
 import { ResolveEnumeration } from './enumeration'
+import { ResolveFunctionGroup } from './functionGroup'
+import { ResolveFunction } from './function';
 
 
 /**
@@ -37,6 +39,7 @@ export class ResolveType{
 	protected _classes: Map<string, ResolveClass> = new Map();
 	protected _interfaces: Map<string, ResolveInterface> = new Map();
 	protected _enumerations: Map<string, ResolveEnumeration> = new Map();
+	protected _functionGroups: Map<string, ResolveFunctionGroup> = new Map();
 	protected _valid: boolean = true;
 	protected _fullyQualifiedName?: string
 	protected _displayName?: string
@@ -56,6 +59,9 @@ export class ResolveType{
 			each.dispose();
 		}
 		for (const each of this._enumerations.values()) {
+			each.dispose();
+		}
+		for (const each of this._functionGroups.values()) {
 			each.dispose();
 		}
 		this.removeFromParent();
@@ -166,6 +172,49 @@ export class ResolveType{
 		if (this._enumerations.delete(enumeration.name)) {
 			enumeration.parent = undefined;
 		}
+	}
+
+
+	public get functionGroups(): Map<string, ResolveFunctionGroup> {
+		this.validate();
+		return this._functionGroups;
+	}
+
+	public functionGroup(name: string): ResolveFunctionGroup | undefined {
+		return this._functionGroups.get(name);
+	}
+
+	public functionGroupOrAdd(name: string): ResolveFunctionGroup {
+		var fg = this._functionGroups.get(name);
+		if (!fg) {
+			fg = new ResolveFunctionGroup(name);
+			this._functionGroups.set(name, fg);
+		}
+		return fg;
+	}
+
+	public addFunction(func: ResolveFunction): boolean {
+		this.removeFunction(func);
+		func.parent = this;
+		let fg = this.functionGroupOrAdd(func.name);
+		if (fg.hasFunctionWithSignature(func)) {
+			return false;
+		}
+		fg.addFunction(func);
+		return true;
+	}
+
+	public removeFunction(func: ResolveFunction): void {
+		let fg = this.functionGroup(func.name);
+		if (fg) {
+			fg.removeFunction(func);
+			
+			if (fg.functions.length == 0) {
+				this._functionGroups.delete(fg.name);
+				fg.dispose();
+			}
+		}
+		func.parent = undefined;
 	}
 
 

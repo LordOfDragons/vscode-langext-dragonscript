@@ -137,6 +137,15 @@ export class ContextNamespace extends Context{
 		}
 		state.parentNamespace = undefined;
 	}
+	
+	public resolveMembers(state: ResolveState): void {
+		state.clearPins();
+		state.parentNamespace = this;
+		for (const each of this._statements) {
+			each.resolveMembers(state);
+		}
+		state.parentNamespace = undefined;
+	}
 
 	public resolveStatements(state: ResolveState): void {
 		state.clearPins();
