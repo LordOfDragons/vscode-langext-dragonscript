@@ -154,7 +154,16 @@ export class ContextInterface extends Context{
 			} else if (this.parent.type == Context.ContextType.Script) {
 				container = ResolveNamespace.root;
 			}
-			container?.addInterface(this._resolveInterface);
+
+			if (container) {
+				if (container.findType(this._name.name)) {
+					if (this._name.token) {
+						state.reportError(state.rangeFrom(this._name.token), `Duplicate interface ${this._name}`);
+					}
+				} else {
+					container.addInterface(this._resolveInterface);
+				}
+			}
 		}
 		
 		for (const each of this._declarations) {

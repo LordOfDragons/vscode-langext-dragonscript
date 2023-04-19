@@ -140,15 +140,15 @@ export class ContextFunction extends Context{
 
 		} else if (fdecl.children.regularFunction) {
 			let fdecl2 = fdecl.children.regularFunction[0].children;
-
+			
 			if (fdecl2.name) {
 				this._functionType = ContextFunction.Type.Regular;
-				this._name = new Identifier(fdecl2.name[0]);
 				this._returnType = new TypeName(fdecl2.returnType[0]);
+				this._name = new Identifier(fdecl2.name[0]);
 
 			} else if(fdecl2.operator) {
 				this._functionType = ContextFunction.Type.Operator;
-				this._returnType = TypeName.typeNamed(ownerTypeName);
+				this._returnType = new TypeName(fdecl2.returnType[0]);
 				docSymKind = SymbolKind.Operator;
 				
 				let odecl = fdecl2.operator[0].children;

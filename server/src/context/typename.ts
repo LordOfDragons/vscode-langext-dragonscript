@@ -30,7 +30,6 @@ import { ResolveNamespace } from "../resolve/namespace";
 import { ResolveClass } from "../resolve/class";
 import { ResolveState } from "../resolve/state";
 import { Identifier } from "./identifier"
-import { debugLogMessage } from "../server";
 import { ResolveType } from "../resolve/type";
 import { ResolveInterface } from "../resolve/interface";
 import { ResolveEnumeration } from "../resolve/enumeration";
@@ -97,6 +96,13 @@ export class TypeName {
 		for (const each of name.split('.')) {
 			tn._parts.push(TypeNamePart.named(each));
 		};
+		return tn;
+	}
+
+	public static typeToken(token: IToken): TypeName {
+		var tn = new TypeName();
+		tn._name = token.image;
+		tn._parts.push(new TypeNamePart(token));
 		return tn;
 	}
 

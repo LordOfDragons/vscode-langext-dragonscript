@@ -25,7 +25,7 @@
 import { IToken } from "chevrotain";
 import { Diagnostic, DiagnosticSeverity, DocumentSymbol, Hover, Position, Range, RemoteConsole } from "vscode-languageserver";
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
-import { capabilities } from "../server";
+import { capabilities, debugLogMessage } from "../server";
 import { ResolveState } from "../resolve/state";
 
 
@@ -134,6 +134,25 @@ export class Context {
 
 	public isPositionInsideTokens(start: IToken, end: IToken, position: Position): boolean {
 		return this.isPositionInsideRange(this.rangeFrom(start, end), position);
+	}
+
+
+	protected ignoreException(code: () => void) {
+		//code();
+
+		try {
+			code();
+		} catch (error) {
+			if (error instanceof Error) {
+				let err = error as Error;
+				debugLogMessage(err.name);
+				if (err.stack) {
+					debugLogMessage(err.stack);
+				}
+			} else {
+				debugLogMessage(`${error}`);
+			}
+		}
 	}
 
 

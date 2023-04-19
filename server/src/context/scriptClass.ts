@@ -198,7 +198,16 @@ export class ContextClass extends Context{
 			} else if (this.parent.type == Context.ContextType.Script) {
 				container = ResolveNamespace.root;
 			}
-			container?.addClass(this._resolveClass);
+
+			if (container) {
+				if (container.findType(this._name.name)) {
+					if (this._name.token) {
+						state.reportError(state.rangeFrom(this._name.token), `Duplicate class ${this._name}`);
+					}
+				} else {
+					container.addClass(this._resolveClass);
+				}
+			}
 		}
 		
 		for (const each of this._declarations) {

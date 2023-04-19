@@ -213,7 +213,20 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	await validator.parse(scriptDocument, textDocument, diagnostics);
 
 	if (scriptDocument.node) {
-		scriptDocument.context = new ContextScript(scriptDocument.node, textDocument);
+		try {
+			scriptDocument.context = new ContextScript(scriptDocument.node, textDocument);
+		} catch (error) {
+			if (error instanceof Error) {
+				let err = error as Error;
+				connection.console.error(err.name);
+				if (err.stack) {
+					connection.console.error(err.stack);
+				}
+			} else {
+				connection.console.error(`${error}`);
+			}
+			scriptDocument.context = undefined;
+		}
 	} else {
 		scriptDocument.context = undefined;
 	}
@@ -257,9 +270,9 @@ connection.onHover(
 		} catch (error) {
 			if (error instanceof Error) {
 				let err = error as Error;
-				connection.console.error(error.name);
-				if (error.stack) {
-					connection.console.error(error.stack);
+				connection.console.error(err.name);
+				if (err.stack) {
+					connection.console.error(err.stack);
 				}
 			} else {
 				connection.console.error(`${error}`);
