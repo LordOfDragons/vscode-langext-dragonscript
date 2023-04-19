@@ -26,14 +26,17 @@ import { Context } from "./context";
 import { ClassVariableCstNode } from "../nodeclasses/declareClass";
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
 import { FullyQualifiedClassNameCstNode } from "../nodeclasses/fullyQualifiedClassName";
-import { Diagnostic, DocumentSymbol, Hover, Position, RemoteConsole, SymbolKind } from "vscode-languageserver";
+import { DocumentSymbol, Hover, Position, RemoteConsole, SymbolKind } from "vscode-languageserver";
 import { TypeName } from "./typename";
 import { ContextBuilder } from "./contextBuilder";
 import { Identifier } from "./identifier";
 import { IToken } from "chevrotain";
 import { HoverInfo } from "../hoverinfo";
-import { ContextClass } from "./scriptClass";
 import { ResolveState } from "../resolve/state";
+import { ResolveVariable } from "../resolve/variable";
+import { ResolveType } from "../resolve/type";
+import { ContextClass } from "./scriptClass";
+import { ContextInterface } from "./scriptInterface";
 
 
 export class ContextVariable extends Context{
@@ -42,13 +45,15 @@ export class ContextVariable extends Context{
 	protected _name: Identifier;
 	protected _typename: TypeName;
 	protected _value?: Context;
-	protected _firstVariable: boolean;
+	protected _firstVariable?: ContextVariable;
+	protected _resolveVariable?: ResolveVariable;
 
 
 	constructor(node: ClassVariableCstNode,
 			    typemodNode: TypeModifiersCstNode | undefined,
 				typeNode: FullyQualifiedClassNameCstNode,
-				firstVar: boolean, endToken: IToken, parent: Context) {
+				firstVar: ContextVariable | undefined,
+				endToken: IToken, parent: Context) {
 		super(Context.ContextType.Variable, parent);
 		this._node = node;
 		this._typeModifiers = new Context.TypeModifierSet(typemodNode);
@@ -60,7 +65,7 @@ export class ContextVariable extends Context{
 			this._value = ContextBuilder.createExpression(node.children.value[0], this);
 		}
 
-		let tokBegin = firstVar ? typeNode.children.identifier[0] : this._name.token;
+		let tokBegin = firstVar ? this._name.token : typeNode.children.identifier[0];
 		if (tokBegin) {
 			this.documentSymbol = DocumentSymbol.create(this._name.name, this._typename.name,
 				this._typeModifiers.has(Context.TypeModifier.Fixed) ? SymbolKind.Constant : SymbolKind.Variable,
@@ -69,6 +74,9 @@ export class ContextVariable extends Context{
 	}
 
 	dispose(): void {
+		this._resolveVariable?.dispose();
+		this._resolveVariable = undefined;
+
 		super.dispose()
 		this._typename.dispose();
 		this._value?.dispose;
@@ -95,14 +103,47 @@ export class ContextVariable extends Context{
 		return this._value;
 	}
 
+	public get firstVariable(): ContextVariable | undefined {
+		return this._firstVariable;
+	}
+
 	public get fullyQualifiedName(): string {
 		let n = this.parent?.fullyQualifiedName || "";
 		return n ? `${n}.${this._name}` : this._name.name;
 	}
+	
+	public get resolveVariable(): ResolveVariable | undefined {
+		return this._resolveVariable;
+	}
 
 	public resolveMembers(state: ResolveState): void {
 		if (this._firstVariable) {
+			this._typename.resolve = this._firstVariable._typename.resolve;
+		} else {
 			this._typename.resolveType(state);
+		}
+		
+		this._resolveVariable?.dispose();
+		this._resolveVariable = undefined;
+
+		this._resolveVariable = new ResolveVariable(this);
+		if (this.parent) {
+			var container: ResolveType | undefined;
+			if (this.parent.type == Context.ContextType.Class) {
+				container = (this.parent as ContextClass).resolveClass;
+			} else if (this.parent.type == Context.ContextType.Interface) {
+				container = (this.parent as ContextInterface).resolveInterface;
+			}
+
+			if (container) {
+				if (container.variable(this._name.name)) {
+					if (this._name.token) {
+						state.reportError(state.rangeFrom(this._name.token), `Duplicate variable ${this._name}`);
+					}
+				} else {
+					container.addVariable(this._resolveVariable);
+				}
+			}
 		}
 	}
 
@@ -114,7 +155,7 @@ export class ContextVariable extends Context{
 		if (this._name.token && this.isPositionInsideToken(this._name.token, position)) {
 			return this;
 		}
-		if (this._typename.isPositionInside(position)) {
+		if (!this._firstVariable && this._typename.isPositionInside(position)) {
 			return this;
 		}
 		return this._value?.contextAtPosition(position);
@@ -127,7 +168,7 @@ export class ContextVariable extends Context{
 			return new HoverInfo(content, this.rangeFrom(this._name.token));
 		}
 
-		if (this._typename.isPositionInside(position)) {
+		if (!this._firstVariable && this._typename.isPositionInside(position)) {
 			return this._typename.hover(position);
 		}
 

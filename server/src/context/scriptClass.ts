@@ -101,10 +101,16 @@ export class ContextClass extends Context{
 						let commaCount = vdecls.comma?.length || 0;
 						let declEnd = vdecls.endOfCommand[0].children;
 						let tokEnd = (declEnd.newline || declEnd.commandSeparator)![0];
+						var firstVar: ContextVariable | undefined = undefined;
 
 						for (let i = 0; i < count; i++) {
-							this._declarations.push(new ContextVariable(vdecls.classVariable[i],
-								typemod, typeNode, i == 0, i < commaCount ? vdecls.comma![i] : tokEnd, this));
+							const v: ContextVariable = new ContextVariable(vdecls.classVariable[i], typemod, typeNode,
+								firstVar, i < commaCount ? vdecls.comma![i] : tokEnd, this);
+							this._declarations.push(v);
+							
+							if (i == 0) {
+								firstVar = v;
+							}
 						}
 					}
 				}

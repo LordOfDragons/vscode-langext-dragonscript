@@ -64,7 +64,7 @@ export class TypeName {
 	protected _node?: FullyQualifiedClassNameCstNode
 	protected _parts: TypeNamePart[]
 	protected _name: string
-	protected _resolve?: any
+	public resolve?: any
 
 
 	constructor(node?: FullyQualifiedClassNameCstNode) {
@@ -134,10 +134,6 @@ export class TypeName {
 		return this.lastPart.name.token;
 	}
 
-	public get resolve(): any {
-		return this._resolve;
-	}
-
 	
 	public resolveNamespace(state: ResolveState): ResolveNamespace | undefined {
 		var ns = ResolveNamespace.root;
@@ -154,7 +150,7 @@ export class TypeName {
 			each.resolve = ns;
 		}
 
-		return this._resolve = ns;
+		return this.resolve = ns;
 	}
 
 	public resolveType(state: ResolveState): ResolveType | undefined {
@@ -196,7 +192,7 @@ export class TypeName {
 			}
 		}		
 
-		return this._resolve = type;
+		return this.resolve = type;
 	}
 
 	protected resolveBaseType(state: ResolveState): ResolveType | undefined {

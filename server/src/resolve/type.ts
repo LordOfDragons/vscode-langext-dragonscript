@@ -23,10 +23,11 @@
  */
 
 import { ResolveClass } from './class';
-import { ResolveInterface } from './interface'
-import { ResolveEnumeration } from './enumeration'
-import { ResolveFunctionGroup } from './functionGroup'
+import { ResolveInterface } from './interface';
+import { ResolveEnumeration } from './enumeration';
+import { ResolveFunctionGroup } from './functionGroup';
 import { ResolveFunction } from './function';
+import { ResolveVariable } from './variable';
 
 
 /**
@@ -40,6 +41,7 @@ export class ResolveType{
 	protected _interfaces: Map<string, ResolveInterface> = new Map();
 	protected _enumerations: Map<string, ResolveEnumeration> = new Map();
 	protected _functionGroups: Map<string, ResolveFunctionGroup> = new Map();
+	protected _variables: Map<string, ResolveVariable> = new Map();
 	protected _valid: boolean = true;
 	protected _fullyQualifiedName?: string
 	protected _displayName?: string
@@ -62,6 +64,9 @@ export class ResolveType{
 			each.dispose();
 		}
 		for (const each of this._functionGroups.values()) {
+			each.dispose();
+		}
+		for (const each of this._variables.values()) {
 			each.dispose();
 		}
 		this.removeFromParent();
@@ -215,6 +220,28 @@ export class ResolveType{
 			}
 		}
 		func.parent = undefined;
+	}
+
+
+	public get variables(): Map<string, ResolveVariable> {
+		this.validate();
+		return this._variables;
+	}
+
+	public variable(name: string): ResolveVariable | undefined {
+		return this._variables.get(name);
+	}
+
+	public addVariable(variable: ResolveVariable): void {
+		this.removeVariable(variable);
+		variable.parent = this;
+		this._variables.set(variable.name, variable);
+	}
+
+	public removeVariable(variable: ResolveVariable): void {
+		if (this._variables.delete(variable.name)) {
+			variable.parent = undefined;
+		}
 	}
 
 
