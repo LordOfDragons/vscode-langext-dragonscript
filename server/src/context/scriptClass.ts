@@ -195,13 +195,13 @@ export class ContextClass extends Context{
 		this._resolveClass = new ResolveClass(this);
 		if (this.parent) {
 			var container: ResolveType | undefined;
-			if (state.parentClass) {
-				container = state.parentClass.resolveClass;
-			} else if (state.parentInterface) {
-				container = state.parentInterface.resolveInterface;
-			} else if (state.parentNamespace) {
-				container = state.parentNamespace.resolveNamespace;
-			} else if (this.parent.type == Context.ContextType.Script) {
+			if (this.parent.type == Context.ContextType.Class) {
+				container = (this.parent as ContextClass).resolveClass;
+			} else if (this.parent.type == Context.ContextType.Interface) {
+				container = (this.parent as ContextInterface).resolveInterface;
+			} else if (this.parent.type == Context.ContextType.Namespace) {
+				container = (this.parent as ContextNamespace).resolveNamespace;
+			} else {
 				container = ResolveNamespace.root;
 			}
 
@@ -216,14 +216,11 @@ export class ContextClass extends Context{
 			}
 		}
 		
-		const ppc = state.parentClass;
-		state.parentClass = this;
-
+		state.pushScopeContext(this);
 		for (const each of this._declarations) {
 			each.resolveClasses(state);
 		}
-
-		state.parentClass = ppc;
+		state.popScopeContext();
 	}
 
 	public resolveInheritance(state: ResolveState): void {
@@ -247,36 +244,27 @@ export class ContextClass extends Context{
 			}
 		}
 		
-		const ppc = state.parentClass;
-		state.parentClass = this;
-
+		state.pushScopeContext(this);
 		for (const each of this._declarations) {
 			each.resolveInheritance(state);
 		}
-
-		state.parentClass = ppc;
+		state.popScopeContext();
 	}
 
 	public resolveMembers(state: ResolveState): void {
-		const ppc = state.parentClass;
-		state.parentClass = this;
-
+		state.pushScopeContext(this);
 		for (const each of this._declarations) {
 			each.resolveMembers(state);
 		}
-		
-		state.parentClass = ppc;
+		state.popScopeContext();
 	}
 
 	public resolveStatements(state: ResolveState): void {
-		const ppc = state.parentClass;
-		state.parentClass = this;
-
+		state.pushScopeContext(this);
 		for (const each of this._declarations) {
 			each.resolveStatements(state);
 		}
-		
-		state.parentClass = ppc;
+		state.popScopeContext();
 	}
 
 	protected updateHover(position: Position): Hover | null {

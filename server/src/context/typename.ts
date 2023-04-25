@@ -33,6 +33,10 @@ import { Identifier } from "./identifier"
 import { ResolveType } from "../resolve/type";
 import { ResolveInterface } from "../resolve/interface";
 import { ResolveEnumeration } from "../resolve/enumeration";
+import { Context } from "./context";
+import { ContextClass } from "./scriptClass";
+import { ContextInterface } from "./scriptInterface";
+import { ContextNamespace } from "./namespace";
 
 
 export class TypeNamePart {
@@ -196,36 +200,62 @@ export class TypeName {
 	}
 
 	protected resolveBaseType(state: ResolveState): ResolveType | undefined {
+		var scopeNS: ResolveNamespace | undefined;
+
 		// first part has to be:
 		var part = this._parts[0];
 		const name = part.name.name;
 		
-		const pc = state.parentClass?.resolveClass;
-		if (pc) {
-			// - an inner type of the parent class
-			// - an inner type of the super class chain
-			const t = this.resolveTypeInClassChain(state, pc, name);
-			if (t) {
-				part.resolve = t;
-				return t;
+		const sostack = state.scopeContextStack;
+		for (let i = sostack.length - 1; i >= 0; --i) {
+			const scope = sostack[i];
+			if (!scope) {
+				continue;
+			}
+
+			switch (scope.type) {
+				case Context.ContextType.Class:
+					const pc = (scope as ContextClass).resolveClass;
+					if (pc) {
+						// - an inner type of the parent class
+						// - an inner type of the super class chain
+						const t = this.resolveTypeInClassChain(state, pc, name);
+						if (t) {
+							part.resolve = t;
+							return t;
+						}
+					}
+					break;
+
+				case Context.ContextType.Interface:
+					const pi = (scope as ContextInterface).resolveInterface;
+					if (pi) {
+						// - an inner type of the parent interface
+						// - an inner type of the super interface chain
+						const t = this.resolveTypeInInterfaceChain(state, pi, name);
+						if (t) {
+							part.resolve = t;
+							return t;
+						}
+					}
+					break;
+
+				case Context.ContextType.Namespace:
+					// - a type of the parent namespace chain
+					scopeNS = (scope as ContextNamespace).resolveNamespace;
+					if (scopeNS) {
+						const t = this.resolveTypeInNamespaceChain(state, scopeNS, name);
+						if (t) {
+							part.resolve = t;
+							return t;
+						}
+					}
+					break;
 			}
 		}
-		
-		const pi = state.parentInterface?.resolveInterface;
-		if (pi) {
-			// - an inner type of the parent interface
-			// - an inner type of the super interface chain
-			const t = this.resolveTypeInInterfaceChain(state, pi, name);
-			if (t) {
-				part.resolve = t;
-				return t;
-			}
-		}
-		
-		// - a type of the parent namespace chain
-		var ns = state.parentNamespace?.resolveNamespace || ResolveNamespace.root;
-		if (ns) {
-			const t = this.resolveTypeInNamespaceChain(state, ns, name);
+
+		{
+			const t = ResolveNamespace.root.findType(name);
 			if (t) {
 				part.resolve = t;
 				return t;
@@ -242,12 +272,17 @@ export class TypeName {
 		}
 
 		// - a namespace of the parent namespace chain
-		var ns2 = state.parentNamespace?.resolveNamespace;
-		if (ns2) {
-			const t = this.resolveNamespaceInNamespaceChain(state, ns, name);
-			if (t) {
-				part.resolve = t;
-				return t;
+		for (let i = sostack.length - 1; i >= 0; --i) {
+			const scope = sostack[i];
+			if (scope?.type == Context.ContextType.Namespace) {
+				const ns = (scope as ContextNamespace).resolveNamespace;
+				if (ns) {
+					const t = this.resolveNamespaceInNamespaceChain(state, ns, name);
+					if (t) {
+						part.resolve = t;
+						return t;
+					}
+				}
 			}
 		}
 

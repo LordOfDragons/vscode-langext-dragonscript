@@ -333,12 +333,11 @@ export class ContextFunction extends Context{
 			this._returnType.resolveType(state);
 		}
 		
-		const pf = state.parentFunction;
-		state.parentFunction = this;
+		state.pushScopeContext(this);
 		for (const each of this._arguments) {
 			each.resolveMembers(state);
 		}
-		state.parentFunction = pf;
+		state.popScopeContext();
 		
 		this._resolveFunction?.dispose();
 		this._resolveFunction = undefined;
@@ -363,12 +362,11 @@ export class ContextFunction extends Context{
 	}
 	
 	public resolveStatements(state: ResolveState): void {
-		const pf = state.parentFunction;
-		state.parentFunction = this;
+		state.pushScopeContext(this);
 		for (const each of this._arguments) {
 			each.resolveStatements(state);
 		}
-		state.parentFunction = pf;
+		state.popScopeContext();
 	}
 
 	public contextAtPosition(position: Position): Context | undefined {

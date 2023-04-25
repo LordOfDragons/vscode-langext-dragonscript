@@ -151,7 +151,7 @@ export class ContextInterface extends Context{
 				container = (this.parent as ContextInterface).resolveInterface;
 			} else if (this.parent.type == Context.ContextType.Namespace) {
 				container = (this.parent as ContextNamespace).resolveNamespace;
-			} else if (this.parent.type == Context.ContextType.Script) {
+			} else {
 				container = ResolveNamespace.root;
 			}
 
@@ -166,14 +166,11 @@ export class ContextInterface extends Context{
 			}
 		}
 		
-		const ppi = state.parentInterface;
-		state.parentInterface = this;
-		
+		state.pushScopeContext(this);
 		for (const each of this._declarations) {
 			each.resolveClasses(state);
 		}
-
-		state.parentInterface = ppi;
+		state.popScopeContext();
 	}
 
 	public resolveInheritance(state: ResolveState): void {
@@ -187,30 +184,27 @@ export class ContextInterface extends Context{
 			}
 		}
 		
-		const ppi = state.parentInterface;
-		state.parentInterface = this;
-
+		state.pushScopeContext(this);
 		for (const each of this._declarations) {
 			each.resolveInheritance(state);
 		}
-
-		state.parentInterface = ppi;
+		state.popScopeContext();
 	}
 
 	public resolveMembers(state: ResolveState): void {
-		state.parentInterface = this;
+		state.pushScopeContext(this);
 		for (const each of this._declarations) {
 			each.resolveMembers(state);
 		}
-		state.parentInterface = undefined;
+		state.popScopeContext();
 	}
 
 	public resolveStatements(state: ResolveState): void {
-		state.parentInterface = this;
+		state.pushScopeContext(this);
 		for (const each of this._declarations) {
 			each.resolveStatements(state);
 		}
-		state.parentInterface = undefined;
+		state.popScopeContext();
 	}
 
 	public contextAtPosition(position: Position): Context | undefined {

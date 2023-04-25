@@ -24,11 +24,7 @@
 
 import { IToken } from "chevrotain";
 import { Diagnostic, DiagnosticSeverity, Range } from "vscode-languageserver"
-import { ContextFunction } from "../context/classFunction";
-import { ContextNamespace } from "../context/namespace";
-import { ContextClass } from "../context/scriptClass";
-import { ContextEnumeration } from "../context/scriptEnum";
-import { ContextInterface } from "../context/scriptInterface";
+import { Context } from "../context/context";
 import { capabilities } from "../server";
 import { ResolveNamespace } from "./namespace";
 
@@ -37,6 +33,8 @@ export class ResolveState {
 	protected _diagnostics: Diagnostic[];
 	protected _uri: string;
 	protected _pins: ResolveNamespace[] = [];
+	protected _scopeContext?: Context;
+	protected _scopeContextStack: (Context | undefined)[] = [];
 
 
 	constructor (diagnostics: Diagnostic[], uri: string) {
@@ -61,19 +59,29 @@ export class ResolveState {
 		this._pins.length = 0;
 	}
 
-	public parentNamespace?: ContextNamespace;
-	public parentClass?: ContextClass;
-	public parentInterface?: ContextInterface;
-	public parentEnumeration?: ContextEnumeration;
-	public parentFunction?: ContextFunction;
+	public get scopeContextStack(): (Context | undefined)[] {
+		return this._scopeContextStack;
+	}
+	
+	public get scopeContext(): Context | undefined {
+		return this._scopeContext;
+	}
+
+	public pushScopeContext(context: Context): void {
+		this._scopeContext = context;
+		this._scopeContextStack.push(context)
+	}
+
+	public popScopeContext(): void {
+		this._scopeContextStack.pop();
+		this._scopeContext = this._scopeContextStack[this._scopeContextStack.length - 1];
+	}
+
 
 	public reset(): void {
 		this._pins.length = 0;
-		this.parentNamespace = undefined;
-		this.parentClass = undefined;
-		this.parentInterface = undefined;
-		this.parentEnumeration = undefined;
-		this.parentFunction = undefined;
+		this._scopeContext = undefined;
+		this._scopeContextStack = [];
 	}
 
 

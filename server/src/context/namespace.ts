@@ -124,53 +124,41 @@ export class ContextNamespace extends Context{
 		this._resolveNamespace = this._typename.resolveNamespace(state);
 		this._resolveNamespace?.addContext(this);
 
-		let pns = state.parentNamespace;
-		state.parentNamespace = this;
-
+		state.pushScopeContext(this);
 		for (const each of this._statements) {
 			each.resolveClasses(state);
 		}
-
-		state.parentNamespace = pns;
+		state.popScopeContext();
 	}
 	
 	public resolveInheritance(state: ResolveState): void {
 		state.clearPins();
 
-		let pns = state.parentNamespace;
-		state.parentNamespace = this;
-
+		state.pushScopeContext(this);
 		for (const each of this._statements) {
 			each.resolveInheritance(state);
 		}
-
-		state.parentNamespace = pns;
+		state.popScopeContext();
 	}
 	
 	public resolveMembers(state: ResolveState): void {
 		state.clearPins();
 
-		let pns = state.parentNamespace;
-		state.parentNamespace = this;
-
+		state.pushScopeContext(this);
 		for (const each of this._statements) {
 			each.resolveMembers(state);
 		}
-
-		state.parentNamespace = pns;
+		state.popScopeContext();
 	}
 
 	public resolveStatements(state: ResolveState): void {
 		state.clearPins();
 
-		let pns = state.parentNamespace;
-		state.parentNamespace = this;
-
+		state.pushScopeContext(this);
 		for (const each of this._statements) {
 			each.resolveStatements(state);
 		}
-
-		state.parentNamespace = pns;
+		state.popScopeContext();
 	}
 
 	protected updateHover(position: Position): Hover | null {

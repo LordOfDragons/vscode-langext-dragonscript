@@ -181,7 +181,7 @@ export class ContextEnumeration extends Context{
 				container = (this.parent as ContextInterface).resolveInterface;
 			} else if (this.parent.type == Context.ContextType.Namespace) {
 				container = (this.parent as ContextNamespace).resolveNamespace;
-			} else if (this.parent.type == Context.ContextType.Script) {
+			} else {
 				container = ResolveNamespace.root;
 			}
 
@@ -198,13 +198,11 @@ export class ContextEnumeration extends Context{
 	}
 
 	public resolveStatements(state: ResolveState): void {
-		state.parentEnumeration = this;
-
+		state.pushScopeContext(this);
 		for (const each of this._entries) {
 			each.resolveStatements(state);
 		}
-		
-		state.parentEnumeration = undefined;
+		state.popScopeContext();
 	}
 
 	public contextAtPosition(position: Position): Context | undefined {
