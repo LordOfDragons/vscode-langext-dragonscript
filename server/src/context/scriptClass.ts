@@ -195,12 +195,12 @@ export class ContextClass extends Context{
 		this._resolveClass = new ResolveClass(this);
 		if (this.parent) {
 			var container: ResolveType | undefined;
-			if (this.parent.type == Context.ContextType.Class) {
-				container = (this.parent as ContextClass).resolveClass;
-			} else if (this.parent.type == Context.ContextType.Interface) {
-				container = (this.parent as ContextInterface).resolveInterface;
-			} else if (this.parent.type == Context.ContextType.Namespace) {
-				container = (this.parent as ContextNamespace).resolveNamespace;
+			if (state.parentClass) {
+				container = state.parentClass.resolveClass;
+			} else if (state.parentInterface) {
+				container = state.parentInterface.resolveInterface;
+			} else if (state.parentNamespace) {
+				container = state.parentNamespace.resolveNamespace;
 			} else if (this.parent.type == Context.ContextType.Script) {
 				container = ResolveNamespace.root;
 			}
@@ -216,9 +216,14 @@ export class ContextClass extends Context{
 			}
 		}
 		
+		const ppc = state.parentClass;
+		state.parentClass = this;
+
 		for (const each of this._declarations) {
 			each.resolveClasses(state);
 		}
+
+		state.parentClass = ppc;
 	}
 
 	public resolveInheritance(state: ResolveState): void {

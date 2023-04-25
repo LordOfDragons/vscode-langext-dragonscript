@@ -199,9 +199,11 @@ export class ContextEnumeration extends Context{
 
 	public resolveStatements(state: ResolveState): void {
 		state.parentEnumeration = this;
+
 		for (const each of this._entries) {
 			each.resolveStatements(state);
 		}
+		
 		state.parentEnumeration = undefined;
 	}
 

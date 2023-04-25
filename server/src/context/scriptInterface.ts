@@ -166,9 +166,14 @@ export class ContextInterface extends Context{
 			}
 		}
 		
+		const ppi = state.parentInterface;
+		state.parentInterface = this;
+		
 		for (const each of this._declarations) {
 			each.resolveClasses(state);
 		}
+
+		state.parentInterface = ppi;
 	}
 
 	public resolveInheritance(state: ResolveState): void {
