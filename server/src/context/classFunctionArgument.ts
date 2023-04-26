@@ -29,6 +29,7 @@ import { TypeName } from "./typename";
 import { Identifier } from "./identifier";
 import { ResolveState } from "../resolve/state";
 import { HoverInfo } from "../hoverinfo";
+import { Helpers } from "../helpers";
 
 
 export class ContextFunctionArgument extends Context{
@@ -45,9 +46,9 @@ export class ContextFunctionArgument extends Context{
 
 		let tokBegin = node.children.type[0].children.identifier[0];
 		let tokEnd = node.children.name[0];
+		this.range = Helpers.rangeFrom(tokBegin, tokEnd, true, false);
 		this.documentSymbol = DocumentSymbol.create(this._name.name, this._typename.name,
-			SymbolKind.Variable, this.rangeFrom(tokBegin, tokEnd, true, false),
-			this.rangeFrom(tokBegin, tokEnd, true, true));
+			SymbolKind.Variable, this.range, Helpers.rangeFrom(tokBegin, tokEnd, true, true));
 	}
 
 	dispose(): void {
@@ -79,11 +80,11 @@ export class ContextFunctionArgument extends Context{
 	}
 
 	public contextAtPosition(position: Position): Context | undefined {
-		if (!this.isPositionInsideRange(this.documentSymbol!.range, position)) {
+		if (!Helpers.isPositionInsideRange(this.range, position)) {
 			return undefined;
 		}
 
-		if (this._name.token && this.isPositionInsideToken(this._name.token, position)) {
+		if (this._name.isPositionInside(position)) {
 			return this;
 		}
 		if (this._typename.isPositionInside(position)) {
@@ -93,10 +94,10 @@ export class ContextFunctionArgument extends Context{
 	}
 
 	protected updateHover(position: Position): Hover | null {
-		if (this._name.token && this.isPositionInsideToken(this._name.token, position)) {
+		if (this._name.isPositionInside(position)) {
 			let content = [];
 			content.push(`**parameter** *${this._typename}* **${this._name}**`);
-			return new HoverInfo(content, this.rangeFrom(this._name.token));
+			return new HoverInfo(content, this._name.range);
 		}
 
 		if (this._typename.isPositionInside(position)) {

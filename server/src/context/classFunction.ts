@@ -40,6 +40,8 @@ import { ResolveFunction } from "../resolve/function";
 import { ResolveType } from "../resolve/type";
 import { ContextClass } from "./scriptClass";
 import { ContextInterface } from "./scriptInterface";
+import { ContextFunctionCall } from "./expressionCall";
+import { Helpers } from "../helpers";
 
 
 export class ContextFunction extends Context{
@@ -48,9 +50,9 @@ export class ContextFunction extends Context{
 	protected _functionType: ContextFunction.Type;
 	protected _name: Identifier;
 	protected _returnType?: TypeName;
-	protected _arguments: ContextFunctionArgument[];
-	protected _thisCall?: Context[];
-	protected _superCall?: Context[];
+	protected _arguments: ContextFunctionArgument[] = [];
+	protected _superToken?: IToken;
+	protected _superCall?: ContextFunctionCall;
 	protected _statements?: ContextStatements;
 	protected _resolveFunction?: ResolveFunction;
 
@@ -60,7 +62,6 @@ export class ContextFunction extends Context{
 				ownerTypeName: string, parent: Context) {
 		super(Context.ContextType.Function, parent);
 		this._node = node;
-		this._arguments = [];
 		this._typeModifiers = new Context.TypeModifierSet(typemodNode);
 
 		var tokBegin: IToken | undefined;
@@ -123,9 +124,11 @@ export class ContextFunction extends Context{
 				let args = fdecl2.functionCall[0].children.argument;
 				if (args) {
 					if (fdecl2.this) {
-						this._thisCall = args.map(each => ContextBuilder.createExpression(each, this));
+						this._superToken = fdecl2.this[0];
+						this._superCall = ContextFunctionCall.newSuperCall(fdecl2.functionCall[0], this, fdecl2.this[0]);
 					} else if (fdecl2.super) {
-						this._superCall = args.map(each => ContextBuilder.createExpression(each, this));
+						this._superToken = fdecl2.super[0];
+						this._superCall = ContextFunctionCall.newSuperCall(fdecl2.functionCall[0], this, fdecl2.super[0]);
 					}
 				}
 			}
@@ -254,9 +257,9 @@ export class ContextFunction extends Context{
 			let retText = this._returnType?.name || "void";
 			let extText = `(${argText}): ${retText}`;
 
+			this.range = Helpers.rangeFrom(tokBegin, tokEnd, true, false);
 			this.documentSymbol = DocumentSymbol.create(this._name.name, extText,
-				docSymKind, this.rangeFrom(tokBegin, tokEnd, true, false),
-				this.rangeFrom(this._name.token, tokEnd, true, true));
+				docSymKind, this.range, Helpers.rangeFrom(this._name.token, tokEnd, true, true));
 		}
 	}
 
@@ -269,16 +272,7 @@ export class ContextFunction extends Context{
 		for (const each of this._arguments) {
 			each.dispose();
 		}
-		if (this._thisCall) {
-			for (const each of this._thisCall) {
-				each.dispose();
-			}
-		}
-		if (this._superCall) {
-			for (const each of this._superCall) {
-				each.dispose();
-			}
-		}
+		this._superCall?.dispose();
 		this._statements?.dispose();
 	}
 
@@ -307,11 +301,11 @@ export class ContextFunction extends Context{
 		return this._arguments;
 	}
 
-	public get thisCall(): Context[] | undefined {
-		return this._thisCall;
+	public get superToken(): IToken | undefined {
+		return this._superToken;
 	}
 
-	public get superCall(): Context[] | undefined{
+	public get superCall(): Context | undefined{
 		return this._superCall;
 	}
 
@@ -353,8 +347,8 @@ export class ContextFunction extends Context{
 
 			if (container) {
 				if (!container.addFunction(this._resolveFunction)) {
-					if (this._name.token) {
-						state.reportError(state.rangeFrom(this._name.token), `Duplicate function ${this._name}`);
+					if (this._name.range) {
+						state.reportError(this._name.range, `Duplicate function ${this._name}`);
 					}
 				}
 			}
@@ -366,26 +360,30 @@ export class ContextFunction extends Context{
 		for (const each of this._arguments) {
 			each.resolveStatements(state);
 		}
+		this._superCall?.resolveStatements(state);
+		this._statements?.resolveStatements(state);
 		state.popScopeContext();
 	}
 
 	public contextAtPosition(position: Position): Context | undefined {
-		if (!this.isPositionInsideRange(this.documentSymbol!.range, position)) {
+		if (!Helpers.isPositionInsideRange(this.range, position)) {
 			return undefined;
 		}
 
-		if (this._name.token && this.isPositionInsideToken(this._name.token, position)) {
+		if (this._name.isPositionInside(position)) {
 			return this;
 		}
 		if (this._returnType?.isPositionInside(position)) {
 			return this;
 		}
 
-		return this.contextAtPositionList(this._arguments, position);
+		return this.contextAtPositionList(this._arguments, position)
+			|| this._superCall?.contextAtPosition(position)
+			|| this._statements?.contextAtPosition(position);
 	}
 
 	protected updateHover(position: Position): Hover | null {
-		if (this._name.token && this.isPositionInsideToken(this._name.token, position)) {
+		if (this._name.isPositionInside(position)) {
 			let parts = [];
 			parts.push(this._typeModifiers.typestring);
 			switch (this._functionType) {
@@ -416,16 +414,11 @@ export class ContextFunction extends Context{
 			let content = [];
 			content.push(parts.join(""));
 	
-			return new HoverInfo(content, this.rangeFrom(this._name.token));
+			return new HoverInfo(content, this._name.range);
 		}
 
 		if (this._returnType?.isPositionInside(position)) {
 			return this._returnType.hover(position);
-		}
-
-		const context = this.contextAtPositionList(this._arguments, position);
-		if (context) {
-			return context.hover(position);
 		}
 
 		return null;
@@ -446,12 +439,13 @@ export class ContextFunction extends Context{
 		s = `${s})`;
 		console.log(s);
 
-		if (this._thisCall) {
-			console.log(`${prefixLines}- this`);
-			this.logChildren(this._thisCall, console, `${prefixLines}  `, "Arg: ");
-		} else if (this._superCall) {
-			console.log(`${prefixLines}- super`);
-			this.logChildren(this._superCall, console, `${prefixLines}  `, "Arg: ");
+		if (this._superToken && this._superCall) {
+			if (this._superToken.image == 'this') {
+				console.log(`${prefixLines}- this`);
+			} else {
+				console.log(`${prefixLines}- super`);
+			}
+			this.logChild(this._superCall, console, prefixLines);
 		}
 		
 		this.logChild(this._statements, console, prefixLines);

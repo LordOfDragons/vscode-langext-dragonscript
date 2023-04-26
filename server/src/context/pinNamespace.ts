@@ -29,6 +29,7 @@ import { TypeName } from "./typename";
 import { HoverInfo } from "../hoverinfo";
 import { ResolveState } from "../resolve/state";
 import { ResolveNamespace } from "../resolve/namespace";
+import { Helpers } from "../helpers";
 
 
 export class ContextPinNamespace extends Context{
@@ -44,9 +45,10 @@ export class ContextPinNamespace extends Context{
 		let tokPin = node.children.pin[0];
 		let tokName = this._typename.lastToken || tokPin;
 		
+		this.range = Helpers.rangeFrom(tokPin, tokName, true, false);
 		this.documentSymbol = DocumentSymbol.create(this._typename.lastPart.name.name,
-			this._typename.name, SymbolKind.Namespace, this.rangeFrom(tokPin, tokName, true, false),
-			this.rangeFrom(tokPin, tokName, true, true));
+			this._typename.name, SymbolKind.Namespace, this.range,
+			Helpers.rangeFrom(tokPin, tokName, true, true));
 	}
 
 	dispose(): void {
@@ -91,13 +93,13 @@ export class ContextPinNamespace extends Context{
 	}
 
 	public contextAtPosition(position: Position): Context | undefined {
-		if (!this.isPositionInsideRange(this.documentSymbol!.range, position)) {
+		if (!Helpers.isPositionInsideRange(this.range, position)) {
 			return undefined;
 		}
 
 		let ft = this._typename.firstToken;
 		let lt = this._typename.lastToken;
-		if (ft && lt && this.isPositionInsideRange(this.rangeFrom(ft, lt), position)) {
+		if (ft && lt && Helpers.isPositionInsideRange(Helpers.rangeFrom(ft, lt), position)) {
 			return this;
 		}
 
@@ -121,19 +123,19 @@ export class ContextPinNamespace extends Context{
 			plen--;
 			let tok = parts[plen].name.token;
 
-			if (!tok || !this.isPositionInsideToken(tok, position)) {
+			if (!tok || !Helpers.isPositionInsideToken(tok, position)) {
 				continue;
 			}
 
 			let pn = parts.slice(0, plen).map(x => x.name.name).reduce((a, b) => `${a}.${b}`);
 			content.push(`**namespace** *${pn}*.**${parts[plen].name}**`);	
-			return new HoverInfo(content, this.rangeFrom(tok));
+			return new HoverInfo(content, Helpers.rangeFrom(tok));
 		}
 
 		let tok = parts[0].name.token;
-		if (tok && this.isPositionInsideToken(tok, position)) {
+		if (tok && Helpers.isPositionInsideToken(tok, position)) {
 			content.push(`**namespace** **${parts[0].name}**`);
-			return new HoverInfo(content, this.rangeFrom(tok));
+			return new HoverInfo(content, Helpers.rangeFrom(tok));
 		}
 
 		return null;

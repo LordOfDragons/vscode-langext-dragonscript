@@ -37,6 +37,7 @@ import { ResolveVariable } from "../resolve/variable";
 import { ResolveType } from "../resolve/type";
 import { ContextClass } from "./scriptClass";
 import { ContextInterface } from "./scriptInterface";
+import { Helpers } from "../helpers";
 
 
 export class ContextVariable extends Context{
@@ -67,9 +68,10 @@ export class ContextVariable extends Context{
 
 		let tokBegin = firstVar ? this._name.token : typeNode.children.identifier[0];
 		if (tokBegin) {
+			this.range = Helpers.rangeFrom(tokBegin, endToken, true, false);
 			this.documentSymbol = DocumentSymbol.create(this._name.name, this._typename.name,
 				this._typeModifiers.has(Context.TypeModifier.Fixed) ? SymbolKind.Constant : SymbolKind.Variable,
-				this.rangeFrom(tokBegin, endToken, true, false), this.rangeFrom(tokBegin, endToken, true, true));
+				this.range, Helpers.rangeFrom(tokBegin, endToken, true, true));
 		}
 	}
 
@@ -137,9 +139,7 @@ export class ContextVariable extends Context{
 
 			if (container) {
 				if (container.variable(this._name.name)) {
-					if (this._name.token) {
-						state.reportError(state.rangeFrom(this._name.token), `Duplicate variable ${this._name}`);
-					}
+					state.reportError(this._name.range, `Duplicate variable ${this._name}`);
 				} else {
 					container.addVariable(this._resolveVariable);
 				}
@@ -147,12 +147,16 @@ export class ContextVariable extends Context{
 		}
 	}
 
+	public resolveStatements(state: ResolveState): void {
+		this._value?.resolveStatements(state);
+	}
+
 	public contextAtPosition(position: Position): Context | undefined {
-		if (!this.isPositionInsideRange(this.documentSymbol!.range, position)) {
+		if (!Helpers.isPositionInsideRange(this.range, position)) {
 			return undefined;
 		}
 
-		if (this._name.token && this.isPositionInsideToken(this._name.token, position)) {
+		if (this._name.isPositionInside(position)) {
 			return this;
 		}
 		if (!this._firstVariable && this._typename.isPositionInside(position)) {
@@ -162,10 +166,10 @@ export class ContextVariable extends Context{
 	}
 
 	protected updateHover(position: Position): Hover | null {
-		if (this._name.token && this.isPositionInsideToken(this._name.token, position)) {
+		if (this._name.isPositionInside(position)) {
 			let content = [];
 			content.push(`${this._typeModifiers.typestring} **variable** *${this._typename}* *${this.parent!.fullyQualifiedName}*.**${this._name}**`);
-			return new HoverInfo(content, this.rangeFrom(this._name.token));
+			return new HoverInfo(content, this._name.range);
 		}
 
 		if (!this._firstVariable && this._typename.isPositionInside(position)) {

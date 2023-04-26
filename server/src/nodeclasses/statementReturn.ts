@@ -1,4 +1,4 @@
-import { CstNode } from "chevrotain";
+import { CstNode, IToken } from "chevrotain";
 import { ExpressionCstNode } from "./expression";
 
 
@@ -8,5 +8,6 @@ export interface StatementReturnCstNode extends CstNode {
 }
 
 export type StatementReturnCstChildren = {
+	return: IToken[];
 	value?: ExpressionCstNode[];
 };

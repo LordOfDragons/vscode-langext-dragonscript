@@ -35,6 +35,7 @@ import { ContextClass } from "./scriptClass";
 import { ContextInterface } from "./scriptInterface";
 import { ContextNamespace } from "./namespace";
 import { ResolveNamespace } from "../resolve/namespace";
+import { Helpers } from "../helpers";
 
 
 export class ContextEnumEntry extends Context{
@@ -51,9 +52,9 @@ export class ContextEnumEntry extends Context{
 		let tokBegin = this._name.token;
 		if (tokBegin) {
 			let tokEnd = eoc.newline ? eoc.newline[0] : eoc.commandSeparator![0];
-			let range = this.rangeFrom(tokBegin, tokEnd);
+			this.range = Helpers.rangeFrom(tokBegin, tokEnd);
 			this.documentSymbol = DocumentSymbol.create(this._name.name, docTextExt,
-				SymbolKind.EnumMember, range, range);
+				SymbolKind.EnumMember, this.range, this.range);
 		}
 	}
 
@@ -72,22 +73,25 @@ export class ContextEnumEntry extends Context{
 	}
 
 	public contextAtPosition(position: Position): Context | undefined {
-		if (this.isPositionInsideRange(this.documentSymbol!.range, position)) {
-			if (this._name.token && this.isPositionInsideRange(this.rangeFrom(this._name.token), position)) {
-				return this;
-			}
+		if (!Helpers.isPositionInsideRange(this.range, position)) {
+			return undefined;
 		}
+
+		if (this._name.isPositionInside(position)) {
+			return this;
+		}
+
 		return undefined;
 	}
 
 	protected updateHover(position: Position): Hover | null {
-		if (!this._name.token || !this.isPositionInsideToken(this._name.token, position)) {
+		if (!this._name.isPositionInside(position)) {
 			return null;
 		}
 
 		let content = [];
 		content.push(`static fixed public **variable** *${this.parent!.fullyQualifiedName}*.**${this.name}**`);
-		return new HoverInfo(content, this.rangeFrom(this._name.token));
+		return new HoverInfo(content, this._name.range);
 	}
 
 
@@ -117,9 +121,9 @@ export class ContextEnumeration extends Context{
 
 		let tokEnd = edecl.enumerationEnd[0].children.end[0];
 		let tokEnum = edeclBegin.enum[0];
+		this.range = Helpers.rangeFrom(tokEnum, tokEnd, true, false);
 		this.documentSymbol = DocumentSymbol.create(this._name.name, undefined,
-			SymbolKind.Enum, this.rangeFrom(tokEnum, tokEnd, true, false),
-			this.rangeFrom(edeclBegin.name[0], tokEnd, true, true));
+			SymbolKind.Enum, this.range, Helpers.rangeFrom(edeclBegin.name[0], tokEnd, true, true));
 
 		let docTextExt = this._name.name;
 		const entries = edecl.enumerationBody[0].children.enumerationEntry;
@@ -187,9 +191,7 @@ export class ContextEnumeration extends Context{
 
 			if (container) {
 				if (container.findType(this._name.name)) {
-					if (this._name.token) {
-						state.reportError(state.rangeFrom(this._name.token), `Duplicate enumeration ${this._name}`);
-					}
+					state.reportError(this._name.range, `Duplicate enumeration ${this._name}`);
 				} else {
 					container.addEnumeration(this._resolveEnum);
 				}
@@ -206,24 +208,25 @@ export class ContextEnumeration extends Context{
 	}
 
 	public contextAtPosition(position: Position): Context | undefined {
-		if (this.isPositionInsideRange(this.documentSymbol!.range, position)) {
-			if (this._name.token && this.isPositionInsideRange(this.rangeFrom(this._name.token), position)) {
-				return this;
-			} else {
-				return this.contextAtPositionList(this._entries, position);
-			}
+		if (!Helpers.isPositionInsideRange(this.range, position)) {
+			return undefined;
 		}
-		return undefined;
+
+		if (this._name.isPositionInside(position)) {
+			return this;
+		}
+
+		return this.contextAtPositionList(this._entries, position);
 	}
 
 	protected updateHover(position: Position): Hover | null {
-		if (!this._name.token || !this.isPositionInsideToken(this._name.token, position)) {
+		if (!this._name.isPositionInside(position)) {
 			return null;
 		}
 
 		let content = [];
 		content.push(`${this._typeModifiers.typestring} **enumeration** ${this.parent!.fullyQualifiedName}.**${this.name}**`);
-		return new HoverInfo(content, this.rangeFrom(this._name.token));
+		return new HoverInfo(content, this._name.range);
 	}
 
 

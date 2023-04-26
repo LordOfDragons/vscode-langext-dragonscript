@@ -24,7 +24,10 @@
 
 import { IToken } from "chevrotain";
 import { Diagnostic, DiagnosticSeverity, Range } from "vscode-languageserver"
+import { ContextFunction } from "../context/classFunction";
 import { Context } from "../context/context";
+import { ContextBlock } from "../context/expressionBlock";
+import { ContextClass } from "../context/scriptClass";
 import { capabilities } from "../server";
 import { ResolveNamespace } from "./namespace";
 
@@ -77,6 +80,28 @@ export class ResolveState {
 		this._scopeContext = this._scopeContextStack[this._scopeContextStack.length - 1];
 	}
 
+	public get topScopeClass(): ContextClass | undefined {
+		return this.topScope(Context.ContextType.Class) as ContextClass;
+	}
+
+	public get topScopeFunction(): ContextFunction | undefined {
+		return this.topScope(Context.ContextType.Function) as ContextFunction;
+	}
+
+	public get topScopeBlock(): ContextBlock | undefined {
+		return this.topScope(Context.ContextType.Block) as ContextBlock;
+	}
+
+	public topScope(type: Context.ContextType): Context | undefined {
+		for (let i=this._scopeContextStack.length - 1; i >= 0; i--) {
+			const c = this._scopeContextStack[i];
+			if (c?.type == type) {
+				return c;
+			}
+		}
+		return undefined;
+	}
+
 
 	public reset(): void {
 		this._pins.length = 0;
@@ -85,39 +110,27 @@ export class ResolveState {
 	}
 
 
-	public rangeFrom(start: IToken, end?: IToken, startAtLeft: boolean = true, endAtLeft: boolean = false): Range {
-		// note: end column ist at the left side of the last character hence (+1 -1) cancels out
-		let a = start;
-		let b = end || start;
-		
-		let startLine = a.startLine || 1;
-		let endLine = b.endLine || startLine;
-		
-		let startColumn = startAtLeft ? (a.startColumn || 1) : (a.endColumn || 1) + 1;
-		let endColumn = endAtLeft ? (b.startColumn || 1) : (b.endColumn || 1) + 1;
-		
-		// note: line/column in chevrotain is base-1 and in vs base-0
-		return Range.create(startLine - 1, startColumn - 1, endLine - 1, endColumn - 1);
-	}
-
-
-	public reportError(range: Range, message: string) {
+	public reportError(range: Range | undefined, message: string) {
 		this.reportDiagnostic(DiagnosticSeverity.Error, range, message);
 	}
 
-	public reportWarning(range: Range, message: string) {
+	public reportWarning(range: Range | undefined, message: string) {
 		this.reportDiagnostic(DiagnosticSeverity.Warning, range, message);
 	}
 
-	public reportInfo(range: Range, message: string) {
+	public reportInfo(range: Range | undefined, message: string) {
 		this.reportDiagnostic(DiagnosticSeverity.Information, range, message);
 	}
 
-	public reportHint(range: Range, message: string) {
+	public reportHint(range: Range | undefined, message: string) {
 		this.reportDiagnostic(DiagnosticSeverity.Hint, range, message);
 	}
 
-	public reportDiagnostic(severity: DiagnosticSeverity, range: Range, message: string) {
+	public reportDiagnostic(severity: DiagnosticSeverity, range: Range | undefined, message: string) {
+		if (!range) {
+			return;
+		}
+		
 		const diagnostic: Diagnostic = {
 			severity: severity,
 			range: range,

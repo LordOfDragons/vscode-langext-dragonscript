@@ -37,6 +37,7 @@ import { ResolveInterface } from "../resolve/interface";
 import { ContextNamespace } from "./namespace";
 import { ResolveNamespace } from "../resolve/namespace";
 import { ResolveType } from "../resolve/type";
+import { Helpers } from "../helpers";
 
 
 export class ContextInterface extends Context{
@@ -60,9 +61,9 @@ export class ContextInterface extends Context{
 
 		let tokIf = ideclBegin.interface[0];
 		let tokEnd = idecl.interfaceEnd[0].children.end[0];
+		this.range = Helpers.rangeFrom(tokIf, tokEnd, true, false);
 		this.documentSymbol = DocumentSymbol.create(this._name.name, undefined,
-			SymbolKind.Interface, this.rangeFrom(tokIf, tokEnd, true, false),
-			this.rangeFrom(ideclBegin.name[0], tokEnd, true, true));
+			SymbolKind.Interface, this.range, Helpers.rangeFrom(ideclBegin.name[0], tokEnd, true, true));
 		
 		if (ideclBegin.baseInterfaceName) {
 			for (const each of ideclBegin.baseInterfaceName) {
@@ -157,9 +158,7 @@ export class ContextInterface extends Context{
 
 			if (container) {
 				if (container.findType(this._name.name)) {
-					if (this._name.token) {
-						state.reportError(state.rangeFrom(this._name.token), `Duplicate interface ${this._name}`);
-					}
+					state.reportError(this._name.range, `Duplicate interface ${this._name}`);
 				} else {
 					container.addInterface(this._resolveInterface);
 				}
@@ -208,30 +207,31 @@ export class ContextInterface extends Context{
 	}
 
 	public contextAtPosition(position: Position): Context | undefined {
-		if (this.isPositionInsideRange(this.documentSymbol!.range, position)) {
-			if (this._name.token && this.isPositionInsideRange(this.rangeFrom(this._name.token), position)) {
+		if (!Helpers.isPositionInsideRange(this.range, position)) {
+			return undefined;
+		}
+
+		if (this._name.isPositionInside(position)) {
+			return this;
+		}
+
+		for (const each of this._implements) {
+			if (each.isPositionInside(position)) {
 				return this;
-			} else {
-				for (const each of this._implements) {
-					if (each.isPositionInside(position)) {
-						return this;
-					}
-				}
-				return this.contextAtPositionList(this._declarations, position);
 			}
 		}
-		return undefined;
+		return this.contextAtPositionList(this._declarations, position);
 	}
 
 	protected updateHover(position: Position): Hover | null {
-		if (this._name.token && this.isPositionInsideRange(this.rangeFrom(this._name.token), position)) {
+		if (this._name.isPositionInside(position)) {
 			let content = [];
 			content.push(`${this._typeModifiers.typestring} **interface** `);
 			if (this.parent) {
 				content.push(`*${this.parent.fullyQualifiedName}*.`);
 			}
 			content.push(`**${this.name}**`);
-			return new HoverInfo(content, this.rangeFrom(this._name.token));
+			return new HoverInfo(content, this._name.range);
 
 		} else {
 			for (const each of this._implements) {

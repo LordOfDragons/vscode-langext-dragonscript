@@ -23,11 +23,13 @@
  */
 
 import { Context } from "./context";
-import { integer, RemoteConsole } from "vscode-languageserver";
+import { Hover, integer, Position, Range, RemoteConsole } from "vscode-languageserver";
 import { ContextBuilder } from "./contextBuilder";
 import { Identifier } from "./identifier";
 import { ExpressionMemberCstNode, ExpressionObjectCstNode } from "../nodeclasses/expressionObject";
-import { ContextFunctionCall } from "./expressionCall";
+import { ResolveState } from "../resolve/state";
+import { HoverInfo } from "../hoverinfo";
+import { Helpers } from "../helpers";
 
 
 export class ContextMember extends Context{
@@ -49,12 +51,14 @@ export class ContextMember extends Context{
 		let cm = new ContextMember(node, memberIndex, parent);
 		cm._object = object ? object : ContextBuilder.createExpressionBaseObject(node.children.object[0], cm);
 		cm._name = new Identifier(node.children.member![memberIndex].children.name[0]);
+		cm.updateRange();
 		return cm;
 	}
 
 	public static newMember(node: ExpressionMemberCstNode, parent: Context) {
 		let cm = new ContextMember(node, 0, parent);
 		cm._name = new Identifier(node.children.name[0]);
+		cm.updateRange();
 		return cm;
 	}
 
@@ -78,6 +82,50 @@ export class ContextMember extends Context{
 	
 	public get name(): Identifier {
 		return this._name!;
+	}
+
+	
+	public resolveStatements(state: ResolveState): void {
+		this._object?.resolveStatements(state);
+	}
+
+
+	public contextAtPosition(position: Position): Context | undefined {
+		if (!Helpers.isPositionInsideRange(this.range, position)) {
+			return undefined;
+		}
+
+		if (this._name?.isPositionInside(position)) {
+			return this;
+		}
+
+		return this._object?.contextAtPosition(position);
+	}
+
+
+	protected updateRange(): void {
+		if (!this._name?.range) {
+			return;
+		}
+
+		const rangeBegin = this.object?.range?.start || this._name.range.start;
+		const rangeEnd = this._name.range.end;
+
+		this.range = Range.create(rangeBegin, rangeEnd);
+	}
+
+	protected updateHover(position: Position): Hover | null {
+		if (!this._name?.range) {
+			return null;
+		}
+
+		let content = [];
+		if (this._object) {
+			content.push(`**member** ${this._name.name}`);
+		} else {
+			content.push(`**member** ${this._name.name}`);
+		}
+		return new HoverInfo(content, this._name.range);
 	}
 
 	

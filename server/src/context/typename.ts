@@ -37,6 +37,7 @@ import { Context } from "./context";
 import { ContextClass } from "./scriptClass";
 import { ContextInterface } from "./scriptInterface";
 import { ContextNamespace } from "./namespace";
+import { Helpers } from "../helpers";
 
 
 export class TypeNamePart {
@@ -111,7 +112,11 @@ export class TypeName {
 	}
 
 	public static typeVoid(): TypeName {
-		return this.typeNamed("void");
+		return this.typeNamed('void');
+	}
+
+	public static typeObject(): TypeName {
+		return this.typeNamed('Object');
 	}
 
 	public get node(): FullyQualifiedClassNameCstNode | undefined {
@@ -143,10 +148,7 @@ export class TypeName {
 		var ns = ResolveNamespace.root;
 		for (const each of this._parts) {
 			if (!ns.isNamespace(each.name.name)) {
-				if (each.name.token) {
-					state.reportError(state.rangeFrom(each.name.token),
-						`"${each.name.name}" in "${ns.name}" is not a namespace`);
-				}
+				state.reportError(each.name.range, `"${each.name.name}" in "${ns.name}" is not a namespace`);
 				return undefined;
 			}
 			
@@ -170,9 +172,7 @@ export class TypeName {
 			if (first) {
 				const nextType = this.resolveBaseType(state);
 				if (!nextType) {
-					if (each.name.token) {
-						state.reportError(state.rangeFrom(each.name.token), `"${each.name.name}" not found.`);
-					}
+					state.reportError(each.name.range, `"${each.name.name}" not found.`);
 					return undefined;
 				}
 
@@ -188,10 +188,7 @@ export class TypeName {
 					continue;
 				}
 				
-				if (each.name.token) {
-					state.reportError(state.rangeFrom(each.name.token),
-						`Type "${each.name.name}" not found in "${type!.name}".`);
-				}
+				state.reportError(each.name.range, `Type "${each.name.name}" not found in "${type!.name}".`);
 				return undefined;
 			}
 		}		
@@ -395,21 +392,20 @@ export class TypeName {
 		let ft = this.firstToken;
 		let lt = this.lastToken;
 		if (ft !== undefined && lt !== undefined) {
-			return this.rangeFrom(ft, lt);
+			return Helpers.rangeFrom(ft, lt);
 		}
 		return undefined;
 	}
 	
 	public isPositionInside(position: Position): boolean {
-		const range = this.range;
-		return range !== undefined && this.isPositionInsideRange(range, position);
+		return Helpers.isPositionInsideRange(this.range, position);
 	}
 
 	public hover(position: Position): Hover | null {
 		let i, plen = this._parts.length;
 		for (i=0; i<plen; i++) {
 			let part = this._parts[i];
-			if (part.name.token && this.isPositionInsideToken(part.name.token, position)) {
+			if (part.name.isPositionInside(position)) {
 				let content = [];
 
 				if (part.resolve) {
@@ -438,7 +434,7 @@ export class TypeName {
 					content.push(`**type** **${part.name}**`);
 				}
 
-				return new HoverInfo(content, this.rangeFrom(part.name.token));
+				return new HoverInfo(content, part.name.range);
 			}
 		};
 
@@ -453,44 +449,5 @@ export class TypeName {
 
 	toString() : string {
 		return this._name;
-	}
-
-	protected isPositionInsideToken(token: IToken, position: Position): boolean {
-		return this.isPositionInsideRange(this.rangeFrom(token), position);
-	}
-
-	protected isPositionInsideRange(range: Range, position: Position): boolean {
-		if (position.line < range.start.line) {
-			return false;
-		} else if (position.line == range.start.line) {
-			if (position.character < range.start.character) {
-				return false;
-			}
-		}
-
-		if (position.line > range.end.line) {
-			return false;
-		} else if (position.line == range.end.line) {
-			if (position.character > range.end.character) {
-				return false;
-			}
-		}
-
-		return true;
-	}
-
-	public rangeFrom(start: IToken, end?: IToken, startAtLeft: boolean = true, endAtLeft: boolean = false): Range {
-		// note: end column ist at the left side of the last character hence (+1 -1) cancels out
-		let a = start;
-		let b = end || start;
-		
-		let startLine = a.startLine || 1;
-		let endLine = b.endLine || startLine;
-		
-		let startColumn = startAtLeft ? (a.startColumn || 1) : (a.endColumn || 1) + 1;
-		let endColumn = endAtLeft ? (b.startColumn || 1) : (b.endColumn || 1) + 1;
-		
-		// note: line/column in chevrotain is base-1 and in vs base-0
-		return Range.create(startLine - 1, startColumn - 1, endLine - 1, endColumn - 1);
 	}
 }

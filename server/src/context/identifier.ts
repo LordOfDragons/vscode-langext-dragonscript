@@ -23,11 +23,14 @@
  */
 
 import { IToken } from "chevrotain"
+import { Position, Range } from "vscode-languageserver";
+import { Helpers } from "../helpers";
 
 
 export class Identifier {
 	protected _token?: IToken;
 	protected _name: string;
+	protected _range?: Range;
 
 
 	constructor(token?: IToken, name?: string) {
@@ -40,6 +43,10 @@ export class Identifier {
 		} else {
 			throw "Token and name can not both be undefined";
 		}
+
+		if (token) {
+			this._range = Helpers.rangeFrom(token);
+		}
 	}
 
 
@@ -49,6 +56,14 @@ export class Identifier {
 
 	public get name(): string {
 		return this._name
+	}
+
+	public get range(): Range | undefined {
+		return this._range;
+	}
+
+	public isPositionInside(position: Position): boolean {
+		return Helpers.isPositionInsideRange(this._range, position);
 	}
 
 	

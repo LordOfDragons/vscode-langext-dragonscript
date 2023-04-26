@@ -36,7 +36,7 @@ export class ContextBlock extends Context{
 
 
 	constructor(node: ExpressionBlockCstNode, parent: Context) {
-		super(Context.ContextType.FunctionCall, parent);
+		super(Context.ContextType.Block, parent);
 		this._node = node;
 		this._arguments = [];
 

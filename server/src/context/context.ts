@@ -27,6 +27,8 @@ import { Diagnostic, DiagnosticSeverity, DocumentSymbol, Hover, Position, Range,
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
 import { capabilities, debugLogMessage } from "../server";
 import { ResolveState } from "../resolve/state";
+import { Helpers } from "../helpers";
+import { ResolveType } from "../resolve/type";
 
 
 /** Base context. */
@@ -35,6 +37,8 @@ export class Context {
 	public parent?: Context;
 	public documentSymbol?: DocumentSymbol;
 	protected _hover: Hover | null | undefined;
+	public range?: Range
+	public expressionType?: ResolveType;
 
 
 	constructor(type: Context.ContextType, parent?: Context) {
@@ -45,6 +49,7 @@ export class Context {
 	/** Dispose of context. */
 	dispose(): void {
 		this.parent = undefined;
+		this.expressionType = undefined;
 	}
 
 
@@ -87,7 +92,7 @@ export class Context {
 	}
 
 	public hover(position: Position): Hover | null {
-		if (!this._hover || (this._hover!.range && !this.isPositionInsideRange(this._hover!.range!, position))) {
+		if (!this._hover || (this._hover.range && !Helpers.isPositionInsideRange(this._hover.range, position))) {
 			this._hover = this.updateHover(position);
 		}
 		return this._hover;
@@ -111,34 +116,6 @@ export class Context {
 		return undefined;
 	}
 
-	public isPositionInsideRange(range: Range, position: Position): boolean {
-		if (position.line < range.start.line) {
-			return false;
-		} else if (position.line == range.start.line) {
-			if (position.character < range.start.character) {
-				return false;
-			}
-		}
-
-		if (position.line > range.end.line) {
-			return false;
-		} else if (position.line == range.end.line) {
-			if (position.character > range.end.character) {
-				return false;
-			}
-		}
-
-		return true;
-	}
-
-	public isPositionInsideToken(token: IToken, position: Position): boolean {
-		return this.isPositionInsideRange(this.rangeFrom(token), position);
-	}
-
-	public isPositionInsideTokens(start: IToken, end: IToken, position: Position): boolean {
-		return this.isPositionInsideRange(this.rangeFrom(start, end), position);
-	}
-
 
 	protected ignoreException(code: () => void) {
 		//code();
@@ -158,25 +135,6 @@ export class Context {
 		}
 	}
 
-
-	/**
-	 * Range from start and end token.
-	 * If end is undefined start is used as end token.
-	 */
-	protected rangeFrom(start: IToken, end?: IToken, startAtLeft: boolean = true, endAtLeft: boolean = false): Range {
-		// note: end column ist at the left side of the last character hence (+1 -1) cancels out
-		let a = start;
-		let b = end || start;
-		
-		let startLine = a.startLine || 1;
-		let endLine = b.endLine || startLine;
-		
-		let startColumn = startAtLeft ? (a.startColumn || 1) : (a.endColumn || 1) + 1;
-		let endColumn = endAtLeft ? (b.startColumn || 1) : (b.endColumn || 1) + 1;
-		
-		// note: line/column in chevrotain is base-1 and in vs base-0
-		return Range.create(startLine - 1, startColumn - 1, endLine - 1, endColumn - 1);
-	}
 
 	protected reportError(diagnostics: Diagnostic[], uri: string, range: Range, message: string) {
 		this.reportDiagnostic(diagnostics, uri, DiagnosticSeverity.Error, range, message);
@@ -271,6 +229,7 @@ export namespace Context {
 		InlineIfElse,
 		Member,
 		Constant,
+		Block,
 		Generic
 	}
 

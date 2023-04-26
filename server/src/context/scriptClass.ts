@@ -38,6 +38,7 @@ import { ContextNamespace } from "./namespace";
 import { ResolveNamespace } from "../resolve/namespace";
 import { ResolveState } from "../resolve/state";
 import { ResolveType } from "../resolve/type";
+import { Helpers } from "../helpers";
 
 
 export class ContextClass extends Context{
@@ -62,12 +63,15 @@ export class ContextClass extends Context{
 		
 		let tokEnd = cdecl.classEnd[0].children.end[0];
 		let tokClass = cdeclBegin.class[0];
+		this.range = Helpers.rangeFrom(tokClass, tokEnd, true, false);
 		this.documentSymbol = DocumentSymbol.create(this._name.name, undefined,
-			SymbolKind.Class, this.rangeFrom(tokClass, tokEnd, true, false),
-			this.rangeFrom(cdeclBegin.name[0], tokEnd, true, true));
+			SymbolKind.Class, this.range, Helpers.rangeFrom(cdeclBegin.name[0], tokEnd, true, true));
 		
 		if (cdeclBegin.baseClassName) {
 			this._extends = new TypeName(cdeclBegin.baseClassName[0]);
+
+		} else if (this.fullyQualifiedName != 'Object') {
+			this._extends = TypeName.typeObject();
 		}
 
 		if (cdeclBegin.interfaceName) {
@@ -166,8 +170,8 @@ export class ContextClass extends Context{
 	}
 
 	public contextAtPosition(position: Position): Context | undefined {
-		if (this.isPositionInsideRange(this.documentSymbol!.range, position)) {
-			if (this._name.token && this.isPositionInsideRange(this.rangeFrom(this._name.token), position)) {
+		if (Helpers.isPositionInsideRange(this.range, position)) {
+			if (this._name.isPositionInside(position)) {
 				return this;
 			} else if (this._extends?.isPositionInside(position)) {
 				return this;
@@ -207,9 +211,7 @@ export class ContextClass extends Context{
 
 			if (container) {
 				if (container.findType(this._name.name)) {
-					if (this._name.token) {
-						state.reportError(state.rangeFrom(this._name.token), `Duplicate class ${this._name}`);
-					}
+					state.reportError(this._name.range, `Duplicate class ${this._name}`);
 				} else {
 					container.addClass(this._resolveClass);
 				}
@@ -268,7 +270,7 @@ export class ContextClass extends Context{
 	}
 
 	protected updateHover(position: Position): Hover | null {
-		if (this._name.token && this.isPositionInsideRange(this.rangeFrom(this._name.token), position)) {
+		if (this._name.isPositionInside(position)) {
 			let content = [];
 			//content.push("```dragonscript");
 			content.push(`${this._typeModifiers.typestring} **class** `);
@@ -280,7 +282,7 @@ export class ContextClass extends Context{
 			/*content.push(...[
 				"___",
 				"This is a test"]);*/
-			return new HoverInfo(content, this.rangeFrom(this._name.token));
+			return new HoverInfo(content, this._name.range);
 
 		} else if (this._extends?.isPositionInside(position)) {
 			return this._extends.hover(position);

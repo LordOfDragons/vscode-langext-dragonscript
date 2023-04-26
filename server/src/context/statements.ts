@@ -23,9 +23,12 @@
  */
 
 import { Context } from "./context";
-import { RemoteConsole } from "vscode-languageserver";
+import { DocumentSymbol, Hover, Position, Range, RemoteConsole, SymbolKind } from "vscode-languageserver";
 import { ContextBuilder } from "./contextBuilder";
 import { StatementsCstNode } from "../nodeclasses/statement";
+import { ResolveState } from "../resolve/state";
+import { HoverInfo } from "../hoverinfo";
+import { Helpers } from "../helpers";
 
 
 export class ContextStatements extends Context{
@@ -40,11 +43,24 @@ export class ContextStatements extends Context{
 
 		const stas = node?.children.statement;
 		if (stas) {
+			var rangeBegin: Position | undefined;
+			var rangeEnd: Position | undefined;
+
 			for (const each of stas) {
 				let statement = ContextBuilder.createStatement(each, this);
 				if (statement) {
+					if (statement.range) {
+						if (!rangeBegin) {
+							rangeBegin = statement.range.start;
+						}
+						rangeEnd = statement.range.end;
+					}
 					this._statements.push(statement);
 				}
+			}
+
+			if (rangeBegin && rangeEnd) {
+				this.range = Range.create(rangeBegin, rangeEnd);
 			}
 		}
 	}
@@ -64,6 +80,30 @@ export class ContextStatements extends Context{
 	public get statements(): Context[] {
 		return this._statements;
 	}
+	
+
+	public resolveStatements(state: ResolveState): void {
+		for (const each of this._statements) {
+			each.resolveStatements(state);
+		}
+	}
+
+
+	public contextAtPosition(position: Position): Context | undefined {
+		if (!Helpers.isPositionInsideRange(this.range, position)) {
+			return undefined; //this._statements[0]?.contextAtPosition(position);
+		}
+
+		return this.contextAtPositionList(this._statements, position);
+	}
+
+	/*
+	protected updateHover(position: Position): Hover | null {
+		let content = [];
+		content.push(`${this._statements[0].type} ${this._statements[0].range}`);
+		return new HoverInfo(content, this.range);
+	}
+	*/
 
 
 	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {

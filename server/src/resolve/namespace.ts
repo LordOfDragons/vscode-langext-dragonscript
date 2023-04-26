@@ -98,6 +98,31 @@ export class ResolveNamespace extends ResolveType {
 	}
 
 
+	public static get classBool(): ResolveType {
+		return rootNamespace.class('bool')!;
+	}
+
+	public static get classByte(): ResolveType {
+		return rootNamespace.class('byte')!;
+	}
+
+	public static get classInt(): ResolveType {
+		return rootNamespace.class('int')!;
+	}
+
+	public static get classFloat(): ResolveType {
+		return rootNamespace.class('float')!;
+	}
+
+	public static get classString(): ResolveType {
+		return rootNamespace.class('String')!;
+	}
+
+	public static get classBlock(): ResolveType {
+		return rootNamespace.class('Block')!;
+	}
+
+
 	protected onInvalidate(): void {
 		super.onInvalidate();
 

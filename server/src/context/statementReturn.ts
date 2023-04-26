@@ -23,9 +23,12 @@
  */
 
 import { Context } from "./context";
-import { RemoteConsole } from "vscode-languageserver";
+import { Hover, Position, Range, RemoteConsole } from "vscode-languageserver";
 import { ContextBuilder } from "./contextBuilder";
 import { StatementReturnCstNode } from "../nodeclasses/statementReturn";
+import { ResolveState } from "../resolve/state";
+import { HoverInfo } from "../hoverinfo";
+import { Helpers } from "../helpers";
 
 
 export class ContextReturn extends Context{
@@ -39,6 +42,12 @@ export class ContextReturn extends Context{
 
 		if (node.children.value) {
 			this._value = ContextBuilder.createExpression(node.children.value[0], this);
+		}
+
+		const tokBegin = node.children.return[0];
+		const tokEnd = this._value?.range?.end;
+		if (tokBegin && tokEnd) {
+			this.range = Range.create(Helpers.rangeFrom(tokBegin).start, tokEnd);
 		}
 	}
 
@@ -55,6 +64,24 @@ export class ContextReturn extends Context{
 	protected get value(): Context | undefined {
 		return this._value;
 	}
+
+	
+	public resolveStatements(state: ResolveState): void {
+		this._value?.resolveStatements(state);
+	}
+
+
+	public contextAtPosition(position: Position): Context | undefined {
+		return this._value?.contextAtPosition(position);
+	}
+
+	/*
+	protected updateHover(position: Position): Hover | null {
+		let content = [];
+		content.push(`${this._value?.type} ${this._value?.range}`);
+		return new HoverInfo(content, this.range);
+	}
+	*/
 
 
 	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
