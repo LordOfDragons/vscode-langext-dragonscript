@@ -23,6 +23,7 @@
  */
 
 import { ContextClass } from '../context/scriptClass';
+import { ResolveSearch } from './search';
 import { ResolveType } from './type'
 
 
@@ -53,6 +54,17 @@ export class ResolveClass extends ResolveType {
 	public removeFromParent(): void {
 		this.parent?.removeClass(this);
 		this.parent = undefined;
+	}
+
+	public search(search: ResolveSearch): void {
+		super.search(search);
+
+		if (this.context) {
+			(this.context.extends?.resolve as ResolveType)?.search(search);
+			for (const each of this.context.implements) {
+				(each.resolve as ResolveType)?.search(search);
+			}
+		}
 	}
 
 	protected onInvalidate(): void {

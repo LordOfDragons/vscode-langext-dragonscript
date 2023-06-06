@@ -23,13 +23,12 @@
  */
 
 import { Context } from "./context";
-import { DocumentSymbol, Hover, Position, Range, RemoteConsole, SymbolKind } from "vscode-languageserver";
+import { Hover, Position, RemoteConsole } from "vscode-languageserver";
 import { ExpressionConstantCstNode } from "../nodeclasses/expressionObject";
 import { Identifier } from "./identifier";
 import { ResolveState } from "../resolve/state";
 import { ResolveType } from "../resolve/type";
 import { ResolveNamespace } from "../resolve/namespace";
-import { ContextClass } from "./scriptClass";
 import { HoverInfo } from "../hoverinfo";
 import { Helpers } from "../helpers";
 
@@ -232,6 +231,13 @@ export class ContextConstant extends Context{
 					*/
 				}
 				}break;
+
+			case ContextConstant.ConstantType.string:
+				const v = this._constantValue as string;
+				if (v) {
+					content.push(`: length ${v.length}`);
+				}
+				break;
 		}
 
 		return new HoverInfo(content, this._name.range);

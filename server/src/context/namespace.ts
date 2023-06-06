@@ -129,46 +129,50 @@ export class ContextNamespace extends Context{
 		return this._typename.name;
 	}
 
+	public get simpleName(): string {
+		return this._typename.name;
+	}
+
 	public resolveClasses(state: ResolveState): void {
 		this._resolveNamespace?.removeContext(this);
 		this._resolveNamespace = this._typename.resolveNamespace(state);
 		this._resolveNamespace?.addContext(this);
 
-		state.pushScopeContext(this);
-		for (const each of this._statements) {
-			each.resolveClasses(state);
-		}
-		state.popScopeContext();
+		state.withScopeContext(this, () => {
+			for (const each of this._statements) {
+				each.resolveClasses(state);
+			}
+		});
 	}
 	
 	public resolveInheritance(state: ResolveState): void {
 		state.clearPins();
 
-		state.pushScopeContext(this);
-		for (const each of this._statements) {
-			each.resolveInheritance(state);
-		}
-		state.popScopeContext();
+		state.withScopeContext(this, () => {
+			for (const each of this._statements) {
+				each.resolveInheritance(state);
+			}
+		});
 	}
 	
 	public resolveMembers(state: ResolveState): void {
 		state.clearPins();
 
-		state.pushScopeContext(this);
-		for (const each of this._statements) {
-			each.resolveMembers(state);
-		}
-		state.popScopeContext();
+		state.withScopeContext(this, () => {
+			for (const each of this._statements) {
+				each.resolveMembers(state);
+			}
+		});
 	}
 
 	public resolveStatements(state: ResolveState): void {
 		state.clearPins();
 
-		state.pushScopeContext(this);
-		for (const each of this._statements) {
-			each.resolveStatements(state);
-		}
-		state.popScopeContext();
+		state.withScopeContext(this, () => {
+			for (const each of this._statements) {
+				each.resolveStatements(state);
+			}
+		});
 	}
 
 	protected updateHover(position: Position): Hover | null {

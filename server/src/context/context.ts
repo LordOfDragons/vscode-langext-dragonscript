@@ -22,13 +22,13 @@
  * SOFTWARE.
  */
 
-import { IToken } from "chevrotain";
 import { Diagnostic, DiagnosticSeverity, DocumentSymbol, Hover, Position, Range, RemoteConsole } from "vscode-languageserver";
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
 import { capabilities, debugLogMessage } from "../server";
 import { ResolveState } from "../resolve/state";
 import { Helpers } from "../helpers";
 import { ResolveType } from "../resolve/type";
+import { ResolveSearch } from "../resolve/search";
 
 
 /** Base context. */
@@ -39,6 +39,8 @@ export class Context {
 	protected _hover: Hover | null | undefined;
 	public range?: Range
 	public expressionType?: ResolveType;
+	protected _resolveTextShort?: string;
+	protected _resolveTextLong?: string[];
 
 
 	constructor(type: Context.ContextType, parent?: Context) {
@@ -79,6 +81,10 @@ export class Context {
 		return this.parent?.fullyQualifiedName || "";
 	}
 
+	public get simpleName(): string {
+		return "";
+	}
+
 	public resolveClasses(state: ResolveState): void {
 	}
 
@@ -100,6 +106,28 @@ export class Context {
 
 	protected updateHover(position: Position): Hover | null {
 		return null;
+	}
+
+	public get resolveTextShort(): string {
+		if (!this._resolveTextShort) {
+			this._resolveTextShort = this.updateResolveTextShort();
+		}
+		return this._resolveTextShort ?? "?";
+	}
+
+	protected updateResolveTextShort(): string {
+		return "?";
+	}
+
+	public get resolveTextLong(): string[] {
+		if (!this._resolveTextLong) {
+			this._resolveTextLong = this.updateResolveTextLong();
+		}
+		return this._resolveTextLong ?? ["?"];
+	}
+
+	protected updateResolveTextLong(): string[] {
+		return ["?"];
 	}
 
 	public contextAtPosition(position: Position): Context | undefined {
@@ -133,6 +161,10 @@ export class Context {
 				debugLogMessage(`${error}`);
 			}
 		}
+	}
+
+
+	public search(search: ResolveSearch, before: Context | undefined = undefined): void {
 	}
 
 

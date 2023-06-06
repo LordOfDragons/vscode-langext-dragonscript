@@ -36,11 +36,14 @@ import { ContextInterface } from "./scriptInterface";
 import { ContextNamespace } from "./namespace";
 import { ResolveNamespace } from "../resolve/namespace";
 import { Helpers } from "../helpers";
+import { ResolveSearch } from "../resolve/search";
+import { ResolveVariable } from "../resolve/variable";
 
 
 export class ContextEnumEntry extends Context{
 	protected _node: EnumerationEntryCstNode;
 	protected _name: Identifier;
+	protected _resolveVariable?: ResolveVariable;
 
 
 	constructor(node: EnumerationEntryCstNode, docTextExt: string | undefined, parent: Context) {
@@ -58,6 +61,13 @@ export class ContextEnumEntry extends Context{
 		}
 	}
 
+	dispose(): void {
+		this._resolveVariable?.dispose();
+		this._resolveVariable = undefined;
+
+		super.dispose()
+	}
+
 
 	public get node(): EnumerationEntryCstNode {
 		return this._node
@@ -66,10 +76,29 @@ export class ContextEnumEntry extends Context{
 	public get name(): Identifier {
 		return this._name
 	}
+	
+	public get resolveVariable(): ResolveVariable | undefined {
+		return this._resolveVariable;
+	}
 
 	public get fullyQualifiedName(): string {
 		let n = this.parent?.fullyQualifiedName || "";
 		return n ? `${n}.${this._name}` : this._name.name;
+	}
+
+	public resolveMembers(state: ResolveState): void {
+		this._resolveVariable?.dispose();
+		this._resolveVariable = undefined;
+
+		this._resolveVariable = new ResolveVariable(this);
+		var container = (this.parent as ContextEnumeration)?.resolveEnumeration;
+		if (container) {
+			if (container.variable(this._name.name)) {
+				state.reportError(this._name.range, `Duplicate variable ${this._name}`);
+			} else {
+				container.addVariable(this._resolveVariable);
+			}
+		}
 	}
 
 	public contextAtPosition(position: Position): Context | undefined {
@@ -167,6 +196,10 @@ export class ContextEnumeration extends Context{
 		let n = this.parent?.fullyQualifiedName || "";
 		return n ? `${n}.${this._name}` : this._name.name;
 	}
+
+	public get simpleName(): string {
+		return this._name.name;
+	}
 	
 	public get resolveEnumeration(): ResolveEnumeration | undefined {
 		return this._resolveEnum;
@@ -199,12 +232,20 @@ export class ContextEnumeration extends Context{
 		}
 	}
 
+	public resolveMembers(state: ResolveState): void {
+		state.withScopeContext(this, () => {
+			for (const each of this._entries) {
+				each.resolveMembers(state);
+			}
+		});
+	}
+
 	public resolveStatements(state: ResolveState): void {
-		state.pushScopeContext(this);
-		for (const each of this._entries) {
-			each.resolveStatements(state);
-		}
-		state.popScopeContext();
+		state.withScopeContext(this, () => {
+			for (const each of this._entries) {
+				each.resolveStatements(state);
+			}
+		});
 	}
 
 	public contextAtPosition(position: Position): Context | undefined {
@@ -227,6 +268,10 @@ export class ContextEnumeration extends Context{
 		let content = [];
 		content.push(`${this._typeModifiers.typestring} **enumeration** ${this.parent!.fullyQualifiedName}.**${this.name}**`);
 		return new HoverInfo(content, this._name.range);
+	}
+
+	public search(search: ResolveSearch, before: Context | undefined = undefined): void {
+		this._resolveEnum?.search(search);
 	}
 
 

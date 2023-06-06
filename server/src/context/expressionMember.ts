@@ -30,13 +30,25 @@ import { ExpressionMemberCstNode, ExpressionObjectCstNode } from "../nodeclasses
 import { ResolveState } from "../resolve/state";
 import { HoverInfo } from "../hoverinfo";
 import { Helpers } from "../helpers";
+import { ResolveType } from "../resolve/type";
+import { ResolveSearch } from "../resolve/search";
+import { ContextFunctionArgument } from "./classFunctionArgument";
+import { ContextVariablesVariable } from "./statementVariables";
+import { ResolveVariable } from "../resolve/variable";
+import { ResolveFunction } from "../resolve/function";
+import { debugLogMessage } from "../server";
 
 
 export class ContextMember extends Context{
 	protected _node: ExpressionObjectCstNode | ExpressionMemberCstNode;
-	protected _memberIndex: integer
+	protected _memberIndex: integer;
 	protected _object?: Context;
 	protected _name?: Identifier;
+	protected _matches?: ResolveSearch;
+	protected _resolveArgument?: ContextFunctionArgument;
+	protected _resolveLocalVariable?: ContextVariablesVariable;
+	protected _resolveVariable?: ResolveVariable;
+	protected _resolveType?: ResolveType;
 
 
 	protected constructor(node: ExpressionObjectCstNode | ExpressionMemberCstNode,
@@ -65,6 +77,11 @@ export class ContextMember extends Context{
 	public dispose(): void {
 		super.dispose();
 		this._object?.dispose();
+		this._matches = undefined;
+		this._resolveArgument = undefined;
+		this._resolveLocalVariable = undefined;
+		this._resolveVariable = undefined;
+		this._resolveType = undefined;
 	}
 
 
@@ -87,6 +104,70 @@ export class ContextMember extends Context{
 	
 	public resolveStatements(state: ResolveState): void {
 		this._object?.resolveStatements(state);
+
+		if (!this._name) {
+			return;
+		}
+
+		let objtype: ResolveType | undefined;
+		
+		if (this._object) {
+			objtype = this._object.expressionType
+			if (!objtype) {
+				// if base object has a problem an error has been already reported so do nothing here
+				return;
+			}
+		}
+
+		this._matches = new ResolveSearch();
+		this._matches.name = this._name.name;
+		this._matches.ignoreFunctions = true;
+
+		if (objtype) {
+			objtype.search(this._matches);
+		} else {
+			state.search(this._matches, this);
+		}
+
+		const matchTypeCount = this._matches.matchTypeCount;
+		
+		if (matchTypeCount == 0) {
+			state.reportError(this._name.range, `Unknown member ${this._name}`);
+
+		} else if (matchTypeCount == 1) {
+			if (this._matches.arguments.length > 0) {
+				this._resolveArgument = this._matches.arguments[0];
+				this.expressionType = this._resolveArgument.typename.resolve as ResolveType;
+
+			} else if (this._matches.localVariables.length > 0) {
+				this._resolveLocalVariable = this._matches.localVariables[0];
+				this.expressionType = this._resolveLocalVariable.parent.typename.resolve as ResolveType;
+
+			} else if (this._matches.variables.length > 0) {
+				this._resolveVariable = this._matches.variables[0];
+				this.expressionType = this._resolveVariable.variableType;
+
+			} else if (this._matches.types.length > 0) {
+				this._resolveType = this._matches.types[0];
+				this.expressionType = this._resolveType;
+			}
+
+		} else {
+			var content = [`Ambigous member ${this._name}. Possible candidates:`];
+			if (this._matches.arguments.length > 0) {
+				content.push(`- Parameter: ${this._matches.arguments[0].resolveTextShort}`)
+			}
+			if (this._matches.localVariables.length > 0) {
+				content.push(`- Variable: ${this._matches.localVariables[0].resolveTextShort}`)
+			}
+			if (this._matches.variables.length > 0) {
+				content.push(`- Variable: ${this._matches.variables[0].resolveTextShort}`)
+			}
+			for (const each of this._matches.types) {
+				content.push(`- Type: ${each.resolveTextShort}`)
+			}
+			state.reportError(this._name.range, content.join('\n'));
+		}
 	}
 
 
@@ -119,9 +200,28 @@ export class ContextMember extends Context{
 			return null;
 		}
 
-		let content = [];
-		if (this._object) {
+		let content: string[] = [];
+
+		if (this._resolveArgument) {
+			content.push(...this._resolveArgument.resolveTextLong);
+			
+		} else if (this._resolveLocalVariable) {
+			content.push(...this._resolveLocalVariable.resolveTextLong);
+			
+		} else if (this._resolveVariable) {
+			content.push(...this._resolveVariable.resolveTextLong);
+			
+		} else if (this._resolveType) {
+			content.push(this._resolveType.displayName);
+		}
+
+		if (this._matches) {
+			content.push(`\n`);
 			content.push(`**member** ${this._name.name}`);
+			content.push(` lv(${this._matches.localVariables.length})`);
+			content.push(` a(${this._matches.arguments.length})`);
+			content.push(` v(${this._matches.variables.length})`);
+			content.push(` t(${this._matches.types.length})`);
 		} else {
 			content.push(`**member** ${this._name.name}`);
 		}

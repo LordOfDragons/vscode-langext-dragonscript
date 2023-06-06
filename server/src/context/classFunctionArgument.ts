@@ -73,6 +73,10 @@ export class ContextFunctionArgument extends Context{
 		return this._name.name;
 	}
 
+	public get simpleName(): string {
+		return this._name.name;
+	}
+
 	public resolveMembers(state: ResolveState): void {
 		if (this._typename) {
 			this._typename.resolveType(state);
@@ -95,16 +99,22 @@ export class ContextFunctionArgument extends Context{
 
 	protected updateHover(position: Position): Hover | null {
 		if (this._name.isPositionInside(position)) {
-			let content = [];
-			content.push(`**parameter** *${this._typename}* **${this._name}**`);
-			return new HoverInfo(content, this._name.range);
+			return new HoverInfo(this.resolveTextLong, this._name.range);
 		}
-
 		if (this._typename.isPositionInside(position)) {
 			return this._typename.hover(position);
 		}
-
 		return null;
+	}
+
+	protected updateResolveTextShort(): string {
+		return `${this._typename} ${this._name}`;
+	}
+
+	protected updateResolveTextLong(): string[] {
+		let content = [];
+		content.push(`**parameter** *${this._typename}* **${this._name}**`);
+		return content;
 	}
 
 	

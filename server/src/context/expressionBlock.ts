@@ -27,6 +27,7 @@ import { RemoteConsole } from "vscode-languageserver";
 import { ExpressionBlockCstNode } from "../nodeclasses/expressionBlock";
 import { ContextFunctionArgument } from "./classFunctionArgument";
 import { ContextStatements } from "./statements";
+import { ResolveSearch } from "../resolve/search";
 
 
 export class ContextBlock extends Context{
@@ -69,6 +70,14 @@ export class ContextBlock extends Context{
 
 	public get statements(): ContextStatements | undefined {
 		return this.statements;
+	}
+
+	public search(search: ResolveSearch, before: Context | undefined = undefined): void {
+		for (const each of this._arguments) {
+			if (search.name == each.name.name) {
+				search.arguments.push(each);
+			}
+		}
 	}
 
 	

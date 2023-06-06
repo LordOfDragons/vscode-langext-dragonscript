@@ -24,6 +24,7 @@
 
 import { ContextNamespace } from '../context/namespace';
 import { ResolveClass } from './class';
+import { ResolveSearch } from './search';
 import { ResolveType } from './type';
 
 
@@ -91,6 +92,19 @@ export class ResolveNamespace extends ResolveType {
 		return !this._classes.has(name);
 	}
 
+	
+
+	public search(search: ResolveSearch): void {
+		super.search(search);
+		
+		let ns = this.namespace(search.name);
+		if (ns) {
+			search.types.push(ns);
+		}
+
+		this.parent?.search(search);
+	}
+
 
 	public static get root(): ResolveNamespace {
 		rootNamespace.validate();
@@ -120,6 +134,10 @@ export class ResolveNamespace extends ResolveType {
 
 	public static get classBlock(): ResolveType {
 		return rootNamespace.class('Block')!;
+	}
+
+	public static get classEnumeration(): ResolveType {
+		return rootNamespace.class('Enumeration')!;
 	}
 
 

@@ -28,6 +28,7 @@ import { ResolveEnumeration } from './enumeration';
 import { ResolveFunctionGroup } from './functionGroup';
 import { ResolveFunction } from './function';
 import { ResolveVariable } from './variable';
+import { ResolveSearch } from './search';
 
 
 /**
@@ -45,6 +46,8 @@ export class ResolveType{
 	protected _valid: boolean = true;
 	protected _fullyQualifiedName?: string
 	protected _displayName?: string
+	protected _resolveTextShort?: string;
+	protected _resolveTextLong?: string[];
 
 
 	constructor (name: string, type: ResolveType.Type) {
@@ -99,6 +102,28 @@ export class ResolveType{
 			this._displayName = this.parent ? this.fullyQualifiedName : "(root)";
 		}
 		return this._displayName;
+	}
+
+	public get resolveTextShort(): string {
+		if (!this._resolveTextShort) {
+			this._resolveTextShort = this.updateResolveTextShort();
+		}
+		return this._resolveTextShort ?? "?";
+	}
+
+	protected updateResolveTextShort(): string {
+		return this._name;
+	}
+
+	public get resolveTextLong(): string[] {
+		if (!this._resolveTextLong) {
+			this._resolveTextLong = this.updateResolveTextLong();
+		}
+		return this._resolveTextLong ?? ["?"];
+	}
+
+	protected updateResolveTextLong(): string[] {
+		return [this.fullyQualifiedName];
 	}
 
 
@@ -247,6 +272,46 @@ export class ResolveType{
 
 	public findType(name: string): ResolveType | undefined {
 		return this.class(name) || this.interface(name) || this.enumeration(name);
+	}
+
+
+	public search(search: ResolveSearch): void {
+		if (search.name == "") {
+			return;
+		}
+
+		if (!search.onlyTypes) {
+			let v = this.variable(search.name);
+			if (v) {
+				search.variables.push(v);
+			}
+
+			if (!search.onlyVariables && !search.ignoreFunctions) {
+				let fg = this.functionGroup(search.name);
+				if (fg) {
+					for (const each of fg.functions) {
+						search.functions.push(each);
+					}
+				}
+			}
+		}
+
+		if (!search.onlyVariables) {
+			let c = this.class(search.name);
+			if (c && !search.types.includes(c)) {
+				search.types.push(c);
+			}
+
+			let i = this.interface(search.name);
+			if (i && !search.types.includes(i)) {
+				search.types.push(i);
+			}
+
+			let e = this.enumeration(search.name);
+			if (e && !search.types.includes(e)) {
+				search.types.push(e);
+			}
+		}
 	}
 
 

@@ -22,7 +22,6 @@
  * SOFTWARE.
  */
 
-import { IToken } from "chevrotain";
 import { Diagnostic, DiagnosticSeverity, Range } from "vscode-languageserver"
 import { ContextFunction } from "../context/classFunction";
 import { Context } from "../context/context";
@@ -30,6 +29,7 @@ import { ContextBlock } from "../context/expressionBlock";
 import { ContextClass } from "../context/scriptClass";
 import { capabilities } from "../server";
 import { ResolveNamespace } from "./namespace";
+import { ResolveSearch } from "./search";
 
 
 export class ResolveState {
@@ -37,7 +37,7 @@ export class ResolveState {
 	protected _uri: string;
 	protected _pins: ResolveNamespace[] = [];
 	protected _scopeContext?: Context;
-	protected _scopeContextStack: (Context | undefined)[] = [];
+	protected _scopeContextStack: Context[] = [];
 
 
 	constructor (diagnostics: Diagnostic[], uri: string) {
@@ -62,7 +62,7 @@ export class ResolveState {
 		this._pins.length = 0;
 	}
 
-	public get scopeContextStack(): (Context | undefined)[] {
+	public get scopeContextStack(): Context[] {
 		return this._scopeContextStack;
 	}
 	
@@ -80,6 +80,15 @@ export class ResolveState {
 		this._scopeContext = this._scopeContextStack[this._scopeContextStack.length - 1];
 	}
 
+	public withScopeContext(context: Context, block: Function) {
+		this.pushScopeContext(context);
+		try {
+			block();
+		} finally {
+			this.popScopeContext();
+		}
+	}
+
 	public get topScopeClass(): ContextClass | undefined {
 		return this.topScope(Context.ContextType.Class) as ContextClass;
 	}
@@ -95,11 +104,37 @@ export class ResolveState {
 	public topScope(type: Context.ContextType): Context | undefined {
 		for (let i=this._scopeContextStack.length - 1; i >= 0; i--) {
 			const c = this._scopeContextStack[i];
-			if (c?.type == type) {
+			if (c.type == type) {
 				return c;
 			}
 		}
 		return undefined;
+	}
+
+
+	public search(search: ResolveSearch, before: Context): void {
+		const onlyTypes = search.onlyTypes;
+
+		for (let i=this._scopeContextStack.length - 1; i >= 0; i--) {
+			let c = this._scopeContextStack[i];
+			c.search(search, before)
+			before = c;
+
+			if (!search.onlyTypes) {
+				switch (c.type) {
+					case Context.ContextType.Class:
+					case Context.ContextType.Interface:
+					case Context.ContextType.Enumeration:
+						search.onlyTypes = true;
+				}
+			}
+		}
+		
+		for (const each of this._pins) {
+			each.search(search);
+		}
+
+		search.onlyTypes = onlyTypes;
 	}
 
 

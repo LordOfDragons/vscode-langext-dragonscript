@@ -69,6 +69,10 @@ export class ContextPinNamespace extends Context{
 		return this._typename.name;
 	}
 
+	public get simpleName(): string {
+		return this._typename.name;
+	}
+
 	public resolveClasses(state: ResolveState): void {
 		this._typename.resolveNamespace(state);
 	}

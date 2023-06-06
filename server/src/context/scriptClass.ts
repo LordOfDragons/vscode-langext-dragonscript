@@ -39,6 +39,7 @@ import { ResolveNamespace } from "../resolve/namespace";
 import { ResolveState } from "../resolve/state";
 import { ResolveType } from "../resolve/type";
 import { Helpers } from "../helpers";
+import { ResolveSearch } from "../resolve/search";
 
 
 export class ContextClass extends Context{
@@ -192,6 +193,10 @@ export class ContextClass extends Context{
 		return n ? `${n}.${this._name}` : this._name.name;
 	}
 
+	public get simpleName(): string {
+		return this._name.name;
+	}
+
 	public resolveClasses(state: ResolveState): void {
 		this._resolveClass?.dispose();
 		this._resolveClass = undefined;
@@ -218,11 +223,11 @@ export class ContextClass extends Context{
 			}
 		}
 		
-		state.pushScopeContext(this);
-		for (const each of this._declarations) {
-			each.resolveClasses(state);
-		}
-		state.popScopeContext();
+		state.withScopeContext(this, () => {
+			for (const each of this._declarations) {
+				each.resolveClasses(state);
+			}
+		});
 	}
 
 	public resolveInheritance(state: ResolveState): void {
@@ -246,27 +251,27 @@ export class ContextClass extends Context{
 			}
 		}
 		
-		state.pushScopeContext(this);
-		for (const each of this._declarations) {
-			each.resolveInheritance(state);
-		}
-		state.popScopeContext();
+		state.withScopeContext(this, () => {
+			for (const each of this._declarations) {
+				each.resolveInheritance(state);
+			}
+		});
 	}
 
 	public resolveMembers(state: ResolveState): void {
-		state.pushScopeContext(this);
-		for (const each of this._declarations) {
-			each.resolveMembers(state);
-		}
-		state.popScopeContext();
+		state.withScopeContext(this, () => {
+			for (const each of this._declarations) {
+				each.resolveMembers(state);
+			}
+		});
 	}
 
 	public resolveStatements(state: ResolveState): void {
-		state.pushScopeContext(this);
-		for (const each of this._declarations) {
-			each.resolveStatements(state);
-		}
-		state.popScopeContext();
+		state.withScopeContext(this, () => {
+			for (const each of this._declarations) {
+				each.resolveStatements(state);
+			}
+		});
 	}
 
 	protected updateHover(position: Position): Hover | null {
@@ -296,6 +301,10 @@ export class ContextClass extends Context{
 		}
 
 		return null;
+	}
+
+	public search(search: ResolveSearch, before: Context | undefined = undefined): void {
+		this._resolveClass?.search(search);
 	}
 
 

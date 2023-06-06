@@ -23,6 +23,9 @@
  */
 
 import { ContextVariable } from '../context/classVariable';
+import { Context } from '../context/context';
+import { ContextEnumEntry, ContextEnumeration } from '../context/scriptEnum';
+import { ResolveNamespace } from './namespace';
 import { ResolveType } from './type';
 
 
@@ -31,15 +34,22 @@ import { ResolveType } from './type';
  */
 export class ResolveVariable{
 	protected _name: string;
-	protected _context?: ContextVariable;
+	protected _context?: ContextVariable | ContextEnumEntry;
 	protected _fullyQualifiedName?: string
 	protected _variableType?: ResolveType;
+	protected _resolveTextShort?: string;
+	protected _resolveTextLong?: string[];
 
 
-	constructor (context: ContextVariable) {
+	constructor (context: ContextVariable | ContextEnumEntry) {
 		this._name = context.name.name;
 		this._context = context;
-		this._variableType = context.typename?.resolve;
+
+		if (context.type == Context.ContextType.Variable) {
+			this._variableType = (context as ContextVariable).typename?.resolve;
+		} else {
+			this._variableType = ResolveNamespace.classEnumeration;
+		}
 	}
 
 	public dispose(): void {
@@ -69,11 +79,43 @@ export class ResolveVariable{
 		return this.fullyQualifiedName;
 	}
 
+	public get resolveTextShort(): string {
+		if (!this._resolveTextShort) {
+			this._resolveTextShort = this.updateResolveTextShort();
+		}
+		return this._resolveTextShort ?? "?";
+	}
+
+	protected updateResolveTextShort(): string {
+		return `${this._variableType?.name} ${this.parent?.name}.${this._name}`;
+	}
+
+	public get resolveTextLong(): string[] {
+		if (!this._resolveTextLong) {
+			this._resolveTextLong = this.updateResolveTextLong();
+		}
+		return this._resolveTextLong ?? ["?"];
+	}
+
+	protected updateResolveTextLong(): string[] {
+		var typeMods = "";
+
+		if (this.context) {
+			if (this.context.type == Context.ContextType.Variable) {
+				typeMods = (this.context as ContextVariable).typeModifiers.typestring;
+			} else {
+				typeMods = "public";
+			}
+		}
+
+		return [`${typeMods} **variable** *${this._variableType?.name}* *${this.parent?.fullyQualifiedName}*.**${this._name}**`];
+	}
+
 
 	public parent?: ResolveType;
 
 
-	public get context(): ContextVariable | undefined {
+	public get context(): ContextVariable | ContextEnumEntry | undefined {
 		return this._context;
 	}
 

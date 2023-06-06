@@ -42,6 +42,7 @@ import { ContextClass } from "./scriptClass";
 import { ContextInterface } from "./scriptInterface";
 import { ContextFunctionCall } from "./expressionCall";
 import { Helpers } from "../helpers";
+import { ResolveSearch } from "../resolve/search";
 
 
 export class ContextFunction extends Context{
@@ -317,6 +318,10 @@ export class ContextFunction extends Context{
 		let n = this.parent?.fullyQualifiedName || "";
 		return n ? `${n}.${this._name}` : this._name.name;
 	}
+
+	public get simpleName(): string {
+		return this._name.name;
+	}
 	
 	public get resolveFunction(): ResolveFunction | undefined {
 		return this._resolveFunction;
@@ -384,44 +389,72 @@ export class ContextFunction extends Context{
 
 	protected updateHover(position: Position): Hover | null {
 		if (this._name.isPositionInside(position)) {
-			let parts = [];
-			parts.push(this._typeModifiers.typestring);
-			switch (this._functionType) {
-				case ContextFunction.Type.Constructor:
-					parts.push(" **constructor** ");
-					break;
-				case ContextFunction.Type.Destructor:
-					parts.push(" **destructor** ");
-					break;
-				case ContextFunction.Type.Operator:
-					parts.push(` **operator** *${this._returnType}* `);
-					break;
-				case ContextFunction.Type.Regular:
-				default:
-					parts.push(` **function** *${this._returnType}* `);
-			}
-			parts.push(`*${this.parent!.fullyQualifiedName}*.**${this._name}**(`);
-	
-			var args = [];
-			for (const each of this._arguments) {
-				args.push(`*${each.typename}* ${each.name}`);
-			}
-			if (args.length > 0) {
-				parts.push(args.join(", "));
-			}
-			parts.push(")");
-	
-			let content = [];
-			content.push(parts.join(""));
-	
-			return new HoverInfo(content, this._name.range);
+			return new HoverInfo(this.resolveTextLong, this._name.range);
 		}
-
 		if (this._returnType?.isPositionInside(position)) {
 			return this._returnType.hover(position);
 		}
-
 		return null;
+	}
+
+	protected updateResolveTextShort(): string {
+		let parts = [];
+		parts.push(this._typeModifiers.typestring);
+		parts.push(`${this._name}(`);
+		
+		var args = [];
+		for (const each of this._arguments) {
+			args.push(`${each.typename} ${each.name}`);
+		}
+		if (args.length > 0) {
+			parts.push(args.join(", "));
+		}
+		parts.push(")");
+
+		return parts.join("");
+	}
+
+	protected updateResolveTextLong(): string[] {
+		let parts = [];
+		parts.push(this._typeModifiers.typestring);
+		switch (this._functionType) {
+			case ContextFunction.Type.Constructor:
+				parts.push(" **constructor** ");
+				break;
+			case ContextFunction.Type.Destructor:
+				parts.push(" **destructor** ");
+				break;
+			case ContextFunction.Type.Operator:
+				parts.push(` **operator** *${this._returnType}* `);
+				break;
+			case ContextFunction.Type.Regular:
+			default:
+				parts.push(` **function** *${this._returnType}* `);
+		}
+		parts.push(`*${this.parent!.fullyQualifiedName}*.**${this._name}**(`);
+
+		var args = [];
+		for (const each of this._arguments) {
+			args.push(`*${each.typename}* ${each.name}`);
+		}
+		if (args.length > 0) {
+			parts.push(args.join(", "));
+		}
+		parts.push(")");
+
+		let content = [];
+		content.push(parts.join(""));
+
+		return content;
+	}
+
+
+	public search(search: ResolveSearch, before: Context | undefined = undefined): void {
+		for (const each of this._arguments) {
+			if (search.name == each.name.name) {
+				search.arguments.push(each);
+			}
+		}
 	}
 
 

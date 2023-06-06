@@ -31,12 +31,16 @@ import { ContextBuilder } from "./contextBuilder";
 
 
 export class ContextVariablesVariable {
+	protected _parent?: ContextVariables;
 	protected _node: StatementVariableCstNode;
 	protected _name: Identifier;
 	protected _value?: Context;
+	protected _resolveTextShort?: string;
+	protected _resolveTextLong?: string[];
 
 
-	constructor(node: StatementVariableCstNode, parent: Context) {
+	constructor(node: StatementVariableCstNode, parent: ContextVariables) {
+		this._parent = parent;
 		this._node = node;
 		this._name = new Identifier(node.children.name[0]);
 		if (node.children.value) {
@@ -46,6 +50,42 @@ export class ContextVariablesVariable {
 
 	public dispose(): void {
 		this._value?.dispose();
+		this._parent = undefined;
+	}
+
+
+	public get parent(): ContextVariables {
+		return this._parent!;
+	}
+
+	public get name(): Identifier {
+		return this._name;
+	}
+
+	public get value(): Context | undefined {
+		return this._value;
+	}
+
+	public get resolveTextShort(): string {
+		if (!this._resolveTextShort) {
+			this._resolveTextShort = this.updateResolveTextShort();
+		}
+		return this._resolveTextShort ?? "?";
+	}
+
+	protected updateResolveTextShort(): string {
+		return `**variable** *${this.parent.typename}* **${this._name}**`;
+	}
+
+	public get resolveTextLong(): string[] {
+		if (!this._resolveTextLong) {
+			this._resolveTextLong = this.updateResolveTextLong();
+		}
+		return this._resolveTextLong ?? ["?"];
+	}
+
+	protected updateResolveTextLong(): string[] {
+		return [`**variable** *${this.parent.typename}* **${this._name}**`];
 	}
 
 

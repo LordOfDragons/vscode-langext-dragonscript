@@ -38,6 +38,7 @@ import { ContextNamespace } from "./namespace";
 import { ResolveNamespace } from "../resolve/namespace";
 import { ResolveType } from "../resolve/type";
 import { Helpers } from "../helpers";
+import { ResolveSearch } from "../resolve/search";
 
 
 export class ContextInterface extends Context{
@@ -137,6 +138,10 @@ export class ContextInterface extends Context{
 	public get fullyQualifiedName(): string {
 		let n = this.parent?.fullyQualifiedName || "";
 		return n ? `${n}.${this._name}` : this._name.name;
+	}
+
+	public get simpleName(): string {
+		return this._name.name;
 	}
 
 	public resolveClasses(state: ResolveState): void {
@@ -242,6 +247,10 @@ export class ContextInterface extends Context{
 		}
 
 		return null;
+	}
+
+	public search(search: ResolveSearch, before: Context | undefined = undefined): void {
+		this._resolveInterface?.search(search);
 	}
 
 

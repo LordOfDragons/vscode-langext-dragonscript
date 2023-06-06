@@ -38,6 +38,8 @@ import { ResolveType } from "../resolve/type";
 import { ContextClass } from "./scriptClass";
 import { ContextInterface } from "./scriptInterface";
 import { Helpers } from "../helpers";
+import { ResolveSearch } from "../resolve/search";
+import { ResolveClass } from "../resolve/class";
 
 
 export class ContextVariable extends Context{
@@ -113,6 +115,10 @@ export class ContextVariable extends Context{
 		let n = this.parent?.fullyQualifiedName || "";
 		return n ? `${n}.${this._name}` : this._name.name;
 	}
+
+	public get simpleName(): string {
+		return this._name.name;
+	}
 	
 	public get resolveVariable(): ResolveVariable | undefined {
 		return this._resolveVariable;
@@ -148,6 +154,17 @@ export class ContextVariable extends Context{
 	}
 
 	public resolveStatements(state: ResolveState): void {
+		if (this.resolveVariable) {
+			let pcr = (this.resolveVariable.parent as ResolveClass)?.context?.extends?.resolve as ResolveType;
+			while (pcr) {
+				if (pcr.variable(this._name.name)) {
+					state.reportWarning(this._name.range, `Shadows variable ${this._name.name} in ${pcr.fullyQualifiedName}`);
+					break;
+				}
+				pcr = (pcr.parent as ResolveClass)?.context?.extends?.resolve as ResolveType;
+			}
+		}
+
 		this._value?.resolveStatements(state);
 	}
 
@@ -167,9 +184,7 @@ export class ContextVariable extends Context{
 
 	protected updateHover(position: Position): Hover | null {
 		if (this._name.isPositionInside(position)) {
-			let content = [];
-			content.push(`${this._typeModifiers.typestring} **variable** *${this._typename}* *${this.parent!.fullyQualifiedName}*.**${this._name}**`);
-			return new HoverInfo(content, this._name.range);
+			return new HoverInfo(this.resolveTextLong, this._name.range);
 		}
 
 		if (!this._firstVariable && this._typename.isPositionInside(position)) {
@@ -177,6 +192,14 @@ export class ContextVariable extends Context{
 		}
 
 		return null;
+	}
+
+	protected updateResolveTextShort(): string {
+		return `${this._typename} ${this.parent!.simpleName}.${this._name}*`;
+	}
+
+	protected updateResolveTextLong(): string[] {
+		return [`${this._typeModifiers.typestring} **variable** *${this._typename}* *${this.parent!.fullyQualifiedName}*.**${this._name}**`];
 	}
 
 
