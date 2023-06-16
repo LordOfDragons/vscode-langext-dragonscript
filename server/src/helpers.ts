@@ -42,6 +42,18 @@ export class Helpers {
 		return Range.create(startLine - 1, startColumn - 1, endLine - 1, endColumn - 1);
 	}
 
+	public static rangeFromPosition(start: Position, end: Position): Range {
+		return Range.create(start.line, start.character, end.line, end.character);
+	}
+
+	public static positionFrom(token: IToken, atLeft: boolean = true) {
+		let line = token.startLine || 1;
+		let column = atLeft ? (token.startColumn || 1) : (token.endColumn || 1) + 1;
+
+		// note: line/column in chevrotain is base-1 and in vs base-0
+		return Position.create(line - 1, column - 1);
+	}
+
 	public static isPositionInsideRange(range: Range | undefined, position: Position): boolean {
 		if (!range) {
 			return false;

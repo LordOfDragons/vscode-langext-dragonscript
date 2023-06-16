@@ -155,6 +155,7 @@ public class OuterClass extends ClassExtendImplement
 			callMe( pMember1.toString().toInt(), ablock )
 			continue
 		end
+		begin = last
 		for i = 5 downto 0
 			callMe( pMember1, ablock )
 			break

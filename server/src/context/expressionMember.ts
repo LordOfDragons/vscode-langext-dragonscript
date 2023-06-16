@@ -33,10 +33,8 @@ import { Helpers } from "../helpers";
 import { ResolveType } from "../resolve/type";
 import { ResolveSearch } from "../resolve/search";
 import { ContextFunctionArgument } from "./classFunctionArgument";
-import { ContextVariablesVariable } from "./statementVariables";
+import { ContextVariable } from "./statementVariable";
 import { ResolveVariable } from "../resolve/variable";
-import { ResolveFunction } from "../resolve/function";
-import { debugLogMessage } from "../server";
 
 
 export class ContextMember extends Context{
@@ -46,7 +44,7 @@ export class ContextMember extends Context{
 	protected _name?: Identifier;
 	protected _matches?: ResolveSearch;
 	protected _resolveArgument?: ContextFunctionArgument;
-	protected _resolveLocalVariable?: ContextVariablesVariable;
+	protected _resolveLocalVariable?: ContextVariable;
 	protected _resolveVariable?: ResolveVariable;
 	protected _resolveType?: ResolveType;
 
@@ -141,7 +139,7 @@ export class ContextMember extends Context{
 
 			} else if (this._matches.localVariables.length > 0) {
 				this._resolveLocalVariable = this._matches.localVariables[0];
-				this.expressionType = this._resolveLocalVariable.parent.typename.resolve as ResolveType;
+				this.expressionType = this._resolveLocalVariable.typename.resolve as ResolveType;
 
 			} else if (this._matches.variables.length > 0) {
 				this._resolveVariable = this._matches.variables[0];
@@ -158,10 +156,10 @@ export class ContextMember extends Context{
 				content.push(`- Parameter: ${this._matches.arguments[0].resolveTextShort}`)
 			}
 			if (this._matches.localVariables.length > 0) {
-				content.push(`- Variable: ${this._matches.localVariables[0].resolveTextShort}`)
+				content.push(`- Local Variable: ${this._matches.localVariables[0].resolveTextShort}`)
 			}
 			if (this._matches.variables.length > 0) {
-				content.push(`- Variable: ${this._matches.variables[0].resolveTextShort}`)
+				content.push(`- Class Variable: ${this._matches.variables[0].resolveTextShort}`)
 			}
 			for (const each of this._matches.types) {
 				content.push(`- Type: ${each.resolveTextShort}`)

@@ -24,7 +24,7 @@
 
 import { Diagnostic, DiagnosticSeverity, DocumentSymbol, Hover, Position, Range, RemoteConsole } from "vscode-languageserver";
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
-import { capabilities, debugLogMessage } from "../server";
+import { capabilities } from "../server";
 import { ResolveState } from "../resolve/state";
 import { Helpers } from "../helpers";
 import { ResolveType } from "../resolve/type";
@@ -146,11 +146,10 @@ export class Context {
 
 
 	protected ignoreException(code: () => void) {
-		//code();
-
 		try {
 			code();
 		} catch (error) {
+			/*
 			if (error instanceof Error) {
 				let err = error as Error;
 				debugLogMessage(err.name);
@@ -160,6 +159,7 @@ export class Context {
 			} else {
 				debugLogMessage(`${error}`);
 			}
+			*/
 		}
 	}
 
@@ -277,11 +277,23 @@ export namespace Context {
 		Native
 	}
 
+	/** Acces level. */
+	export enum AccessLevel {
+		Public,
+		Protected,
+		Private
+	}
+
 
 	/** Type modifier set. */
 	export class TypeModifierSet extends Set<Context.TypeModifier> {
+
 		protected _canonical?: Context.TypeModifier[];
 		protected _typestring?: string;
+		protected _accessLevel: AccessLevel = AccessLevel.Public;
+		protected _abstract: boolean = false;
+		protected _fixed: boolean = false;
+		protected _static: boolean = false;
 
 		constructor(node?: TypeModifiersCstNode) {
 			super();
@@ -293,20 +305,69 @@ export namespace Context {
 			for (const each of node.children.typeModifier) {
 				if (each.children.public) {
 					this.add(Context.TypeModifier.Public);
+					this._accessLevel = AccessLevel.Public;
+
 				} else if (each.children.protected) {
 					this.add(Context.TypeModifier.Protected);
+					this._accessLevel = AccessLevel.Protected;
+
 				} else if (each.children.private) {
 					this.add(Context.TypeModifier.Private);
+					this._accessLevel = AccessLevel.Private;
+
 				} else if (each.children.abstract) {
 					this.add(Context.TypeModifier.Abstract);
+					this._abstract = true;
+
 				} else if (each.children.fixed) {
 					this.add(Context.TypeModifier.Fixed);
+					this._fixed = true;
+
 				} else if (each.children.static) {
 					this.add(Context.TypeModifier.Static);
+					this._static = true;
+
 				} else if (each.children.native) {
 					this.add(Context.TypeModifier.Native);
 				}
 			}
+		}
+
+
+		public get accessLevel(): AccessLevel {
+			return this._accessLevel;
+		}
+
+		public get isPublic(): boolean {
+			return this._accessLevel == AccessLevel.Public;
+		}
+
+		public get isProtected(): boolean {
+			return this._accessLevel == AccessLevel.Protected;
+		}
+
+		public get isPrivate(): boolean {
+			return this._accessLevel == AccessLevel.Private;
+		}
+
+		public get isPublicOrProtected(): boolean {
+			return this._accessLevel >= AccessLevel.Protected;
+		}
+
+		public get isProtectedOrPrivate(): boolean {
+			return this._accessLevel <= AccessLevel.Protected;
+		}
+
+		public get isAbstract(): boolean {
+			return this._abstract;
+		}
+
+		public get isFixed(): boolean {
+			return this._fixed;
+		}
+
+		public get isStatic(): boolean {
+			return this._static;
 		}
 
 

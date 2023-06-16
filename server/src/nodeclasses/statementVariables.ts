@@ -1,4 +1,5 @@
 import { CstNode, IToken } from "chevrotain";
+import { EndOfCommandCstNode } from "./endOfCommand";
 import { ExpressionCstNode } from "./expression";
 import { FullyQualifiedClassNameCstNode } from "./fullyQualifiedClassName";
 
@@ -10,7 +11,9 @@ export interface StatementVariablesCstNode extends CstNode {
 
 export type StatementVariablesCstChildren = {
 	type: FullyQualifiedClassNameCstNode[];
+	comma?: IToken[];
 	statementVariable?: StatementVariableCstNode[];
+	endOfCommand: EndOfCommandCstNode[];
 };
 
 

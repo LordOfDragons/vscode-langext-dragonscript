@@ -24,14 +24,14 @@
 
 import { integer } from "vscode-languageserver";
 import { ContextFunctionArgument } from "../context/classFunctionArgument";
-import { ContextVariablesVariable } from "../context/statementVariables";
+import { ContextVariable } from "../context/statementVariable";
 import { ResolveFunction } from "./function";
 import { ResolveType } from "./type";
 import { ResolveVariable } from "./variable";
 
 export class ResolveSearch {
 	protected _arguments: ContextFunctionArgument[] = [];
-	protected _localVariables: ContextVariablesVariable[] = [];
+	protected _localVariables: ContextVariable[] = [];
 	protected _variables: ResolveVariable[] = [];
 	protected _functions: ResolveFunction[] = [];
 	protected _types: ResolveType[] = [];
@@ -52,6 +52,9 @@ export class ResolveSearch {
 
 	/** Ignore functions. */
 	public ignoreFunctions: boolean = false;
+
+	/** Find all matching types instead of the first one. */
+	public allMatchingTypes: boolean = false;
 	
 
 
@@ -65,7 +68,7 @@ export class ResolveSearch {
 	}
 
 	/** Local variables. */
-	public get localVariables(): ContextVariablesVariable[] {
+	public get localVariables(): ContextVariable[] {
 		return this._localVariables;
 	}
 
@@ -84,6 +87,19 @@ export class ResolveSearch {
 
 	public get types(): ResolveType[] {
 		return this._types;
+	}
+
+	public addType(type: ResolveType): void {
+		if (this.allMatchingTypes) {
+			if (!this._types.includes(type)) {
+				this._types.push(type);
+			}
+			
+		} else {
+			if (this._types.length == 0) {
+				this._types.push(type);
+			}
+		}
 	}
 
 

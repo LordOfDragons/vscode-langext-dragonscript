@@ -46,16 +46,15 @@ export class ContextStatements extends Context{
 			var rangeBegin: Position | undefined;
 			var rangeEnd: Position | undefined;
 
-			for (const each of stas) {
-				let statement = ContextBuilder.createStatement(each, this);
-				if (statement) {
-					if (statement.range) {
+			for (const staNode of stas) {
+				for (const staCtx of ContextBuilder.createStatement(staNode, this)) {
+					if (staCtx.range) {
 						if (!rangeBegin) {
-							rangeBegin = statement.range.start;
+							rangeBegin = staCtx.range.start;
 						}
-						rangeEnd = statement.range.end;
+						rangeEnd = staCtx.range.end;
 					}
-					this._statements.push(statement);
+					this._statements.push(staCtx);
 				}
 			}
 

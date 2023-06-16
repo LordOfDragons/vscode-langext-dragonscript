@@ -34,7 +34,7 @@ import { ContextTry } from "./statementTry";
 import { ContextThrow } from "./statementThrow";
 import { ContextBreak } from "./statementBreak";
 import { ContextContinue } from "./statementContinue";
-import { ContextVariables } from "./statementVariables";
+import { ContextVariable } from "./statementVariable";
 import { ExpressionMultiplyCstNode } from "../nodeclasses/expressionMultiply";
 import { ExpressionAdditionCstNode } from "../nodeclasses/expressionAddition";
 import { ExpressionBitOperationCstNode } from "../nodeclasses/expressionBitOperation";
@@ -52,39 +52,69 @@ import { ContextMember } from "./expressionMember";
 import { ContextConstant } from "./expressionConstant";
 import { ContextBlock } from "./expressionBlock";
 import { integer } from "vscode-languageserver";
-import { assertWarn } from "../server";
 
 
 /** Context builder. */
 export class ContextBuilder{
 	/** Create statement from node. */
-	public static createStatement(node: StatementCstNode, parent: Context): Context | undefined {
+	public static createStatement(node: StatementCstNode, parent: Context): Context[] {
 		let c = node.children;
+
 		if (c.statementIf) {
-			return new ContextIf(c.statementIf[0], parent);
+			return [new ContextIf(c.statementIf[0], parent)];
+
 		} else if (c.statementReturn) {
-			return new ContextReturn(c.statementReturn[0], parent);
+			return [new ContextReturn(c.statementReturn[0], parent)];
+
 		} else if (c.statementSelect) {
-			return new ContextSelect(c.statementSelect[0], parent);
+			return [new ContextSelect(c.statementSelect[0], parent)];
+
 		} else if (c.statementWhile) {
-			return new ContextWhile(c.statementWhile[0], parent);
+			return [new ContextWhile(c.statementWhile[0], parent)];
+
 		} else if (c.statementFor) {
-			return new ContextFor(c.statementFor[0], parent);
+			return [new ContextFor(c.statementFor[0], parent)];
+
 		} else if (c.statementBreak) {
-			return new ContextBreak(c.statementBreak[0], parent);
+			return [new ContextBreak(c.statementBreak[0], parent)];
+
 		} else if (c.statementContinue) {
-			return new ContextContinue(c.statementContinue[0], parent);
+			return [new ContextContinue(c.statementContinue[0], parent)];
+
 		} else if (c.statementThrow) {
-			return new ContextThrow(c.statementThrow[0], parent);
+			return [new ContextThrow(c.statementThrow[0], parent)];
+
 		} else if (c.statementTry) {
-			return new ContextTry(c.statementTry[0], parent);
+			return [new ContextTry(c.statementTry[0], parent)];
+
 		} else if (c.statementVariables) {
-			return new ContextVariables(c.statementVariables[0], parent);
+			let vdecls = c.statementVariables[0].children;
+			if (vdecls.statementVariable) {
+				let typeNode = vdecls.type[0];
+				let count = vdecls.statementVariable.length;
+				let commaCount = vdecls.comma?.length || 0;
+				let declEnd = vdecls.endOfCommand[0].children;
+				let tokEnd = (declEnd.newline || declEnd.commandSeparator)![0];
+				var firstVar: ContextVariable | undefined = undefined;
+				let stalist: Context[] = [];
+
+				for (let i = 0; i < count; i++) {
+					const v: ContextVariable = new ContextVariable(vdecls.statementVariable[i], typeNode,
+						firstVar, i < commaCount ? vdecls.comma![i] : tokEnd, parent);
+					stalist.push(v);
+					
+					if (i == 0) {
+						firstVar = v;
+					}
+				}
+
+				return stalist;
+			}
+
 		} else if (c.expression) {
-			return this.createExpression(c.expression[0], parent);
-		} else {
-			return undefined;
+			return [this.createExpression(c.expression[0], parent)];
 		}
+		return [];
 	}
 
 	/** Create expression from node. */

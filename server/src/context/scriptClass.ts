@@ -30,7 +30,7 @@ import { TypeName } from "./typename"
 import { ContextInterface } from "./scriptInterface";
 import { ContextEnumeration } from "./scriptEnum";
 import { ContextFunction } from "./classFunction";
-import { ContextVariable } from "./classVariable";
+import { ContextClassVariable } from "./classVariable";
 import { Identifier } from "./identifier";
 import { HoverInfo } from "../hoverinfo";
 import { ResolveClass } from "../resolve/class";
@@ -106,10 +106,10 @@ export class ContextClass extends Context{
 						let commaCount = vdecls.comma?.length || 0;
 						let declEnd = vdecls.endOfCommand[0].children;
 						let tokEnd = (declEnd.newline || declEnd.commandSeparator)![0];
-						var firstVar: ContextVariable | undefined = undefined;
+						var firstVar: ContextClassVariable | undefined = undefined;
 
 						for (let i = 0; i < count; i++) {
-							const v: ContextVariable = new ContextVariable(vdecls.classVariable[i], typemod, typeNode,
+							const v: ContextClassVariable = new ContextClassVariable(vdecls.classVariable[i], typemod, typeNode,
 								firstVar, i < commaCount ? vdecls.comma![i] : tokEnd, this);
 							this._declarations.push(v);
 							

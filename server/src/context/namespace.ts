@@ -24,12 +24,13 @@
 
 import { Context } from "./context";
 import { OpenNamespaceCstNode } from "../nodeclasses/openNamespace";
-import { Diagnostic, DocumentSymbol, Hover, Position, Range, RemoteConsole, SymbolKind } from "vscode-languageserver";
+import { DocumentSymbol, Hover, Position, RemoteConsole, SymbolKind } from "vscode-languageserver";
 import { TypeName } from "./typename";
 import { HoverInfo } from "../hoverinfo";
 import { ResolveNamespace } from "../resolve/namespace";
 import { ResolveState } from "../resolve/state";
 import { Helpers } from "../helpers";
+import { ResolveSearch } from "../resolve/search";
 
 
 export class ContextNamespace extends Context{
@@ -146,8 +147,6 @@ export class ContextNamespace extends Context{
 	}
 	
 	public resolveInheritance(state: ResolveState): void {
-		state.clearPins();
-
 		state.withScopeContext(this, () => {
 			for (const each of this._statements) {
 				each.resolveInheritance(state);
@@ -156,8 +155,6 @@ export class ContextNamespace extends Context{
 	}
 	
 	public resolveMembers(state: ResolveState): void {
-		state.clearPins();
-
 		state.withScopeContext(this, () => {
 			for (const each of this._statements) {
 				each.resolveMembers(state);
@@ -166,8 +163,6 @@ export class ContextNamespace extends Context{
 	}
 
 	public resolveStatements(state: ResolveState): void {
-		state.clearPins();
-
 		state.withScopeContext(this, () => {
 			for (const each of this._statements) {
 				each.resolveStatements(state);
@@ -208,6 +203,10 @@ export class ContextNamespace extends Context{
 		}
 
 		return null;
+	}
+
+	public search(search: ResolveSearch, before: Context | undefined = undefined): void {
+		this._resolveNamespace?.search(search);
 	}
 
 

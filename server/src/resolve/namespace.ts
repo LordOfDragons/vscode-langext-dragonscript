@@ -95,11 +95,15 @@ export class ResolveNamespace extends ResolveType {
 	
 
 	public search(search: ResolveSearch): void {
+		if (search.onlyVariables || !search.name) {
+			return;
+		}
+
 		super.search(search);
-		
+
 		let ns = this.namespace(search.name);
 		if (ns) {
-			search.types.push(ns);
+			search.addType(ns);
 		}
 
 		this.parent?.search(search);

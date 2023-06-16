@@ -23,42 +23,34 @@
  */
 
 import { Context } from "./context";
-import { ClassVariableCstNode } from "../nodeclasses/declareClass";
-import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
-import { FullyQualifiedClassNameCstNode } from "../nodeclasses/fullyQualifiedClassName";
-import { DocumentSymbol, Hover, Position, RemoteConsole, SymbolKind } from "vscode-languageserver";
+import { Hover, Position, RemoteConsole } from "vscode-languageserver";
+import { StatementVariableCstNode } from "../nodeclasses/statementVariables";
 import { TypeName } from "./typename";
-import { ContextBuilder } from "./contextBuilder";
 import { Identifier } from "./identifier";
+import { ContextBuilder } from "./contextBuilder";
+import { ResolveSearch } from "../resolve/search";
+import { ResolveState } from "../resolve/state";
+import { Helpers } from "../helpers";
 import { IToken } from "chevrotain";
 import { HoverInfo } from "../hoverinfo";
-import { ResolveState } from "../resolve/state";
-import { ResolveVariable } from "../resolve/variable";
-import { ResolveType } from "../resolve/type";
-import { ContextClass } from "./scriptClass";
-import { ContextInterface } from "./scriptInterface";
-import { Helpers } from "../helpers";
-import { ResolveClass } from "../resolve/class";
+import { FullyQualifiedClassNameCstNode } from "../nodeclasses/fullyQualifiedClassName";
 
 
-export class ContextClassVariable extends Context{
-	protected _node: ClassVariableCstNode;
-	protected _typeModifiers: Context.TypeModifierSet;
+export class ContextVariable extends Context {
+	protected _node: StatementVariableCstNode;
 	protected _name: Identifier;
 	protected _typename: TypeName;
 	protected _value?: Context;
-	protected _firstVariable?: ContextClassVariable;
-	protected _resolveVariable?: ResolveVariable;
+	protected _firstVariable?: ContextVariable;
 
 
-	constructor(node: ClassVariableCstNode,
-			    typemodNode: TypeModifiersCstNode | undefined,
+	constructor(node: StatementVariableCstNode,
 				typeNode: FullyQualifiedClassNameCstNode,
-				firstVar: ContextClassVariable | undefined,
+				firstVar: ContextVariable | undefined,
 				endToken: IToken, parent: Context) {
 		super(Context.ContextType.Variable, parent);
 		this._node = node;
-		this._typeModifiers = new Context.TypeModifierSet(typemodNode);
+		
 		this._name = new Identifier(node.children.name[0]);
 		this._typename = new TypeName(typeNode);
 		this._firstVariable = firstVar;
@@ -70,15 +62,11 @@ export class ContextClassVariable extends Context{
 		let tokBegin = firstVar ? this._name.token : typeNode.children.identifier[0];
 		if (tokBegin) {
 			this.range = Helpers.rangeFrom(tokBegin, endToken, true, false);
-			this.documentSymbol = DocumentSymbol.create(this._name.name, this._typename.name,
-				this._typeModifiers.has(Context.TypeModifier.Fixed) ? SymbolKind.Constant : SymbolKind.Variable,
-				this.range, Helpers.rangeFrom(tokBegin, endToken, true, true));
 		}
 	}
 
-	dispose(): void {
-		this._resolveVariable?.dispose();
-		this._resolveVariable = undefined;
+	public dispose(): void {
+		super.dispose();
 
 		super.dispose()
 		this._typename.dispose();
@@ -86,12 +74,8 @@ export class ContextClassVariable extends Context{
 	}
 
 
-	public get node(): ClassVariableCstNode {
+	public get node(): StatementVariableCstNode {
 		return this._node;
-	}
-
-	public get typeModifiers(): Context.TypeModifierSet {
-		return this._typeModifiers;
 	}
 
 	public get name(): Identifier {
@@ -106,22 +90,14 @@ export class ContextClassVariable extends Context{
 		return this._value;
 	}
 
-	public get firstVariable(): ContextClassVariable | undefined {
+	public get firstVariable(): ContextVariable | undefined {
 		return this._firstVariable;
-	}
-
-	public get fullyQualifiedName(): string {
-		let n = this.parent?.fullyQualifiedName || "";
-		return n ? `${n}.${this._name}` : this._name.name;
 	}
 
 	public get simpleName(): string {
 		return this._name.name;
 	}
-	
-	public get resolveVariable(): ResolveVariable | undefined {
-		return this._resolveVariable;
-	}
+
 
 	public resolveMembers(state: ResolveState): void {
 		if (this._firstVariable) {
@@ -129,45 +105,13 @@ export class ContextClassVariable extends Context{
 		} else {
 			this._typename.resolveType(state);
 		}
-		
-		this._resolveVariable?.dispose();
-		this._resolveVariable = undefined;
 
-		this._resolveVariable = new ResolveVariable(this);
-		if (this.parent) {
-			var container: ResolveType | undefined;
-			if (this.parent.type == Context.ContextType.Class) {
-				container = (this.parent as ContextClass).resolveClass;
-			} else if (this.parent.type == Context.ContextType.Interface) {
-				container = (this.parent as ContextInterface).resolveInterface;
-			}
-
-			if (container) {
-				if (container.variable(this._name.name)) {
-					state.reportError(this._name.range, `Duplicate variable ${this._name}`);
-				} else {
-					container.addVariable(this._resolveVariable);
-				}
-			}
-		}
+		// TODO check for shadowing
 	}
 
 	public resolveStatements(state: ResolveState): void {
-		if (this.resolveVariable) {
-			const parentClass = this.resolveVariable.parent as ResolveClass;
-			let pcr = parentClass?.context?.extends?.resolve as ResolveType;
-			while (pcr) {
-				const v = pcr.variable(this._name.name);
-				if (v) {
-					if (v.canAccess(parentClass)) {
-						state.reportWarning(this._name.range, `Shadows variable ${this._name.name} in ${pcr.fullyQualifiedName}`);
-					}
-					break;
-				}
-				pcr = (pcr.parent as ResolveClass)?.context?.extends?.resolve as ResolveType;
-			}
-		}
-
+		// pushScopeContext on purpose to keep context on stack until parent scope is removed
+		state.pushScopeContext(this);
 		this._value?.resolveStatements(state);
 	}
 
@@ -198,16 +142,26 @@ export class ContextClassVariable extends Context{
 	}
 
 	protected updateResolveTextShort(): string {
-		return `${this._typename} ${this.parent!.simpleName}.${this._name}*`;
+		return `${this._typename} ${this._name}*`;
 	}
 
 	protected updateResolveTextLong(): string[] {
-		return [`${this._typeModifiers.typestring} **variable** *${this._typename}* *${this.parent!.fullyQualifiedName}*.**${this._name}**`];
+		return [`**local variable** *${this._typename}* **${this._name}**`];
+	}
+
+	public search(search: ResolveSearch, before: Context | undefined = undefined): void {
+		if (search.onlyTypes) {
+			return;
+		}
+
+		if (this._name.name == search.name) {
+			search.localVariables.push(this);
+		}
 	}
 
 
 	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
-		console.log(`${prefix}Variable ${this._typeModifiers} ${this._typename.name} ${this._name}`);
+		console.log(`${prefix}Local Variable ${this._typename.name} ${this._name}`);
 		this._value?.log(console, `${prefixLines}- Value: `, `${prefixLines}  `);
 	}
 }

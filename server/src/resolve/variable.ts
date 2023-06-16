@@ -22,9 +22,10 @@
  * SOFTWARE.
  */
 
-import { ContextVariable } from '../context/classVariable';
+import { ContextClassVariable } from '../context/classVariable';
 import { Context } from '../context/context';
 import { ContextEnumEntry, ContextEnumeration } from '../context/scriptEnum';
+import { ResolveClass } from './class';
 import { ResolveNamespace } from './namespace';
 import { ResolveType } from './type';
 
@@ -34,19 +35,19 @@ import { ResolveType } from './type';
  */
 export class ResolveVariable{
 	protected _name: string;
-	protected _context?: ContextVariable | ContextEnumEntry;
+	protected _context?: ContextClassVariable | ContextEnumEntry;
 	protected _fullyQualifiedName?: string
 	protected _variableType?: ResolveType;
 	protected _resolveTextShort?: string;
 	protected _resolveTextLong?: string[];
 
 
-	constructor (context: ContextVariable | ContextEnumEntry) {
+	constructor (context: ContextClassVariable | ContextEnumEntry) {
 		this._name = context.name.name;
 		this._context = context;
 
 		if (context.type == Context.ContextType.Variable) {
-			this._variableType = (context as ContextVariable).typename?.resolve;
+			this._variableType = (context as ContextClassVariable).typename?.resolve;
 		} else {
 			this._variableType = ResolveNamespace.classEnumeration;
 		}
@@ -102,7 +103,7 @@ export class ResolveVariable{
 
 		if (this.context) {
 			if (this.context.type == Context.ContextType.Variable) {
-				typeMods = (this.context as ContextVariable).typeModifiers.typestring;
+				typeMods = (this.context as ContextClassVariable).typeModifiers.typestring;
 			} else {
 				typeMods = "public";
 			}
@@ -115,7 +116,7 @@ export class ResolveVariable{
 	public parent?: ResolveType;
 
 
-	public get context(): ContextVariable | ContextEnumEntry | undefined {
+	public get context(): ContextClassVariable | ContextEnumEntry | undefined {
 		return this._context;
 	}
 
@@ -126,5 +127,30 @@ export class ResolveVariable{
 	public removeFromParent(): void {
 		this.parent?.removeVariable(this);
 		this.parent = undefined;
+	}
+
+	/** Determine if class 'cls' can access variable. */
+	public canAccess(cls: ResolveClass) {
+		const pc = this.parent as ResolveClass;
+		if (!pc || !this.context) {
+			return false;
+		}
+		if (cls == pc) {
+			return true;
+		}
+
+		if (this.context.type == Context.ContextType.Variable) {
+			const v = this.context as ContextClassVariable;
+			
+			if (pc.isSuperclass(cls)) {
+				return v.typeModifiers.isProtectedOrPrivate;
+			} else {
+				return v.typeModifiers.isPublic;
+			}
+			
+		} else if (this.context.type == Context.ContextType.EnumerationEntry) {
+			return true;
+		}
+
 	}
 }

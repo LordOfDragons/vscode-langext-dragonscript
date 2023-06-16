@@ -170,11 +170,11 @@ export class ContextInterface extends Context{
 			}
 		}
 		
-		state.pushScopeContext(this);
-		for (const each of this._declarations) {
-			each.resolveClasses(state);
-		}
-		state.popScopeContext();
+		state.withScopeContext(this, () => {
+			for (const each of this._declarations) {
+				each.resolveClasses(state);
+			}
+		});
 	}
 
 	public resolveInheritance(state: ResolveState): void {
@@ -188,27 +188,27 @@ export class ContextInterface extends Context{
 			}
 		}
 		
-		state.pushScopeContext(this);
-		for (const each of this._declarations) {
-			each.resolveInheritance(state);
-		}
-		state.popScopeContext();
+		state.withScopeContext(this, () => {
+			for (const each of this._declarations) {
+				each.resolveInheritance(state);
+			}
+		});
 	}
 
 	public resolveMembers(state: ResolveState): void {
-		state.pushScopeContext(this);
-		for (const each of this._declarations) {
-			each.resolveMembers(state);
-		}
-		state.popScopeContext();
+		state.withScopeContext(this, () => {
+			for (const each of this._declarations) {
+				each.resolveMembers(state);
+			}
+		});
 	}
 
 	public resolveStatements(state: ResolveState): void {
-		state.pushScopeContext(this);
-		for (const each of this._declarations) {
-			each.resolveStatements(state);
-		}
-		state.popScopeContext();
+		state.withScopeContext(this, () => {
+			for (const each of this._declarations) {
+				each.resolveStatements(state);
+			}
+		});
 	}
 
 	public contextAtPosition(position: Position): Context | undefined {

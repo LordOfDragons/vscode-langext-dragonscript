@@ -22,9 +22,12 @@
  * SOFTWARE.
  */
 
+import { ContextClassVariable } from '../context/classVariable';
+import { Context } from '../context/context';
 import { ContextClass } from '../context/scriptClass';
 import { ResolveSearch } from './search';
 import { ResolveType } from './type'
+import { ResolveVariable } from './variable';
 
 
 export class ResolveClass extends ResolveType {
@@ -65,6 +68,21 @@ export class ResolveClass extends ResolveType {
 				(each.resolve as ResolveType)?.search(search);
 			}
 		}
+	}
+
+	public isSuperclass(cls: ResolveClass) {
+		var c = cls.parent;
+		while (c) {
+			if (c == this) {
+				return true;
+			}
+			c = c.parent;
+		}
+		return false;
+	}
+
+	public isSubclass(cls: ResolveClass) {
+		return cls.isSuperclass(this);
 	}
 
 	protected onInvalidate(): void {

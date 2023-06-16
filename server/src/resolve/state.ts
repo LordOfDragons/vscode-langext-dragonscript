@@ -80,12 +80,22 @@ export class ResolveState {
 		this._scopeContext = this._scopeContextStack[this._scopeContextStack.length - 1];
 	}
 
+	public popScopeContextUntil(context: Context): void {
+		while (this._scopeContext) {
+			const found = this._scopeContext == context;
+			this.popScopeContext();
+			if (found) {
+				break;
+			}
+		}
+	}
+
 	public withScopeContext(context: Context, block: Function) {
 		this.pushScopeContext(context);
 		try {
 			block();
 		} finally {
-			this.popScopeContext();
+			this.popScopeContextUntil(context);
 		}
 	}
 

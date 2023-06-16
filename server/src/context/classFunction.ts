@@ -332,11 +332,11 @@ export class ContextFunction extends Context{
 			this._returnType.resolveType(state);
 		}
 		
-		state.pushScopeContext(this);
-		for (const each of this._arguments) {
-			each.resolveMembers(state);
-		}
-		state.popScopeContext();
+		state.withScopeContext(this, () => {
+			for (const each of this._arguments) {
+				each.resolveMembers(state);
+			}
+		});
 		
 		this._resolveFunction?.dispose();
 		this._resolveFunction = undefined;
@@ -361,13 +361,13 @@ export class ContextFunction extends Context{
 	}
 	
 	public resolveStatements(state: ResolveState): void {
-		state.pushScopeContext(this);
-		for (const each of this._arguments) {
-			each.resolveStatements(state);
-		}
-		this._superCall?.resolveStatements(state);
-		this._statements?.resolveStatements(state);
-		state.popScopeContext();
+		state.withScopeContext(this, () => {
+			for (const each of this._arguments) {
+				each.resolveStatements(state);
+			}
+			this._superCall?.resolveStatements(state);
+			this._statements?.resolveStatements(state);
+		});
 	}
 
 	public contextAtPosition(position: Position): Context | undefined {

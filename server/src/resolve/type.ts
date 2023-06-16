@@ -29,6 +29,7 @@ import { ResolveFunctionGroup } from './functionGroup';
 import { ResolveFunction } from './function';
 import { ResolveVariable } from './variable';
 import { ResolveSearch } from './search';
+import { Context } from '../context/context';
 
 
 /**
@@ -276,7 +277,7 @@ export class ResolveType{
 
 
 	public search(search: ResolveSearch): void {
-		if (search.name == "") {
+		if (!search.name) {
 			return;
 		}
 
@@ -297,19 +298,25 @@ export class ResolveType{
 		}
 
 		if (!search.onlyVariables) {
+			if (this._name == search.name) {
+				search.addType(this);
+			}
+		}
+
+		if (!search.onlyVariables) {
 			let c = this.class(search.name);
-			if (c && !search.types.includes(c)) {
-				search.types.push(c);
+			if (c) {
+				search.addType(c);
 			}
 
 			let i = this.interface(search.name);
-			if (i && !search.types.includes(i)) {
-				search.types.push(i);
+			if (i) {
+				search.addType(i);
 			}
 
 			let e = this.enumeration(search.name);
-			if (e && !search.types.includes(e)) {
-				search.types.push(e);
+			if (e) {
+				search.addType(e);
 			}
 		}
 	}
