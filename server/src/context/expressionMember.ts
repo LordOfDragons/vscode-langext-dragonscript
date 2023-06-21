@@ -132,7 +132,7 @@ export class ContextMember extends Context{
 		if (matchTypeCount == 0) {
 			state.reportError(this._name.range, `Unknown member ${this._name}`);
 
-		} else if (matchTypeCount == 1) {
+		} else {
 			if (this._matches.arguments.length > 0) {
 				this._resolveArgument = this._matches.arguments[0];
 				this.expressionType = this._resolveArgument.typename.resolve as ResolveType;
@@ -150,21 +150,24 @@ export class ContextMember extends Context{
 				this.expressionType = this._resolveType;
 			}
 
-		} else {
-			var content = [`Ambigous member ${this._name}. Possible candidates:`];
-			if (this._matches.arguments.length > 0) {
-				content.push(`- Parameter: ${this._matches.arguments[0].resolveTextShort}`)
+			/*
+			if (matchTypeCount > 1) {
+				var content = [`Ambigous member ${this._name}. Possible candidates:`];
+				if (this._matches.arguments.length > 0) {
+					content.push(`- Parameter: ${this._matches.arguments[0].resolveTextShort}`)
+				}
+				if (this._matches.localVariables.length > 0) {
+					content.push(`- Local Variable: ${this._matches.localVariables[0].resolveTextShort}`)
+				}
+				if (this._matches.variables.length > 0) {
+					content.push(`- Class Variable: ${this._matches.variables[0].resolveTextShort}`)
+				}
+				for (const each of this._matches.types) {
+					content.push(`- Type: ${each.resolveTextShort}`)
+				}
+				state.reportWarning(this._name.range, content.join('\n'));
 			}
-			if (this._matches.localVariables.length > 0) {
-				content.push(`- Local Variable: ${this._matches.localVariables[0].resolveTextShort}`)
-			}
-			if (this._matches.variables.length > 0) {
-				content.push(`- Class Variable: ${this._matches.variables[0].resolveTextShort}`)
-			}
-			for (const each of this._matches.types) {
-				content.push(`- Type: ${each.resolveTextShort}`)
-			}
-			state.reportError(this._name.range, content.join('\n'));
+			*/
 		}
 	}
 

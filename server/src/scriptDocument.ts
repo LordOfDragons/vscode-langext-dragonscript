@@ -25,6 +25,7 @@
 import { Diagnostic, RemoteConsole } from "vscode-languageserver";
 import { ContextScript } from "./context/script";
 import { ScriptCstNode } from "./nodeclasses/script";
+import { ReportConfig } from "./reportConfig";
 import { ResolveState } from "./resolve/state";
 import { debugLogMessage } from "./server";
 import { DSSettings } from "./settings";
@@ -36,6 +37,8 @@ export class ScriptDocument {
 	protected _settings: DSSettings;
 	protected _node?: ScriptCstNode;
 	protected _context?: ContextScript;
+
+	public requiresAnotherTurn: boolean = false;
 
 
 	constructor(uri: string, console: RemoteConsole, settings: DSSettings) {
@@ -91,44 +94,45 @@ export class ScriptDocument {
 	}
 
 
-	public async resolveClasses(): Promise<Diagnostic[]> {
+	public async resolveClasses(reportConfig: ReportConfig): Promise<Diagnostic[]> {
 		let diagnostics: Diagnostic[] = [];
 		
 		if (this.context) {
-			let state = new ResolveState(diagnostics, this.uri);
+			let state = new ResolveState(diagnostics, this.uri, reportConfig);
 			this.context.resolveClasses(state);
 		}
 
 		return diagnostics;
 	}
 
-	public async resolveInheritance(): Promise<Diagnostic[]> {
+	public async resolveInheritance(reportConfig: ReportConfig): Promise<Diagnostic[]> {
 		let diagnostics: Diagnostic[] = [];
 		
 		if (this.context) {
-			let state = new ResolveState(diagnostics, this.uri);
+			let state = new ResolveState(diagnostics, this.uri, reportConfig);
 			this.context.resolveInheritance(state);
+			this.requiresAnotherTurn = state.requiresAnotherTurn;
 		}
 
 		return diagnostics;
 	}
 
-	public async resolveMembers(): Promise<Diagnostic[]> {
+	public async resolveMembers(reportConfig: ReportConfig): Promise<Diagnostic[]> {
 		let diagnostics: Diagnostic[] = [];
 		
 		if (this.context) {
-			let state = new ResolveState(diagnostics, this.uri);
+			let state = new ResolveState(diagnostics, this.uri, reportConfig);
 			this.context.resolveMembers(state);
 		}
 
 		return diagnostics;
 	}
 
-	public async resolveStatements(): Promise<Diagnostic[]> {
+	public async resolveStatements(reportConfig: ReportConfig): Promise<Diagnostic[]> {
 		let diagnostics: Diagnostic[] = [];
 		
 		if (this.context) {
-			let state = new ResolveState(diagnostics, this.uri);
+			let state = new ResolveState(diagnostics, this.uri, reportConfig);
 			this.context.resolveStatements(state);
 		}
 

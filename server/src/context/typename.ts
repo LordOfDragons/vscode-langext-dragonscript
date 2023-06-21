@@ -304,6 +304,10 @@ export class TypeName {
 		// TODO: if variable or function fail
 
 		if (rclass.context) {
+			if (!rclass.context.inheritanceResolved) {
+				state.requiresAnotherTurn = true;
+			}
+
 			const t2 = rclass.context.extends?.resolve;
 			if (t2?.type == ResolveType.Type.Class) {
 				const t3 = this.resolveTypeInClassChain(state, t2 as ResolveClass, name);
@@ -344,6 +348,10 @@ export class TypeName {
 		// TODO: if variable or function fail
 
 		if (iface.context) {
+			if (!iface.context.inheritanceResolved) {
+				state.requiresAnotherTurn = true;
+			}
+
 			for (const each of iface.context.implements) {
 				const t2 = each.resolve;
 				if (t2?.type == ResolveType.Type.Interface) {

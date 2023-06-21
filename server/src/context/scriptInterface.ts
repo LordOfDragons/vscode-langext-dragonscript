@@ -48,6 +48,7 @@ export class ContextInterface extends Context{
 	protected _implements: TypeName[] = [];
 	protected _declarations: Context[] = [];
 	protected _resolveInterface?: ResolveInterface;
+	protected _inheritanceResolved: boolean = false;
 
 
 	constructor(node: DeclareInterfaceCstNode, typemodNode: TypeModifiersCstNode | undefined, parent: Context) {
@@ -144,6 +145,10 @@ export class ContextInterface extends Context{
 		return this._name.name;
 	}
 
+	public get inheritanceResolved(): boolean {
+		return this._inheritanceResolved;
+	}
+
 	public resolveClasses(state: ResolveState): void {
 		this._resolveInterface?.dispose();
 		this._resolveInterface = undefined;
@@ -178,6 +183,8 @@ export class ContextInterface extends Context{
 	}
 
 	public resolveInheritance(state: ResolveState): void {
+		this._inheritanceResolved = true;
+		
 		for (const each of this._implements) {
 			const t = each.resolveType(state);
 			if (t && !(t.type == ResolveType.Type.Interface)) {

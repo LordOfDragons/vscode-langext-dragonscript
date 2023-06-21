@@ -50,6 +50,7 @@ export class ContextClass extends Context{
 	protected _implements: TypeName[] = [];
 	protected _declarations: Context[] = [];
 	protected _resolveClass?: ResolveClass;
+	protected _inheritanceResolved: boolean = false;
 
 
 	constructor(node: DeclareClassCstNode, typemodNode: TypeModifiersCstNode | undefined, parent: Context) {
@@ -170,6 +171,10 @@ export class ContextClass extends Context{
 		return this._resolveClass;
 	}
 
+	public get inheritanceResolved(): boolean {
+		return this._inheritanceResolved;
+	}
+
 	public contextAtPosition(position: Position): Context | undefined {
 		if (Helpers.isPositionInsideRange(this.range, position)) {
 			if (this._name.isPositionInside(position)) {
@@ -231,6 +236,8 @@ export class ContextClass extends Context{
 	}
 
 	public resolveInheritance(state: ResolveState): void {
+		this._inheritanceResolved = true;
+
 		if (this._extends) {
 			const t = this._extends.resolveType(state);
 			if (t?.type != ResolveType.Type.Class) {

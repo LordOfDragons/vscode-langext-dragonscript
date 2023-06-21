@@ -27,6 +27,7 @@ import { ContextFunction } from "../context/classFunction";
 import { Context } from "../context/context";
 import { ContextBlock } from "../context/expressionBlock";
 import { ContextClass } from "../context/scriptClass";
+import { ReportConfig } from "../reportConfig";
 import { capabilities } from "../server";
 import { ResolveNamespace } from "./namespace";
 import { ResolveSearch } from "./search";
@@ -38,11 +39,15 @@ export class ResolveState {
 	protected _pins: ResolveNamespace[] = [];
 	protected _scopeContext?: Context;
 	protected _scopeContextStack: Context[] = [];
+	public reportConfig: ReportConfig;
+
+	public requiresAnotherTurn: boolean = false;
 
 
-	constructor (diagnostics: Diagnostic[], uri: string) {
+	constructor (diagnostics: Diagnostic[], uri: string, reportConfig: ReportConfig) {
 		this._diagnostics = diagnostics;
 		this._uri = uri;
+		this.reportConfig = reportConfig;
 	}
 
 
@@ -160,15 +165,21 @@ export class ResolveState {
 	}
 
 	public reportWarning(range: Range | undefined, message: string) {
-		this.reportDiagnostic(DiagnosticSeverity.Warning, range, message);
+		if (this.reportConfig.enableReportWarning) {
+			this.reportDiagnostic(DiagnosticSeverity.Warning, range, message);
+		}
 	}
 
 	public reportInfo(range: Range | undefined, message: string) {
-		this.reportDiagnostic(DiagnosticSeverity.Information, range, message);
+		if (this.reportConfig.enableReportInfo) {
+			this.reportDiagnostic(DiagnosticSeverity.Information, range, message);
+		}
 	}
 
 	public reportHint(range: Range | undefined, message: string) {
-		this.reportDiagnostic(DiagnosticSeverity.Hint, range, message);
+		if (this.reportConfig.enableReportHint) {
+			this.reportDiagnostic(DiagnosticSeverity.Hint, range, message);
+		}
 	}
 
 	public reportDiagnostic(severity: DiagnosticSeverity, range: Range | undefined, message: string) {

@@ -27,6 +27,7 @@ import { readdir, readFile } from "fs/promises";
 import { join } from "path";
 import { Diagnostic, DiagnosticSeverity, RemoteConsole } from "vscode-languageserver";
 import { ContextScript } from "../context/script";
+import { ReportConfig } from "../reportConfig";
 import { ScriptDocument } from "../scriptDocument";
 import { getDocumentSettings, globalSettings, scriptDocuments, validator } from "../server";
 
@@ -106,24 +107,35 @@ export class Package {
 	}
 
 	protected async loadFiles(): Promise<void> {
+		var reportConfig = new ReportConfig;
+		//reportConfig.enableReportWarning = false;
+		//reportConfig.enableReportInfo = false;
+		//reportConfig.enableReportHint = false;
+
 		// loading files does "resolveClasses" on all documents individually
-		await Promise.all(this._files.map(each => this.loadFile(each)));
+		await Promise.all(this._files.map(each => this.loadFile(each, reportConfig)));
 
 		// calling "resolveInheritance" and "resolveStatements" requires all files to be present
+		var docs: ScriptDocument[] = [...this._scriptDocuments];
+
+		while (docs.length > 0) {
+			await Promise.all(docs.map(each => {
+				this.resolveLogDiagnostics(each.resolveInheritance(reportConfig), each.uri);
+			}));
+
+			docs = docs.filter(each => each.requiresAnotherTurn);
+		}
+
 		await Promise.all(this._scriptDocuments.map(each => {
-			this.resolveLogDiagnostics(each.resolveInheritance(), each.uri);
+			this.resolveLogDiagnostics(each.resolveMembers(reportConfig), each.uri);
 		}));
 		
 		await Promise.all(this._scriptDocuments.map(each => {
-			this.resolveLogDiagnostics(each.resolveMembers(), each.uri);
-		}));
-		
-		await Promise.all(this._scriptDocuments.map(each => {
-			this.resolveLogDiagnostics(each.resolveStatements(), each.uri);
+			this.resolveLogDiagnostics(each.resolveStatements(reportConfig), each.uri);
 		}));
 	}
 
-	protected async loadFile(path: string): Promise<void> {
+	protected async loadFile(path: string, reportConfig: ReportConfig): Promise<void> {
 		//let startTime = Date.now();
 
 		let uri = `file://${path}`
@@ -188,7 +200,7 @@ export class Package {
 		//scriptDocument.console.info(`Package '${this._id}' (${this._finishedCounter}/${this._files.length}): Parsed '${path}' in ${elapsedTime / 1000}s`);
 
 		// this can run asynchronous
-		this.resolveLogDiagnostics(scriptDocument.resolveClasses(), scriptDocument.uri);
+		this.resolveLogDiagnostics(scriptDocument.resolveClasses(reportConfig), scriptDocument.uri);
 	}
 
 	protected async resolveLogDiagnostics(diagnostics: Promise<Diagnostic[]>, uri: string): Promise<void> {

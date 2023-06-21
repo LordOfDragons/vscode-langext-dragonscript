@@ -53,6 +53,7 @@ import { Packages } from "./package/packages";
 import { PackageDEModule } from "./package/dragenginemodule";
 import { PackageDSLanguage } from "./package/dslanguage";
 import { ResolveNamespace } from './resolve/namespace';
+import { ReportConfig } from './reportConfig';
 
 // Create a connection for the server, using Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -209,6 +210,8 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 		scriptDocuments.add(scriptDocument);
 	}
 
+	let reportConfig = new ReportConfig;
+
 	const diagnostics: Diagnostic[] = [];
 	await validator.parse(scriptDocument, textDocument, diagnostics);
 
@@ -231,16 +234,16 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 		scriptDocument.context = undefined;
 	}
 	
-	for (const each of await scriptDocument.resolveClasses()) {
+	for (const each of await scriptDocument.resolveClasses(reportConfig)) {
 		diagnostics.push(each)
 	}
-	for (const each of await scriptDocument.resolveInheritance()) {
+	for (const each of await scriptDocument.resolveInheritance(reportConfig)) {
 		diagnostics.push(each)
 	}
-	for (const each of await scriptDocument.resolveMembers()) {
+	for (const each of await scriptDocument.resolveMembers(reportConfig)) {
 		diagnostics.push(each)
 	}
-	for (const each of await scriptDocument.resolveStatements()) {
+	for (const each of await scriptDocument.resolveStatements(reportConfig)) {
 		diagnostics.push(each)
 	}
 
