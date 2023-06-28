@@ -95,7 +95,7 @@ export class ResolveNamespace extends ResolveType {
 	
 
 	public search(search: ResolveSearch): void {
-		if (search.onlyVariables || !search.name) {
+		if (search.onlyVariables || search.onlyFunctions || !search.name) {
 			return;
 		}
 

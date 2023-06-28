@@ -328,9 +328,7 @@ export class ContextFunction extends Context{
 	}
 
 	public resolveMembers(state: ResolveState): void {
-		if (this._returnType) {
-			this._returnType.resolveType(state);
-		}
+		this._returnType?.resolveType(state);
 		
 		state.withScopeContext(this, () => {
 			for (const each of this._arguments) {
@@ -400,7 +398,8 @@ export class ContextFunction extends Context{
 	protected updateResolveTextShort(): string {
 		let parts = [];
 		parts.push(this._typeModifiers.typestring);
-		parts.push(`${this._name}(`);
+		parts.push(` ${this._returnType?.name ?? "?"}`);
+		parts.push(` ${this._name}(`);
 		
 		var args = [];
 		for (const each of this._arguments) {

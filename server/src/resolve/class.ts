@@ -22,12 +22,9 @@
  * SOFTWARE.
  */
 
-import { ContextClassVariable } from '../context/classVariable';
-import { Context } from '../context/context';
 import { ContextClass } from '../context/scriptClass';
 import { ResolveSearch } from './search';
 import { ResolveType } from './type'
-import { ResolveVariable } from './variable';
 
 
 export class ResolveClass extends ResolveType {
@@ -44,6 +41,8 @@ export class ResolveClass extends ResolveType {
 		this._context = undefined;
 	}
 
+
+	public primitiveType: ResolveClass.PrimitiveType = ResolveClass.PrimitiveType.Object;
 
 	public get context(): ContextClass | undefined {
 		return this._context;
@@ -73,7 +72,7 @@ export class ResolveClass extends ResolveType {
 	public isSuperclass(cls: ResolveClass) {
 		var c = cls.parent;
 		while (c) {
-			if (c == this) {
+			if (c === this) {
 				return true;
 			}
 			c = c.parent;
@@ -83,6 +82,25 @@ export class ResolveClass extends ResolveType {
 
 	public isSubclass(cls: ResolveClass) {
 		return cls.isSuperclass(this);
+	}
+
+	public castable(type: ResolveType): boolean {
+		if (type === this) {
+			return true;
+		}
+		if (!this.context) {
+			return false;
+		}
+
+		if (type.type == ResolveType.Type.Interface) {
+			for (const each of this.context.implements) {
+				if ((each.resolve as ResolveType).castable(type)) {
+					return true;
+				}
+			}
+		}
+
+		return this.parent?.castable(type) ?? false;
 	}
 
 	protected onInvalidate(): void {
@@ -97,5 +115,16 @@ export class ResolveClass extends ResolveType {
 				
 			}
 		}
+	}
+}
+
+
+export namespace ResolveClass {
+	export enum PrimitiveType {
+		Byte,
+		Bool,
+		Int,
+		Float,
+		Object
 	}
 }

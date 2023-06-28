@@ -67,6 +67,25 @@ export class ResolveInterface extends ResolveType {
 		}
 	}
 
+	public castable(type: ResolveType): boolean {
+		if (type === this) {
+			return true;
+		}
+		if (!this.context) {
+			return false;
+		}
+
+		if (type.type == ResolveType.Type.Interface) {
+			for (const each of this.context.implements) {
+				if ((each.resolve as ResolveType).castable(type)) {
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
 	protected onInvalidate(): void {
 		super.onInvalidate();
 	}

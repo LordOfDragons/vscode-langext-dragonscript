@@ -26,6 +26,7 @@ import { integer } from "vscode-languageserver";
 import { ContextFunctionArgument } from "../context/classFunctionArgument";
 import { ContextVariable } from "../context/statementVariable";
 import { ResolveFunction } from "./function";
+import { ResolveSignature } from "./signature";
 import { ResolveType } from "./type";
 import { ResolveVariable } from "./variable";
 
@@ -33,7 +34,9 @@ export class ResolveSearch {
 	protected _arguments: ContextFunctionArgument[] = [];
 	protected _localVariables: ContextVariable[] = [];
 	protected _variables: ResolveVariable[] = [];
-	protected _functions: ResolveFunction[] = [];
+	protected _functionsFull: ResolveFunction[] = [];
+	protected _functionsPartial: ResolveFunction[] = [];
+	protected _functionsWildcard: ResolveFunction[] = [];
 	protected _types: ResolveType[] = [];
 
 
@@ -50,21 +53,42 @@ export class ResolveSearch {
 	/** Search only variables. */
 	public onlyVariables: boolean = false;
 
+	/** Search only functions. */
+	public onlyFunctions: boolean = false;
+
+	/** Ignore variables. */
+	public ignoreVariables: boolean = false;
+
 	/** Ignore functions. */
 	public ignoreFunctions: boolean = false;
 
 	/** Find all matching types instead of the first one. */
 	public allMatchingTypes: boolean = false;
+
+	/** Signature to match. Undefine in argument means anything. */
+	public signature?: ResolveSignature;
+
+	/** Allow partial match for functions. */
+	public allowPartialMatch: boolean = true;
+
+	/** Allow wildcard/error match for functions. */
+	public allowWildcardMatch: boolean = true;
+
+	/** Stop matching after first full match. */
+	public stopAfterFirstFullMatch: boolean = true;
 	
 
 
 	/** Clear search result. */
 	public clearResults(): void {
-		this._localVariables.splice(0)
-		this._arguments.splice(0)
-		this._variables.splice(0)
-		this._functions.splice(0)
-		this._types.splice(0)
+		this._localVariables.splice(0);
+		this._arguments.splice(0);
+		this._variables.splice(0);
+		this._functionsFull.splice(0);
+		this._functionsPartial.splice(0);
+		this._functionsWildcard.splice(0);
+		this._types.splice(0);
+		this.signature = undefined;
 	}
 
 	/** Local variables. */
@@ -81,8 +105,19 @@ export class ResolveSearch {
 		return this._variables;
 	}
 	
-	public get functions(): ResolveFunction[] {
-		return this._functions;
+	/** Functions fully matching signature. */
+	public get functionsFull(): ResolveFunction[] {
+		return this._functionsFull;
+	}
+	
+	/** Functions partially matching signature. */
+	public get functionsPartial(): ResolveFunction[] {
+		return this._functionsPartial;
+	}
+	
+	/** Functions wildcard or error matching signature. */
+	public get functionsWildcard(): ResolveFunction[] {
+		return this._functionsWildcard;
 	}
 
 	public get types(): ResolveType[] {
@@ -106,7 +141,9 @@ export class ResolveSearch {
 	/** Count of matches found. */
 	public get matchCount(): integer {
 		return this._localVariables.length + this._arguments.length
-			+ this._variables.length + this._functions.length + this._types.length;
+			+ this._variables.length + this._functionsFull.length
+			+ this._functionsPartial.length + this._types.length
+			+ this._functionsWildcard.length + this._types.length;
 	}
 
 	/** Count of match type group found. */
@@ -115,7 +152,9 @@ export class ResolveSearch {
 		if (this._localVariables.length > 0) count++;
 		if (this._arguments.length > 0) count++;
 		if (this._variables.length > 0) count++;
-		count += this._functions.length;
+		if (this._functionsFull.length > 0) count ++;
+		count += this._functionsPartial.length;
+		count += this._functionsWildcard.length;
 		count += this._types.length;
 		return count;
 	}

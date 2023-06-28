@@ -29,7 +29,7 @@ import { ResolveFunctionGroup } from './functionGroup';
 import { ResolveFunction } from './function';
 import { ResolveVariable } from './variable';
 import { ResolveSearch } from './search';
-import { Context } from '../context/context';
+import { ResolveSignature } from './signature';
 
 
 /**
@@ -276,34 +276,62 @@ export class ResolveType{
 	}
 
 
+	public castable(type: ResolveType): boolean {
+		return false;
+	}
+
 	public search(search: ResolveSearch): void {
 		if (!search.name) {
 			return;
 		}
 
 		if (!search.onlyTypes) {
-			let v = this.variable(search.name);
-			if (v) {
-				search.variables.push(v);
+			if (!search.onlyFunctions && !search.ignoreVariables) {
+				let v = this.variable(search.name);
+				if (v) {
+					search.variables.push(v);
+				}
 			}
+			
+			if (!search.onlyVariables && !search.ignoreFunctions && search.signature) {
+				if (search.functionsFull.length == 0 || !search.stopAfterFirstFullMatch) {
+					let fg = this.functionGroup(search.name);
+					if (fg) {
+						for (const each of fg.functions) {
+							const match = each.signature.matches(search.signature);
+							switch (match) {
+								case ResolveSignature.Match.Full:
+									search.functionsFull.push(each);
+									break;
 
-			if (!search.onlyVariables && !search.ignoreFunctions) {
-				let fg = this.functionGroup(search.name);
-				if (fg) {
-					for (const each of fg.functions) {
-						search.functions.push(each);
+								case ResolveSignature.Match.Partial:
+									if (search.allowPartialMatch) {
+										search.functionsPartial.push(each);
+									}
+									break;
+
+								case ResolveSignature.Match.Wildcard:
+									if (search.allowWildcardMatch) {
+										search.functionsWildcard.push(each);
+									}
+									break;
+
+								default:
+									break;
+							}
+						}
 					}
 				}
 			}
 		}
 
-		if (!search.onlyVariables) {
+		if (!search.onlyVariables && !search.onlyFunctions) {
 			if (this._name == search.name) {
 				search.addType(this);
 			}
 		}
 
-		if (!search.onlyVariables) {
+		if (!search.onlyVariables && !search.onlyFunctions) {
 			let c = this.class(search.name);
 			if (c) {
 				search.addType(c);

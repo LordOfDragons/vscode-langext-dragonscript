@@ -95,7 +95,7 @@ export class ContextFunctionArgument extends Context{
 				const v = pcr.variable(this._name.name);
 				if (v) {
 					if (v.canAccess(parentClass)) {
-						state.reportWarning(this._name.range, `Shadows variable ${this._name.name} in ${pcr.fullyQualifiedName}`);
+						state.reportWarning(this._name.range, `Parameter shadows variable ${this._name.name} in ${pcr.fullyQualifiedName}`);
 					}
 					break;
 				}

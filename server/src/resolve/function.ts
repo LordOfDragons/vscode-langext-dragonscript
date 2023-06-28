@@ -25,6 +25,7 @@
 import { ContextFunction } from '../context/classFunction';
 import { ResolveFunctionGroup } from './functionGroup';
 import { ResolveNamespace } from './namespace';
+import { ResolveSignature } from './signature';
 import { ResolveType } from './type';
 
 
@@ -36,7 +37,7 @@ export class ResolveFunction{
 	protected _context?: ContextFunction;
 	protected _fullyQualifiedName?: string
 	protected _returnType?: ResolveType;
-	protected _signature: ResolveType[] = [];
+	protected _signature: ResolveSignature = new ResolveSignature();
 
 
 	constructor (context: ContextFunction) {
@@ -49,7 +50,7 @@ export class ResolveFunction{
 			if (!type) {
 				type = ResolveNamespace.root.class('void');
 			}
-			this._signature.push(type);
+			this._signature.addArgument(type, each.name.name);
 		}
 	}
 
@@ -57,7 +58,7 @@ export class ResolveFunction{
 		this._context = undefined;
 		this.removeFromParent();
 		this._returnType = undefined;
-		this._signature = [];
+		this._signature.dispose();
 		this.functionGroup = undefined;
 	}
 
@@ -97,21 +98,8 @@ export class ResolveFunction{
 		return this._returnType;
 	}
 
-	public get signature(): ResolveType[] {
+	public get signature(): ResolveSignature {
 		return this._signature;
-	}
-
-	public matches(signature: ResolveType[]): boolean {
-		const len = this._signature.length;
-		if (len != signature.length) {
-			return false;
-		}
-		for (var i=0; i<len; i++) {
-			if (this._signature[i] != signature[i]) {
-				return false;
-			}
-		}
-		return true;
 	}
 
 	public removeFromParent(): void {

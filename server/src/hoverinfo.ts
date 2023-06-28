@@ -31,7 +31,7 @@ export class HoverInfo implements Hover {
 	constructor(content: string[], range?: Range) {
 		this.contents = {
 			kind: MarkupKind.Markdown,
-			value: content.join('\n')
+			value: content.join('  \n')
 		};
 		this.range = range;
 	}

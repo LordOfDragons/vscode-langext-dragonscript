@@ -207,6 +207,28 @@ export class ContextClass extends Context{
 		this._resolveClass = undefined;
 
 		this._resolveClass = new ResolveClass(this);
+
+		switch (this._name.name) {
+			case "byte":
+				this._resolveClass.primitiveType = ResolveClass.PrimitiveType.Byte;
+				break;
+
+			case "bool":
+				this._resolveClass.primitiveType = ResolveClass.PrimitiveType.Bool;
+				break;
+
+			case "int":
+				this._resolveClass.primitiveType = ResolveClass.PrimitiveType.Int;
+				break;
+
+			case "float":
+				this._resolveClass.primitiveType = ResolveClass.PrimitiveType.Float;
+				break;
+
+			default:
+				break; // default is object primitive type
+		}
+
 		if (this.parent) {
 			var container: ResolveType | undefined;
 			if (this.parent.type == Context.ContextType.Class) {

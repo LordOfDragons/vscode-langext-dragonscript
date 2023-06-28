@@ -23,6 +23,7 @@
  */
 
 import { ResolveFunction } from './function';
+import { ResolveSignature } from './signature';
 import { ResolveType } from './type';
  
   
@@ -81,9 +82,9 @@ export class ResolveFunctionGroup{
 		func.functionGroup = this;
 	}
 
-	public findFunction(signature: ResolveType[]): ResolveFunction | undefined {
+	public findFunction(signature: ResolveSignature): ResolveFunction | undefined {
 		for (const each of this._functions) {
-			if (each.matches(signature)) {
+			if (each.signature.matchesExactly(signature)) {
 				return each;
 			}
 		}

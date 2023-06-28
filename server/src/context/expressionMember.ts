@@ -216,6 +216,7 @@ export class ContextMember extends Context{
 			content.push(this._resolveType.displayName);
 		}
 
+		/*
 		if (this._matches) {
 			content.push(`\n`);
 			content.push(`**member** ${this._name.name}`);
@@ -226,6 +227,8 @@ export class ContextMember extends Context{
 		} else {
 			content.push(`**member** ${this._name.name}`);
 		}
+		*/
+		
 		return new HoverInfo(content, this._name.range);
 	}
 

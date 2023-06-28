@@ -451,7 +451,7 @@ export class TypeName {
 
 	protected hoverAddParent(content: string[], type?: ResolveType) {
 		if (type) {
-			content.push(`\nparent class *${type.displayName}*`);
+			content.push(`parent class *${type.displayName}*`);
 		}
 	}
 

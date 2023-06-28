@@ -43,6 +43,9 @@ import { FunctionCallCstNode } from "../nodeclasses/declareFunction";
 import { IToken } from "chevrotain";
 import { Helpers } from "../helpers";
 import { ResolveNamespace } from "../resolve/namespace";
+import { ResolveType } from "../resolve/type";
+import { ResolveSearch } from "../resolve/search";
+import { ResolveSignature } from "../resolve/signature";
 
 
 export class ContextFunctionCall extends Context{
@@ -60,7 +63,9 @@ export class ContextFunctionCall extends Context{
 	protected _castType?: TypeName;
 	protected _functionType: ContextFunctionCall.FunctionType = ContextFunctionCall.FunctionType.function;
 
-
+	private _matches: ResolveSearch | undefined;
+	
+	
 	protected constructor(node: ExpressionAdditionCstNode | ExpressionBitOperationCstNode
 			| ExpressionCompareCstNode | ExpressionLogicCstNode
 			| ExpressionMultiplyCstNode | ExpressionPostfixCstNode
@@ -411,6 +416,8 @@ export class ContextFunctionCall extends Context{
 			each.dispose();
 		}
 		this._castType?.dispose();
+
+		this._matches = undefined;
 	}
 
 
@@ -460,11 +467,36 @@ export class ContextFunctionCall extends Context{
 			return;
 		}
 
-		// TODO find matching function
+		let objtype: ResolveType | undefined;
+		
+		if (this._object) {
+			objtype = this._object.expressionType
+			if (!objtype) {
+				// if base object has a problem an error has been already reported so do nothing here
+				return;
+			}
+		}
+
+		this._matches = new ResolveSearch();
+		this._matches.name = this._name.name;
+		this._matches.ignoreVariables = true;
+		
+		this._matches.signature = new ResolveSignature();
+		for (const each of this._arguments) {
+			this._matches.signature.addArgument(each.expressionType);
+		}
+
+		if (objtype) {
+			objtype.search(this._matches);
+		} else {
+			state.search(this._matches, this);
+		}
 
 		switch (this._functionType) {
 			case ContextFunctionCall.FunctionType.function:
-				// TODO use found function return value as expression type
+				if (this._matches.functionsFull.length == 1) {
+					this.expressionType = this._matches.functionsFull[0].returnType;
+				}
 				break;
 
 			case ContextFunctionCall.FunctionType.assignMultiply:
@@ -548,6 +580,35 @@ export class ContextFunctionCall extends Context{
 			} else {
 				content.push(`**function**`);
 			}
+
+			if (this._matches) {
+				content.push("___");
+				content.push(`call ${this.expressionType?.resolveTextShort} ${this._matches.signature?.resolveTextShort}`);
+				content.push("___");
+				content.push(`full ${this._name.name} f(${this._matches.functionsFull.length})`);
+				for (const each of this._matches.functionsFull) {
+					if (each.context) {
+						content.push(`${each.context.resolveTextShort} (${each.context.parent?.fullyQualifiedName})`);
+					}
+				}
+				content.push("___");
+				content.push(`partial ${this._name.name} f(${this._matches.functionsPartial.length})`);
+				for (const each of this._matches.functionsPartial) {
+					if (each.context) {
+						content.push(`${each.context.resolveTextShort} (${each.context.parent?.fullyQualifiedName})`);
+					}
+				}
+				content.push("___");
+				content.push(`error ${this._name.name} f(${this._matches.functionsWildcard.length})`);
+				for (const each of this._matches.functionsWildcard) {
+					if (each.context) {
+						content.push(`${each.context.resolveTextShort} (${each.context.parent?.fullyQualifiedName})`);
+					}
+				}
+			} else {
+				content.push(`**member** ${this._name.name}`);
+			}
+
 			return new HoverInfo(content, this._name.range);
 
 		} else if (this._castType?.isPositionInside(position)) {
