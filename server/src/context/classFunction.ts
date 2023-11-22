@@ -356,6 +356,8 @@ export class ContextFunction extends Context{
 				}
 			}
 		}
+		
+		this._statements?.resolveMembers(state);
 	}
 	
 	public resolveStatements(state: ResolveState): void {

@@ -80,7 +80,13 @@ export class ContextStatements extends Context{
 		return this._statements;
 	}
 	
-
+	
+	public resolveMembers(state: ResolveState): void {
+		for (const each of this._statements) {
+			each.resolveMembers(state);
+		}
+	}
+	
 	public resolveStatements(state: ResolveState): void {
 		for (const each of this._statements) {
 			each.resolveStatements(state);

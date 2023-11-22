@@ -117,7 +117,7 @@ export class ResolveSignature{
 	}
 
 
-	/** Signatures match. */
+	/** Signatures match (this exact/cast signature) */
 	public matches(signature: ResolveSignature): ResolveSignature.Match {
 		const len = this.arguments.length;
 		if (len != signature.arguments.length) {

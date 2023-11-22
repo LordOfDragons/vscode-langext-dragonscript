@@ -397,7 +397,7 @@ export class ContextFunctionCall extends Context{
 
 		cfc._name = new Identifier(name);
 		cfc._operator = false;
-		cfc._functionType = ContextFunctionCall.FunctionType.function;
+		cfc._functionType = ContextFunctionCall.FunctionType.functionSuper;
 
 		const args = node.children.argument;
 		if (args) {
@@ -462,7 +462,7 @@ export class ContextFunctionCall extends Context{
 		}
 		this._castType?.resolveType(state);
 
-		// resolve expressioon type
+		// resolve expression type
 		if (!this._name) {
 			return;
 		}
@@ -478,7 +478,11 @@ export class ContextFunctionCall extends Context{
 		}
 
 		this._matches = new ResolveSearch();
-		this._matches.name = this._name.name;
+		if (this._functionType == ContextFunctionCall.FunctionType.functionSuper) {
+			this._matches.name = 'new';
+		} else {
+			this._matches.name = this._name.name;
+		}
 		this._matches.ignoreVariables = true;
 		
 		this._matches.signature = new ResolveSignature();
@@ -488,12 +492,19 @@ export class ContextFunctionCall extends Context{
 
 		if (objtype) {
 			objtype.search(this._matches);
+		} else if (this._functionType == ContextFunctionCall.FunctionType.functionSuper) {
+			if (this._name.name == 'this') {
+				state.topScopeClass?.resolveClass?.search(this._matches);
+			} else {
+				(state.topScopeClass?.resolveClass?.context?.extends?.resolve as ResolveType)?.search(this._matches);
+			}
 		} else {
 			state.search(this._matches, this);
 		}
 
 		switch (this._functionType) {
 			case ContextFunctionCall.FunctionType.function:
+			case ContextFunctionCall.FunctionType.functionSuper:
 				if (this._matches.functionsFull.length == 1) {
 					this.expressionType = this._matches.functionsFull[0].returnType;
 				}
@@ -523,6 +534,7 @@ export class ContextFunctionCall extends Context{
 			case ContextFunctionCall.FunctionType.increment:
 			case ContextFunctionCall.FunctionType.decrement:
 			case ContextFunctionCall.FunctionType.inverse:
+			case ContextFunctionCall.FunctionType.assign:
 				if (this._object) {
 					this.expressionType = this._object.expressionType;
 				} else {
@@ -545,7 +557,7 @@ export class ContextFunctionCall extends Context{
 				break;
 
 			case ContextFunctionCall.FunctionType.cast:
-				this.expressionType = this._castType?.resolve;
+				this.expressionType = this._castType?.resolve as ResolveType;
 				break;
 		}
 	}
@@ -581,7 +593,21 @@ export class ContextFunctionCall extends Context{
 				content.push(`**function**`);
 			}
 
-			if (this._matches) {
+			if (this._functionType == ContextFunctionCall.FunctionType.cast) {
+				content.push(`**cast** ${(this._castType?.resolve as ResolveType).resolveTextShort}`);
+			} else if (this._functionType == ContextFunctionCall.FunctionType.castable) {
+				content.push(`bool **castable** ${(this._castType?.resolve as ResolveType).resolveTextShort}`);
+			} else if (this._functionType == ContextFunctionCall.FunctionType.typeof) {
+				content.push(`bool **typeof** ${(this._castType?.resolve as ResolveType).resolveTextShort}`);
+			} else if (this._functionType == ContextFunctionCall.FunctionType.assign) {
+				const at1 = this._object?.expressionType;
+				const at2 = this._arguments.at(0)?.expressionType;
+				if (at1 && (!at2 || at1 == at2 || at2.castable(at1))) {
+					content.push(`${at1.resolveTextShort} **assign** ${at2?.resolveTextShort || "null"}`);
+				} else {
+					content.push(`${at1?.resolveTextShort} **assign** ${at2?.resolveTextShort} (invalid cast)`);
+				}
+			} else if (this._matches) {
 				content.push("___");
 				content.push(`call ${this.expressionType?.resolveTextShort} ${this._matches.signature?.resolveTextShort}`);
 				content.push("___");
@@ -608,7 +634,7 @@ export class ContextFunctionCall extends Context{
 			} else {
 				content.push(`**member** ${this._name.name}`);
 			}
-
+			
 			return new HoverInfo(content, this._name.range);
 
 		} else if (this._castType?.isPositionInside(position)) {
@@ -632,6 +658,9 @@ export class ContextFunctionCall extends Context{
 		}
 		if (this._arguments.length > 0) {
 			rangeEnd = this._arguments[this._arguments.length - 1].range?.end;
+		}
+		if (this._castType?.range) {
+			rangeEnd = this._castType.range.end;
 		}
 
 		if (!rangeBegin) {
@@ -661,6 +690,7 @@ export namespace ContextFunctionCall {
 	/** Function type. */
 	export enum FunctionType {
 		function,
+		functionSuper,
 
 		assignMultiply,
 		assignDivide,

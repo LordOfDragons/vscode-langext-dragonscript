@@ -91,7 +91,7 @@ export class ResolveClass extends ResolveType {
 		if (!this.context) {
 			return false;
 		}
-
+		
 		if (type.type == ResolveType.Type.Interface) {
 			for (const each of this.context.implements) {
 				if ((each.resolve as ResolveType).castable(type)) {
@@ -99,7 +99,12 @@ export class ResolveClass extends ResolveType {
 				}
 			}
 		}
-
+		
+		const r = this.context.extends?.resolve as ResolveType;
+		if (r && r.castable(type)) {
+			return true;
+		}
+		
 		return this.parent?.castable(type) ?? false;
 	}
 

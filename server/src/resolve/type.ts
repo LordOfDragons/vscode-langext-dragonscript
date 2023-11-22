@@ -298,7 +298,7 @@ export class ResolveType{
 					let fg = this.functionGroup(search.name);
 					if (fg) {
 						for (const each of fg.functions) {
-							const match = each.signature.matches(search.signature);
+							const match = search.signature.matches(each.signature);
 							switch (match) {
 								case ResolveSignature.Match.Full:
 									search.functionsFull.push(each);
