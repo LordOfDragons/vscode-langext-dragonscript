@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-import { Diagnostic, DiagnosticSeverity, DocumentSymbol, Hover, Position, Range, RemoteConsole } from "vscode-languageserver";
+import { Diagnostic, DiagnosticRelatedInformation, DiagnosticSeverity, DocumentSymbol, Hover, Location, Position, Range, RemoteConsole, URI } from "vscode-languageserver";
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
 import { capabilities } from "../server";
 import { ResolveState } from "../resolve/state";
@@ -39,6 +39,7 @@ export class Context {
 	protected _hover: Hover | null | undefined;
 	public range?: Range
 	public expressionType?: ResolveType;
+	public expressionAutoCast: Context.AutoCast = Context.AutoCast.No;
 	protected _resolveTextShort?: string;
 	protected _resolveTextLong?: string[];
 
@@ -52,6 +53,7 @@ export class Context {
 	dispose(): void {
 		this.parent = undefined;
 		this.expressionType = undefined;
+		this.expressionAutoCast = Context.AutoCast.No;
 	}
 
 
@@ -142,6 +144,20 @@ export class Context {
 			}
 		}
 		return undefined;
+	}
+	
+	public getDocumentUri(): URI | undefined {
+		return this.parent?.getDocumentUri();
+	}
+	
+	public getReportLocation(): Location {
+		return Location.create(this.getDocumentUri() ?? "",
+			this.documentSymbol?.range ?? this.range ??
+				Range.create(Position.create(1, 1), Position.create(1, 1)));
+	}
+	
+	public createReportInfo(message: string): DiagnosticRelatedInformation {
+		return DiagnosticRelatedInformation.create(this.getReportLocation(), message);
 	}
 
 
@@ -435,5 +451,23 @@ export namespace Context {
 				return "()";
 			}
 		}
+	}
+	
+	/**
+	 * Auto-cast support from null keyword or literal to types
+	 * where an explicit cast would be otherwise required.
+	 */
+	export enum AutoCast {
+		/** No auto cast. */
+		No,
+		
+		/** Auto cast constant 'null'. */
+		KeywordNull,
+		
+		/** Auto cast literal of type byte. */
+		LiteralByte,
+		
+		/** Auto cast literal of type int. */
+		LiteralInt
 	}
 }

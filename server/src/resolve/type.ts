@@ -293,31 +293,39 @@ export class ResolveType{
 				}
 			}
 			
-			if (!search.onlyVariables && !search.ignoreFunctions && search.signature) {
+			if (!search.onlyVariables && !search.ignoreFunctions) {
 				if (search.functionsFull.length == 0 || !search.stopAfterFirstFullMatch) {
 					let fg = this.functionGroup(search.name);
 					if (fg) {
-						for (const each of fg.functions) {
-							const match = search.signature.matches(each.signature);
-							switch (match) {
-								case ResolveSignature.Match.Full:
-									search.functionsFull.push(each);
-									break;
+						if (search.signature) {
+							for (const each of fg.functions) {
+								const match = search.signature.matches(each.signature);
+								switch (match) {
+									case ResolveSignature.Match.Full:
+										search.functionsFull.push(each);
+										break;
 
-								case ResolveSignature.Match.Partial:
-									if (search.allowPartialMatch) {
-										search.functionsPartial.push(each);
-									}
-									break;
+									case ResolveSignature.Match.Partial:
+										if (search.allowPartialMatch && !search.functionsPartial.find(
+											(each2) => each.signature.matchesExactly(each2.signature))
+										) {
+											search.functionsPartial.push(each);
+										}
+										break;
 
-								case ResolveSignature.Match.Wildcard:
-									if (search.allowWildcardMatch) {
-										search.functionsWildcard.push(each);
-									}
-									break;
+									case ResolveSignature.Match.Wildcard:
+										if (search.allowWildcardMatch) {
+											search.functionsWildcard.push(each);
+										}
+										break;
 
-								default:
-									break;
+									default:
+										break;
+								}
+							}
+						} else {
+							for (const each of fg.functions) {
+								search.functionsAll.push(each);
 							}
 						}
 					}

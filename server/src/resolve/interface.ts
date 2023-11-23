@@ -59,14 +59,14 @@ export class ResolveInterface extends ResolveType {
 
 	public search(search: ResolveSearch): void {
 		super.search(search);
-
+		
 		if (this.context) {
 			for (const each of this.context.implements) {
 				(each.resolve as ResolveType)?.search(search);
 			}
 		}
 	}
-
+	
 	public castable(type: ResolveType): boolean {
 		if (type === this) {
 			return true;
@@ -74,15 +74,23 @@ export class ResolveInterface extends ResolveType {
 		if (!this.context) {
 			return false;
 		}
-
-		if (type.type == ResolveType.Type.Interface) {
+		
+		switch (type.type) {
+		case ResolveType.Type.Interface:
 			for (const each of this.context.implements) {
 				if ((each.resolve as ResolveType).castable(type)) {
 					return true;
 				}
 			}
+			break;
+			
+		case ResolveType.Type.Class:
+			if (type.fullyQualifiedName == 'Object') {
+				return true;
+			}
+			break;
 		}
-
+		
 		return false;
 	}
 

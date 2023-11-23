@@ -57,6 +57,7 @@ class ClassExtendImplement extends ClassExtend implements ActionListener, Collid
 	end
 	
 	protected func int pFunc()
+		//onAction(90)
 		return 80
 	end
 	

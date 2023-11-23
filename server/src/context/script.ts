@@ -24,7 +24,7 @@
 
 import { Context } from "./context";
 import { ScriptCstNode } from "../nodeclasses/script";
-import { DocumentSymbol, Position, RemoteConsole } from "vscode-languageserver";
+import { DocumentSymbol, Position, RemoteConsole, URI } from "vscode-languageserver";
 import { ContextPinNamespace } from "./pinNamespace";
 import { ContextNamespace } from "./namespace";
 import { ContextClass } from "./scriptClass";
@@ -42,12 +42,13 @@ export class ContextScript extends Context{
 	protected _requires: ContextRequiresPackage[] = [];
 	protected _namespaces: ContextNamespace[] = [];
 	public documentSymbols: DocumentSymbol[] = [];
+	public uri?: URI;
 
 
 	constructor(node: ScriptCstNode, textDocument?: TextDocument, lineCount?: number) {
 		super(Context.ContextType.Script);
 		this._node = node;
-
+		
 		let lastPosition = textDocument
 			? textDocument.positionAt(textDocument.getText().length)
 			: Position.create(lineCount ?? 1, 1);
@@ -119,6 +120,11 @@ export class ContextScript extends Context{
 	}
 
 
+	
+	public getDocumentUri(): URI | undefined {
+		return this.uri;
+	}
+	
 	public get node(): ScriptCstNode{
 		return this._node;
 	}

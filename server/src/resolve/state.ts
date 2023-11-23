@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-import { Diagnostic, DiagnosticSeverity, Range } from "vscode-languageserver"
+import { Diagnostic, DiagnosticRelatedInformation, DiagnosticSeverity, Range } from "vscode-languageserver"
 import { ContextFunction } from "../context/classFunction";
 import { Context } from "../context/context";
 import { ContextBlock } from "../context/expressionBlock";
@@ -160,29 +160,30 @@ export class ResolveState {
 	}
 
 
-	public reportError(range: Range | undefined, message: string) {
-		this.reportDiagnostic(DiagnosticSeverity.Error, range, message);
+	public reportError(range: Range | undefined, message: string, relatedInformation: DiagnosticRelatedInformation[] = []) {
+		this.reportDiagnostic(DiagnosticSeverity.Error, range, message, relatedInformation);
 	}
 
-	public reportWarning(range: Range | undefined, message: string) {
+	public reportWarning(range: Range | undefined, message: string, relatedInformation: DiagnosticRelatedInformation[] = []) {
 		if (this.reportConfig.enableReportWarning) {
-			this.reportDiagnostic(DiagnosticSeverity.Warning, range, message);
+			this.reportDiagnostic(DiagnosticSeverity.Warning, range, message, relatedInformation);
 		}
 	}
 
-	public reportInfo(range: Range | undefined, message: string) {
+	public reportInfo(range: Range | undefined, message: string, relatedInformation: DiagnosticRelatedInformation[] = []) {
 		if (this.reportConfig.enableReportInfo) {
-			this.reportDiagnostic(DiagnosticSeverity.Information, range, message);
+			this.reportDiagnostic(DiagnosticSeverity.Information, range, message, relatedInformation);
 		}
 	}
 
-	public reportHint(range: Range | undefined, message: string) {
+	public reportHint(range: Range | undefined, message: string, relatedInformation: DiagnosticRelatedInformation[] = []) {
 		if (this.reportConfig.enableReportHint) {
-			this.reportDiagnostic(DiagnosticSeverity.Hint, range, message);
+			this.reportDiagnostic(DiagnosticSeverity.Hint, range, message, relatedInformation);
 		}
 	}
 
-	public reportDiagnostic(severity: DiagnosticSeverity, range: Range | undefined, message: string) {
+	public reportDiagnostic(severity: DiagnosticSeverity, range: Range | undefined, message: string,
+			relatedInformation: DiagnosticRelatedInformation[] = []) {
 		if (!range) {
 			return;
 		}
@@ -204,6 +205,7 @@ export class ResolveState {
 					message: 'Semantics'
 				}
 			];
+			diagnostic.relatedInformation.push(...relatedInformation);
 		}
 
 		this._diagnostics.push(diagnostic);

@@ -130,19 +130,23 @@ export class ContextConstant extends Context{
 			case ContextConstant.ConstantType.literalByte:
 				if (this._name.name.startsWith("'\\u")) {
 					this._resolveType = ResolveNamespace.classInt;
+					this.expressionAutoCast = Context.AutoCast.LiteralInt;
 				} else {
 					this._resolveType = ResolveNamespace.classByte;
+					this.expressionAutoCast = Context.AutoCast.LiteralByte;
 				}
 				break;
 
 			case ContextConstant.ConstantType.literalIntByte:
 			case ContextConstant.ConstantType.literalIntOct:
 				this._resolveType = ResolveNamespace.classByte;
+				this.expressionAutoCast = Context.AutoCast.LiteralByte;
 				break;
 		
 			case ContextConstant.ConstantType.literalIntHex:
 			case ContextConstant.ConstantType.literalInt:
 				this._resolveType = ResolveNamespace.classInt;
+				this.expressionAutoCast = Context.AutoCast.LiteralInt;
 				break;
 
 			case ContextConstant.ConstantType.literalFloat:

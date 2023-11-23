@@ -27,7 +27,6 @@ import { ContextScript } from "./context/script";
 import { ScriptCstNode } from "./nodeclasses/script";
 import { ReportConfig } from "./reportConfig";
 import { ResolveState } from "./resolve/state";
-import { debugLogMessage } from "./server";
 import { DSSettings } from "./settings";
 
 export class ScriptDocument {

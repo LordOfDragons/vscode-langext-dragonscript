@@ -55,9 +55,24 @@ export class ResolveEnumeration extends ResolveType {
 		this.parent?.removeEnumeration(this);
 		this.parent = undefined;
 	}
-
-
-
+	
+	
+	
+	public castable(type: ResolveType): boolean {
+		if (type === this) {
+			return true;
+		}
+		if (!this.context) {
+			return false;
+		}
+		
+		if (type.type == ResolveType.Type.Class && type.fullyQualifiedName == 'Object') {
+			return true;
+		}
+		
+		return false;
+	}
+	
 	protected onInvalidate(): void {
 		super.onInvalidate();
 	}

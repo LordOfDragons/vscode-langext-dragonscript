@@ -23,7 +23,7 @@
  */
 
 import { Context } from "./context";
-import { DocumentSymbol, Hover, integer, Position, Range, RemoteConsole, SymbolKind } from "vscode-languageserver";
+import { DiagnosticRelatedInformation, DocumentSymbol, Hover, integer, Location, Position, Range, RemoteConsole, SymbolKind } from "vscode-languageserver";
 import { ContextBuilder } from "./contextBuilder";
 import { Identifier } from "./identifier";
 import { ExpressionAdditionCstNode } from "../nodeclasses/expressionAddition";
@@ -485,9 +485,19 @@ export class ContextFunctionCall extends Context{
 		}
 		this._matches.ignoreVariables = true;
 		
+		switch (this._functionType) {
+			case ContextFunctionCall.FunctionType.function:
+				this._matches.searchSuperClasses = this._name.name != 'new';
+				break;
+				
+			case ContextFunctionCall.FunctionType.functionSuper:
+				this._matches.searchSuperClasses = false;
+				break;
+		}
+		
 		this._matches.signature = new ResolveSignature();
 		for (const each of this._arguments) {
-			this._matches.signature.addArgument(each.expressionType);
+			this._matches.signature.addArgument(each.expressionType, undefined, each.expressionAutoCast);
 		}
 
 		if (objtype) {
@@ -560,7 +570,65 @@ export class ContextFunctionCall extends Context{
 				this.expressionType = this._castType?.resolve as ResolveType;
 				break;
 		}
-	}
+		
+		// report problems
+		switch (this._functionType) {
+			case ContextFunctionCall.FunctionType.cast:
+			case ContextFunctionCall.FunctionType.castable:
+			case ContextFunctionCall.FunctionType.typeof:
+				// TODO check if argument is a class not an object
+				break;
+				
+			case ContextFunctionCall.FunctionType.assign:
+				// TODO check if cast is valid
+				break;
+				
+			default:
+				if (this._matches) {
+					if (this._matches.functionsFull.length == 0) {
+						if (this._matches.functionsPartial.length > 1) {
+							let relatedInformation: DiagnosticRelatedInformation[] = [];
+							for (const each of this._matches.functionsPartial) {
+								if (each.context) {
+									relatedInformation.push(each.context.createReportInfo(
+										`Candidate: ${each.context.resolveTextShort}`));
+								}
+							}
+							state.reportError(this._name.range,
+								`Ambigous function call ${this._name}${this._matches.signature?.resolveTextShort}`,
+								relatedInformation);
+							
+						} else if (this._matches.functionsPartial.length == 0) {
+							let matches2 = new ResolveSearch(this._matches);
+							matches2.signature = undefined;
+							
+							if (objtype) {
+								objtype.search(matches2);
+							} else if (this._functionType == ContextFunctionCall.FunctionType.functionSuper) {
+								if (this._name.name == 'this') {
+									state.topScopeClass?.resolveClass?.search(matches2);
+								} else {
+									(state.topScopeClass?.resolveClass?.context?.extends?.resolve as ResolveType)?.search(matches2);
+								}
+							} else {
+								state.search(matches2, this);
+							}
+							
+							let relatedInformation: DiagnosticRelatedInformation[] = [];
+							for (const each of matches2.functionsAll) {
+								if (each.context) {
+									relatedInformation.push(each.context.createReportInfo(
+										`Candidate: ${each.context.resolveTextShort}`));
+								}
+							}
+							state.reportError(this._name.range,
+								`Function call ${this._name}${this._matches.signature?.resolveTextShort} not found`,
+								relatedInformation);
+						}
+					}
+				}
+			}
+		}
 
 
 	public contextAtPosition(position: Position): Context | undefined {

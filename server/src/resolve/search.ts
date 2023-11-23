@@ -37,10 +37,25 @@ export class ResolveSearch {
 	protected _functionsFull: ResolveFunction[] = [];
 	protected _functionsPartial: ResolveFunction[] = [];
 	protected _functionsWildcard: ResolveFunction[] = [];
+	protected _functionsAll: ResolveFunction[] = [];
 	protected _types: ResolveType[] = [];
 
 
-	constructor () {
+	constructor (copy?: ResolveSearch) {
+		if (copy) {
+			this.name = copy.name;
+			this.onlyTypes = copy.onlyTypes;
+			this.onlyVariables = copy.onlyVariables;
+			this.onlyFunctions = copy.onlyFunctions;
+			this.ignoreVariables = copy.ignoreVariables;
+			this.ignoreFunctions = copy.ignoreFunctions;
+			this.allMatchingTypes = copy.allMatchingTypes;
+			this.signature = copy.signature;
+			this.allowPartialMatch = copy.allowPartialMatch;
+			this.allowWildcardMatch = copy.allowWildcardMatch;
+			this.stopAfterFirstFullMatch = copy.stopAfterFirstFullMatch;
+			this.searchSuperClasses = copy.searchSuperClasses;
+		}
 	}
 
 
@@ -77,6 +92,9 @@ export class ResolveSearch {
 	/** Stop matching after first full match. */
 	public stopAfterFirstFullMatch: boolean = true;
 	
+	/** Search in super classes. */
+	public searchSuperClasses: boolean = true;
+	
 
 
 	/** Clear search result. */
@@ -87,6 +105,7 @@ export class ResolveSearch {
 		this._functionsFull.splice(0);
 		this._functionsPartial.splice(0);
 		this._functionsWildcard.splice(0);
+		this._functionsAll.splice(0);
 		this._types.splice(0);
 		this.signature = undefined;
 	}
@@ -119,6 +138,11 @@ export class ResolveSearch {
 	public get functionsWildcard(): ResolveFunction[] {
 		return this._functionsWildcard;
 	}
+	
+	/** All functions. Used if signature is undefined. */
+	public get functionsAll(): ResolveFunction[] {
+		return this._functionsAll;
+	}
 
 	public get types(): ResolveType[] {
 		return this._types;
@@ -143,7 +167,8 @@ export class ResolveSearch {
 		return this._localVariables.length + this._arguments.length
 			+ this._variables.length + this._functionsFull.length
 			+ this._functionsPartial.length + this._types.length
-			+ this._functionsWildcard.length + this._types.length;
+			+ this._functionsWildcard.length + this._types.length
+			+ this._functionsAll.length + this._types.length;
 	}
 
 	/** Count of match type group found. */
@@ -155,6 +180,7 @@ export class ResolveSearch {
 		if (this._functionsFull.length > 0) count ++;
 		count += this._functionsPartial.length;
 		count += this._functionsWildcard.length;
+		count += this._functionsAll.length;
 		count += this._types.length;
 		return count;
 	}

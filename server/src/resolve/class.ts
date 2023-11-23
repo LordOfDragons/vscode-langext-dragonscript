@@ -60,9 +60,11 @@ export class ResolveClass extends ResolveType {
 
 	public search(search: ResolveSearch): void {
 		super.search(search);
-
+		
 		if (this.context) {
-			(this.context.extends?.resolve as ResolveType)?.search(search);
+			if (search.searchSuperClasses) {
+				(this.context.extends?.resolve as ResolveType)?.search(search);
+			}
 			for (const each of this.context.implements) {
 				(each.resolve as ResolveType)?.search(search);
 			}
