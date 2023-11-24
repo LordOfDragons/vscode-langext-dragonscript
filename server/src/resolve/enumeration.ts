@@ -22,6 +22,7 @@
  * SOFTWARE.
  */
 
+import { DiagnosticRelatedInformation } from 'vscode-languageserver';
 import { ContextEnumeration } from '../context/scriptEnum';
 import { ResolveType } from './type';
 
@@ -54,6 +55,10 @@ export class ResolveEnumeration extends ResolveType {
 	public removeFromParent(): void {
 		this.parent?.removeEnumeration(this);
 		this.parent = undefined;
+	}
+	
+	public createReportInfo(message: string): DiagnosticRelatedInformation | undefined {
+		return this._context?.createReportInfo(message);
 	}
 	
 	

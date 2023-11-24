@@ -144,6 +144,10 @@ export class ResolveNamespace extends ResolveType {
 		return rootNamespace.class('Enumeration')!;
 	}
 
+	public static get classObject(): ResolveType {
+		return rootNamespace.class('Object')!;
+	}
+
 
 	protected onInvalidate(): void {
 		super.onInvalidate();

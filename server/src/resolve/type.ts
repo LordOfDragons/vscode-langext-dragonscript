@@ -30,6 +30,7 @@ import { ResolveFunction } from './function';
 import { ResolveVariable } from './variable';
 import { ResolveSearch } from './search';
 import { ResolveSignature } from './signature';
+import { DiagnosticRelatedInformation } from 'vscode-languageserver';
 
 
 /**
@@ -125,6 +126,17 @@ export class ResolveType{
 
 	protected updateResolveTextLong(): string[] {
 		return [this.fullyQualifiedName];
+	}
+	
+	public createReportInfo(message: string): DiagnosticRelatedInformation | undefined {
+		return undefined;
+	}
+	
+	public addReportInfo(relatedInformation: DiagnosticRelatedInformation[], message: string) {
+		var info = this.createReportInfo(message);
+		if (info) {
+			relatedInformation.push(info);
+		}
 	}
 
 
@@ -279,6 +291,7 @@ export class ResolveType{
 	public castable(type: ResolveType): boolean {
 		return false;
 	}
+	
 
 	public search(search: ResolveSearch): void {
 		if (!search.name) {

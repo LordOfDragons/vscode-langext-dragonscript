@@ -22,6 +22,7 @@
  * SOFTWARE.
  */
 
+import { DiagnosticRelatedInformation } from 'vscode-languageserver';
 import { ContextInterface } from '../context/scriptInterface';
 import { ResolveSearch } from './search';
 import { ResolveType } from './type';
@@ -55,6 +56,10 @@ export class ResolveInterface extends ResolveType {
 	public removeFromParent(): void {
 		this.parent?.removeInterface(this);
 		this.parent = undefined;
+	}
+	
+	public createReportInfo(message: string): DiagnosticRelatedInformation | undefined {
+		return this._context?.createReportInfo(message);
 	}
 
 	public search(search: ResolveSearch): void {

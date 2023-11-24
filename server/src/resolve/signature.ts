@@ -51,6 +51,49 @@ export class ResolveSignatureArgument{
 	public get autoCast(): Context.AutoCast {
 		return this._autoCast;
 	}
+	
+	public matches(target: ResolveSignatureArgument): ResolveSignature.Match {
+		return ResolveSignatureArgument.typeMatches(this._type, target._type, this._autoCast);
+	}
+	
+	public static exprMatches(from: Context, to: Context) {
+		return ResolveSignatureArgument.typeMatches(from.expressionType, to.expressionType, from.expressionAutoCast);
+	}
+	
+	public static typeMatches(fromType: ResolveType | undefined, toType: ResolveType | undefined,
+	autoCast: Context.AutoCast): ResolveSignature.Match {
+		if (!fromType || !toType) {
+			return ResolveSignature.Match.Wildcard;
+		}
+		if (fromType == toType) {
+			return ResolveSignature.Match.Full;
+		}
+		if (fromType.castable(toType)) {
+			return ResolveSignature.Match.Partial;
+		}
+		
+		switch (autoCast) {
+		case Context.AutoCast.KeywordNull:
+			return ResolveSignature.Match.Partial;
+			
+		case Context.AutoCast.LiteralByte:
+			if (toType.fullyQualifiedName == 'int' || toType.fullyQualifiedName == 'float') {
+				return ResolveSignature.Match.Partial;
+			}
+			break;
+			
+		case Context.AutoCast.LiteralInt:
+			if (toType.fullyQualifiedName == 'float') {
+				return ResolveSignature.Match.Partial;
+			}
+			break;
+			
+		default:
+			break;
+		}
+		
+		return ResolveSignature.Match.No;
+	}
 };
 
 /**
@@ -134,47 +177,21 @@ export class ResolveSignature{
 		var result = ResolveSignature.Match.Full;
 		
 		for (var i=0; i<len; i++) {
-			const at1 = this.arguments[i].type;
-			const at2 = signature.arguments[i].type;
-			
-			if (!at1 || !at2) {
-				result = ResolveSignature.Match.Wildcard;
+			switch (this.arguments[i].matches(signature.arguments[i])) {
+			case ResolveSignature.Match.Full:
 				continue;
-			}
-			
-			if (at1 == at2) {
-				continue;
-			}
-			
-			if (at1.castable(at2)) {
+				
+			case ResolveSignature.Match.Partial:
 				result = ResolveSignature.Match.Partial;
-				continue;
+				break;
+				
+			case ResolveSignature.Match.Wildcard:
+				result = ResolveSignature.Match.Wildcard;
+				break;
+				
+			case ResolveSignature.Match.No:
+				return ResolveSignature.Match.No;
 			}
-			
-			switch (this.arguments[i].autoCast) {
-				case Context.AutoCast.KeywordNull:
-					result = ResolveSignature.Match.Partial;
-					continue;
-					
-				case Context.AutoCast.LiteralByte:
-					if (at2.fullyQualifiedName == 'int' || at2.fullyQualifiedName == 'float') {
-						result = ResolveSignature.Match.Partial;
-						continue;
-					}
-					break;
-					
-				case Context.AutoCast.LiteralInt:
-					if (at2.fullyQualifiedName == 'float') {
-						result = ResolveSignature.Match.Partial;
-						continue;
-					}
-					break;
-					
-				default:
-					break;
-			}
-			
-			return ResolveSignature.Match.No;
 		}
 		
 		return result;

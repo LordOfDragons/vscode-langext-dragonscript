@@ -169,6 +169,10 @@ export class ContextConstant extends Context{
 			case ContextConstant.ConstantType.super:
 				this._resolveType = state.topScopeClass?.extends?.resolve;
 				break;
+				
+			case ContextConstant.ConstantType.null:
+				this._resolveType = ResolveNamespace.classObject;
+				this.expressionAutoCast = Context.AutoCast.KeywordNull;
 		}
 
 		this.expressionType = this._resolveType;

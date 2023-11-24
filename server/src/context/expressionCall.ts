@@ -23,7 +23,7 @@
  */
 
 import { Context } from "./context";
-import { DiagnosticRelatedInformation, DocumentSymbol, Hover, integer, Location, Position, Range, RemoteConsole, SymbolKind } from "vscode-languageserver";
+import { DiagnosticRelatedInformation, Hover, integer, Position, Range, RemoteConsole } from "vscode-languageserver";
 import { ContextBuilder } from "./contextBuilder";
 import { Identifier } from "./identifier";
 import { ExpressionAdditionCstNode } from "../nodeclasses/expressionAddition";
@@ -45,7 +45,7 @@ import { Helpers } from "../helpers";
 import { ResolveNamespace } from "../resolve/namespace";
 import { ResolveType } from "../resolve/type";
 import { ResolveSearch } from "../resolve/search";
-import { ResolveSignature } from "../resolve/signature";
+import { ResolveSignature, ResolveSignatureArgument } from "../resolve/signature";
 
 
 export class ContextFunctionCall extends Context{
@@ -517,6 +517,10 @@ export class ContextFunctionCall extends Context{
 			case ContextFunctionCall.FunctionType.functionSuper:
 				if (this._matches.functionsFull.length == 1) {
 					this.expressionType = this._matches.functionsFull[0].returnType;
+				} else if (this._matches.functionsPartial.length == 1) {
+					this.expressionType = this._matches.functionsPartial[0].returnType;
+				} else if (this._matches.functionsWildcard.length == 1) {
+					this.expressionType = this._matches.functionsWildcard[0].returnType;
 				}
 				break;
 
@@ -580,23 +584,27 @@ export class ContextFunctionCall extends Context{
 				break;
 				
 			case ContextFunctionCall.FunctionType.assign:
-				// TODO check if cast is valid
+				const o1 = this._object;
+				const o2 = this._arguments.at(0);
+				if (o1 && o2 && ResolveSignatureArgument.exprMatches(o1, o2) == ResolveSignature.Match.No) {
+					const at1 = o1.expressionType;
+					const at2 = o2.expressionType;
+					let ri: DiagnosticRelatedInformation[] = [];
+					at2?.addReportInfo(ri, `Source Type: ${at2?.resolveTextLong}`);
+					at1?.addReportInfo(ri, `Target Type: ${at1?.resolveTextLong}`);
+					state.reportError(this._name.range, `Invalid cast from ${at2?.resolveTextShort} to ${at1?.resolveTextShort}`, ri);
+				}
 				break;
 				
 			default:
 				if (this._matches) {
 					if (this._matches.functionsFull.length == 0) {
 						if (this._matches.functionsPartial.length > 1) {
-							let relatedInformation: DiagnosticRelatedInformation[] = [];
+							let ri: DiagnosticRelatedInformation[] = [];
 							for (const each of this._matches.functionsPartial) {
-								if (each.context) {
-									relatedInformation.push(each.context.createReportInfo(
-										`Candidate: ${each.context.resolveTextShort}`));
-								}
+								each.context?.addReportInfo(ri, `Candidate: ${each.context.resolveTextShort}`);
 							}
-							state.reportError(this._name.range,
-								`Ambigous function call ${this._name}${this._matches.signature?.resolveTextShort}`,
-								relatedInformation);
+							state.reportError(this._name.range, `Ambigous function call ${this._name}${this._matches.signature?.resolveTextShort}`, ri);
 							
 						} else if (this._matches.functionsPartial.length == 0) {
 							let matches2 = new ResolveSearch(this._matches);
@@ -614,16 +622,11 @@ export class ContextFunctionCall extends Context{
 								state.search(matches2, this);
 							}
 							
-							let relatedInformation: DiagnosticRelatedInformation[] = [];
+							let ri: DiagnosticRelatedInformation[] = [];
 							for (const each of matches2.functionsAll) {
-								if (each.context) {
-									relatedInformation.push(each.context.createReportInfo(
-										`Candidate: ${each.context.resolveTextShort}`));
-								}
+								each.context?.addReportInfo(ri, `Candidate: ${each.context.resolveTextShort}`);
 							}
-							state.reportError(this._name.range,
-								`Function call ${this._name}${this._matches.signature?.resolveTextShort} not found`,
-								relatedInformation);
+							state.reportError(this._name.range, `Function call ${this._name}${this._matches.signature?.resolveTextShort} not found`, ri);
 						}
 					}
 				}
@@ -668,12 +671,16 @@ export class ContextFunctionCall extends Context{
 			} else if (this._functionType == ContextFunctionCall.FunctionType.typeof) {
 				content.push(`bool **typeof** ${(this._castType?.resolve as ResolveType).resolveTextShort}`);
 			} else if (this._functionType == ContextFunctionCall.FunctionType.assign) {
-				const at1 = this._object?.expressionType;
-				const at2 = this._arguments.at(0)?.expressionType;
-				if (at1 && (!at2 || at1 == at2 || at2.castable(at1))) {
-					content.push(`${at1.resolveTextShort} **assign** ${at2?.resolveTextShort || "null"}`);
-				} else {
-					content.push(`${at1?.resolveTextShort} **assign** ${at2?.resolveTextShort} (invalid cast)`);
+				const o1 = this._object;
+				const o2 = this._arguments.at(0);
+				if (o1 && o2) {
+					const at1 = o1.expressionType;
+					const at2 = o2.expressionType;
+					if (ResolveSignatureArgument.exprMatches(o1, o2) == ResolveSignature.Match.No) {
+						content.push(`${at1?.resolveTextShort} **assign** ${at2?.resolveTextShort} (invalid cast)`);
+					} else {
+						content.push(`${at1?.resolveTextShort} **assign** ${at2?.resolveTextShort}`);
+					}
 				}
 			} else if (this._matches) {
 				content.push("___");

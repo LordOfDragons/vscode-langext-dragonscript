@@ -159,6 +159,10 @@ export class Context {
 	public createReportInfo(message: string): DiagnosticRelatedInformation {
 		return DiagnosticRelatedInformation.create(this.getReportLocation(), message);
 	}
+	
+	public addReportInfo(relatedInformation: DiagnosticRelatedInformation[], message: string) {
+		relatedInformation.push(this.createReportInfo(message));
+	}
 
 
 	protected ignoreException(code: () => void) {
