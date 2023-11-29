@@ -82,9 +82,7 @@ export class ContextFunctionArgument extends Context{
 	}
 
 	public resolveMembers(state: ResolveState): void {
-		if (this._typename) {
-			this._typename.resolveType(state);
-		}
+		this._typename?.resolveType(state);
 	}
 
 	public resolveStatements(state: ResolveState): void {

@@ -23,7 +23,7 @@
  */
 
 import { Context } from "./context";
-import { Hover, Position, RemoteConsole } from "vscode-languageserver";
+import { DocumentSymbol, Hover, Position, RemoteConsole } from "vscode-languageserver";
 import { StatementVariableCstNode } from "../nodeclasses/statementVariables";
 import { TypeName } from "./typename";
 import { Identifier } from "./identifier";
@@ -113,6 +113,11 @@ export class ContextVariable extends Context {
 		// pushScopeContext on purpose to keep context on stack until parent scope is removed
 		state.pushScopeContext(this);
 		this._value?.resolveStatements(state);
+	}
+	
+	public collectChildDocSymbols(list: DocumentSymbol[]) {
+		super.collectChildDocSymbols(list);
+		this._value?.collectChildDocSymbols(list);
 	}
 
 	public contextAtPosition(position: Position): Context | undefined {

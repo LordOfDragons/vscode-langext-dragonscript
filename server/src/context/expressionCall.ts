@@ -23,7 +23,7 @@
  */
 
 import { Context } from "./context";
-import { DiagnosticRelatedInformation, Hover, integer, Position, Range, RemoteConsole } from "vscode-languageserver";
+import { DiagnosticRelatedInformation, DocumentSymbol, Hover, integer, Position, Range, RemoteConsole } from "vscode-languageserver";
 import { ContextBuilder } from "./contextBuilder";
 import { Identifier } from "./identifier";
 import { ExpressionAdditionCstNode } from "../nodeclasses/expressionAddition";
@@ -541,12 +541,12 @@ export class ContextFunctionCall extends Context{
 			case ContextFunctionCall.FunctionType.assignAnd:
 			case ContextFunctionCall.FunctionType.assignOr:
 			case ContextFunctionCall.FunctionType.assignXor:
+			case ContextFunctionCall.FunctionType.assign:
 			case ContextFunctionCall.FunctionType.and:
 			case ContextFunctionCall.FunctionType.or:
 			case ContextFunctionCall.FunctionType.xor:
 			case ContextFunctionCall.FunctionType.shiftLeft:
 			case ContextFunctionCall.FunctionType.shiftRight:
-			case ContextFunctionCall.FunctionType.assign:
 			case ContextFunctionCall.FunctionType.multiply:
 			case ContextFunctionCall.FunctionType.divide:
 			case ContextFunctionCall.FunctionType.modulus:
@@ -555,7 +555,6 @@ export class ContextFunctionCall extends Context{
 			case ContextFunctionCall.FunctionType.increment:
 			case ContextFunctionCall.FunctionType.decrement:
 			case ContextFunctionCall.FunctionType.inverse:
-			case ContextFunctionCall.FunctionType.assign:
 				if (this._object) {
 					this.expressionType = this._object.expressionType;
 				} else {
@@ -591,7 +590,9 @@ export class ContextFunctionCall extends Context{
 				break;
 				
 			case ContextFunctionCall.FunctionType.assign:
-				const o1 = this._object;
+			case ContextFunctionCall.FunctionType.equals:
+			case ContextFunctionCall.FunctionType.notEquals:
+					const o1 = this._object;
 				const o2 = this._arguments.at(0);
 				if (o1 && o2 && ResolveSignatureArgument.exprMatches(o1, o2) == ResolveSignature.Match.No) {
 					const at1 = o1.expressionType;
@@ -637,8 +638,16 @@ export class ContextFunctionCall extends Context{
 						}
 					}
 				}
-			}
 		}
+	}
+	
+	public collectChildDocSymbols(list: DocumentSymbol[]) {
+		super.collectChildDocSymbols(list);
+		this._object?.collectChildDocSymbols(list);
+		for (const each of this._arguments) {
+			each.collectChildDocSymbols(list);
+		}
+	}
 
 
 	public contextAtPosition(position: Position): Context | undefined {
@@ -667,72 +676,103 @@ export class ContextFunctionCall extends Context{
 			let tname = this._operator ? 'operator' : 'function';
 			let content = [];
 			
-			if (this._functionType == ContextFunctionCall.FunctionType.cast) {
-				content.push(`**operator cast** ${(this._castType?.resolve as ResolveType).resolveTextShort}`);
-			} else if (this._functionType == ContextFunctionCall.FunctionType.castable) {
-				content.push(`bool **operator castable** ${(this._castType?.resolve as ResolveType).resolveTextShort}`);
-			} else if (this._functionType == ContextFunctionCall.FunctionType.typeof) {
-				content.push(`bool **operator typeof** ${(this._castType?.resolve as ResolveType).resolveTextShort}`);
-			} else if (this._functionType == ContextFunctionCall.FunctionType.assign) {
-				const o1 = this._object;
-				const o2 = this._arguments.at(0);
-				if (o1 && o2) {
-					const at1 = o1.expressionType;
-					const at2 = o2.expressionType;
-					if (ResolveSignatureArgument.exprMatches(o1, o2) == ResolveSignature.Match.No) {
-						content.push(`${at1?.resolveTextShort} **operator assign** ${at2?.resolveTextShort} (invalid cast)`);
-					} else {
-						content.push(`${at1?.resolveTextShort} **operator assign** ${at2?.resolveTextShort}`);
-					}
-				}
-			} else if (this._matches) {
-				var f: ResolveFunction | undefined;
-				
-				if (this._matches.functionsFull.length > 0) {
-					if (this._matches.functionsFull.length == 1) {
-						f = this._matches.functionsFull[0];
-					}
-				} else if (this._matches.functionsPartial.length > 0) {
-					if (this._matches.functionsPartial.length == 1) {
-						f = this._matches.functionsPartial[0];
-					}
-				} else if (this._matches.functionsWildcard.length > 0) {
-					if (this._matches.functionsWildcard.length == 1) {
-						f = this._matches.functionsWildcard[0];
-					}
-				}
-				
-				if (f?.context) {
-					content.push(...f.context.resolveTextLong);
+			switch (this._functionType) {
+				case ContextFunctionCall.FunctionType.cast:
+					content.push(`**operator cast** ${(this._castType?.resolve as ResolveType).resolveTextShort}`);
+					break;
 					
-				}
-				/*
-				content.push("___");
-				content.push(`call ${this.expressionType?.resolveTextShort} ${this._matches.signature?.resolveTextShort}`);
-				content.push("___");
-				content.push(`full ${this._name.name} f(${this._matches.functionsFull.length})`);
-				for (const each of this._matches.functionsFull) {
-					if (each.context) {
-						content.push(`${each.context.resolveTextShort} (${each.context.parent?.fullyQualifiedName})`);
+				case ContextFunctionCall.FunctionType.castable:
+					content.push(`bool **operator castable** ${(this._castType?.resolve as ResolveType).resolveTextShort}`);
+					break;
+					
+				case ContextFunctionCall.FunctionType.typeof:
+					content.push(`bool **operator typeof** ${(this._castType?.resolve as ResolveType).resolveTextShort}`);
+					break;
+					
+				case ContextFunctionCall.FunctionType.assign:
+				case ContextFunctionCall.FunctionType.equals:
+				case ContextFunctionCall.FunctionType.notEquals:
+					const o1 = this._object;
+					const o2 = this._arguments.at(0);
+					if (o1 && o2) {
+						const at1 = o1.expressionType;
+						const at2 = o2.expressionType;
+						
+						var opname: string;
+						
+						switch (this._functionType) {
+							case ContextFunctionCall.FunctionType.assign:
+								opname = "="
+								break;
+								
+							case ContextFunctionCall.FunctionType.equals:
+								opname = "==";
+								break;
+								
+							case ContextFunctionCall.FunctionType.notEquals:
+								opname = "!=";
+								break;
+						}
+						
+						if (ResolveSignatureArgument.exprMatches(o1, o2) == ResolveSignature.Match.No) {
+							content.push(`${at1?.resolveTextShort} **${opname}** ${at2?.resolveTextShort} (invalid cast)`);
+						} else {
+							content.push(`${at1?.resolveTextShort} **${opname}** ${at2?.resolveTextShort}`);
+						}
 					}
-				}
-				content.push("___");
-				content.push(`partial ${this._name.name} f(${this._matches.functionsPartial.length})`);
-				for (const each of this._matches.functionsPartial) {
-					if (each.context) {
-						content.push(`${each.context.resolveTextShort} (${each.context.parent?.fullyQualifiedName})`);
+					break;
+					
+				default:
+					if (this._matches) {
+						var f: ResolveFunction | undefined;
+						
+						if (this._matches.functionsFull.length > 0) {
+							if (this._matches.functionsFull.length == 1) {
+								f = this._matches.functionsFull[0];
+							}
+						} else if (this._matches.functionsPartial.length > 0) {
+							if (this._matches.functionsPartial.length == 1) {
+								f = this._matches.functionsPartial[0];
+							}
+						} else if (this._matches.functionsWildcard.length > 0) {
+							if (this._matches.functionsWildcard.length == 1) {
+								f = this._matches.functionsWildcard[0];
+							}
+						}
+						
+						if (f?.context) {
+							content.push(...f.context.resolveTextLong);
+							
+						}
+						/*
+						content.push("___");
+						content.push(`call ${this.expressionType?.resolveTextShort} ${this._matches.signature?.resolveTextShort}`);
+						content.push("___");
+						content.push(`full ${this._name.name} f(${this._matches.functionsFull.length})`);
+						for (const each of this._matches.functionsFull) {
+							if (each.context) {
+								content.push(`${each.context.resolveTextShort} (${each.context.parent?.fullyQualifiedName})`);
+							}
+						}
+						content.push("___");
+						content.push(`partial ${this._name.name} f(${this._matches.functionsPartial.length})`);
+						for (const each of this._matches.functionsPartial) {
+							if (each.context) {
+								content.push(`${each.context.resolveTextShort} (${each.context.parent?.fullyQualifiedName})`);
+							}
+						}
+						content.push("___");
+						content.push(`error ${this._name.name} f(${this._matches.functionsWildcard.length})`);
+						for (const each of this._matches.functionsWildcard) {
+							if (each.context) {
+								content.push(`${each.context.resolveTextShort} (${each.context.parent?.fullyQualifiedName})`);
+							}
+						}
+						*/
+						
+					} else {
+						content.push(`**${tname} member** ${this._name.name}`);
 					}
-				}
-				content.push("___");
-				content.push(`error ${this._name.name} f(${this._matches.functionsWildcard.length})`);
-				for (const each of this._matches.functionsWildcard) {
-					if (each.context) {
-						content.push(`${each.context.resolveTextShort} (${each.context.parent?.fullyQualifiedName})`);
-					}
-				}
-				*/
-			} else {
-				content.push(`**${tname} member** ${this._name.name}`);
 			}
 			
 			return new HoverInfo(content, this._name.range);

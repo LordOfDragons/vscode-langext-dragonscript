@@ -83,7 +83,7 @@ export class ResolveSignatureArgument{
 			break;
 			
 		case Context.AutoCast.LiteralInt:
-			if (toType.fullyQualifiedName == 'float') {
+			if (toType.fullyQualifiedName == 'float' || toType.fullyQualifiedName == 'byte') {
 				return ResolveSignature.Match.Partial;
 			}
 			break;

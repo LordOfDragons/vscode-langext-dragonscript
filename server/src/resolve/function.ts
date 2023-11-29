@@ -23,6 +23,8 @@
  */
 
 import { ContextFunction } from '../context/classFunction';
+import { Context } from '../context/context';
+import { ContextBlock } from '../context/expressionBlock';
 import { ResolveFunctionGroup } from './functionGroup';
 import { ResolveNamespace } from './namespace';
 import { ResolveSignature } from './signature';
@@ -34,17 +36,32 @@ import { ResolveType } from './type';
  */
 export class ResolveFunction{
 	protected _name: string;
-	protected _context?: ContextFunction;
+	protected _context?: ContextFunction | ContextBlock;
 	protected _fullyQualifiedName?: string
 	protected _returnType?: ResolveType;
 	protected _signature: ResolveSignature = new ResolveSignature();
 
 
-	constructor (context: ContextFunction) {
-		this._name = context.name.name;
+	constructor (context: ContextFunction | ContextBlock) {
 		this._context = context;
 		
-		this._returnType = context.returnType?.resolve;
+		switch (context.type) {
+		case Context.ContextType.Function:
+			let cxtfunc = context as ContextFunction;
+			this._name = cxtfunc.name.name;
+			this._returnType = cxtfunc.returnType?.resolve;
+			break;
+			
+		case Context.ContextType.Block:
+			let cxtblock = context as ContextBlock;
+			this._name = "run";
+			this._returnType = ResolveNamespace.classObject;
+			break;
+			
+		default:
+			throw Error("Invalid object type");
+		}
+		
 		for (const each of context.arguments) {
 			var type = each.typename.resolve;
 			if (!type) {
@@ -90,7 +107,7 @@ export class ResolveFunction{
 	public parent?: ResolveType;
 
 
-	public get context(): ContextFunction | undefined {
+	public get context(): ContextFunction | ContextBlock | undefined {
 		return this._context;
 	}
 

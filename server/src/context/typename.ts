@@ -111,11 +111,11 @@ export class TypeName {
 		return tn;
 	}
 
-	public static typeVoid(): TypeName {
+	public static get typeVoid(): TypeName {
 		return this.typeNamed('void');
 	}
 
-	public static typeObject(): TypeName {
+	public static get typeObject(): TypeName {
 		return this.typeNamed('Object');
 	}
 

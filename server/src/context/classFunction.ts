@@ -101,7 +101,7 @@ export class ContextFunction extends Context{
 		if (!fdecl) {
 			this._functionType = ContextFunction.Type.Regular;
 			this._name = new Identifier(undefined, "??");
-			this._returnType = TypeName.typeVoid();
+			this._returnType = TypeName.typeVoid;
 			return;
 		}
 
@@ -142,7 +142,7 @@ export class ContextFunction extends Context{
 			let fdecl2 = fdecl.children.classDestructor[0].children;
 			this._functionType = ContextFunction.Type.Destructor;
 			this._name = new Identifier(fdecl2.identifier[0]); // is always "destructor"
-			this._returnType = TypeName.typeVoid();
+			this._returnType = TypeName.typeVoid;
 
 			let declEnd = fdecl2.endOfCommand[0].children;
 			tokEnd = (declEnd.newline || declEnd.commandSeparator)![0];
@@ -222,7 +222,7 @@ export class ContextFunction extends Context{
 			} else {
 				this._functionType = ContextFunction.Type.Regular;
 				this._name = new Identifier(undefined, "??");
-				this._returnType = TypeName.typeVoid();
+				this._returnType = TypeName.typeVoid;
 			}
 
 			if (fdecl2.functionArguments) {
@@ -240,7 +240,7 @@ export class ContextFunction extends Context{
 		} else {
 			this._functionType = ContextFunction.Type.Regular;
 			this._name = new Identifier(undefined, "??");
-			this._returnType = TypeName.typeVoid();
+			this._returnType = TypeName.typeVoid;
 		}
 
 		if (cfdecl?.children.statements) {
@@ -261,6 +261,17 @@ export class ContextFunction extends Context{
 			this.range = Helpers.rangeFrom(tokBegin, tokEnd, true, false);
 			this.documentSymbol = DocumentSymbol.create(this._name.name, extText,
 				docSymKind, this.range, Helpers.rangeFrom(this._name.token, tokEnd, true, true));
+		}
+		
+		if (this._statements && this.documentSymbol) {
+			let collected: DocumentSymbol[] = [];
+			this._statements.collectChildDocSymbols(collected);
+			if (collected.length > 0) {
+				if (!this.documentSymbol.children) {
+					this.documentSymbol.children = [];
+				}
+				this.documentSymbol.children.push(...collected);
+			}
 		}
 	}
 
@@ -326,7 +337,7 @@ export class ContextFunction extends Context{
 	public get resolveFunction(): ResolveFunction | undefined {
 		return this._resolveFunction;
 	}
-
+	
 	public resolveMembers(state: ResolveState): void {
 		this._returnType?.resolveType(state);
 		

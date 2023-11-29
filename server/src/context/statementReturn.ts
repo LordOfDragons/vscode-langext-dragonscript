@@ -23,11 +23,10 @@
  */
 
 import { Context } from "./context";
-import { DiagnosticRelatedInformation, Hover, Position, Range, RemoteConsole } from "vscode-languageserver";
+import { DiagnosticRelatedInformation, DocumentSymbol, Hover, Position, Range, RemoteConsole } from "vscode-languageserver";
 import { ContextBuilder } from "./contextBuilder";
 import { StatementReturnCstNode } from "../nodeclasses/statementReturn";
 import { ResolveState } from "../resolve/state";
-import { HoverInfo } from "../hoverinfo";
 import { Helpers } from "../helpers";
 import { ResolveSignature, ResolveSignatureArgument } from "../resolve/signature";
 import { ResolveType } from "../resolve/type";
@@ -71,12 +70,12 @@ export class ContextReturn extends Context{
 	public resolveStatements(state: ResolveState): void {
 		this._value?.resolveStatements(state);
 		
-		const cf = state.topScopeFunction;
-		if (!cf) {
+		const cbf = state.topScopeBlock ?? state.topScopeFunction;
+		if (!cbf) {
 			return;
 		}
 		
-		const frt = cf.returnType?.resolve as ResolveType;
+		const frt = cbf.returnType?.resolve as ResolveType;
 		const ov = this._value;
 		
 		if (frt && frt.fullyQualifiedName != 'void') {
@@ -86,26 +85,31 @@ export class ContextReturn extends Context{
 					let ri: DiagnosticRelatedInformation[] = [];
 					tv?.addReportInfo(ri, `Return Value Type: ${tv?.resolveTextLong}`);
 					frt.addReportInfo(ri, `Function Return Type: ${frt.resolveTextLong}`);
-					cf.addReportInfo(ri, `Function ${cf.resolveTextShort}`);
+					cbf.addReportInfo(ri, `Function ${cbf.resolveTextShort}`);
 					state.reportError(Helpers.rangeFrom(this.node.children.return[0]),
 						`Invalid cast from ${tv?.resolveTextShort} to ${frt.resolveTextShort}`, ri);
 				}
 				
 			} else {
 				let ri: DiagnosticRelatedInformation[] = [];
-				cf.addReportInfo(ri, `Function ${cf.resolveTextShort}`);
+				cbf.addReportInfo(ri, `Function ${cbf.resolveTextShort}`);
 				state.reportError(Helpers.rangeFrom(this.node.children.return[0]),
-					`Missing return value for function with return type ${cf.returnType?.resolve?.resolveTextShort}`, ri);
+					`Missing return value for function with return type ${frt.resolveTextShort}`, ri);
 			}
 			
 		} else {
 			if (ov) {
 				let ri: DiagnosticRelatedInformation[] = [];
-				cf.addReportInfo(ri, `Function ${cf.resolveTextShort}`);
+				cbf.addReportInfo(ri, `Function ${cbf.resolveTextShort}`);
 				state.reportError(Helpers.rangeFrom(this.node.children.return[0]),
 					`Return value not allowed in function with void return type`, ri);
 			}
 		}
+	}
+	
+	public collectChildDocSymbols(list: DocumentSymbol[]) {
+		super.collectChildDocSymbols(list);
+		this._value?.collectChildDocSymbols(list);
 	}
 
 

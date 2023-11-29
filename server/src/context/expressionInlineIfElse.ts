@@ -23,7 +23,7 @@
  */
 
 import { Context } from "./context";
-import { DiagnosticRelatedInformation, Hover, Position, Range, RemoteConsole } from "vscode-languageserver";
+import { DiagnosticRelatedInformation, DocumentSymbol, Hover, Position, Range, RemoteConsole } from "vscode-languageserver";
 import { ContextBuilder } from "./contextBuilder";
 import { ExpressionInlineIfElseCstNode } from "../nodeclasses/expressionInlineIfElse";
 import { ResolveState } from "../resolve/state";
@@ -106,6 +106,13 @@ export class ContextInlineIfElse extends Context{
 			it.addReportInfo(ri, `Target Type: ${it.resolveTextLong}`);
 			state.reportError(this._elsevalue.range, `Else: Invalid cast from ${et.resolveTextShort} to ${it.resolveTextShort}`, ri);
 		}
+	}
+	
+	public collectChildDocSymbols(list: DocumentSymbol[]) {
+		super.collectChildDocSymbols(list);
+		this._condition.collectChildDocSymbols(list);
+		this._ifvalue.collectChildDocSymbols(list);
+		this._elsevalue.collectChildDocSymbols(list);
 	}
 	
 	public contextAtPosition(position: Position): Context | undefined {

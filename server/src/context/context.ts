@@ -78,6 +78,13 @@ export class Context {
 			}
 		}
 	}
+	
+	public collectChildDocSymbols(list: DocumentSymbol[]) {
+		if (this.documentSymbol) {
+			list.push(this.documentSymbol);
+		}
+	}
+	
 
 	public get fullyQualifiedName(): string {
 		return this.parent?.fullyQualifiedName || "";

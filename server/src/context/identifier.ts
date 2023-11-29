@@ -41,7 +41,7 @@ export class Identifier {
 		} else if (token) {
 			this._name = token.image;
 		} else {
-			throw "Token and name can not both be undefined";
+			throw Error("Token and name can not both be undefined");
 		}
 
 		if (token) {

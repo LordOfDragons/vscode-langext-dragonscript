@@ -23,11 +23,10 @@
  */
 
 import { Context } from "./context";
-import { DocumentSymbol, Hover, Position, Range, RemoteConsole, SymbolKind } from "vscode-languageserver";
+import { DocumentSymbol, Position, Range, RemoteConsole } from "vscode-languageserver";
 import { ContextBuilder } from "./contextBuilder";
 import { StatementsCstNode } from "../nodeclasses/statement";
 import { ResolveState } from "../resolve/state";
-import { HoverInfo } from "../hoverinfo";
 import { Helpers } from "../helpers";
 
 
@@ -90,6 +89,13 @@ export class ContextStatements extends Context{
 	public resolveStatements(state: ResolveState): void {
 		for (const each of this._statements) {
 			each.resolveStatements(state);
+		}
+	}
+	
+	public collectChildDocSymbols(list: DocumentSymbol[]) {
+		super.collectChildDocSymbols(list);
+		for (const each of this._statements) {
+			each.collectChildDocSymbols(list);
 		}
 	}
 

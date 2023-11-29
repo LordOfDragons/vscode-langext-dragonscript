@@ -24,6 +24,8 @@
 
 import { DiagnosticRelatedInformation } from 'vscode-languageserver';
 import { ContextEnumeration } from '../context/scriptEnum';
+import { ResolveNamespace } from './namespace';
+import { ResolveSearch } from './search';
 import { ResolveType } from './type';
 
 
@@ -63,12 +65,26 @@ export class ResolveEnumeration extends ResolveType {
 	
 	
 	
+	public search(search: ResolveSearch): void {
+		super.search(search);
+		
+		if (this.context) {
+			if (search.searchSuperClasses) {
+				ResolveNamespace.classEnumeration.search(search);
+			}
+		}
+	}
+	
 	public castable(type: ResolveType): boolean {
 		if (type === this) {
 			return true;
 		}
 		if (!this.context) {
 			return false;
+		}
+		
+		if (ResolveNamespace.classEnumeration.castable(type)) {
+			return true;
 		}
 		
 		if (type.type == ResolveType.Type.Class && type.fullyQualifiedName == 'Object') {

@@ -49,7 +49,7 @@ export class ResolveVariable{
 		if (context.type == Context.ContextType.Variable) {
 			this._variableType = (context as ContextClassVariable).typename?.resolve;
 		} else {
-			this._variableType = ResolveNamespace.classEnumeration;
+			this._variableType = (context.parent as ContextEnumeration).resolveEnumeration;
 		}
 	}
 

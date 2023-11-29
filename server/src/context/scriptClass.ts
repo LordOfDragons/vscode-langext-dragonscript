@@ -73,7 +73,7 @@ export class ContextClass extends Context{
 			this._extends = new TypeName(cdeclBegin.baseClassName[0]);
 
 		} else if (this.fullyQualifiedName != 'Object') {
-			this._extends = TypeName.typeObject();
+			this._extends = TypeName.typeObject;
 		}
 
 		if (cdeclBegin.interfaceName) {

@@ -38,7 +38,7 @@ export class LiteralString {
 		} else if (token) {
 			this._string = token.image;
 		} else {
-			throw "Token and name can not both be undefined";
+			throw Error("Token and name can not both be undefined");
 		}
 	}
 
