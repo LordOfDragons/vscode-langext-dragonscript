@@ -56,7 +56,7 @@ export class ContextClassVariable extends Context{
 				typeNode: FullyQualifiedClassNameCstNode,
 				firstVar: ContextClassVariable | undefined,
 				endToken: IToken, parent: Context) {
-		super(Context.ContextType.Variable, parent);
+		super(Context.ContextType.ClassVariable, parent);
 		this._node = node;
 		this._typeModifiers = new Context.TypeModifierSet(typemodNode, Context.TypeModifier.Private);
 		this._name = new Identifier(node.children.name[0]);

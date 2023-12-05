@@ -105,7 +105,9 @@ export class ContextVariable extends Context {
 		} else {
 			this._typename.resolveType(state);
 		}
-
+		
+		this._value?.resolveMembers(state);
+		
 		// TODO check for shadowing
 	}
 

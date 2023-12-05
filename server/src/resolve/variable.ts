@@ -27,7 +27,6 @@ import { ContextClassVariable } from '../context/classVariable';
 import { Context } from '../context/context';
 import { ContextEnumEntry, ContextEnumeration } from '../context/scriptEnum';
 import { ResolveClass } from './class';
-import { ResolveNamespace } from './namespace';
 import { ResolveType } from './type';
 
 
@@ -47,7 +46,7 @@ export class ResolveVariable{
 		this._name = context.name.name;
 		this._context = context;
 
-		if (context.type == Context.ContextType.Variable) {
+		if (context.type == Context.ContextType.ClassVariable) {
 			this._variableType = (context as ContextClassVariable).typename?.resolve;
 		} else {
 			this._variableType = (context.parent as ContextEnumeration).resolveEnumeration;
@@ -103,7 +102,7 @@ export class ResolveVariable{
 		var typeMods = "";
 
 		if (this.context) {
-			if (this.context.type == Context.ContextType.Variable) {
+			if (this.context.type == Context.ContextType.ClassVariable) {
 				typeMods = (this.context as ContextClassVariable).typeModifiers.typestring;
 			} else {
 				typeMods = "public";
@@ -140,7 +139,7 @@ export class ResolveVariable{
 			return true;
 		}
 
-		if (this.context.type == Context.ContextType.Variable) {
+		if (this.context.type == Context.ContextType.ClassVariable) {
 			const v = this.context as ContextClassVariable;
 			
 			if (pc.isSuperclass(cls)) {

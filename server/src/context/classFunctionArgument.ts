@@ -30,8 +30,6 @@ import { Identifier } from "./identifier";
 import { ResolveState } from "../resolve/state";
 import { HoverInfo } from "../hoverinfo";
 import { Helpers } from "../helpers";
-import { ContextClass } from "./scriptClass";
-import { ResolveClass } from "../resolve/class";
 
 
 export class ContextFunctionArgument extends Context{
@@ -82,24 +80,7 @@ export class ContextFunctionArgument extends Context{
 	public resolveMembers(state: ResolveState): void {
 		this._typename?.resolveType(state);
 	}
-
-	public resolveStatements(state: ResolveState): void {
-		const parentClass = (this.parent?.parent as ContextClass).resolveClass;
-		if (parentClass) {
-			let pcr = parentClass;
-			while (pcr) {
-				const v = pcr.variable(this._name.name);
-				if (v) {
-					if (v.canAccess(parentClass)) {
-						state.reportWarning(this._name.range, `Parameter shadows variable ${this._name.name} in ${pcr.fullyQualifiedName}`);
-					}
-					break;
-				}
-				pcr = (pcr.parent as ResolveClass)?.context?.extends?.resolve as ResolveClass;
-			}
-		}
-	}
-
+	
 	public contextAtPosition(position: Position): Context | undefined {
 		if (!Helpers.isPositionInsideRange(this.range, position)) {
 			return undefined;

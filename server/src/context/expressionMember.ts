@@ -36,8 +36,6 @@ import { ContextFunctionArgument } from "./classFunctionArgument";
 import { ContextVariable } from "./statementVariable";
 import { ResolveVariable } from "../resolve/variable";
 import { ContextClass } from "./scriptClass";
-import { ContextClassVariable } from "./classVariable";
-import { ResolveClass } from "../resolve/class";
 
 
 export class ContextMember extends Context{
@@ -102,6 +100,26 @@ export class ContextMember extends Context{
 		return this._name!;
 	}
 
+	
+	public get resolveArgument(): ContextFunctionArgument | undefined {
+		return this._resolveArgument;
+	};
+	
+	public get resolveLocalVariable(): ContextVariable | undefined {
+		return this._resolveLocalVariable;
+	}
+	
+	public get resolveVariable(): ResolveVariable | undefined {
+		return this._resolveVariable;
+	}
+	
+	public get resolveType(): ResolveType | undefined {
+		return this._resolveType;
+	}
+	
+	public get resolveAny(): ContextFunctionArgument | ContextVariable | ResolveVariable | ResolveType | undefined {
+		return this._resolveArgument ?? this._resolveLocalVariable ?? this._resolveVariable ?? this._resolveType;
+	}
 	
 	public resolveStatements(state: ResolveState): void {
 		this._object?.resolveStatements(state);

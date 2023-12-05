@@ -171,7 +171,6 @@ export class Context {
 		relatedInformation.push(this.createReportInfo(message));
 	}
 
-
 	protected ignoreException(code: () => void) {
 		try {
 			code();
@@ -275,6 +274,7 @@ export namespace Context {
 		Function,
 		FunctionArgument,
 		Variable,
+		ClassVariable,
 		Return,
 		Break,
 		Continue,

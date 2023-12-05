@@ -47,6 +47,10 @@ import { ResolveType } from "../resolve/type";
 import { ResolveSearch } from "../resolve/search";
 import { ResolveSignature, ResolveSignatureArgument } from "../resolve/signature";
 import { ResolveFunction } from "../resolve/function";
+import { ContextClassVariable } from "./classVariable";
+import { ContextVariable } from "./statementVariable";
+import { ContextFunctionArgument } from "./classFunctionArgument";
+import { ContextMember } from "./expressionMember";
 
 
 export class ContextFunctionCall extends Context{
@@ -521,8 +525,29 @@ export class ContextFunctionCall extends Context{
 		}
 
 		switch (this._functionType) {
-			case ContextFunctionCall.FunctionType.function:
-			case ContextFunctionCall.FunctionType.functionSuper:
+			case ContextFunctionCall.FunctionType.assign:
+				if (this._object) {
+					this.expressionType = this._object.expressionType;
+				} else {
+					this.expressionType = state.topScopeClass?.resolveClass;
+				}
+				break;
+		
+			case ContextFunctionCall.FunctionType.equals:
+			case ContextFunctionCall.FunctionType.notEquals:
+			case ContextFunctionCall.FunctionType.logicalAnd:
+			case ContextFunctionCall.FunctionType.logicalOr:
+			case ContextFunctionCall.FunctionType.not:
+			case ContextFunctionCall.FunctionType.castable:
+			case ContextFunctionCall.FunctionType.typeof:
+				this.expressionType = ResolveNamespace.classBool;
+				break;
+
+			case ContextFunctionCall.FunctionType.cast:
+				this.expressionType = this._castType?.resolve as ResolveType;
+				break;
+				
+			default:
 				if (this._matches.functionsFull.length > 0) {
 					if (this._matches.functionsFull.length == 1) {
 						this.expressionType = this._matches.functionsFull[0].returnType;
@@ -536,55 +561,6 @@ export class ContextFunctionCall extends Context{
 						this.expressionType = this._matches.functionsWildcard[0].returnType;
 					}
 				}
-				break;
-
-			case ContextFunctionCall.FunctionType.assignMultiply:
-			case ContextFunctionCall.FunctionType.assignDivide:
-			case ContextFunctionCall.FunctionType.assignModulus:
-			case ContextFunctionCall.FunctionType.assignAdd:
-			case ContextFunctionCall.FunctionType.assignSubtract:
-			case ContextFunctionCall.FunctionType.assignShiftLeft:
-			case ContextFunctionCall.FunctionType.assignShiftRight:
-			case ContextFunctionCall.FunctionType.assignAnd:
-			case ContextFunctionCall.FunctionType.assignOr:
-			case ContextFunctionCall.FunctionType.assignXor:
-			case ContextFunctionCall.FunctionType.assign:
-			case ContextFunctionCall.FunctionType.and:
-			case ContextFunctionCall.FunctionType.or:
-			case ContextFunctionCall.FunctionType.xor:
-			case ContextFunctionCall.FunctionType.shiftLeft:
-			case ContextFunctionCall.FunctionType.shiftRight:
-			case ContextFunctionCall.FunctionType.multiply:
-			case ContextFunctionCall.FunctionType.divide:
-			case ContextFunctionCall.FunctionType.modulus:
-			case ContextFunctionCall.FunctionType.add:
-			case ContextFunctionCall.FunctionType.subtract:
-			case ContextFunctionCall.FunctionType.increment:
-			case ContextFunctionCall.FunctionType.decrement:
-			case ContextFunctionCall.FunctionType.inverse:
-				if (this._object) {
-					this.expressionType = this._object.expressionType;
-				} else {
-					this.expressionType = state.topScopeClass?.resolveClass;
-				}
-				break;
-		
-			case ContextFunctionCall.FunctionType.less:
-			case ContextFunctionCall.FunctionType.greater:
-			case ContextFunctionCall.FunctionType.lessEqual:
-			case ContextFunctionCall.FunctionType.greaterEqual:
-			case ContextFunctionCall.FunctionType.equals:
-			case ContextFunctionCall.FunctionType.notEquals:
-			case ContextFunctionCall.FunctionType.logicalAnd:
-			case ContextFunctionCall.FunctionType.logicalOr:
-			case ContextFunctionCall.FunctionType.not:
-			case ContextFunctionCall.FunctionType.castable:
-			case ContextFunctionCall.FunctionType.typeof:
-				this.expressionType = ResolveNamespace.classBool;
-				break;
-
-			case ContextFunctionCall.FunctionType.cast:
-				this.expressionType = this._castType?.resolve as ResolveType;
 				break;
 		}
 		
@@ -661,6 +637,53 @@ export class ContextFunctionCall extends Context{
 					}
 				}
 		}
+		
+		switch (this._functionType) {
+			case ContextFunctionCall.FunctionType.assign:{
+				const other = this._arguments.at(0);
+				if (other && this.sameTarget(other)) {
+					let ri: DiagnosticRelatedInformation[] = [];
+					other.addReportInfo(ri, `Target: ${other.resolveTextLong}`);
+					state.reportWarning(this._name.range, 'Assignment has no effect.', ri);
+				}
+				}break;
+				
+			case ContextFunctionCall.FunctionType.equals:{
+				const other = this._arguments.at(0);
+				if (other && this.sameTarget(other)) {
+					let ri: DiagnosticRelatedInformation[] = [];
+					other.addReportInfo(ri, `Target: ${other.resolveTextLong}`);
+					state.reportWarning(this._name.range, 'Comparisson is always true', ri);
+				}
+				}break;
+				
+			case ContextFunctionCall.FunctionType.notEquals:{
+				const other = this._arguments.at(0);
+				if (other && this.sameTarget(other)) {
+					let ri: DiagnosticRelatedInformation[] = [];
+					other.addReportInfo(ri, `Target: ${other.resolveTextLong}`);
+					state.reportWarning(this._name.range, 'Comparisson is always false', ri);
+				}
+				}break;
+		}
+	}
+	
+	protected sameTarget(other: Context): boolean {
+		if (!this._object || other.type != this._object.type) {
+			return false;
+		}
+		
+		switch (this._object.type) {
+			case Context.ContextType.Member:{
+				const v1 = (this._object as ContextMember).resolveAny;
+				const v2 = (other as ContextMember).resolveAny;
+				if (v1 && v2) {
+					return v1 == v2;
+				}
+				}break;
+		}
+		
+		return false;
 	}
 	
 	public collectChildDocSymbols(list: DocumentSymbol[]) {

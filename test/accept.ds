@@ -104,7 +104,6 @@ public class OuterClass extends ClassExtendImplement
 			each.equals( this.pFunc().toString() )
 			return true
 		end )
-		BgButton.new(null, null).pImage = null
 	end
 	
 	public func new() this( "Something \u1234.", true )
