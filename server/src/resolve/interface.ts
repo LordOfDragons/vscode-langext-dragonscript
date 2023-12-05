@@ -35,6 +35,7 @@ export class ResolveInterface extends ResolveType {
 	constructor (context: ContextInterface) {
 		super(context.name.name, ResolveType.Type.Interface);
 		this._context = context;
+		this._resolveTextType = 'interface';
 	}
 
 	public dispose(): void {

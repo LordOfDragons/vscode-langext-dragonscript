@@ -322,10 +322,26 @@ export namespace Context {
 		protected _fixed: boolean = false;
 		protected _static: boolean = false;
 
-		constructor(node?: TypeModifiersCstNode) {
+		constructor(node: TypeModifiersCstNode | undefined, defaultModifier: Context.TypeModifier) {
 			super();
+			
 			if (!node || !node.children.typeModifier) {
-				this.add(Context.TypeModifier.Public);
+				this.add(defaultModifier);
+				
+				switch (defaultModifier) {
+				case Context.TypeModifier.Public:
+					this._accessLevel = AccessLevel.Public;
+					break;
+					
+				case Context.TypeModifier.Protected:
+					this._accessLevel = AccessLevel.Protected;
+					break;
+					
+				case Context.TypeModifier.Private:
+					this._accessLevel = AccessLevel.Private;
+					break;
+				}
+				
 				return;
 			}
 

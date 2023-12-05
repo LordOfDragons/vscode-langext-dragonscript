@@ -22,6 +22,7 @@
  * SOFTWARE.
  */
 
+import { DiagnosticRelatedInformation } from 'vscode-languageserver';
 import { ContextClassVariable } from '../context/classVariable';
 import { Context } from '../context/context';
 import { ContextEnumEntry, ContextEnumeration } from '../context/scriptEnum';
@@ -143,14 +144,23 @@ export class ResolveVariable{
 			const v = this.context as ContextClassVariable;
 			
 			if (pc.isSuperclass(cls)) {
-				return v.typeModifiers.isProtectedOrPrivate;
+				return v.typeModifiers.isPublicOrProtected;
 			} else {
 				return v.typeModifiers.isPublic;
 			}
 			
 		} else if (this.context.type == Context.ContextType.EnumerationEntry) {
 			return true;
+			
+		} else {
+			return true;
 		}
-
+	}
+	
+	public addReportInfo(relatedInformation: DiagnosticRelatedInformation[], message: string) {
+		var info = this._context?.createReportInfo(message);
+		if (info) {
+			relatedInformation.push(info);
+		}
 	}
 }

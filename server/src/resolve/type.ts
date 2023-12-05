@@ -50,6 +50,8 @@ export class ResolveType{
 	protected _displayName?: string
 	protected _resolveTextShort?: string;
 	protected _resolveTextLong?: string[];
+	protected _childTypesBeforeSelf = false;
+	protected _resolveTextType = 'type ';
 
 
 	constructor (name: string, type: ResolveType.Type) {
@@ -114,7 +116,7 @@ export class ResolveType{
 	}
 
 	protected updateResolveTextShort(): string {
-		return this._name;
+		return `${this._resolveTextType} ${this._name}`;
 	}
 
 	public get resolveTextLong(): string[] {
@@ -125,7 +127,7 @@ export class ResolveType{
 	}
 
 	protected updateResolveTextLong(): string[] {
-		return [this.fullyQualifiedName];
+		return [`**${this._resolveTextType}** ${this.fullyQualifiedName}`];
 	}
 	
 	public createReportInfo(message: string): DiagnosticRelatedInformation | undefined {
@@ -345,13 +347,26 @@ export class ResolveType{
 				}
 			}
 		}
-
+		
+		if (this._childTypesBeforeSelf) {
+			this.searchChildTypes(search);
+			this.searchSelf(search);
+			
+		} else {
+			this.searchSelf(search);
+			this.searchChildTypes(search);
+		}
+	}
+	
+	protected searchSelf(search: ResolveSearch): void {
 		if (!search.onlyVariables && !search.onlyFunctions) {
 			if (this._name == search.name) {
 				search.addType(this);
 			}
 		}
-
+	}
+	
+	protected searchChildTypes(search: ResolveSearch): void {
 		if (!search.onlyVariables && !search.onlyFunctions) {
 			let c = this.class(search.name);
 			if (c) {
@@ -369,7 +384,7 @@ export class ResolveType{
 			}
 		}
 	}
-
+	
 
 	public invalidate(): void {
 		this._valid = false;

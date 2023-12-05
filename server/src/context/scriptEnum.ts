@@ -146,7 +146,7 @@ export class ContextEnumeration extends Context{
 
 		this._node = node;
 		this._name = new Identifier(edeclBegin.name[0]);
-		this._typeModifiers = new Context.TypeModifierSet(typemodNode);
+		this._typeModifiers = new Context.TypeModifierSet(typemodNode, Context.TypeModifier.Public);
 
 		let tokEnd = edecl.enumerationEnd[0].children.end[0];
 		let tokEnum = edeclBegin.enum[0];

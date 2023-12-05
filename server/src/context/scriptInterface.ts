@@ -59,7 +59,7 @@ export class ContextInterface extends Context{
 
 		this._node = node;
 		this._name = new Identifier(ideclBegin.name[0]);
-		this._typeModifiers = new Context.TypeModifierSet(typemodNode);
+		this._typeModifiers = new Context.TypeModifierSet(typemodNode, Context.TypeModifier.Public);
 
 		let tokIf = ideclBegin.interface[0];
 		let tokEnd = idecl.interfaceEnd[0].children.end[0];

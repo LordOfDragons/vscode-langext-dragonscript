@@ -30,9 +30,7 @@ import { Identifier } from "./identifier";
 import { ResolveState } from "../resolve/state";
 import { HoverInfo } from "../hoverinfo";
 import { Helpers } from "../helpers";
-import { ResolveType } from "../resolve/type";
 import { ContextClass } from "./scriptClass";
-import { ContextInterface } from "./scriptInterface";
 import { ResolveClass } from "../resolve/class";
 
 

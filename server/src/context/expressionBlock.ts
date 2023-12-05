@@ -122,8 +122,18 @@ export class ContextBlock extends Context{
 		}
 	}
 	
-	public resolveStatements(state: ResolveState): void {
+	public resolveMembers(state: ResolveState): void {
 		this._returnType.resolveType(state);
+		
+		state.withScopeContext(this, () => {
+			for (const each of this._arguments) {
+				each.resolveMembers(state);
+			}
+			this._statements?.resolveMembers(state);
+		});
+	}
+	
+	public resolveStatements(state: ResolveState): void {
 		this.expressionType = ResolveNamespace.classBlock;
 		
 		this._resolveFunction?.dispose();

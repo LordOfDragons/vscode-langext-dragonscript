@@ -104,6 +104,7 @@ public class OuterClass extends ClassExtendImplement
 			each.equals( this.pFunc().toString() )
 			return true
 		end )
+		BgButton.new(null, null).pImage = null
 	end
 	
 	public func new() this( "Something \u1234.", true )
@@ -121,7 +122,7 @@ public class OuterClass extends ClassExtendImplement
 	/**
 	 * \brief This is the documentation of callMe function.
 	 * 
-	 * Some more stuff to fill some lins.
+	 * Some more stuff to fill some lines.
 	 * 
 	 * \param value A value parameter.
 	 * \param ablock A block with some parameters.

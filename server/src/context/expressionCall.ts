@@ -456,12 +456,19 @@ export class ContextFunctionCall extends Context{
 	}
 
 
+	public resolveMembers(state: ResolveState): void {
+		this._object?.resolveMembers(state);
+		for (const each of this._arguments) {
+			each.resolveMembers(state);
+		}
+		this._castType?.resolveType(state);
+	}
+	
 	public resolveStatements(state: ResolveState): void {
 		this._object?.resolveStatements(state);
 		for (const each of this._arguments) {
 			each.resolveStatements(state);
 		}
-		this._castType?.resolveType(state);
 
 		// resolve expression type
 		if (!this._name) {
@@ -591,9 +598,9 @@ export class ContextFunctionCall extends Context{
 				
 			case ContextFunctionCall.FunctionType.assign:
 			case ContextFunctionCall.FunctionType.equals:
-			case ContextFunctionCall.FunctionType.notEquals:
-					const o1 = this._object;
-				const o2 = this._arguments.at(0);
+			case ContextFunctionCall.FunctionType.notEquals:{
+				const o1 = this._arguments.at(0);
+				const o2 = this._object;
 				if (o1 && o2 && ResolveSignatureArgument.exprMatches(o1, o2) == ResolveSignature.Match.No) {
 					const at1 = o1.expressionType;
 					const at2 = o2.expressionType;
@@ -602,7 +609,22 @@ export class ContextFunctionCall extends Context{
 					at1?.addReportInfo(ri, `Target Type: ${at1?.resolveTextLong}`);
 					state.reportError(this._name.range, `Invalid cast from ${at2?.resolveTextShort} to ${at1?.resolveTextShort}`, ri);
 				}
-				break;
+				}break;
+				
+			case ContextFunctionCall.FunctionType.logicalAnd:
+			case ContextFunctionCall.FunctionType.logicalOr:
+			case ContextFunctionCall.FunctionType.not:{
+				const o1 = this._object;
+				if (o1) {
+					const at1 = o1.expressionType;
+					if (at1 && ResolveSignatureArgument.typeMatches(at1, this.expressionType, o1.expressionAutoCast) == ResolveSignature.Match.No) {
+						let ri: DiagnosticRelatedInformation[] = [];
+						this.expressionType?.addReportInfo(ri, `Source Type: ${this.expressionType?.resolveTextLong}`);
+						at1?.addReportInfo(ri, `Target Type: ${at1?.resolveTextLong}`);
+						state.reportError(this._name.range, `Invalid cast from ${this.expressionType?.resolveTextShort} to ${at1?.resolveTextShort}`, ri);
+					}
+				}
+				}break;
 				
 			default:
 				if (this._matches) {
@@ -692,14 +714,10 @@ export class ContextFunctionCall extends Context{
 				case ContextFunctionCall.FunctionType.assign:
 				case ContextFunctionCall.FunctionType.equals:
 				case ContextFunctionCall.FunctionType.notEquals:
-					const o1 = this._object;
-					const o2 = this._arguments.at(0);
+					const o1 = this._arguments.at(0);
+					const o2 = this._object;
 					if (o1 && o2) {
-						const at1 = o1.expressionType;
-						const at2 = o2.expressionType;
-						
 						var opname: string;
-						
 						switch (this._functionType) {
 							case ContextFunctionCall.FunctionType.assign:
 								opname = "="
@@ -713,6 +731,9 @@ export class ContextFunctionCall extends Context{
 								opname = "!=";
 								break;
 						}
+						
+						const at1 = o1.expressionType;
+						const at2 = o2.expressionType;
 						
 						if (ResolveSignatureArgument.exprMatches(o1, o2) == ResolveSignature.Match.No) {
 							content.push(`${at1?.resolveTextShort} **${opname}** ${at2?.resolveTextShort} (invalid cast)`);

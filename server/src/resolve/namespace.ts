@@ -35,7 +35,10 @@ export class ResolveNamespace extends ResolveType {
 
 	constructor (name: string) {
 		super(name, ResolveType.Type.Namespace);
-
+		
+		this._childTypesBeforeSelf = true;
+		this._resolveTextType = 'namespace';
+		
 		if (name == "") {
 			// for the root namespace add some special classes
 			this.addClass(new ResolveClass(undefined, "void"));
@@ -98,14 +101,14 @@ export class ResolveNamespace extends ResolveType {
 		if (search.onlyVariables || search.onlyFunctions || !search.name) {
 			return;
 		}
-
+		
 		super.search(search);
-
+		
 		let ns = this.namespace(search.name);
 		if (ns) {
 			search.addType(ns);
 		}
-
+		
 		this.parent?.search(search);
 	}
 

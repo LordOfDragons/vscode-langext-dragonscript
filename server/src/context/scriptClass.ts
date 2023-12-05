@@ -61,7 +61,7 @@ export class ContextClass extends Context{
 		
 		this._node = node;
 		this._name = new Identifier(cdeclBegin.name[0]);
-		this._typeModifiers = new Context.TypeModifierSet(typemodNode);
+		this._typeModifiers = new Context.TypeModifierSet(typemodNode, Context.TypeModifier.Public);
 		
 		let tokEnd = cdecl.classEnd[0].children.end[0];
 		let tokClass = cdeclBegin.class[0];

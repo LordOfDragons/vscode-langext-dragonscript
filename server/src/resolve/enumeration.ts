@@ -36,6 +36,7 @@ export class ResolveEnumeration extends ResolveType {
 	constructor (context: ContextEnumeration) {
 		super(context.name.name, ResolveType.Type.Enumeration);
 		this._context = context;
+		this._resolveTextType = 'enumeration';
 	}
 
 	public dispose(): void {

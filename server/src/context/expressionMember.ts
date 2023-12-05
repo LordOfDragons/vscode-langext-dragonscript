@@ -23,7 +23,7 @@
  */
 
 import { Context } from "./context";
-import { Hover, integer, Position, Range, RemoteConsole } from "vscode-languageserver";
+import { DiagnosticRelatedInformation, Hover, integer, Position, Range, RemoteConsole } from "vscode-languageserver";
 import { ContextBuilder } from "./contextBuilder";
 import { Identifier } from "./identifier";
 import { ExpressionMemberCstNode, ExpressionObjectCstNode } from "../nodeclasses/expressionObject";
@@ -35,6 +35,9 @@ import { ResolveSearch } from "../resolve/search";
 import { ContextFunctionArgument } from "./classFunctionArgument";
 import { ContextVariable } from "./statementVariable";
 import { ResolveVariable } from "../resolve/variable";
+import { ContextClass } from "./scriptClass";
+import { ContextClassVariable } from "./classVariable";
+import { ResolveClass } from "../resolve/class";
 
 
 export class ContextMember extends Context{
@@ -144,7 +147,19 @@ export class ContextMember extends Context{
 			} else if (this._matches.variables.length > 0) {
 				this._resolveVariable = this._matches.variables[0];
 				this.expressionType = this._resolveVariable.variableType;
-
+				
+				const tfcc = state.topScopeFunction?.parent as ContextClass;
+				if (tfcc?.type == Context.ContextType.Class) {
+					const tfrc = tfcc.resolveClass;
+					if (tfrc && !this._resolveVariable.canAccess(tfrc)) {
+						let ri: DiagnosticRelatedInformation[] = [];
+						this._resolveVariable.addReportInfo(ri, `Variable: ${this._resolveVariable.resolveTextLong}`);
+						this._resolveVariable.parent?.addReportInfo(ri, `Owner Class: ${this._resolveVariable.parent.resolveTextLong}`);
+						tfrc.addReportInfo(ri, `Accessing Class: ${tfrc.resolveTextLong}`);
+						state.reportError(this._name.range, 'Can not access variable', ri);
+					}
+				}
+	
 			} else if (this._matches.types.length > 0) {
 				this._resolveType = this._matches.types[0];
 				this.expressionType = this._resolveType;
@@ -213,7 +228,7 @@ export class ContextMember extends Context{
 			content.push(...this._resolveVariable.resolveTextLong);
 			
 		} else if (this._resolveType) {
-			content.push(this._resolveType.displayName);
+			content.push(...this._resolveType.resolveTextLong);
 		}
 
 		/*

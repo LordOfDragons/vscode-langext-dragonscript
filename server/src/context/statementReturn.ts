@@ -67,6 +67,10 @@ export class ContextReturn extends Context{
 	}
 
 	
+	public resolveMembers(state: ResolveState): void {
+		this._value?.resolveMembers(state);
+	}
+	
 	public resolveStatements(state: ResolveState): void {
 		this._value?.resolveStatements(state);
 		

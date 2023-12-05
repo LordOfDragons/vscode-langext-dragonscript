@@ -22,6 +22,7 @@
  * SOFTWARE.
  */
 
+import { DiagnosticRelatedInformation } from 'vscode-languageserver';
 import { ContextFunction } from '../context/classFunction';
 import { Context } from '../context/context';
 import { ContextBlock } from '../context/expressionBlock';
@@ -122,5 +123,12 @@ export class ResolveFunction{
 	public removeFromParent(): void {
 		this.parent?.removeFunction(this);
 		this.parent = undefined;
+	}
+	
+	public addReportInfo(relatedInformation: DiagnosticRelatedInformation[], message: string) {
+		var info = this._context?.createReportInfo(message);
+		if (info) {
+			relatedInformation.push(info);
+		}
 	}
 }
