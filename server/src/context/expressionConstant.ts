@@ -207,11 +207,11 @@ export class ContextConstant extends Context{
 			default:
 				content.push(`**constant**`);
 		}
-
+		
 		if (this._resolveType) {
 			content.push(` *${this._resolveType.fullyQualifiedName}* `);
 		}
-
+		
 		switch (this._constantType) {
 			case ContextConstant.ConstantType.literalByte:
 			case ContextConstant.ConstantType.literalIntByte:
@@ -219,24 +219,21 @@ export class ContextConstant extends Context{
 			case ContextConstant.ConstantType.literalIntHex:
 			case ContextConstant.ConstantType.literalInt:{
 				const v = this._constantValue as number;
-				if (v) {
+				if (v !== undefined) {
 					content.push(`: ${v.toFixed(0)}`);
 
-					content.push(` hex(${v.toString(16)})`);
+					content.push(` | hex(${v.toString(16)})`);
 
 					if (v < 256) {
-						content.push(` bin(${Helpers.numToBin(v)})`);
-					}
-					
-					/*
-					try {
-						const c = String.fromCodePoint(v);
-						if (c && c.length > 0) {
-							content.push(` char(${c})`);
+						content.push(` | bin(${Helpers.numToBin(v)})`);
+						
+						if (v >= 32 && v <= 126) {
+							try {
+								content.push(` | char(${String.fromCodePoint(v)})`);
+							} catch {
+							}
 						}
-					} catch {
 					}
-					*/
 				}
 				}break;
 
@@ -248,7 +245,7 @@ export class ContextConstant extends Context{
 				break;
 		}
 
-		return new HoverInfo(content, this._name.range);
+		return new HoverInfo([content.join('')], this._name.range);
 	}
 
 	

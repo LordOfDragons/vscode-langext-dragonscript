@@ -24,21 +24,24 @@
 
 import { Context } from "./context";
 import { StatementCaseCstNode, StatementSelectCstNode } from "../nodeclasses/statementSelect";
-import { RemoteConsole } from "vscode-languageserver";
+import { Position, RemoteConsole } from "vscode-languageserver";
 import { ContextBuilder } from "./contextBuilder";
 import { ContextStatements } from "./statements";
+import { Helpers } from "../helpers";
+import { ResolveState } from "../resolve/state";
 
 
-export class ContextSelectCase {
+export class ContextSelectCase extends Context {
 	protected _node: StatementCaseCstNode;
 	protected _values: Context[];
 	protected _statements: ContextStatements;
-
-
-	constructor(node: StatementCaseCstNode, parent: Context) {
+	
+	
+	constructor(node: StatementCaseCstNode, parent: ContextSelect) {
+		super(Context.ContextType.SelectCase, parent);
 		this._node = node;
 		this._values = [];
-
+		
 		const values = node.children.value;
 		if (values) {
 			for (const each of values) {
@@ -47,16 +50,23 @@ export class ContextSelectCase {
 		}
 		
 		this._statements = new ContextStatements(node.children.statements[0], parent);
+		
+		const tokBegin = node.children.case[0];
+		let tokEnd = this._statements.range?.end;
+		
+		if (tokEnd) {
+			this.range = Helpers.rangeFromPosition(Helpers.positionFrom(tokBegin), tokEnd);
+		}
 	}
-
+	
 	public dispose(): void {
 		for (const each of this._values) {
 			each.dispose();
 		}
 		this._statements.dispose();
 	}
-
-
+	
+	
 	public get values(): Context[] {
 		return this._values;
 	}
@@ -64,8 +74,36 @@ export class ContextSelectCase {
 	public get statements(): ContextStatements {
 		return this._statements;
 	}
-
-
+	
+	
+	public resolveMembers(state: ResolveState): void {
+		state.withScopeContext(this, () => {
+			for (const each of this._values) {
+				each.resolveMembers(state);
+			}
+			this._statements.resolveMembers(state);
+		});
+	}
+	
+	public resolveStatements(state: ResolveState): void {
+		state.withScopeContext(this, () => {
+			for (const each of this._values) {
+				each.resolveStatements(state);
+			}
+			this._statements.resolveStatements(state);
+		});
+	}
+	
+	public contextAtPosition(position: Position): Context | undefined {
+		if (!Helpers.isPositionInsideRange(this.range, position)) {
+			return undefined;
+		}
+		
+		return this._values.find((each) => each.contextAtPosition(position))
+			?? this._statements.contextAtPosition(position);
+	}
+	
+	
 	log(console: RemoteConsole, prefix: string = ""): void {
 		console.log(`${prefix}- Case`);
 		for (const each of this._values) {
@@ -81,27 +119,32 @@ export class ContextSelect extends Context {
 	protected _value: Context;
 	protected _cases: ContextSelectCase[];
 	protected _elsestatements?: ContextStatements;
-
-
+	
+	
 	constructor(node: StatementSelectCstNode, parent: Context) {
 		super(Context.ContextType.Select, parent);
 		this._node = node;
 		this._cases = [];
-
+		
 		let selbegin = node.children.statementSelectBegin[0].children;
 		this._value = ContextBuilder.createExpression(selbegin.value[0], this);
-
+		
 		if (node.children.statementCase) {
 			for (const each of node.children.statementCase) {
 				this._cases.push(new ContextSelectCase(each, this));
 			}
 		}
-
+		
 		if (node.children.statementSelectElse) {
 			this._elsestatements = new ContextStatements(node.children.statementSelectElse[0].children.statements[0], this);
 		}
+		
+		const tokBegin = node.children.statementSelectBegin[0].children.select[0];
+		let tokEnd = node.children.statementSelectEnd[0].children.end[0];
+		
+		this.range = Helpers.rangeFrom(tokBegin, tokEnd, true, false);
 	}
-
+	
 	public dispose(): void {
 		super.dispose();
 		this._value.dispose();
@@ -110,25 +153,56 @@ export class ContextSelect extends Context {
 		}
 		this._elsestatements?.dispose();
 	}
-
-
+	
+	
 	public get node(): StatementSelectCstNode {
 		return this._node;
 	}
-
+	
 	public get condition(): Context {
 		return this._value;
 	}
-
+	
 	public get cases(): ContextSelectCase[] {
 		return this._cases;
 	}
-
+	
 	public get elsestatements(): ContextStatements | undefined {
 		return this._elsestatements;
 	}
-
-
+	
+	
+	public resolveMembers(state: ResolveState): void {
+		state.withScopeContext(this, () => {
+			this._value.resolveMembers(state);
+			for (const each of this._cases) {
+				each.resolveMembers(state);
+			}
+			this._elsestatements?.resolveMembers(state);
+		});
+	}
+	
+	public resolveStatements(state: ResolveState): void {
+		state.withScopeContext(this, () => {
+			this._value.resolveStatements(state);
+			for (const each of this._cases) {
+				each.resolveStatements(state);
+			}
+			this._elsestatements?.resolveStatements(state);
+		});
+	}
+	
+	public contextAtPosition(position: Position): Context | undefined {
+		if (!Helpers.isPositionInsideRange(this.range, position)) {
+			return undefined;
+		}
+		
+		return this._value.contextAtPosition(position)
+			?? this.contextAtPositionList(this._cases, position)
+			?? this._elsestatements?.contextAtPosition(position);
+	}
+	
+	
 	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
 		console.log(`${prefix}Select`);
 		this.logChild(this._value, console, prefixLines, "Value: ");

@@ -95,23 +95,8 @@ export class ContextInlineIfElse extends Context{
 		this.expressionType = this._ifvalue.expressionType;
 		this.expressionAutoCast = this._ifvalue.expressionAutoCast;
 		
-		const typeBool = ResolveNamespace.classBool;
-		const ct = this._condition.expressionType;
-		if (ct && ResolveSignatureArgument.typeMatches(ct, typeBool, this._condition.expressionAutoCast) == ResolveSignature.Match.No) {
-			let ri: DiagnosticRelatedInformation[] = [];
-			ct.addReportInfo(ri, `Source Type: ${ct.reportInfoText}`);
-			typeBool.addReportInfo(ri, `Target Type: ${typeBool.reportInfoText}`);
-			state.reportError(this._condition.range, `Condition: Invalid cast from ${ct.name} to ${typeBool.name}`, ri);
-		}
-		
-		const it = this._ifvalue.expressionType;
-		const et = this._elsevalue.expressionType;
-		if (it && et && ResolveSignatureArgument.typeMatches(et, it, this._elsevalue.expressionAutoCast) == ResolveSignature.Match.No) {
-			let ri: DiagnosticRelatedInformation[] = [];
-			et.addReportInfo(ri, `Source Type: ${et.reportInfoText}`);
-			it.addReportInfo(ri, `Target Type: ${it.reportInfoText}`);
-			state.reportError(this._elsevalue.range, `Else: Invalid cast from ${et.name} to ${it.name}`, ri);
-		}
+		this.requireCastable(state, this._condition, ResolveNamespace.classBool, 'Condition');
+		this.requireCastable(state, this._elsevalue, this._ifvalue.expressionType, 'Else');
 	}
 	
 	public collectChildDocSymbols(list: DocumentSymbol[]) {

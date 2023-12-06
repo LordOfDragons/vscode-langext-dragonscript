@@ -445,7 +445,14 @@ export class ContextFunction extends Context{
 			default:
 				parts.push(` **function** *${this._returnType}* `);
 		}
-		parts.push(`*${this.parent!.fullyQualifiedName}*.**${this._name}**(`);
+		parts.push(`*${this.parent!.fullyQualifiedName}*.`);
+		
+		if (this._name.name.startsWith('*') || this._name.name.endsWith('*')) {
+			parts.push(`__${this._name}__`);
+		} else {
+			parts.push(`**${this._name}**`);
+		}
+		parts.push(`(`);
 
 		var args = [];
 		for (const each of this._arguments) {

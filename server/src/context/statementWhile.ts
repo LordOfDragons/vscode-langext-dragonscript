@@ -24,9 +24,13 @@
 
 import { Context } from "./context";
 import { StatementWhileCstNode } from "../nodeclasses/statementWhile";
-import { RemoteConsole } from "vscode-languageserver";
+import { DiagnosticRelatedInformation, Position, RemoteConsole } from "vscode-languageserver";
 import { ContextBuilder } from "./contextBuilder";
 import { ContextStatements } from "./statements";
+import { ResolveState } from "../resolve/state";
+import { ResolveNamespace } from "../resolve/namespace";
+import { ResolveSignature, ResolveSignatureArgument } from "../resolve/signature";
+import { Helpers } from "../helpers";
 
 
 export class ContextWhile extends Context{
@@ -41,6 +45,11 @@ export class ContextWhile extends Context{
 
 		this._condition = ContextBuilder.createExpression(node.children.statementWhileBegin[0].children.condition[0], this);
 		this._statements = new ContextStatements(node.children.statements[0], this);
+		
+		const tokBegin = node.children.statementWhileBegin[0].children.while[0];
+		let tokEnd = node.children.statementWhileEnd[0].children.end[0];
+		
+		this.range = Helpers.rangeFrom(tokBegin, tokEnd, true, false);
 	}
 
 	public dispose(): void {
@@ -61,7 +70,33 @@ export class ContextWhile extends Context{
 	public get statements(): ContextStatements {
 		return this._statements;
 	}
-
+	
+	
+	public resolveMembers(state: ResolveState): void {
+		state.withScopeContext(this, () => {
+			this._condition.resolveMembers(state);
+			this._statements.resolveMembers(state);
+		});
+	}
+	
+	public resolveStatements(state: ResolveState): void {
+		state.withScopeContext(this, () => {
+			this._condition.resolveStatements(state);
+			this._statements.resolveStatements(state);
+		});
+		
+		this.requireCastable(state, this._condition, ResolveNamespace.classBool, 'Condition');
+	}
+	
+	public contextAtPosition(position: Position): Context | undefined {
+		if (!Helpers.isPositionInsideRange(this.range, position)) {
+			return undefined;
+		}
+		
+		return this._condition.contextAtPosition(position)
+			?? this._statements.contextAtPosition(position);
+	}
+	
 	
 	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
 		console.log(`${prefix}While`);

@@ -115,6 +115,10 @@ export class ResolveFunction{
 	public get returnType(): ResolveType | undefined {
 		return this._returnType;
 	}
+	
+	public replaceReturnType(type: ResolveType): void {
+		this._returnType = type;
+	}
 
 	public get signature(): ResolveSignature {
 		return this._signature;

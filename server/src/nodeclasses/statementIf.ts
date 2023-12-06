@@ -1,4 +1,4 @@
-import { CstNode } from "chevrotain";
+import { CstNode, IToken } from "chevrotain";
 import { ExpressionCstNode } from "./expression";
 import { StatementsCstNode } from "./statement";
 
@@ -12,6 +12,7 @@ export type StatementIfCstChildren = {
 	statementIfBegin: StatementIfBeginCstNode[];
 	statementElif?: StatementElifCstNode[];
 	statementElse?: StatementElseCstNode[];
+	statementIfEnd: StatementIfEndCstNode[];
 };
 
 
@@ -21,6 +22,7 @@ export interface StatementIfBeginCstNode extends CstNode {
 }
 
 export type StatementIfBeginCstChildren = {
+	if: IToken[];
 	condition: ExpressionCstNode[];
 	statements: StatementsCstNode[];
 };
@@ -32,6 +34,7 @@ export interface StatementElifCstNode extends CstNode {
 }
 
 export type StatementElifCstChildren = {
+	elif: IToken[];
 	condition: ExpressionCstNode[];
 	statements: StatementsCstNode[];
 };
@@ -44,4 +47,14 @@ export interface StatementElseCstNode extends CstNode {
 
 export type StatementElseCstChildren = {
 	statements: StatementsCstNode[];
+};
+
+
+export interface StatementIfEndCstNode extends CstNode {
+	name: "statementIfEnd";
+	children: StatementIfEndCstChildren;
+}
+
+export type StatementIfEndCstChildren = {
+	end: IToken[];
 };

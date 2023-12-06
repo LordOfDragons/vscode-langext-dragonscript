@@ -38,6 +38,10 @@ import { ResolveNamespace } from "../resolve/namespace";
 import { Helpers } from "../helpers";
 import { ResolveSearch } from "../resolve/search";
 import { ResolveVariable } from "../resolve/variable";
+import { ContextFunction } from "./classFunction";
+import { TypeName } from "./typename";
+import { debugLogMessage } from "../server";
+import { ResolveFunction } from "../resolve/function";
 
 
 export class ContextEnumEntry extends Context{
@@ -233,6 +237,27 @@ export class ContextEnumeration extends Context{
 	}
 
 	public resolveMembers(state: ResolveState): void {
+		if (this._resolveEnum) {
+			// enumerations are a bit special. their script class receives a copy of each
+			// function in Enumeration class but with the type replace to the enum class
+			const ownerTypeName = this._name.name;
+			const ownerType = TypeName.typeNamed(ownerTypeName);
+			
+			ResolveNamespace.classEnumeration.functionGroups.forEach((group, name) => {
+				group.functions.forEach((func) => {
+					if (this._resolveEnum && func.context) {
+						let rf = new ResolveFunction(func.context);
+						
+						if (rf.returnType?.name == 'Enumeration') {
+							rf.replaceReturnType(this._resolveEnum);
+						}
+						
+						this._resolveEnum.addFunction(rf);
+					}
+				});
+			});
+		}
+		
 		state.withScopeContext(this, () => {
 			for (const each of this._entries) {
 				each.resolveMembers(state);

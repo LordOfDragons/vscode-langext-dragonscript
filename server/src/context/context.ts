@@ -29,6 +29,8 @@ import { ResolveState } from "../resolve/state";
 import { Helpers } from "../helpers";
 import { ResolveType } from "../resolve/type";
 import { ResolveSearch } from "../resolve/search";
+import { ResolveSignature, ResolveSignatureArgument } from "../resolve/signature";
+import { ResolveNamespace } from "../resolve/namespace";
 
 
 /** Base context. */
@@ -204,7 +206,20 @@ export class Context {
 
 	public search(search: ResolveSearch, before: Context | undefined = undefined): void {
 	}
-
+	
+	protected requireCastable(state: ResolveState, context: Context | undefined,
+			targetType: ResolveType | undefined, infoPrefix: string): void {
+		if (context && targetType) {
+			const ct = context.expressionType;
+			if (ct && ResolveSignatureArgument.typeMatches(ct, targetType, context.expressionAutoCast) == ResolveSignature.Match.No) {
+				let ri: DiagnosticRelatedInformation[] = [];
+				ct.addReportInfo(ri, `Source Type: ${ct.reportInfoText}`);
+				targetType.addReportInfo(ri, `Target Type: ${targetType.reportInfoText}`);
+				state.reportError(context.range, `${infoPrefix}: Invalid cast from ${ct.name} to ${targetType.name}`, ri);
+			}
+		}
+	}
+	
 
 	protected reportError(diagnostics: Diagnostic[], uri: string, range: Range, message: string) {
 		this.reportDiagnostic(diagnostics, uri, DiagnosticSeverity.Error, range, message);
@@ -291,8 +306,10 @@ export namespace Context {
 		Break,
 		Continue,
 		If,
+		IfElif,
 		While,
 		Select,
+		SelectCase,
 		For,
 		Throw,
 		Statements,

@@ -66,16 +66,6 @@ export class ResolveEnumeration extends ResolveType {
 	
 	
 	
-	public search(search: ResolveSearch): void {
-		super.search(search);
-		
-		if (this.context) {
-			if (search.searchSuperClasses) {
-				ResolveNamespace.classEnumeration.search(search);
-			}
-		}
-	}
-	
 	public castable(type: ResolveType): boolean {
 		if (type === this) {
 			return true;

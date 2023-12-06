@@ -47,9 +47,6 @@ import { ResolveType } from "../resolve/type";
 import { ResolveSearch } from "../resolve/search";
 import { ResolveSignature, ResolveSignatureArgument } from "../resolve/signature";
 import { ResolveFunction } from "../resolve/function";
-import { ContextClassVariable } from "./classVariable";
-import { ContextVariable } from "./statementVariable";
-import { ContextFunctionArgument } from "./classFunctionArgument";
 import { ContextMember } from "./expressionMember";
 
 

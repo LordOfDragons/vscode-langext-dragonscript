@@ -1,4 +1,4 @@
-import { CstNode } from "chevrotain";
+import { CstNode, IToken } from "chevrotain";
 import { ExpressionCstNode } from "./expression";
 import { StatementsCstNode } from "./statement";
 
@@ -12,6 +12,7 @@ export type StatementSelectCstChildren = {
 	statementSelectBegin: StatementSelectBeginCstNode[];
 	statementCase?: StatementCaseCstNode[];
 	statementSelectElse?: StatementSelectElseCstNode[];
+	statementSelectEnd: StatementSelectEndCstNode[];
 };
 
 
@@ -21,6 +22,7 @@ export interface StatementSelectBeginCstNode extends CstNode {
 }
 
 export type StatementSelectBeginCstChildren = {
+	select: IToken[];
 	value: ExpressionCstNode[];
 };
 
@@ -31,6 +33,7 @@ export interface StatementCaseCstNode extends CstNode {
 }
 
 export type StatementCaseCstChildren = {
+	case: IToken[];
 	value?: ExpressionCstNode[];
 	statements: StatementsCstNode[];
 };
@@ -43,4 +46,14 @@ export interface StatementSelectElseCstNode extends CstNode {
 
 export type StatementSelectElseCstChildren = {
 	statements: StatementsCstNode[];
+};
+
+
+export interface StatementSelectEndCstNode extends CstNode {
+	name: "statementSelectEnd";
+	children: StatementSelectEndCstChildren;
+}
+
+export type StatementSelectEndCstChildren = {
+	end: IToken[];
 };

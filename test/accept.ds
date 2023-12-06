@@ -99,6 +99,7 @@ public class OuterClass extends ClassExtendImplement
 	private var int pMember1
 	private var OuterClass pMember2
 	public static fixed var int CONSTANT = 8 + 0h2a + 0b1001 + 'a'
+	var SimpleEnum pMember3
 	
 	static public func int isATest( int value1, int value2 )
 		return value1 + value2
@@ -112,6 +113,7 @@ public class OuterClass extends ClassExtendImplement
 			each.equals( this.pFunc().toString() )
 			return true
 		end )
+		pMember3 = SimpleEnum.withOrder(0)
 	end
 	
 	public func new() this( "Something \u1234.", true )
