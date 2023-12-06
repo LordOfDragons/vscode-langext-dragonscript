@@ -780,10 +780,10 @@ export class ContextFunctionCall extends Context{
 						const at1 = o1.expressionType;
 						const at2 = o2.expressionType;
 						
-						if (ResolveSignatureArgument.exprMatches(o1, o2) == ResolveSignature.Match.No) {
-							content.push(`${at1?.resolveTextLong} **${opname}** ${at2?.resolveTextLong} (invalid cast)`);
+						if (o1.expressionAutoCast == Context.AutoCast.KeywordNull) {
+							content.push(`${at2?.resolveTextLong} **${opname}** **null**`);
 						} else {
-							content.push(`${at1?.resolveTextLong} **${opname}** ${at2?.resolveTextLong}`);
+							content.push(`${at2?.resolveTextLong} **${opname}** ${at1?.resolveTextLong}`);
 						}
 					}
 					break;
