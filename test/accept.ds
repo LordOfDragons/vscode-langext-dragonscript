@@ -147,7 +147,7 @@ public class OuterClass extends ClassExtendImplement
 		end
 	end
 	
-	public func OuterClass +( int value )
+	public func int +( int value )
 		if value > 0
 			return pMember1 + value
 		elif value < -10

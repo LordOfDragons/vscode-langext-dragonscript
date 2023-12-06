@@ -24,7 +24,7 @@
 
 import { Context } from "./context";
 import { StatementWhileCstNode } from "../nodeclasses/statementWhile";
-import { DiagnosticRelatedInformation, Position, RemoteConsole } from "vscode-languageserver";
+import { DiagnosticRelatedInformation, DocumentSymbol, Position, RemoteConsole } from "vscode-languageserver";
 import { ContextBuilder } from "./contextBuilder";
 import { ContextStatements } from "./statements";
 import { ResolveState } from "../resolve/state";
@@ -95,6 +95,12 @@ export class ContextWhile extends Context{
 		
 		return this._condition.contextAtPosition(position)
 			?? this._statements.contextAtPosition(position);
+	}
+	
+	public collectChildDocSymbols(list: DocumentSymbol[]) {
+		super.collectChildDocSymbols(list);
+		this._condition?.collectChildDocSymbols(list);
+		this._statements.collectChildDocSymbols(list);
 	}
 	
 	

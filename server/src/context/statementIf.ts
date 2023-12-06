@@ -24,7 +24,7 @@
 
 import { Context } from "./context";
 import { StatementElifCstNode, StatementIfCstNode } from "../nodeclasses/statementIf";
-import { DiagnosticRelatedInformation, Position, RemoteConsole } from "vscode-languageserver";
+import { DiagnosticRelatedInformation, DocumentSymbol, Position, RemoteConsole } from "vscode-languageserver";
 import { ContextBuilder } from "./contextBuilder";
 import { ContextStatements } from "./statements";
 import { Helpers } from "../helpers";
@@ -91,6 +91,12 @@ export class ContextIfElif extends Context {
 		
 		return this._condition.contextAtPosition(position)
 			?? this._statements.contextAtPosition(position);
+	}
+	
+	public collectChildDocSymbols(list: DocumentSymbol[]) {
+		super.collectChildDocSymbols(list);
+		this._condition?.collectChildDocSymbols(list);
+		this._statements.collectChildDocSymbols(list);
 	}
 
 
@@ -200,6 +206,16 @@ export class ContextIf extends Context {
 			?? this._ifstatements.contextAtPosition(position)
 			?? this.contextAtPositionList(this._elif, position)
 			?? this._elsestatements?.contextAtPosition(position);
+	}
+	
+	public collectChildDocSymbols(list: DocumentSymbol[]) {
+		super.collectChildDocSymbols(list);
+		this._condition?.collectChildDocSymbols(list);
+		this._ifstatements.collectChildDocSymbols(list);
+		for (const each of this._elif) {
+			each.collectChildDocSymbols(list);
+		}
+		this._elsestatements?.collectChildDocSymbols(list);
 	}
 	
 	

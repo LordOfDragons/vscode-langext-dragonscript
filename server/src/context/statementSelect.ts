@@ -24,7 +24,7 @@
 
 import { Context } from "./context";
 import { StatementCaseCstNode, StatementSelectCstNode } from "../nodeclasses/statementSelect";
-import { Position, RemoteConsole } from "vscode-languageserver";
+import { DocumentSymbol, Position, RemoteConsole } from "vscode-languageserver";
 import { ContextBuilder } from "./contextBuilder";
 import { ContextStatements } from "./statements";
 import { Helpers } from "../helpers";
@@ -101,6 +101,14 @@ export class ContextSelectCase extends Context {
 		
 		return this._values.find((each) => each.contextAtPosition(position))
 			?? this._statements.contextAtPosition(position);
+	}
+	
+	public collectChildDocSymbols(list: DocumentSymbol[]) {
+		super.collectChildDocSymbols(list);
+		for (const each of this._values) {
+			each.collectChildDocSymbols(list);
+		}
+		this._statements?.collectChildDocSymbols(list);
 	}
 	
 	
@@ -200,6 +208,15 @@ export class ContextSelect extends Context {
 		return this._value.contextAtPosition(position)
 			?? this.contextAtPositionList(this._cases, position)
 			?? this._elsestatements?.contextAtPosition(position);
+	}
+	
+	public collectChildDocSymbols(list: DocumentSymbol[]) {
+		super.collectChildDocSymbols(list);
+		this._value?.collectChildDocSymbols(list);
+		for (const each of this._cases) {
+			each.collectChildDocSymbols(list);
+		}
+		this._elsestatements?.collectChildDocSymbols(list);
 	}
 	
 	

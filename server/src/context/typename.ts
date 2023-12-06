@@ -163,10 +163,10 @@ export class TypeName {
 		if (this._parts.length == 0) {
 			return undefined;
 		}
-
+		
 		var type: ResolveType | undefined;
 		var first = true;
-
+		
 		for (const each of this._parts) {
 			// first entry has to resolve to a basic class
 			if (first) {
@@ -175,10 +175,10 @@ export class TypeName {
 					state.reportError(each.name.range, `"${each.name.name}" not found.`);
 					return undefined;
 				}
-
+				
 				type = nextType;
 				first = false;
-
+				
 			// all other parts have to be direct children
 			} else {
 				const nextType = type!.findType(each.name.name);
@@ -191,8 +191,8 @@ export class TypeName {
 				state.reportError(each.name.range, `Type "${each.name.name}" not found in "${type!.name}".`);
 				return undefined;
 			}
-		}		
-
+		}
+		
 		return this.resolve = type;
 	}
 

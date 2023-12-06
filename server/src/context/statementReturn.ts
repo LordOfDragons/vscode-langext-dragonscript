@@ -115,8 +115,7 @@ export class ContextReturn extends Context{
 		super.collectChildDocSymbols(list);
 		this._value?.collectChildDocSymbols(list);
 	}
-
-
+	
 	public contextAtPosition(position: Position): Context | undefined {
 		if (!Helpers.isPositionInsideRange(this.range, position)) {
 			return undefined;

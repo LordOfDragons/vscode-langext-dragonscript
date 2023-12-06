@@ -23,39 +23,68 @@
  */
 
 import { Context } from "./context";
-import { RemoteConsole } from "vscode-languageserver";
+import { DocumentSymbol, Position, Range, RemoteConsole } from "vscode-languageserver";
 import { ContextBuilder } from "./contextBuilder";
 import { StatementThrowCstNode } from "../nodeclasses/statementThrow";
+import { Helpers } from "../helpers";
+import { ResolveState } from "../resolve/state";
 
 
 export class ContextThrow extends Context{
 	protected _node: StatementThrowCstNode;
 	protected _exception?: Context;
-
-
+	
+	
 	constructor(node: StatementThrowCstNode, parent: Context) {
 		super(Context.ContextType.Throw, parent);
 		this._node = node;
-
+		
 		if (node.children.exception) {
 			this._exception = ContextBuilder.createExpression(node.children.exception[0], this);
 		}
+		
+		const tokBegin = node.children.throw[0];
+		const tokEnd = this._exception?.range?.end;
+		if (tokBegin && tokEnd) {
+			this.range = Range.create(Helpers.rangeFrom(tokBegin).start, tokEnd);
+		}
 	}
-
+	
 	public dispose(): void {
 		super.dispose();
 		this._exception?.dispose();
 	}
-
-
+	
+	
 	public get node(): StatementThrowCstNode {
 		return this._node;
 	}
-
+	
 	public get exception(): Context | undefined {
 		return this._exception;
 	}
-
+	
+	
+	public resolveMembers(state: ResolveState): void {
+		this._exception?.resolveMembers(state);
+	}
+	
+	public resolveStatements(state: ResolveState): void {
+		this._exception?.resolveStatements(state);
+	}
+	
+	public collectChildDocSymbols(list: DocumentSymbol[]) {
+		super.collectChildDocSymbols(list);
+		this._exception?.collectChildDocSymbols(list);
+	}
+	
+	public contextAtPosition(position: Position): Context | undefined {
+		if (!Helpers.isPositionInsideRange(this.range, position)) {
+			return undefined;
+		}
+		return this._exception?.contextAtPosition(position);
+	}
+	
 	
 	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
 		if (this._exception) {
