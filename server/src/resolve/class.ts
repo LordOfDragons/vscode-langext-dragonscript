@@ -77,19 +77,13 @@ export class ResolveClass extends ResolveType {
 		}
 	}
 
-	public isSuperclass(cls: ResolveClass) {
-		var c = cls.parent;
-		while (c) {
-			if (c === this) {
-				return true;
-			}
-			c = c.parent;
-		}
-		return false;
+	public isSuperclass(cls: ResolveClass): boolean {
+		return cls.isSubclass(this);
 	}
 
-	public isSubclass(cls: ResolveClass) {
-		return cls.isSuperclass(this);
+	public isSubclass(cls: ResolveClass): boolean {
+		const pc = this._context?.extends?.resolve as ResolveClass;
+		return pc && (pc === cls || pc.isSubclass(cls));
 	}
 
 	public castable(type: ResolveType): boolean {

@@ -36,6 +36,8 @@ import { ContextFunctionArgument } from "./classFunctionArgument";
 import { ContextVariable } from "./statementVariable";
 import { ResolveVariable } from "../resolve/variable";
 import { ContextClass } from "./scriptClass";
+import { ResolveClass } from "../resolve/class";
+import { ContextClassVariable } from "./classVariable";
 
 
 export class ContextMember extends Context{
@@ -121,6 +123,10 @@ export class ContextMember extends Context{
 		return this._resolveArgument ?? this._resolveLocalVariable ?? this._resolveVariable ?? this._resolveType;
 	}
 	
+	public resolveMembers(state: ResolveState): void {
+		this._object?.resolveMembers(state);
+	}
+	
 	public resolveStatements(state: ResolveState): void {
 		this._object?.resolveStatements(state);
 
@@ -171,10 +177,10 @@ export class ContextMember extends Context{
 					const tfrc = tfcc.resolveClass;
 					if (tfrc && !this._resolveVariable.canAccess(tfrc)) {
 						let ri: DiagnosticRelatedInformation[] = [];
-						this._resolveVariable.addReportInfo(ri, `Variable: ${this._resolveVariable.resolveTextLong}`);
-						this._resolveVariable.parent?.addReportInfo(ri, `Owner Class: ${this._resolveVariable.parent.resolveTextLong}`);
-						tfrc.addReportInfo(ri, `Accessing Class: ${tfrc.resolveTextLong}`);
-						state.reportError(this._name.range, 'Can not access variable', ri);
+						this._resolveVariable.addReportInfo(ri, `Variable: ${this._resolveVariable.reportInfoText}`);
+						this._resolveVariable.parent?.addReportInfo(ri, `Owner Class: ${this._resolveVariable.parent.reportInfoText}`);
+						tfrc.addReportInfo(ri, `Accessing Class: ${tfrc.reportInfoText}`);
+						state.reportError(this._name.range, `Can not access variable ${this._resolveVariable.name}`, ri);
 					}
 				}
 	

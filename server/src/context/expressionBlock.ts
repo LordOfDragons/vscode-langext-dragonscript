@@ -203,6 +203,22 @@ export class ContextBlock extends Context{
 		return content;
 	}
 	
+	protected updateReportInfoText(): string {
+		let parts = [];
+		parts.push('public Object block (');
+		
+		var args = [];
+		for (const each of this._arguments) {
+			args.push(`${each.typename} ${each.name}`);
+		}
+		if (args.length > 0) {
+			parts.push(args.join(", "));
+		}
+		parts.push(")");
+		
+		return parts.join("");
+	}
+	
 	
 	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
 		var s = `${prefix}Block (`;

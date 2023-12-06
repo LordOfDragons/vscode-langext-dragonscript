@@ -31,6 +31,7 @@ import { ResolveVariable } from './variable';
 import { ResolveSearch } from './search';
 import { ResolveSignature } from './signature';
 import { DiagnosticRelatedInformation } from 'vscode-languageserver';
+import { Context } from '../context/context';
 
 
 /**
@@ -50,8 +51,10 @@ export class ResolveType{
 	protected _displayName?: string
 	protected _resolveTextShort?: string;
 	protected _resolveTextLong?: string[];
+	protected _reportInfoText?: string;
 	protected _childTypesBeforeSelf = false;
 	protected _resolveTextType = 'type ';
+	public autoCast: Context.AutoCast = Context.AutoCast.No;
 
 
 	constructor (name: string, type: ResolveType.Type) {
@@ -128,6 +131,17 @@ export class ResolveType{
 
 	protected updateResolveTextLong(): string[] {
 		return [`**${this._resolveTextType}** ${this.fullyQualifiedName}`];
+	}
+
+	public get reportInfoText(): string {
+		if (!this._reportInfoText) {
+			this._reportInfoText = this.updateReportInfoText();
+		}
+		return this._reportInfoText ?? "?";
+	}
+
+	protected updateReportInfoText(): string {
+		return `${this._resolveTextType} ${this._name}`;
 	}
 	
 	public createReportInfo(message: string): DiagnosticRelatedInformation | undefined {

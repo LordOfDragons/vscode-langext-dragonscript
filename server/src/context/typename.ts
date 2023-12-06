@@ -204,6 +204,44 @@ export class TypeName {
 		const name = part.name.name;
 		
 		const sostack = state.scopeContextStack;
+		
+		for (let i = sostack.length - 1; i >= 0; --i) {
+			const scope = sostack[i];
+			if (!scope) {
+				continue;
+			}
+			
+			switch (scope.type) {
+				case Context.ContextType.Class:
+					const pc = (scope as ContextClass).resolveClass;
+					if (pc) {
+						// - an inner type of the parent class
+						const t = this.resolveTypeInClassChain(state, pc, name, true, false);
+						if (t) {
+							part.resolve = t;
+							return t;
+						}
+					}
+					break;
+					
+				case Context.ContextType.Interface:
+					const pi = (scope as ContextInterface).resolveInterface;
+					if (pi) {
+						// - an inner type of the parent interface
+						const t = this.resolveTypeInInterfaceChain(state, pi, name, false);
+						if (t) {
+							part.resolve = t;
+							return t;
+						}
+					}
+					break;
+					
+				case Context.ContextType.Namespace:
+					i == 0;
+					break;
+			}
+		}
+		
 		for (let i = sostack.length - 1; i >= 0; --i) {
 			const scope = sostack[i];
 			if (!scope) {
@@ -214,9 +252,8 @@ export class TypeName {
 				case Context.ContextType.Class:
 					const pc = (scope as ContextClass).resolveClass;
 					if (pc) {
-						// - an inner type of the parent class
 						// - an inner type of the super class chain
-						const t = this.resolveTypeInClassChain(state, pc, name);
+						const t = this.resolveTypeInClassChain(state, pc, name, false, true);
 						if (t) {
 							part.resolve = t;
 							return t;
@@ -227,16 +264,28 @@ export class TypeName {
 				case Context.ContextType.Interface:
 					const pi = (scope as ContextInterface).resolveInterface;
 					if (pi) {
-						// - an inner type of the parent interface
 						// - an inner type of the super interface chain
-						const t = this.resolveTypeInInterfaceChain(state, pi, name);
+						const t = this.resolveTypeInInterfaceChain(state, pi, name, true);
 						if (t) {
 							part.resolve = t;
 							return t;
 						}
 					}
 					break;
-
+				
+				case Context.ContextType.Namespace:
+					i == 0;
+					break;
+			}
+		}
+		
+		for (let i = sostack.length - 1; i >= 0; --i) {
+			const scope = sostack[i];
+			if (!scope) {
+				continue;
+			}
+			
+			switch (scope.type) {
 				case Context.ContextType.Namespace:
 					// - a type of the parent namespace chain
 					scopeNS = (scope as ContextNamespace).resolveNamespace;
@@ -250,7 +299,7 @@ export class TypeName {
 					break;
 			}
 		}
-
+		
 		{
 			const t = ResolveNamespace.root.findType(name);
 			if (t) {
@@ -295,22 +344,23 @@ export class TypeName {
 		return undefined;
 	}
 
-	protected resolveTypeInClassChain(state: ResolveState, rclass: ResolveClass, name: string): ResolveType | undefined {
+	protected resolveTypeInClassChain(state: ResolveState, rclass: ResolveClass, name: string,
+			withParent: boolean, withChain: boolean): ResolveType | undefined {
 		const t = rclass.findType(name);
 		if (t) {
 			return t;
 		}
-	
+		
 		// TODO: if variable or function fail
-
-		if (rclass.context) {
+		
+		if (withChain && rclass.context) {
 			if (!rclass.context.inheritanceResolved) {
 				state.requiresAnotherTurn = true;
 			}
 
 			const t2 = rclass.context.extends?.resolve;
 			if (t2?.type == ResolveType.Type.Class) {
-				const t3 = this.resolveTypeInClassChain(state, t2 as ResolveClass, name);
+				const t3 = this.resolveTypeInClassChain(state, t2 as ResolveClass, name, true, true);
 				if (t3) {
 					return t3;
 				}
@@ -319,7 +369,7 @@ export class TypeName {
 			for (const each of rclass.context.implements) {
 				const t2 = each.resolve;
 				if (t2?.type == ResolveType.Type.Interface) {
-					const t3 = this.resolveTypeInInterfaceChain(state, t2 as ResolveInterface, name);
+					const t3 = this.resolveTypeInInterfaceChain(state, t2 as ResolveInterface, name, true);
 					if (t3) {
 						return t3;
 					}
@@ -327,42 +377,43 @@ export class TypeName {
 			}
 		}
 
-		if (rclass.parent) {
+		if (withParent && rclass.parent) {
 			switch (rclass.parent.type) {
 				case ResolveType.Type.Class:
-					return this.resolveTypeInClassChain(state, rclass.parent as ResolveClass, name);
+					return this.resolveTypeInClassChain(state, rclass.parent as ResolveClass, name, true, withChain);
 				case ResolveType.Type.Interface:
-					return this.resolveTypeInInterfaceChain(state, rclass.parent as ResolveInterface, name);
+					return this.resolveTypeInInterfaceChain(state, rclass.parent as ResolveInterface, name, withChain);
 			}
 		}
 
 		return undefined;
 	}
 
-	protected resolveTypeInInterfaceChain(state: ResolveState, iface: ResolveInterface, name: string): ResolveType | undefined {
+	protected resolveTypeInInterfaceChain(state: ResolveState, iface: ResolveInterface,
+			name: string, withChain: boolean): ResolveType | undefined {
 		const t = iface.findType(name);
 		if (t) {
 			return t;
 		}
-	
+		
 		// TODO: if variable or function fail
-
-		if (iface.context) {
+		
+		if (withChain && iface.context) {
 			if (!iface.context.inheritanceResolved) {
 				state.requiresAnotherTurn = true;
 			}
-
+			
 			for (const each of iface.context.implements) {
 				const t2 = each.resolve;
 				if (t2?.type == ResolveType.Type.Interface) {
-					const t3 = this.resolveTypeInInterfaceChain(state, t2 as ResolveInterface, name);
+					const t3 = this.resolveTypeInInterfaceChain(state, t2 as ResolveInterface, name, true);
 					if (t3) {
 						return t3;
 					}
 				}
 			}
 		}
-
+		
 		return undefined;
 	}
 

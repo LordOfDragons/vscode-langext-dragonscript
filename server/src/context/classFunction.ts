@@ -345,6 +345,8 @@ export class ContextFunction extends Context{
 			for (const each of this._arguments) {
 				each.resolveMembers(state);
 			}
+			this._superCall?.resolveMembers(state);
+			this._statements?.resolveMembers(state);
 		});
 		
 		this._resolveFunction?.dispose();
@@ -458,6 +460,31 @@ export class ContextFunction extends Context{
 		content.push(parts.join(""));
 
 		return content;
+	}
+
+	protected updateReportInfoText(): string {
+		let parts = [];
+		parts.push(this._typeModifiers.typestring);
+		switch (this._functionType) {
+			case ContextFunction.Type.Constructor:
+			case ContextFunction.Type.Destructor:
+				break;
+				
+			default:
+				parts.push(` ${this._returnType} `);
+		}
+		parts.push(`${this.parent!.simpleName}.${this._name}(`);
+		
+		var args = [];
+		for (const each of this._arguments) {
+			args.push(`${each.typename} ${each.name}`);
+		}
+		if (args.length > 0) {
+			parts.push(args.join(", "));
+		}
+		parts.push(")");
+		
+		return parts.join("");
 	}
 
 

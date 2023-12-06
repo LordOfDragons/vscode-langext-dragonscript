@@ -115,6 +115,10 @@ export class ContextFunctionArgument extends Context{
 		return content;
 	}
 
+	protected updateReportInfoText(): string {
+		return `parameter ${this._typename} ${this._name}`;
+	}
+
 	
 	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
 		console.log(`${prefix}Argument ${this._typename.name} ${this._name}`)

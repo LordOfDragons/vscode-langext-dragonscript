@@ -42,6 +42,7 @@ export class Context {
 	public expressionAutoCast: Context.AutoCast = Context.AutoCast.No;
 	protected _resolveTextShort?: string;
 	protected _resolveTextLong?: string[];
+	protected _reportInfoText?: string;
 
 
 	constructor(type: Context.ContextType, parent?: Context) {
@@ -137,6 +138,17 @@ export class Context {
 
 	protected updateResolveTextLong(): string[] {
 		return ["?"];
+	}
+
+	public get reportInfoText(): string {
+		if (!this._reportInfoText) {
+			this._reportInfoText = this.updateReportInfoText();
+		}
+		return this._reportInfoText ?? "?";
+	}
+
+	protected updateReportInfoText(): string {
+		return "?";
 	}
 
 	public contextAtPosition(position: Position): Context | undefined {
@@ -394,11 +406,11 @@ export namespace Context {
 		}
 
 		public get isPublicOrProtected(): boolean {
-			return this._accessLevel >= AccessLevel.Protected;
+			return this._accessLevel <= AccessLevel.Protected;
 		}
 
 		public get isProtectedOrPrivate(): boolean {
-			return this._accessLevel <= AccessLevel.Protected;
+			return this._accessLevel >= AccessLevel.Protected;
 		}
 
 		public get isAbstract(): boolean {
@@ -495,6 +507,12 @@ export namespace Context {
 		LiteralByte,
 		
 		/** Auto cast literal of type int. */
-		LiteralInt
+		LiteralInt,
+		
+		/** Auto cast value of type byte. */
+		ValueByte,
+		
+		/** Auto cast value of type int. */
+		ValueInt
 	}
 }

@@ -22,6 +22,7 @@
  * SOFTWARE.
  */
 
+import { Context } from '../context/context';
 import { ContextNamespace } from '../context/namespace';
 import { ResolveClass } from './class';
 import { ResolveSearch } from './search';
@@ -119,35 +120,39 @@ export class ResolveNamespace extends ResolveType {
 	}
 
 
-	public static get classBool(): ResolveType {
+	public static get classBool(): ResolveClass {
 		return rootNamespace.class('bool')!;
 	}
 
-	public static get classByte(): ResolveType {
-		return rootNamespace.class('byte')!;
+	public static get classByte(): ResolveClass {
+		let c = rootNamespace.class('byte')!;
+		c.autoCast = Context.AutoCast.ValueByte;
+		return c;
 	}
 
-	public static get classInt(): ResolveType {
-		return rootNamespace.class('int')!;
+	public static get classInt(): ResolveClass {
+		let c = rootNamespace.class('int')!;
+		c.autoCast = Context.AutoCast.ValueInt;
+		return c;
 	}
 
-	public static get classFloat(): ResolveType {
+	public static get classFloat(): ResolveClass {
 		return rootNamespace.class('float')!;
 	}
 
-	public static get classString(): ResolveType {
+	public static get classString(): ResolveClass {
 		return rootNamespace.class('String')!;
 	}
 
-	public static get classBlock(): ResolveType {
+	public static get classBlock(): ResolveClass {
 		return rootNamespace.class('Block')!;
 	}
 
-	public static get classEnumeration(): ResolveType {
+	public static get classEnumeration(): ResolveClass {
 		return rootNamespace.class('Enumeration')!;
 	}
 
-	public static get classObject(): ResolveType {
+	public static get classObject(): ResolveClass {
 		return rootNamespace.class('Object')!;
 	}
 

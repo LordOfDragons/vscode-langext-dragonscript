@@ -581,9 +581,9 @@ export class ContextFunctionCall extends Context{
 					const at1 = o1.expressionType;
 					const at2 = o2.expressionType;
 					let ri: DiagnosticRelatedInformation[] = [];
-					at2?.addReportInfo(ri, `Source Type: ${at2?.resolveTextLong}`);
-					at1?.addReportInfo(ri, `Target Type: ${at1?.resolveTextLong}`);
-					state.reportError(this._name.range, `Invalid cast from ${at2?.resolveTextShort} to ${at1?.resolveTextShort}`, ri);
+					at2?.addReportInfo(ri, `Source Type: ${at2?.reportInfoText}`);
+					at1?.addReportInfo(ri, `Target Type: ${at1?.reportInfoText}`);
+					state.reportError(this._name.range, `Invalid cast from ${at2?.name} to ${at1?.name}`, ri);
 				}
 				}break;
 				
@@ -595,9 +595,9 @@ export class ContextFunctionCall extends Context{
 					const at1 = o1.expressionType;
 					if (at1 && ResolveSignatureArgument.typeMatches(at1, this.expressionType, o1.expressionAutoCast) == ResolveSignature.Match.No) {
 						let ri: DiagnosticRelatedInformation[] = [];
-						this.expressionType?.addReportInfo(ri, `Source Type: ${this.expressionType?.resolveTextLong}`);
-						at1?.addReportInfo(ri, `Target Type: ${at1?.resolveTextLong}`);
-						state.reportError(this._name.range, `Invalid cast from ${this.expressionType?.resolveTextShort} to ${at1?.resolveTextShort}`, ri);
+						this.expressionType?.addReportInfo(ri, `Source Type: ${this.expressionType?.reportInfoText}`);
+						at1?.addReportInfo(ri, `Target Type: ${at1?.reportInfoText}`);
+						state.reportError(this._name.range, `Invalid cast from ${this.expressionType?.name} to ${at1?.name}`, ri);
 					}
 				}
 				}break;
@@ -608,7 +608,7 @@ export class ContextFunctionCall extends Context{
 						if (this._matches.functionsPartial.length > 1) {
 							let ri: DiagnosticRelatedInformation[] = [];
 							for (const each of this._matches.functionsPartial) {
-								each.context?.addReportInfo(ri, `Candidate: ${each.context.resolveTextShort}`);
+								each.context?.addReportInfo(ri, `Candidate: ${each.context.reportInfoText}`);
 							}
 							state.reportError(this._name.range, `Ambigous function call ${this._name}${this._matches.signature?.resolveTextShort}`, ri);
 							
@@ -630,7 +630,7 @@ export class ContextFunctionCall extends Context{
 							
 							let ri: DiagnosticRelatedInformation[] = [];
 							for (const each of matches2.functionsAll) {
-								each.context?.addReportInfo(ri, `Candidate: ${each.context.resolveTextShort}`);
+								each.context?.addReportInfo(ri, `Candidate: ${each.context.reportInfoText}`);
 							}
 							state.reportError(this._name.range, `Function call ${this._name}${this._matches.signature?.resolveTextShort} not found`, ri);
 						}
@@ -643,7 +643,7 @@ export class ContextFunctionCall extends Context{
 				const other = this._arguments.at(0);
 				if (other && this.sameTarget(other)) {
 					let ri: DiagnosticRelatedInformation[] = [];
-					other.addReportInfo(ri, `Target: ${other.resolveTextLong}`);
+					other.addReportInfo(ri, `Target: ${this.targetResolveText}`);
 					state.reportWarning(this._name.range, 'Assignment has no effect.', ri);
 				}
 				}break;
@@ -652,7 +652,7 @@ export class ContextFunctionCall extends Context{
 				const other = this._arguments.at(0);
 				if (other && this.sameTarget(other)) {
 					let ri: DiagnosticRelatedInformation[] = [];
-					other.addReportInfo(ri, `Target: ${other.resolveTextLong}`);
+					other.addReportInfo(ri, `Target: ${this.targetResolveText}`);
 					state.reportWarning(this._name.range, 'Comparisson is always true', ri);
 				}
 				}break;
@@ -661,7 +661,7 @@ export class ContextFunctionCall extends Context{
 				const other = this._arguments.at(0);
 				if (other && this.sameTarget(other)) {
 					let ri: DiagnosticRelatedInformation[] = [];
-					other.addReportInfo(ri, `Target: ${other.resolveTextLong}`);
+					other.addReportInfo(ri, `Target: ${this.targetResolveText}`);
 					state.reportWarning(this._name.range, 'Comparisson is always false', ri);
 				}
 				}break;
@@ -675,15 +675,37 @@ export class ContextFunctionCall extends Context{
 		
 		switch (this._object.type) {
 			case Context.ContextType.Member:{
-				const v1 = (this._object as ContextMember).resolveAny;
-				const v2 = (other as ContextMember).resolveAny;
-				if (v1 && v2) {
-					return v1 == v2;
+				const m1 = this._object as ContextMember;
+				const m2 = other as ContextMember;
+				
+				if (m1.resolveArgument) {
+					return m1.resolveArgument == m2.resolveArgument;
+					
+				} else if (m1.resolveLocalVariable) {
+					return m1.resolveLocalVariable == m2.resolveLocalVariable;
+					
+				} else if (m1.resolveVariable) {
+					//return m1.resolveVariable == m2.resolveVariable;
+					// this is not working since the object can be different.
+					// but how to check this?
 				}
 				}break;
 		}
 		
 		return false;
+	}
+	
+	protected get targetResolveText(): string {
+		if (!this._object) {
+			return '?';
+		}
+		
+		switch (this._object.type) {
+			case Context.ContextType.Member:
+				return (this._object as ContextMember).resolveAny?.reportInfoText ?? '?';
+		}
+		
+		return '?';
 	}
 	
 	public collectChildDocSymbols(list: DocumentSymbol[]) {
@@ -723,15 +745,15 @@ export class ContextFunctionCall extends Context{
 			
 			switch (this._functionType) {
 				case ContextFunctionCall.FunctionType.cast:
-					content.push(`**operator cast** ${(this._castType?.resolve as ResolveType).resolveTextShort}`);
+					content.push(`**operator cast** ${(this._castType?.resolve as ResolveType)?.resolveTextLong}`);
 					break;
 					
 				case ContextFunctionCall.FunctionType.castable:
-					content.push(`bool **operator castable** ${(this._castType?.resolve as ResolveType).resolveTextShort}`);
+					content.push(`bool **operator castable** ${(this._castType?.resolve as ResolveType)?.resolveTextLong}`);
 					break;
 					
 				case ContextFunctionCall.FunctionType.typeof:
-					content.push(`bool **operator typeof** ${(this._castType?.resolve as ResolveType).resolveTextShort}`);
+					content.push(`bool **operator typeof** ${(this._castType?.resolve as ResolveType)?.resolveTextLong}`);
 					break;
 					
 				case ContextFunctionCall.FunctionType.assign:
@@ -759,9 +781,9 @@ export class ContextFunctionCall extends Context{
 						const at2 = o2.expressionType;
 						
 						if (ResolveSignatureArgument.exprMatches(o1, o2) == ResolveSignature.Match.No) {
-							content.push(`${at1?.resolveTextShort} **${opname}** ${at2?.resolveTextShort} (invalid cast)`);
+							content.push(`${at1?.resolveTextLong} **${opname}** ${at2?.resolveTextLong} (invalid cast)`);
 						} else {
-							content.push(`${at1?.resolveTextShort} **${opname}** ${at2?.resolveTextShort}`);
+							content.push(`${at1?.resolveTextLong} **${opname}** ${at2?.resolveTextLong}`);
 						}
 					}
 					break;

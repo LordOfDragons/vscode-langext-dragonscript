@@ -40,6 +40,7 @@ export class ResolveVariable{
 	protected _variableType?: ResolveType;
 	protected _resolveTextShort?: string;
 	protected _resolveTextLong?: string[];
+	protected _reportInfoText?: string;
 
 
 	constructor (context: ContextClassVariable | ContextEnumEntry) {
@@ -112,6 +113,27 @@ export class ResolveVariable{
 		return [`${typeMods} **variable** *${this._variableType?.name}* *${this.parent?.fullyQualifiedName}*.**${this._name}**`];
 	}
 
+	public get reportInfoText(): string {
+		if (!this._reportInfoText) {
+			this._reportInfoText = this.updateReportInfoText();
+		}
+		return this._reportInfoText ?? "?";
+	}
+
+	protected updateReportInfoText(): string {
+		var typeMods = "";
+
+		if (this.context) {
+			if (this.context.type == Context.ContextType.ClassVariable) {
+				typeMods = (this.context as ContextClassVariable).typeModifiers.typestring;
+			} else {
+				typeMods = "public";
+			}
+		}
+
+		return `${typeMods} ${this._variableType?.name} ${this.parent?.name}.${this._name}`;
+	}
+
 
 	public parent?: ResolveType;
 
@@ -142,7 +164,7 @@ export class ResolveVariable{
 		if (this.context.type == Context.ContextType.ClassVariable) {
 			const v = this.context as ContextClassVariable;
 			
-			if (pc.isSuperclass(cls)) {
+			if (cls.isSubclass(pc)) {
 				return v.typeModifiers.isPublicOrProtected;
 			} else {
 				return v.typeModifiers.isPublic;

@@ -149,11 +149,15 @@ export class ContextVariable extends Context {
 	}
 
 	protected updateResolveTextShort(): string {
-		return `${this._typename} ${this._name}*`;
+		return `${this._typename} ${this._name}`;
 	}
 
 	protected updateResolveTextLong(): string[] {
 		return [`**local variable** *${this._typename}* **${this._name}**`];
+	}
+
+	protected updateReportInfoText(): string {
+		return `${this._typename} ${this._name}`;
 	}
 
 	public search(search: ResolveSearch, before: Context | undefined = undefined): void {

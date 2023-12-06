@@ -24,6 +24,7 @@
 
 import { DiagnosticRelatedInformation } from 'vscode-languageserver';
 import { ContextInterface } from '../context/scriptInterface';
+import { ResolveNamespace } from './namespace';
 import { ResolveSearch } from './search';
 import { ResolveType } from './type';
 
@@ -70,6 +71,7 @@ export class ResolveInterface extends ResolveType {
 			for (const each of this.context.implements) {
 				(each.resolve as ResolveType)?.search(search);
 			}
+			ResolveNamespace.classObject.search(search);
 		}
 	}
 	

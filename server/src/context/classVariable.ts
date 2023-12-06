@@ -198,11 +198,15 @@ export class ContextClassVariable extends Context{
 	}
 
 	protected updateResolveTextShort(): string {
-		return `${this._typename} ${this.parent!.simpleName}.${this._name}*`;
+		return `${this._typename} ${this.parent!.simpleName}.${this._name}`;
 	}
 
 	protected updateResolveTextLong(): string[] {
 		return [`${this._typeModifiers.typestring} **variable** *${this._typename}* *${this.parent!.fullyQualifiedName}*.**${this._name}**`];
+	}
+
+	protected updateReportInfoText(): string {
+		return `${this._typeModifiers.typestring} ${this._typename} ${this.parent!.simpleName}.${this._name}`;
 	}
 
 

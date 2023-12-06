@@ -88,6 +88,14 @@ public class OuterClass extends ClassExtendImplement
 		entry3
 	end
 	
+	class Test1
+		var String test
+		
+		func new(String test)
+			//test = test
+		end
+	end
+	
 	private var int pMember1
 	private var OuterClass pMember2
 	public static fixed var int CONSTANT = 8 + 0h2a + 0b1001 + 'a'

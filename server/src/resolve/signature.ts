@@ -72,17 +72,23 @@ export class ResolveSignatureArgument{
 			return ResolveSignature.Match.Partial;
 		}
 		
+		if (autoCast == Context.AutoCast.No && fromType?.autoCast) {
+			autoCast = fromType.autoCast;
+		}
+		
 		switch (autoCast) {
 		case Context.AutoCast.KeywordNull:
 			return ResolveSignature.Match.Partial;
 			
 		case Context.AutoCast.LiteralByte:
+		case Context.AutoCast.ValueByte:
 			if (toType.fullyQualifiedName == 'int' || toType.fullyQualifiedName == 'float') {
 				return ResolveSignature.Match.Partial;
 			}
 			break;
 			
 		case Context.AutoCast.LiteralInt:
+		case Context.AutoCast.ValueInt:
 			if (toType.fullyQualifiedName == 'float' || toType.fullyQualifiedName == 'byte') {
 				return ResolveSignature.Match.Partial;
 			}
@@ -164,6 +170,19 @@ export class ResolveSignature{
 			return `${name}${type}`;
 		});
 		return [`(${parts.join(",")})`];
+	}
+
+	protected updateReportInfoText(): string {
+		if (arguments.length == 0) {
+			return "()";
+		}
+
+		var parts = this.arguments.map(each => {
+			const name: string = each.name !== undefined ? `${each.name} ` : "";
+			const type: string = each.type?.fullyQualifiedName ?? "?";
+			return `${name}${type}`;
+		});
+		return `(${parts.join(",")})`;
 	}
 
 

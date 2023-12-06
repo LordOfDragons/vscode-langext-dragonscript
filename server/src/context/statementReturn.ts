@@ -87,26 +87,26 @@ export class ContextReturn extends Context{
 				const tv = ov?.expressionType;
 				if (ResolveSignatureArgument.typeMatches(tv, frt, ov.expressionAutoCast) == ResolveSignature.Match.No) {
 					let ri: DiagnosticRelatedInformation[] = [];
-					tv?.addReportInfo(ri, `Return Value Type: ${tv?.resolveTextLong}`);
-					frt.addReportInfo(ri, `Function Return Type: ${frt.resolveTextLong}`);
-					cbf.addReportInfo(ri, `Function ${cbf.resolveTextShort}`);
+					tv?.addReportInfo(ri, `Return Value Type: ${tv?.reportInfoText}`);
+					frt.addReportInfo(ri, `Function Return Type: ${frt.reportInfoText}`);
+					cbf.addReportInfo(ri, `Function ${cbf.reportInfoText}`);
 					state.reportError(Helpers.rangeFrom(this.node.children.return[0]),
-						`Invalid cast from ${tv?.resolveTextShort} to ${frt.resolveTextShort}`, ri);
+						`Invalid cast from ${tv?.name} to ${frt.name}`, ri);
 				}
 				
 			} else {
 				let ri: DiagnosticRelatedInformation[] = [];
-				cbf.addReportInfo(ri, `Function ${cbf.resolveTextShort}`);
+				cbf.addReportInfo(ri, `Function ${cbf.reportInfoText}`);
 				state.reportError(Helpers.rangeFrom(this.node.children.return[0]),
-					`Missing return value for function with return type ${frt.resolveTextShort}`, ri);
+					`Missing return value for function with return type ${frt.name}`, ri);
 			}
 			
 		} else {
 			if (ov) {
 				let ri: DiagnosticRelatedInformation[] = [];
-				cbf.addReportInfo(ri, `Function ${cbf.resolveTextShort}`);
+				cbf.addReportInfo(ri, `Function ${cbf.reportInfoText}`);
 				state.reportError(Helpers.rangeFrom(this.node.children.return[0]),
-					`Return value not allowed in function with void return type`, ri);
+					'Return value not allowed in function with void return type', ri);
 			}
 		}
 	}
