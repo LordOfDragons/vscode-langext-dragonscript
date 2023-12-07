@@ -38,6 +38,7 @@ import { ResolveVariable } from "../resolve/variable";
 import { ContextClass } from "./scriptClass";
 import { ResolveClass } from "../resolve/class";
 import { ContextClassVariable } from "./classVariable";
+import { ContextTryCatch } from "./statementTry";
 
 
 export class ContextMember extends Context{
@@ -46,7 +47,7 @@ export class ContextMember extends Context{
 	protected _object?: Context;
 	protected _name?: Identifier;
 	protected _matches?: ResolveSearch;
-	protected _resolveArgument?: ContextFunctionArgument;
+	protected _resolveArgument?: ContextFunctionArgument | ContextTryCatch;
 	protected _resolveLocalVariable?: ContextVariable;
 	protected _resolveVariable?: ResolveVariable;
 	protected _resolveType?: ResolveType;
@@ -103,7 +104,7 @@ export class ContextMember extends Context{
 	}
 
 	
-	public get resolveArgument(): ContextFunctionArgument | undefined {
+	public get resolveArgument(): ContextFunctionArgument | ContextTryCatch | undefined {
 		return this._resolveArgument;
 	};
 	
@@ -119,7 +120,7 @@ export class ContextMember extends Context{
 		return this._resolveType;
 	}
 	
-	public get resolveAny(): ContextFunctionArgument | ContextVariable | ResolveVariable | ResolveType | undefined {
+	public get resolveAny(): ContextFunctionArgument | ContextTryCatch | ContextVariable | ResolveVariable | ResolveType | undefined {
 		return this._resolveArgument ?? this._resolveLocalVariable ?? this._resolveVariable ?? this._resolveType;
 	}
 	

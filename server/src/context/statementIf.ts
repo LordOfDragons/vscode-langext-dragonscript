@@ -24,13 +24,12 @@
 
 import { Context } from "./context";
 import { StatementElifCstNode, StatementIfCstNode } from "../nodeclasses/statementIf";
-import { DiagnosticRelatedInformation, DocumentSymbol, Position, RemoteConsole } from "vscode-languageserver";
+import { DocumentSymbol, Position, RemoteConsole } from "vscode-languageserver";
 import { ContextBuilder } from "./contextBuilder";
 import { ContextStatements } from "./statements";
 import { Helpers } from "../helpers";
 import { ResolveState } from "../resolve/state";
 import { ResolveNamespace } from "../resolve/namespace";
-import { ResolveSignature, ResolveSignatureArgument } from "../resolve/signature";
 
 
 export class ContextIfElif extends Context {

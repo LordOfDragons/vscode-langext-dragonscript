@@ -28,6 +28,7 @@ import { ContextBuilder } from "./contextBuilder";
 import { StatementThrowCstNode } from "../nodeclasses/statementThrow";
 import { Helpers } from "../helpers";
 import { ResolveState } from "../resolve/state";
+import { ResolveNamespace } from "../resolve/namespace";
 
 
 export class ContextThrow extends Context{
@@ -71,6 +72,8 @@ export class ContextThrow extends Context{
 	
 	public resolveStatements(state: ResolveState): void {
 		this._exception?.resolveStatements(state);
+		
+		this.requireCastable(state, this.exception, ResolveNamespace.classException, "Exception");
 	}
 	
 	public collectChildDocSymbols(list: DocumentSymbol[]) {

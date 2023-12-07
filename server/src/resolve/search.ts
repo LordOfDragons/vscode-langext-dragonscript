@@ -24,6 +24,7 @@
 
 import { integer } from "vscode-languageserver";
 import { ContextFunctionArgument } from "../context/classFunctionArgument";
+import { ContextTryCatch } from "../context/statementTry";
 import { ContextVariable } from "../context/statementVariable";
 import { ResolveFunction } from "./function";
 import { ResolveSignature } from "./signature";
@@ -31,7 +32,7 @@ import { ResolveType } from "./type";
 import { ResolveVariable } from "./variable";
 
 export class ResolveSearch {
-	protected _arguments: ContextFunctionArgument[] = [];
+	protected _arguments: (ContextFunctionArgument | ContextTryCatch)[] = [];
 	protected _localVariables: ContextVariable[] = [];
 	protected _variables: ResolveVariable[] = [];
 	protected _functionsFull: ResolveFunction[] = [];
@@ -115,8 +116,8 @@ export class ResolveSearch {
 		return this._localVariables;
 	}
 
-	/** Function or block arguments. */
-	public get arguments(): ContextFunctionArgument[] {
+	/** Function, block or catch arguments. */
+	public get arguments(): (ContextFunctionArgument | ContextTryCatch)[] {
 		return this._arguments;
 	}
 

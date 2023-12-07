@@ -318,6 +318,8 @@ export namespace Context {
 		Member,
 		Constant,
 		Block,
+		Try,
+		TryCatch,
 		Generic
 	}
 

@@ -156,6 +156,10 @@ export class ResolveNamespace extends ResolveType {
 		return rootNamespace.class('Object')!;
 	}
 
+	public static get classException(): ResolveClass {
+		return rootNamespace.class('Exception')!;
+	}
+
 
 	protected onInvalidate(): void {
 		super.onInvalidate();
