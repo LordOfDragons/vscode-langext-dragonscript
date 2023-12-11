@@ -205,26 +205,28 @@ export class ContextClass extends Context{
 	public resolveClasses(state: ResolveState): void {
 		this._resolveClass?.dispose();
 		this._resolveClass = undefined;
-
+		
 		this._resolveClass = new ResolveClass(this);
-
+		
 		switch (this._name.name) {
 			case "byte":
 				this._resolveClass.primitiveType = ResolveClass.PrimitiveType.Byte;
+				this._resolveClass.autoCast = Context.AutoCast.ValueByte;
 				break;
-
+				
 			case "bool":
 				this._resolveClass.primitiveType = ResolveClass.PrimitiveType.Bool;
 				break;
-
+				
 			case "int":
 				this._resolveClass.primitiveType = ResolveClass.PrimitiveType.Int;
+				this._resolveClass.autoCast = Context.AutoCast.ValueInt;
 				break;
-
+				
 			case "float":
 				this._resolveClass.primitiveType = ResolveClass.PrimitiveType.Float;
 				break;
-
+				
 			default:
 				break; // default is object primitive type
 		}

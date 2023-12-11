@@ -24,12 +24,11 @@
 
 import { Context } from "./context";
 import { StatementWhileCstNode } from "../nodeclasses/statementWhile";
-import { DiagnosticRelatedInformation, DocumentSymbol, Position, RemoteConsole } from "vscode-languageserver";
+import { DocumentSymbol, Position, RemoteConsole } from "vscode-languageserver";
 import { ContextBuilder } from "./contextBuilder";
 import { ContextStatements } from "./statements";
 import { ResolveState } from "../resolve/state";
 import { ResolveNamespace } from "../resolve/namespace";
-import { ResolveSignature, ResolveSignatureArgument } from "../resolve/signature";
 import { Helpers } from "../helpers";
 
 

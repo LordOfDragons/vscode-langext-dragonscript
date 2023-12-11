@@ -12,6 +12,7 @@ export interface StatementForCstNode extends CstNode {
 export type StatementForCstChildren = {
 	statementForBegin: StatementForBeginCstNode[];
 	statements: StatementsCstNode[];
+	statementForEnd: StatementForEndCstNode[];
 };
 
 
@@ -21,6 +22,7 @@ export interface StatementForBeginCstNode extends CstNode {
 }
 
 export type StatementForBeginCstChildren = {
+	for: IToken[];
 	statementForVariable: StatementForVariableCstNode[];
 	statementForFrom: StatementForFromCstNode[];
 	statementForTo: StatementForToCstNode[];
@@ -67,4 +69,14 @@ export interface StatementForStepCstNode extends CstNode {
 
 export type StatementForStepCstChildren = {
 	value: ExpressionCstNode[];
+};
+
+
+export interface StatementForEndCstNode extends CstNode {
+	name: "statementForEnd";
+	children: StatementForEndCstChildren;
+}
+
+export type StatementForEndCstChildren = {
+	end: IToken[];
 };

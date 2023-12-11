@@ -578,9 +578,9 @@ export class ContextFunctionCall extends Context{
 					const at1 = o1.expressionType;
 					const at2 = o2.expressionType;
 					let ri: DiagnosticRelatedInformation[] = [];
-					at2?.addReportInfo(ri, `Source Type: ${at2?.reportInfoText}`);
-					at1?.addReportInfo(ri, `Target Type: ${at1?.reportInfoText}`);
-					state.reportError(this._name.range, `Invalid cast from ${at2?.name} to ${at1?.name}`, ri);
+					at2?.addReportInfo(ri, `Source Type: ${at1?.reportInfoText}`);
+					at1?.addReportInfo(ri, `Target Type: ${at2?.reportInfoText}`);
+					state.reportError(this._name.range, `Invalid cast from ${at1?.name} to ${at2?.name}`, ri);
 				}
 				}break;
 				

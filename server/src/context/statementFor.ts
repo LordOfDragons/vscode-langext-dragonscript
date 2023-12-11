@@ -23,10 +23,13 @@
  */
 
 import { Context } from "./context";
-import { RemoteConsole } from "vscode-languageserver";
+import { DocumentSymbol, Position, RemoteConsole } from "vscode-languageserver";
 import { ContextBuilder } from "./contextBuilder";
 import { ContextStatements } from "./statements";
 import { StatementForCstNode } from "../nodeclasses/statementFor";
+import { Helpers } from "../helpers";
+import { ResolveState } from "../resolve/state";
+import { ResolveNamespace } from "../resolve/namespace";
 
 
 export class ContextFor extends Context{
@@ -56,6 +59,11 @@ export class ContextFor extends Context{
 		}
 
 		this._statements = new ContextStatements(node.children.statements[0], this);
+		
+		const tokBegin = node.children.statementForBegin[0].children.for[0];
+		let tokEnd = node.children.statementForEnd[0].children.end[0];
+		
+		this.range = Helpers.rangeFrom(tokBegin, tokEnd, true, false);
 	}
 
 	public dispose(): void {
@@ -95,7 +103,56 @@ export class ContextFor extends Context{
 	public get statements(): ContextStatements {
 		return this._statements;
 	}
-
+	
+	
+	public resolveMembers(state: ResolveState): void {
+		state.withScopeContext(this, () => {
+			this._variable.resolveMembers(state);
+			this._from.resolveMembers(state);
+			this._to.resolveMembers(state);
+			this._step?.resolveMembers(state);
+			this._statements.resolveMembers(state);
+		});
+	}
+	
+	public resolveStatements(state: ResolveState): void {
+		state.withScopeContext(this, () => {
+			this._variable.resolveStatements(state);
+			this._from.resolveStatements(state);
+			this._to.resolveStatements(state);
+			this._step?.resolveStatements(state);
+			this._statements.resolveStatements(state);
+		});
+		
+		this.requireCastable(state, this._variable, ResolveNamespace.classInt, 'From');
+		this.requireCastable(state, this._from, ResolveNamespace.classInt, 'From');
+		this.requireCastable(state, this._to, ResolveNamespace.classInt, 'To');
+		if (this._step) {
+			this.requireCastable(state, this._step, ResolveNamespace.classInt, 'Step');
+		}
+	}
+	
+	public contextAtPosition(position: Position): Context | undefined {
+		if (!Helpers.isPositionInsideRange(this.range, position)) {
+			return undefined;
+		}
+		
+		return this._variable.contextAtPosition(position)
+			?? this._from.contextAtPosition(position)
+			?? this._to.contextAtPosition(position)
+			?? this._step?.contextAtPosition(position)
+			?? this._statements.contextAtPosition(position);
+	}
+	
+	public collectChildDocSymbols(list: DocumentSymbol[]) {
+		super.collectChildDocSymbols(list);
+		this._variable?.collectChildDocSymbols(list);
+		this._from?.collectChildDocSymbols(list);
+		this._to?.collectChildDocSymbols(list);
+		this._step?.collectChildDocSymbols(list);
+		this._statements.collectChildDocSymbols(list);
+	}
+	
 	
 	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
 		console.log(`${prefix}For`);
