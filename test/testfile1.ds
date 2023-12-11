@@ -1,0 +1,25 @@
+namespace Dragengine.Elements
+
+class TestClassA1
+	var int pSomeVariable
+	public var int pPubVar
+	
+	/**
+	 * \brief This is the brief description of the function.
+	 * \param param A parameter
+	 * 
+	 * This is the lengthy description of the constructor.
+	 */
+	func new(int param)
+		pSomeVariable = param
+		pPubVar = 5
+	end
+	
+	/**
+	 * \brief Get value of pSomeVariable.
+	 * \returns Value of pSomeVariable.
+	 */
+	func int getSomeVariable()
+		return pSomeVariable
+	end
+end

@@ -114,6 +114,9 @@ public class OuterClass extends ClassExtendImplement
 			return true
 		end )
 		pMember3 = SimpleEnum.withOrder(0)
+		
+		var TestClassA1 a1 = TestClassA1.new(pMember1)
+		pMember1 = a1.getSomeVariable()
 	end
 	
 	public func new() this( "Something \u1234.", true )

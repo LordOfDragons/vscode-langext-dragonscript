@@ -57,48 +57,50 @@ export class ContextScript extends Context{
 		var statements = this._statements;
 		var parentContext: Context = this;
 
-		for (const each of node.children.scriptStatement) {
-			this.ignoreException(() => {
-				let c = each.children;
+		if (node.children.scriptStatement) {
+			for (const each of node.children.scriptStatement) {
+				this.ignoreException(() => {
+					let c = each.children;
 
-				if (c.requiresPackage) {
-					let reqpack = new ContextRequiresPackage(c.requiresPackage[0], parentContext);
-					this._requires.push(reqpack);
-					statements.push(reqpack);
+					if (c.requiresPackage) {
+						let reqpack = new ContextRequiresPackage(c.requiresPackage[0], parentContext);
+						this._requires.push(reqpack);
+						statements.push(reqpack);
 
-				} else if(c.pinNamespace) {
-					statements.push(new ContextPinNamespace(c.pinNamespace[0], parentContext));
+					} else if(c.pinNamespace) {
+						statements.push(new ContextPinNamespace(c.pinNamespace[0], parentContext));
 
-				} else if (c.openNamespace) {
-					let prevNamespace = openNamespace;
+					} else if (c.openNamespace) {
+						let prevNamespace = openNamespace;
 
-					openNamespace = new ContextNamespace(c.openNamespace[0], this);
-					openNamespace.lastNamespace(lastPosition);
-					this._statements.push(openNamespace);
-					this._namespaces.push(openNamespace);
+						openNamespace = new ContextNamespace(c.openNamespace[0], this);
+						openNamespace.lastNamespace(lastPosition);
+						this._statements.push(openNamespace);
+						this._namespaces.push(openNamespace);
 
-					if (prevNamespace) {
-						prevNamespace.nextNamespace(openNamespace);
+						if (prevNamespace) {
+							prevNamespace.nextNamespace(openNamespace);
+						}
+
+						statements = openNamespace.statements;
+						parentContext = openNamespace;
+
+					} else if (c.scriptDeclaration) {
+						let declNode = c.scriptDeclaration[0].children;
+						let typemod = declNode.typeModifiers?.at(0);
+
+						if (declNode.declareClass) {
+							statements.push(new ContextClass(declNode.declareClass[0], typemod, parentContext));
+
+						} else if (declNode.declareInterface) {
+							statements.push(new ContextInterface(declNode.declareInterface[0], typemod, parentContext));
+
+						} else if (declNode.declareEnumeration) {
+							statements.push(new ContextEnumeration(declNode.declareEnumeration[0], typemod, parentContext));
+						}
 					}
-
-					statements = openNamespace.statements;
-					parentContext = openNamespace;
-
-				} else if (c.scriptDeclaration) {
-					let declNode = c.scriptDeclaration[0].children;
-					let typemod = declNode.typeModifiers?.at(0);
-
-					if (declNode.declareClass) {
-						statements.push(new ContextClass(declNode.declareClass[0], typemod, parentContext));
-
-					} else if (declNode.declareInterface) {
-						statements.push(new ContextInterface(declNode.declareInterface[0], typemod, parentContext));
-
-					} else if (declNode.declareEnumeration) {
-						statements.push(new ContextEnumeration(declNode.declareEnumeration[0], typemod, parentContext));
-					}
-				}
-			});
+				});
+			}
 		}
 
 		for (const each of this._namespaces) {

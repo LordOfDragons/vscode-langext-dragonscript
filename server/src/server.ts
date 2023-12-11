@@ -36,7 +36,8 @@ import {
 	InitializeResult,
 	DocumentSymbolParams,
 	DocumentSymbol,
-	Hover
+	Hover,
+	TextDocumentEdit
 } from 'vscode-languageserver/node'
 
 import {
@@ -85,6 +86,65 @@ const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
 export const capabilities: DSCapabilities = new DSCapabilities;
 export const validator = new ScriptValidator(capabilities);
 export const scriptDocuments: ScriptDocuments = new ScriptDocuments(connection.console);
+
+class ReresolveHelper {
+	public pending: boolean = false;
+	public followup: boolean = false;
+	
+	
+	public reresolv(): void {
+		this.followup = true;
+		if (this.pending) {
+			return;
+		}
+		
+		debugLogMessage('ReresolveHelper.reresolve');
+		this.armTimeout();
+	}
+	
+	private armTimeout(): void {
+		this.followup = false;
+		this.pending = true;
+		setTimeout(this.onTimerElapsed.bind(this), 1000);
+	}
+	
+	private onTimerElapsed() {
+		//debugLogMessage('Reresolving');
+		//let startTime = Date.now();
+		
+		let collect: Promise<void>[] = [];
+		for (const each of documents.all()) {
+			collect.push(this.resolveTextDocument(each));
+		}
+		
+		Promise.all(documents.all().map((each) => this.resolveTextDocument(each))).then(() => {
+			//let elapsedTime = Date.now() - startTime;
+			//debugLogMessage(`Finished resolving in ${elapsedTime / 1000}s`);
+			
+			this.pending = false;
+			if (this.followup) {
+				this.armTimeout();
+			}
+		});
+	}
+	
+	private async resolveTextDocument(textDocument: TextDocument): Promise<void> {
+		let scriptDocument = scriptDocuments.get(textDocument.uri);
+		if (!scriptDocument) {
+			return;
+		}
+		
+		let reportConfig = new ReportConfig;
+		
+		const diagnostics: Diagnostic[] = [];
+		for (const each of await scriptDocument.resolveStatements(reportConfig)) {
+			diagnostics.push(each)
+		}
+		connection.sendDiagnostics({uri: textDocument.uri, diagnostics})
+	}
+};
+
+let reresolve: ReresolveHelper = new ReresolveHelper();
 
 
 connection.onInitialize((params: InitializeParams) => {
@@ -188,7 +248,7 @@ documents.onDidClose(e => {
 // The content of a text document has changed. This event is emitted
 // when the text document first opened or when its content has changed.
 documents.onDidChangeContent(change => {
-	validateTextDocument(change.document);
+	validateTextDocumentAndReresolve(change.document);
 });
 
 /*
@@ -200,21 +260,26 @@ function test(n: ResolveNamespace, i: string) {
 }
 */
 
+async function validateTextDocumentAndReresolve(textDocument: TextDocument): Promise<void> {
+	await validateTextDocument(textDocument);
+	reresolve.reresolv();
+}
+
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	//let startTime = Date.now();
-
+	
 	let scriptDocument = scriptDocuments.get(textDocument.uri);
 	if (!scriptDocument) {
 		const settings = await getDocumentSettings(textDocument.uri);
 		scriptDocument = new ScriptDocument(textDocument.uri, connection.console, settings);
 		scriptDocuments.add(scriptDocument);
 	}
-
+	
 	let reportConfig = new ReportConfig;
-
+	
 	const diagnostics: Diagnostic[] = [];
 	await validator.parse(scriptDocument, textDocument, diagnostics);
-
+	
 	if (scriptDocument.node) {
 		try {
 			scriptDocument.context = new ContextScript(scriptDocument.node, textDocument);
@@ -247,14 +312,14 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	for (const each of await scriptDocument.resolveStatements(reportConfig)) {
 		diagnostics.push(each)
 	}
-
+	
 	//let elapsedTime = Date.now() - startTime;
 	//connection.console.info(`Parsed '${scriptDocument.uri}' in ${elapsedTime / 1000}s`);
-
+	
 	//scriptDocument.context?.log(connection.console);
-
+	
 	connection.sendDiagnostics({uri: textDocument.uri, diagnostics})
-
+	
 	//test(ResolveNamespace.root, "");
 }
 

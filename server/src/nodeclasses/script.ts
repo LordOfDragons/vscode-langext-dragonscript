@@ -14,7 +14,7 @@ export interface ScriptCstNode extends CstNode {
 }
 
 export type ScriptCstChildren = {
-	scriptStatement: ScriptStatementCstNode[];
+	scriptStatement?: ScriptStatementCstNode[];
 };
 
 
