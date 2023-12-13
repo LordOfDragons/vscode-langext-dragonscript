@@ -24,7 +24,7 @@
 
 import { Context } from "./context"
 import { FunctionArgumentCstNode } from "../nodeclasses/declareFunction";
-import { DocumentSymbol, Hover, Position, RemoteConsole, SymbolKind } from "vscode-languageserver"
+import { Definition, DocumentSymbol, Hover, Position, RemoteConsole, SymbolKind } from "vscode-languageserver"
 import { TypeName } from "./typename";
 import { Identifier } from "./identifier";
 import { ResolveState } from "../resolve/state";
@@ -117,6 +117,16 @@ export class ContextFunctionArgument extends Context{
 
 	protected updateReportInfoText(): string {
 		return `parameter ${this._typename} ${this._name}`;
+	}
+	
+	public definition(position: Position): Definition {
+		if (this._name.isPositionInside(position)) {
+			return [];
+		}
+		if (this._typename.isPositionInside(position)) {
+			return this._typename.definition(position);
+		}
+		return [];
 	}
 
 	

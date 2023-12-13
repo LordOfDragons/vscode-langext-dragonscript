@@ -23,7 +23,7 @@
  */
 
 import { Context } from "./context";
-import { DiagnosticRelatedInformation, DocumentSymbol, Hover, integer, Position, Range, RemoteConsole } from "vscode-languageserver";
+import { Definition, DiagnosticRelatedInformation, DocumentSymbol, Hover, integer, Position, Range, RemoteConsole } from "vscode-languageserver";
 import { ContextBuilder } from "./contextBuilder";
 import { Identifier } from "./identifier";
 import { ExpressionAdditionCstNode } from "../nodeclasses/expressionAddition";
@@ -48,6 +48,7 @@ import { ResolveSearch } from "../resolve/search";
 import { ResolveSignature, ResolveSignatureArgument } from "../resolve/signature";
 import { ResolveFunction } from "../resolve/function";
 import { ContextMember } from "./expressionMember";
+import { debugLogMessage } from "../server";
 
 
 export class ContextFunctionCall extends Context{
@@ -737,7 +738,6 @@ export class ContextFunctionCall extends Context{
 
 	protected updateHover(position: Position): Hover | null {
 		if (this._name?.isPositionInside(position)) {
-			let tname = this._operator ? 'operator' : 'function';
 			let content = [];
 			
 			switch (this._functionType) {
@@ -807,34 +807,9 @@ export class ContextFunctionCall extends Context{
 							content.push(...f.context.resolveTextLong);
 							
 						}
-						/*
-						content.push("___");
-						content.push(`call ${this.expressionType?.resolveTextShort} ${this._matches.signature?.resolveTextShort}`);
-						content.push("___");
-						content.push(`full ${this._name.name} f(${this._matches.functionsFull.length})`);
-						for (const each of this._matches.functionsFull) {
-							if (each.context) {
-								content.push(`${each.context.resolveTextShort} (${each.context.parent?.fullyQualifiedName})`);
-							}
-						}
-						content.push("___");
-						content.push(`partial ${this._name.name} f(${this._matches.functionsPartial.length})`);
-						for (const each of this._matches.functionsPartial) {
-							if (each.context) {
-								content.push(`${each.context.resolveTextShort} (${each.context.parent?.fullyQualifiedName})`);
-							}
-						}
-						content.push("___");
-						content.push(`error ${this._name.name} f(${this._matches.functionsWildcard.length})`);
-						for (const each of this._matches.functionsWildcard) {
-							if (each.context) {
-								content.push(`${each.context.resolveTextShort} (${each.context.parent?.fullyQualifiedName})`);
-							}
-						}
-						*/
 						
 					} else {
-						content.push(`**${tname} member** ${this._name.name}`);
+						content.push(`**${this._operator ? 'operator' : 'function'} member** ${this._name.name}`);
 					}
 			}
 			
@@ -846,7 +821,54 @@ export class ContextFunctionCall extends Context{
 
 		return null;
 	}
-
+	
+	public definition(position: Position): Definition {
+		if (this._name?.isPositionInside(position)) {
+			switch (this._functionType) {
+				case ContextFunctionCall.FunctionType.cast:
+				case ContextFunctionCall.FunctionType.castable:
+				case ContextFunctionCall.FunctionType.typeof:
+				case ContextFunctionCall.FunctionType.assign:
+				case ContextFunctionCall.FunctionType.equals:
+				case ContextFunctionCall.FunctionType.notEquals:
+					break;
+					
+				default:
+					if (this._matches) {
+						var definitions: Definition = [];
+						
+						if (this._matches.functionsFull.length > 0) {
+							if (this._matches.functionsFull.length == 1) {
+								const l = this._matches.functionsFull[0].context?.resolveLocationSelf();
+								if (l) {
+									definitions.push(l);
+								}
+							}
+						} else if (this._matches.functionsPartial.length > 0) {
+							for (const each of this._matches.functionsPartial) {
+								const l = each.context?.resolveLocationSelf();
+								if (l) {
+									definitions.push(l);
+								}
+							}
+						} else if (this._matches.functionsWildcard.length > 0) {
+							for (const each of this._matches.functionsWildcard) {
+								const l = each.context?.resolveLocationSelf();
+								if (l) {
+									definitions.push(l);
+								}
+							}
+						}
+						
+						return definitions;
+					}
+			}
+		} else if (this._castType?.isPositionInside(position)) {
+			return this._castType.definition(position);
+		}
+		return [];
+	}
+	
 
 	protected updateRange(): void {
 		if (!this._name?.range) {

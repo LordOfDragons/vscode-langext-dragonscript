@@ -27,7 +27,7 @@ import { FunctionBeginCstNode } from "../nodeclasses/declareFunction";
 import { InterfaceFunctionCstNode } from "../nodeclasses/declareInterface";
 import { ClassFunctionCstNode } from "../nodeclasses/declareClass";
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
-import { DocumentSymbol, Hover, Position, RemoteConsole, SymbolKind } from "vscode-languageserver";
+import { Definition, DocumentSymbol, Hover, Position, RemoteConsole, SymbolKind } from "vscode-languageserver";
 import { TypeName } from "./typename";
 import { ContextFunctionArgument } from "./classFunctionArgument";
 import { Identifier } from "./identifier";
@@ -492,14 +492,23 @@ export class ContextFunction extends Context{
 		
 		return parts.join("");
 	}
-
-
+	
 	public search(search: ResolveSearch, before: Context | undefined = undefined): void {
 		for (const each of this._arguments) {
 			if (search.name == each.name.name) {
 				search.arguments.push(each);
 			}
 		}
+	}
+	
+	public definition(position: Position): Definition {
+		if (this._name.isPositionInside(position)) {
+			return [];
+		}
+		if (this._returnType?.isPositionInside(position)) {
+			return this._returnType.definition(position);
+		}
+		return [];
 	}
 
 

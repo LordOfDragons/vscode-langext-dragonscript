@@ -25,7 +25,7 @@
 import { Context } from "./context"
 import { DeclareClassCstNode } from "../nodeclasses/declareClass";
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
-import { DocumentSymbol, Hover, Position, RemoteConsole, SymbolKind } from "vscode-languageserver"
+import { Definition, DocumentSymbol, Hover, Position, RemoteConsole, SymbolKind } from "vscode-languageserver"
 import { TypeName } from "./typename"
 import { ContextInterface } from "./scriptInterface";
 import { ContextEnumeration } from "./scriptEnum";
@@ -336,6 +336,21 @@ export class ContextClass extends Context{
 
 	public search(search: ResolveSearch, before: Context | undefined = undefined): void {
 		this._resolveClass?.search(search);
+	}
+	
+	public definition(position: Position): Definition {
+		if (this._name.isPositionInside(position)) {
+			return [];
+		} else if (this._extends?.isPositionInside(position)) {
+			return this._extends.definition(position);
+		} else {
+			for (const each of this._implements) {
+				if (each.isPositionInside(position)) {
+					return each.definition(position);
+				}
+			}
+		}
+		return [];
 	}
 
 

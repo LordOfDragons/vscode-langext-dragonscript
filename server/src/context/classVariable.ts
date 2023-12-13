@@ -26,7 +26,7 @@ import { Context } from "./context";
 import { ClassVariableCstNode } from "../nodeclasses/declareClass";
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
 import { FullyQualifiedClassNameCstNode } from "../nodeclasses/fullyQualifiedClassName";
-import { DocumentSymbol, Hover, Position, RemoteConsole, SymbolKind } from "vscode-languageserver";
+import { Definition, DocumentSymbol, Hover, Position, RemoteConsole, SymbolKind } from "vscode-languageserver";
 import { TypeName } from "./typename";
 import { ContextBuilder } from "./contextBuilder";
 import { Identifier } from "./identifier";
@@ -207,6 +207,16 @@ export class ContextClassVariable extends Context{
 
 	protected updateReportInfoText(): string {
 		return `${this._typeModifiers.typestring} ${this._typename} ${this.parent!.simpleName}.${this._name}`;
+	}
+	
+	public definition(position: Position): Definition {
+		if (this._name.isPositionInside(position)) {
+			return [];
+		}
+		if (!this._firstVariable && this._typename.isPositionInside(position)) {
+			return this._typename.definition(position);
+		}
+		return [];
 	}
 
 

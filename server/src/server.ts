@@ -239,7 +239,7 @@ documents.onDidClose(e => {
 // The content of a text document has changed. This event is emitted
 // when the text document first opened or when its content has changed.
 documents.onDidChangeContent(change => {
-	console.log(`onDidChangeContent ${change.document.uri} ${change.document.version}`);
+	//console.log(`onDidChangeContent ${change.document.uri} ${change.document.version}`);
 	validateTextDocumentAndReresolve(change.document);
 });
 
@@ -263,7 +263,7 @@ async function validateTextDocumentAndReresolve(textDocument: TextDocument): Pro
 }
 
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
-	console.log(`validateTextDocument ${textDocument.uri} ${textDocument.version}`);
+	//console.log(`validateTextDocument ${textDocument.uri} ${textDocument.version}`);
 	//let startTime = Date.now();
 	
 	let scriptDocument = scriptDocuments.get(textDocument.uri);
