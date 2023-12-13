@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-import { DiagnosticRelatedInformation } from 'vscode-languageserver';
+import { DiagnosticRelatedInformation, Location } from 'vscode-languageserver';
 import { ContextInterface } from '../context/scriptInterface';
 import { ResolveNamespace } from './namespace';
 import { ResolveSearch } from './search';
@@ -100,6 +100,11 @@ export class ResolveInterface extends ResolveType {
 		}
 		
 		return false;
+	}
+	
+	public resolveLocation(): Location[] {
+		const l = this._context?.resolveLocationSelf();
+		return l ? [l] : [];
 	}
 
 	protected onInvalidate(): void {

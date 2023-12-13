@@ -23,7 +23,7 @@
  */
 
 import { IToken } from "chevrotain"
-import { Hover, Position, Range } from "vscode-languageserver";
+import { Definition, Hover, Location, Position, Range } from "vscode-languageserver";
 import { HoverInfo } from "../hoverinfo";
 import { FullyQualifiedClassNameCstNode } from "../nodeclasses/fullyQualifiedClassName"
 import { ResolveNamespace } from "../resolve/namespace";
@@ -38,6 +38,7 @@ import { ContextClass } from "./scriptClass";
 import { ContextInterface } from "./scriptInterface";
 import { ContextNamespace } from "./namespace";
 import { Helpers } from "../helpers";
+import { debugLogMessage } from "../server";
 
 
 export class TypeNamePart {
@@ -504,6 +505,20 @@ export class TypeName {
 		if (type) {
 			content.push(`parent class *${type.displayName}*`);
 		}
+	}
+	
+	public definition(position: Position): Definition {
+		let i, plen = this._parts.length;
+		for (i=0; i<plen; i++) {
+			let part = this._parts[i];
+			if (part.name.isPositionInside(position)) {
+				if (part.resolve) {
+					return (part.resolve as ResolveType).resolveLocation();
+				}
+				return [];
+			}
+		};
+		return [];
 	}
 
 	toString() : string {

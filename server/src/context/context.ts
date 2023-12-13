@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-import { Diagnostic, DiagnosticRelatedInformation, DiagnosticSeverity, DocumentSymbol, Hover, Location, Position, Range, RemoteConsole, URI } from "vscode-languageserver";
+import { Definition, Diagnostic, DiagnosticRelatedInformation, DiagnosticSeverity, DocumentSymbol, Hover, Location, Position, Range, RemoteConsole, URI } from "vscode-languageserver";
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
 import { capabilities } from "../server";
 import { ResolveState } from "../resolve/state";
@@ -118,6 +118,20 @@ export class Context {
 	protected updateHover(position: Position): Hover | null {
 		return null;
 	}
+	
+	public definition(position: Position): Definition {
+		return [];
+	}
+	
+	public resolveLocation(range?: Range): Location | undefined {
+		const uri = this.getDocumentUri();
+		return uri && range ? Location.create(uri, range) : undefined;
+	}
+	
+	public resolveLocationSelf(): Location | undefined {
+		return this.resolveLocation(this.range);
+	}
+	
 
 	public get resolveTextShort(): string {
 		if (!this._resolveTextShort) {

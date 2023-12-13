@@ -111,21 +111,25 @@ export class Package {
 		//reportConfig.enableReportWarning = false;
 		//reportConfig.enableReportInfo = false;
 		//reportConfig.enableReportHint = false;
-
+		
 		// loading files does "resolveClasses" on all documents individually
 		await Promise.all(this._files.map(each => this.loadFile(each, reportConfig)));
-
+		
 		// calling "resolveInheritance" and "resolveStatements" requires all files to be present
+		await this.resolveAll(reportConfig);
+	}
+	
+	protected async resolveAll(reportConfig: ReportConfig): Promise<void> {
 		var docs: ScriptDocument[] = [...this._scriptDocuments];
-
+		
 		while (docs.length > 0) {
 			await Promise.all(docs.map(each => {
 				this.resolveLogDiagnostics(each.resolveInheritance(reportConfig), each.uri);
 			}));
-
+			
 			docs = docs.filter(each => each.requiresAnotherTurn);
 		}
-
+		
 		await Promise.all(this._scriptDocuments.map(each => {
 			this.resolveLogDiagnostics(each.resolveMembers(reportConfig), each.uri);
 		}));

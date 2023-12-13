@@ -38,6 +38,7 @@ export class ScriptDocument {
 	protected _context?: ContextScript;
 
 	public requiresAnotherTurn: boolean = false;
+	public revision: number = 1;
 
 
 	constructor(uri: string, console: RemoteConsole, settings: DSSettings) {

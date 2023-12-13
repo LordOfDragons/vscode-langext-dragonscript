@@ -22,8 +22,9 @@
  * SOFTWARE.
  */
 
-import { DiagnosticRelatedInformation } from 'vscode-languageserver';
+import { Definition, DiagnosticRelatedInformation, Location } from 'vscode-languageserver';
 import { ContextClass } from '../context/scriptClass';
+import { debugLogMessage, debugLogObjProps } from '../server';
 import { ResolveSearch } from './search';
 import { ResolveType } from './type'
 
@@ -108,6 +109,11 @@ export class ResolveClass extends ResolveType {
 		}
 		
 		return this.parent?.castable(type) ?? false;
+	}
+	
+	public resolveLocation(): Location[] {
+		const l = this._context?.resolveLocationSelf();
+		return l ? [l] : [];
 	}
 
 	protected onInvalidate(): void {

@@ -22,7 +22,7 @@
 * SOFTWARE.
 */
 
-import { RemoteConsole, WorkspaceFolder } from "vscode-languageserver";
+import { Diagnostic, RemoteConsole, WorkspaceFolder } from "vscode-languageserver";
 import { ReportConfig } from "../reportConfig";
 import { getDocumentSettings, packages, reportDiagnostics } from "../server";
 import { PackageDEModule } from "./dragenginemodule";
@@ -60,8 +60,8 @@ export class PackageWorkspace extends Package {
 	}
 	
 	
-	public resolveAll(): void {
-		this.armTimeoutResolve();
+	public resolveAllLater(): void {
+		this.armResolveAll();
 	}
 	
 	
@@ -85,18 +85,17 @@ export class PackageWorkspace extends Package {
 		this.loadingFinished();
 	}
 	
-	private armTimeoutResolve(): void {
+	private armResolveAll(): void {
 		if (this._timerResolve) {
 			clearTimeout(this._timerResolve);
 			this._timerResolve = undefined;
 		}
-		this._timerResolve = setTimeout(this._resolveAll.bind(this), 1000);
+		
+		const myself = this;
+		this._timerResolve = setTimeout(() => myself.resolveAll(new ReportConfig), 1000);
 	}
 	
-	private _resolveAll(): void {
-		var reportConfig = new ReportConfig;
-		for (const each of this._scriptDocuments) {
-			each.resolveStatements(reportConfig).then(diagnostics => reportDiagnostics(each.uri, diagnostics));
-		};
+	protected async resolveLogDiagnostics(diagnostics: Promise<Diagnostic[]>, uri: string): Promise<void> {
+		reportDiagnostics(uri, await diagnostics);
 	}
 }

@@ -23,7 +23,7 @@
  */
 
 import { Context } from "./context";
-import { DocumentSymbol, Hover, Position, RemoteConsole } from "vscode-languageserver";
+import { Definition, DocumentSymbol, Hover, Position, RemoteConsole } from "vscode-languageserver";
 import { StatementVariableCstNode } from "../nodeclasses/statementVariables";
 import { TypeName } from "./typename";
 import { Identifier } from "./identifier";
@@ -168,6 +168,16 @@ export class ContextVariable extends Context {
 		if (this._name.name == search.name) {
 			search.localVariables.push(this);
 		}
+	}
+	
+	public definition(position: Position): Definition {
+		if (this._name.isPositionInside(position)) {
+			return [];
+		}
+		if (!this._firstVariable && this._typename.isPositionInside(position)) {
+			return this._typename.definition(position);
+		}
+		return [];
 	}
 
 

@@ -24,7 +24,7 @@
 
 import { Context } from "./context";
 import { OpenNamespaceCstNode } from "../nodeclasses/openNamespace";
-import { DocumentSymbol, Hover, Position, RemoteConsole, SymbolKind } from "vscode-languageserver";
+import { Definition, DocumentSymbol, Hover, Position, RemoteConsole, SymbolKind } from "vscode-languageserver";
 import { TypeName } from "./typename";
 import { HoverInfo } from "../hoverinfo";
 import { ResolveNamespace } from "../resolve/namespace";
@@ -207,6 +207,10 @@ export class ContextNamespace extends Context{
 
 	public search(search: ResolveSearch, before: Context | undefined = undefined): void {
 		this._resolveNamespace?.search(search);
+	}
+	
+	public definition(position: Position): Definition {
+		return this._typename.definition(position);
 	}
 
 

@@ -36,7 +36,10 @@ import {
 	InitializeResult,
 	DocumentSymbolParams,
 	DocumentSymbol,
-	Hover} from 'vscode-languageserver/node'
+	Hover,
+	Location,
+	LocationLink,
+	Definition} from 'vscode-languageserver/node'
 
 import {
 	TextDocument
@@ -113,7 +116,8 @@ connection.onInitialize((params: InitializeParams) => {
 			documentSymbolProvider: {
 				label: "DragonScript"
 			},
-			hoverProvider: true
+			hoverProvider: true,
+			definitionProvider: true
 		}
 	};
 	
@@ -235,6 +239,7 @@ documents.onDidClose(e => {
 // The content of a text document has changed. This event is emitted
 // when the text document first opened or when its content has changed.
 documents.onDidChangeContent(change => {
+	console.log(`onDidChangeContent ${change.document.uri} ${change.document.version}`);
 	validateTextDocumentAndReresolve(change.document);
 });
 
@@ -248,17 +253,27 @@ function test(n: ResolveNamespace, i: string) {
 */
 
 async function validateTextDocumentAndReresolve(textDocument: TextDocument): Promise<void> {
+	let scriptDocument = scriptDocuments.get(textDocument.uri);
+	if (scriptDocument && textDocument.version == scriptDocument.revision) {
+		return;
+	}
+	
 	await validateTextDocument(textDocument);
-	workspacePackages.forEach (each => each.resolveAll());
+	workspacePackages.forEach (each => each.resolveAllLater());
 }
 
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
+	console.log(`validateTextDocument ${textDocument.uri} ${textDocument.version}`);
 	//let startTime = Date.now();
 	
 	let scriptDocument = scriptDocuments.get(textDocument.uri);
-	if (!scriptDocument) {
+	if (scriptDocument) {
+		scriptDocument.revision = textDocument.version;
+		
+	} else {
 		const settings = await getDocumentSettings(textDocument.uri);
 		scriptDocument = new ScriptDocument(textDocument.uri, connection.console, settings);
+		scriptDocument.revision = textDocument.version;
 		scriptDocuments.add(scriptDocument);
 	}
 	
@@ -272,15 +287,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 			scriptDocument.context = new ContextScript(scriptDocument.node, textDocument);
 			scriptDocument.context.uri = textDocument.uri;
 		} catch (error) {
-			if (error instanceof Error) {
-				let err = error as Error;
-				connection.console.error(err.name);
-				if (err.stack) {
-					connection.console.error(err.stack);
-				}
-			} else {
-				connection.console.error(`${error}`);
-			}
+			logError(error);
 			scriptDocument.context = undefined;
 		}
 	} else {
@@ -327,15 +334,7 @@ connection.onHover(
 			return scriptDocuments.get(params.textDocument.uri)?.context?.
 				contextAtPosition(params.position)?.hover(params.position) || null;
 		} catch (error) {
-			if (error instanceof Error) {
-				let err = error as Error;
-				connection.console.error(err.name);
-				if (err.stack) {
-					connection.console.error(err.stack);
-				}
-			} else {
-				connection.console.error(`${error}`);
-			}
+			logError(error);
 			return null;
 		}
 	}
@@ -375,6 +374,30 @@ connection.onCompletionResolve(
 		return item;
 	}
 );
+
+connection.onDefinition(
+	(params: TextDocumentPositionParams): Definition => {
+		try {
+			return scriptDocuments.get(params.textDocument.uri)?.context?.
+				contextAtPosition(params.position)?.definition(params.position) || [];
+		} catch (error) {
+			logError(error);
+			return [];
+		}
+	}
+);
+
+function logError(error: any): void {
+	if (error instanceof Error) {
+		let err = error as Error;
+		connection.console.error(err.name);
+		if (err.stack) {
+			connection.console.error(err.stack);
+		}
+	} else {
+		connection.console.error(`${error}`);
+	}
+}
 
 // Make the text document manager listen on the connection
 // for open, change and close text document events

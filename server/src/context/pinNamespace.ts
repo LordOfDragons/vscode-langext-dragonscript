@@ -24,7 +24,7 @@
 
 import { Context } from "./context";
 import { PinNamespaceCstNode } from "../nodeclasses/pinNamespace";
-import { DocumentSymbol, Hover, Position, RemoteConsole, SymbolKind } from "vscode-languageserver";
+import { Definition, DocumentSymbol, Hover, Position, RemoteConsole, SymbolKind } from "vscode-languageserver";
 import { TypeName } from "./typename";
 import { HoverInfo } from "../hoverinfo";
 import { ResolveState } from "../resolve/state";
@@ -144,7 +144,11 @@ export class ContextPinNamespace extends Context{
 
 		return null;
 	}
-
+	
+	public definition(position: Position): Definition {
+		return this._typename.definition(position);
+	}
+	
 
 	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
 		console.log(`${prefix}Pin: ${this._typename.name}`);

@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-import { DiagnosticRelatedInformation } from 'vscode-languageserver';
+import { DiagnosticRelatedInformation, Location } from 'vscode-languageserver';
 import { ContextEnumeration } from '../context/scriptEnum';
 import { ResolveNamespace } from './namespace';
 import { ResolveType } from './type';
@@ -82,6 +82,11 @@ export class ResolveEnumeration extends ResolveType {
 		}
 		
 		return false;
+	}
+	
+	public resolveLocation(): Location[] {
+		const l = this._context?.resolveLocationSelf();
+		return l ? [l] : [];
 	}
 	
 	protected onInvalidate(): void {

@@ -30,7 +30,7 @@ import { ResolveFunction } from './function';
 import { ResolveVariable } from './variable';
 import { ResolveSearch } from './search';
 import { ResolveSignature } from './signature';
-import { DiagnosticRelatedInformation } from 'vscode-languageserver';
+import { DiagnosticRelatedInformation, Location } from 'vscode-languageserver';
 import { Context } from '../context/context';
 
 
@@ -153,6 +153,10 @@ export class ResolveType{
 		if (info) {
 			relatedInformation.push(info);
 		}
+	}
+	
+	public resolveLocation(): Location[] {
+		return [];
 	}
 
 

@@ -23,7 +23,7 @@
  */
 
 import { Context } from "./context";
-import { DiagnosticRelatedInformation, Hover, integer, Position, Range, RemoteConsole } from "vscode-languageserver";
+import { Definition, DiagnosticRelatedInformation, Hover, integer, Location, Position, Range, RemoteConsole } from "vscode-languageserver";
 import { ContextBuilder } from "./contextBuilder";
 import { Identifier } from "./identifier";
 import { ExpressionMemberCstNode, ExpressionObjectCstNode } from "../nodeclasses/expressionObject";
@@ -269,7 +269,25 @@ export class ContextMember extends Context{
 		
 		return new HoverInfo(content, this._name.range);
 	}
-
+	
+	public definition(position: Position): Definition {
+		if (!this._name?.range) {
+			return [];
+		}
+		
+		var location: Location | undefined;
+		if (this._resolveArgument) {
+			location = this._resolveArgument.resolveLocationSelf();
+		} else if (this._resolveLocalVariable) {
+			location = this._resolveLocalVariable.resolveLocationSelf();
+		} else if (this._resolveVariable) {
+			location = this._resolveVariable.context?.resolveLocationSelf();
+		} else if (this._resolveType) {
+			return this._resolveType.resolveLocation();
+		}
+		return location ? [location] : [];
+	}
+	
 	
 	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
 		console.log(`${prefix}Member ${this._name}`);

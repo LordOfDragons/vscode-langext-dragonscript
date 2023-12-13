@@ -22,6 +22,7 @@
  * SOFTWARE.
  */
 
+import { Location } from 'vscode-languageserver';
 import { Context } from '../context/context';
 import { ContextNamespace } from '../context/namespace';
 import { ResolveClass } from './class';
@@ -158,6 +159,18 @@ export class ResolveNamespace extends ResolveType {
 
 	public static get classException(): ResolveClass {
 		return rootNamespace.class('Exception')!;
+	}
+	
+	
+	public resolveLocation(): Location[] {
+		let list: Location[] = [];
+		for (const each of this._contexts) {
+			const l = each.resolveLocationSelf();
+			if (l) {
+				list.push(l);
+			}
+		}
+		return list;
 	}
 
 
