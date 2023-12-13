@@ -30,7 +30,6 @@ import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
 import { DocumentSymbol, Hover, Position, RemoteConsole, SymbolKind } from "vscode-languageserver";
 import { TypeName } from "./typename";
 import { ContextFunctionArgument } from "./classFunctionArgument";
-import { ContextBuilder } from "./contextBuilder";
 import { Identifier } from "./identifier";
 import { ContextStatements } from "./statements";
 import { IToken } from "chevrotain";

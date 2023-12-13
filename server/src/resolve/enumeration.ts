@@ -25,7 +25,6 @@
 import { DiagnosticRelatedInformation } from 'vscode-languageserver';
 import { ContextEnumeration } from '../context/scriptEnum';
 import { ResolveNamespace } from './namespace';
-import { ResolveSearch } from './search';
 import { ResolveType } from './type';
 
 

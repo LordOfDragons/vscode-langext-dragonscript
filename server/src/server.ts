@@ -36,9 +36,7 @@ import {
 	InitializeResult,
 	DocumentSymbolParams,
 	DocumentSymbol,
-	Hover,
-	TextDocumentEdit
-} from 'vscode-languageserver/node'
+	Hover} from 'vscode-languageserver/node'
 
 import {
 	TextDocument
@@ -53,8 +51,8 @@ import { ScriptDocument } from "./scriptDocument";
 import { Packages } from "./package/packages";
 import { PackageDEModule } from "./package/dragenginemodule";
 import { PackageDSLanguage } from "./package/dslanguage";
-import { ResolveNamespace } from './resolve/namespace';
 import { ReportConfig } from './reportConfig';
+import { PackageWorkspace } from './package/workspacepackage';
 
 // Create a connection for the server, using Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -81,81 +79,31 @@ export function assertWarn(message: string) {
 	}
 }
 
+export function reportDiagnostics(uri: string, diagnostics: Diagnostic[]) {
+	connection.sendDiagnostics({uri: uri, diagnostics});
+}
+
 // Create a simple text document manager.
 const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
 export const capabilities: DSCapabilities = new DSCapabilities;
 export const validator = new ScriptValidator(capabilities);
 export const scriptDocuments: ScriptDocuments = new ScriptDocuments(connection.console);
 
-class ReresolveHelper {
-	public pending: boolean = false;
-	public followup: boolean = false;
-	
-	
-	public reresolv(): void {
-		this.followup = true;
-		if (this.pending) {
-			return;
-		}
-		
-		debugLogMessage('ReresolveHelper.reresolve');
-		this.armTimeout();
-	}
-	
-	private armTimeout(): void {
-		this.followup = false;
-		this.pending = true;
-		setTimeout(this.onTimerElapsed.bind(this), 1000);
-	}
-	
-	private onTimerElapsed() {
-		//debugLogMessage('Reresolving');
-		//let startTime = Date.now();
-		
-		let collect: Promise<void>[] = [];
-		for (const each of documents.all()) {
-			collect.push(this.resolveTextDocument(each));
-		}
-		
-		Promise.all(documents.all().map((each) => this.resolveTextDocument(each))).then(() => {
-			//let elapsedTime = Date.now() - startTime;
-			//debugLogMessage(`Finished resolving in ${elapsedTime / 1000}s`);
-			
-			this.pending = false;
-			if (this.followup) {
-				this.armTimeout();
-			}
-		});
-	}
-	
-	private async resolveTextDocument(textDocument: TextDocument): Promise<void> {
-		let scriptDocument = scriptDocuments.get(textDocument.uri);
-		if (!scriptDocument) {
-			return;
-		}
-		
-		let reportConfig = new ReportConfig;
-		
-		const diagnostics: Diagnostic[] = [];
-		for (const each of await scriptDocument.resolveStatements(reportConfig)) {
-			diagnostics.push(each)
-		}
-		connection.sendDiagnostics({uri: textDocument.uri, diagnostics})
-	}
-};
-
-let reresolve: ReresolveHelper = new ReresolveHelper();
+const workspacePackages: PackageWorkspace[] = [];
 
 
 connection.onInitialize((params: InitializeParams) => {
 	Error.stackTraceLimit = 50; // 10 is default but too short to debug lexing/parsing problems
-
+	
+	workspacePackages.forEach((each) => each.dispose());
+	workspacePackages.length = 0;
+	
 	capabilities.init(params.capabilities);
 	connection.console.log(`Capabilities:`)
 	connection.console.log(`- hasConfiguration: ${capabilities.hasConfiguration}`)
 	connection.console.log(`- hasWorkspaceFolder: ${capabilities.hasWorkspaceFolder}`)
 	connection.console.log(`- hasDiagnosticRelatedInformation: ${capabilities.hasDiagnosticRelatedInformation}`)
-
+	
 	const result: InitializeResult = {
 		capabilities: {
 			textDocumentSync: TextDocumentSyncKind.Incremental,
@@ -168,7 +116,7 @@ connection.onInitialize((params: InitializeParams) => {
 			hoverProvider: true
 		}
 	};
-
+	
 	if (capabilities.hasWorkspaceFolder) {
 		result.capabilities.workspace = {
 			workspaceFolders: {
@@ -185,18 +133,20 @@ connection.onInitialized(() => {
 	}
 	if (capabilities.hasWorkspaceFolder) {
 		connection.workspace.onDidChangeWorkspaceFolders(_event => {
-			connection.console.log('Workspace folder change event received.');
+			onDidChangeWorkspaceFolders();
 		});
 	}
-
+	
 	packages.add(new PackageDSLanguage(connection.console));
 	packages.add(new PackageDEModule(connection.console));
-
+	
 	if (capabilities.hasConfiguration) {
 		connection.workspace.getConfiguration('dragonscriptLanguage').then(settings => {
 			(<PackageDEModule>packages.get(PackageDEModule.PACKAGE_ID)).pathDragengine = settings.pathDragengine;
 		});
 	}
+	
+	onDidChangeWorkspaceFolders();
 });
 
 // The global settings, used when the `workspace/configuration` request is not supported by the client.
@@ -228,6 +178,43 @@ connection.onDidChangeConfiguration(change => {
 		validateTextDocument(each);
 	}
 });
+
+function onDidChangeWorkspaceFolders() {
+	connection.workspace.getWorkspaceFolders().then(folders => {
+		// dispose of folders no more existing
+		let retainPackages: PackageWorkspace[] = [];
+		let disposePackages: PackageWorkspace[] = [];
+		
+		if (folders) {
+			for (const p of workspacePackages) {
+				if (folders.find(f => f.uri == p.uri)) {
+					retainPackages.push(p);
+				} else {
+					disposePackages.push(p);
+				}
+			}
+			
+		} else {
+			disposePackages.push(...workspacePackages);
+		}
+		
+		workspacePackages.length = 0;
+		workspacePackages.push(...retainPackages);
+		
+		disposePackages.forEach(p => p.dispose());
+		
+		// add new packages
+		if (folders) {
+			for (const f of folders) {
+				if (!workspacePackages.find(p => p.uri == f.uri)) {
+					const wfpackage = new PackageWorkspace(connection.console, f);
+					workspacePackages.push(wfpackage);
+					wfpackage.reload();
+				}
+			}
+		}
+	});
+}
 
 export function getDocumentSettings(resource: string): Thenable<DSSettings> {
 	if (!capabilities.hasConfiguration) {
@@ -262,7 +249,7 @@ function test(n: ResolveNamespace, i: string) {
 
 async function validateTextDocumentAndReresolve(textDocument: TextDocument): Promise<void> {
 	await validateTextDocument(textDocument);
-	reresolve.reresolv();
+	workspacePackages.forEach (each => each.resolveAll());
 }
 
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {

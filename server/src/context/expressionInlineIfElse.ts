@@ -23,13 +23,12 @@
  */
 
 import { Context } from "./context";
-import { DiagnosticRelatedInformation, DocumentSymbol, Hover, Position, Range, RemoteConsole } from "vscode-languageserver";
+import { DocumentSymbol, Position, Range, RemoteConsole } from "vscode-languageserver";
 import { ContextBuilder } from "./contextBuilder";
 import { ExpressionInlineIfElseCstNode } from "../nodeclasses/expressionInlineIfElse";
 import { ResolveState } from "../resolve/state";
 import { ResolveNamespace } from "../resolve/namespace";
 import { Helpers } from "../helpers";
-import { ResolveSignature, ResolveSignatureArgument } from "../resolve/signature";
 
 
 export class ContextInlineIfElse extends Context{

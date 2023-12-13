@@ -34,7 +34,6 @@ import { Helpers } from "../helpers";
 import { HoverInfo } from "../hoverinfo";
 import { ResolveNamespace } from "../resolve/namespace";
 import { TypeName } from "./typename";
-import { debugLogMessage } from "../server";
 
 
 export class ContextBlock extends Context{

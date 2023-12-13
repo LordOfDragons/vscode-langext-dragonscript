@@ -29,7 +29,7 @@ import { Diagnostic, DiagnosticSeverity, RemoteConsole } from "vscode-languagese
 import { ContextScript } from "../context/script";
 import { ReportConfig } from "../reportConfig";
 import { ScriptDocument } from "../scriptDocument";
-import { getDocumentSettings, globalSettings, scriptDocuments, validator } from "../server";
+import { globalSettings, scriptDocuments, validator } from "../server";
 
 export class Package {
 	protected _console: RemoteConsole;

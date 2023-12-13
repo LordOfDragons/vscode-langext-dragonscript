@@ -30,7 +30,6 @@ import { Helpers } from "../helpers";
 import { ResolveType } from "../resolve/type";
 import { ResolveSearch } from "../resolve/search";
 import { ResolveSignature, ResolveSignatureArgument } from "../resolve/signature";
-import { ResolveNamespace } from "../resolve/namespace";
 
 
 /** Base context. */

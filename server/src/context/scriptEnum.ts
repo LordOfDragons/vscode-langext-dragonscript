@@ -38,9 +38,7 @@ import { ResolveNamespace } from "../resolve/namespace";
 import { Helpers } from "../helpers";
 import { ResolveSearch } from "../resolve/search";
 import { ResolveVariable } from "../resolve/variable";
-import { ContextFunction } from "./classFunction";
 import { TypeName } from "./typename";
-import { debugLogMessage } from "../server";
 import { ResolveFunction } from "../resolve/function";
 
 

@@ -36,8 +36,6 @@ import { ContextFunctionArgument } from "./classFunctionArgument";
 import { ContextVariable } from "./statementVariable";
 import { ResolveVariable } from "../resolve/variable";
 import { ContextClass } from "./scriptClass";
-import { ResolveClass } from "../resolve/class";
-import { ContextClassVariable } from "./classVariable";
 import { ContextTryCatch } from "./statementTry";
 
 

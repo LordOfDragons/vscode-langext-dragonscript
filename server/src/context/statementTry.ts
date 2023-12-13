@@ -23,7 +23,7 @@
  */
 
 import { Context } from "./context";
-import { DiagnosticRelatedInformation, DocumentSymbol, Hover, Position, RemoteConsole, SymbolKind } from "vscode-languageserver";
+import { DiagnosticRelatedInformation, DocumentSymbol, Hover, Position, RemoteConsole } from "vscode-languageserver";
 import { ContextStatements } from "./statements";
 import { StatementCatchCstNode, StatementTryCstNode } from "../nodeclasses/statementTry";
 import { TypeName } from "./typename";

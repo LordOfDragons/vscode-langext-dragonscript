@@ -1,4 +1,4 @@
-import { CstNode, IToken } from "chevrotain";
+import { CstNode } from "chevrotain";
 import { ExpressionCstNode } from "./expression";
 import { StatementBreakCstNode } from "./statementBreak";
 import { StatementContinueCstNode } from "./statementContinue";
