@@ -24,7 +24,7 @@
 
 import { RemoteConsole, WorkspaceFolder } from "vscode-languageserver";
 import { ReportConfig } from "../reportConfig";
-import { packages, reportDiagnostics } from "../server";
+import { getDocumentSettings, packages, reportDiagnostics } from "../server";
 import { PackageDEModule } from "./dragenginemodule";
 import { PackageDSLanguage } from "./dslanguage";
 import { Package } from "./package";
@@ -69,8 +69,8 @@ export class PackageWorkspace extends Package {
 		let pkg: Package = packages.get(PackageDSLanguage.PACKAGE_ID)!;
 		await pkg.load();
 		
-		//if (scriptDocument.settings.requiresPackageDragengine)
-		{
+		const settings = await getDocumentSettings(this._uri);
+		if (settings.requiresPackageDragengine) {
 			let pkg: Package = packages.get(PackageDEModule.PACKAGE_ID)!;
 			await pkg.load();
 		}

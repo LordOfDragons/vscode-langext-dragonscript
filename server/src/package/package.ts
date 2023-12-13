@@ -29,7 +29,7 @@ import { Diagnostic, DiagnosticSeverity, RemoteConsole } from "vscode-languagese
 import { ContextScript } from "../context/script";
 import { ReportConfig } from "../reportConfig";
 import { ScriptDocument } from "../scriptDocument";
-import { globalSettings, scriptDocuments, validator } from "../server";
+import { getDocumentSettings, globalSettings, scriptDocuments, validator } from "../server";
 
 export class Package {
 	protected _console: RemoteConsole;
@@ -141,7 +141,8 @@ export class Package {
 		let uri = `file://${path}`
 		let scriptDocument = scriptDocuments.get(uri);
 		if (!scriptDocument) {
-			scriptDocument = new ScriptDocument(uri, this.console, globalSettings);
+			const settings = await getDocumentSettings(uri);
+			scriptDocument = new ScriptDocument(uri, this.console, settings);
 			scriptDocuments.add(scriptDocument);
 		}
 
