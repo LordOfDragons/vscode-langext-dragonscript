@@ -23,7 +23,7 @@
  */
 
 import { Context } from "./context";
-import { DocumentSymbol, Hover, Position, RemoteConsole, SymbolKind } from "vscode-languageserver";
+import { Definition, DocumentSymbol, Hover, Position, RemoteConsole, SymbolKind } from "vscode-languageserver";
 import { ExpressionBlockCstNode } from "../nodeclasses/expressionBlock";
 import { ContextFunctionArgument } from "./classFunctionArgument";
 import { ContextStatements } from "./statements";
@@ -216,6 +216,13 @@ export class ContextBlock extends Context{
 		parts.push(")");
 		
 		return parts.join("");
+	}
+	
+	public definition(position: Position): Definition {
+		if (Helpers.isPositionInsideToken(this._node.children.expressionBlockBegin[0].children.block[0], position)) {
+			return this.definitionSelf();
+		}
+		return super.definition(position);
 	}
 	
 	

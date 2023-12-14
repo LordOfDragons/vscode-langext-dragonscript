@@ -121,12 +121,12 @@ export class ContextFunctionArgument extends Context{
 	
 	public definition(position: Position): Definition {
 		if (this._name.isPositionInside(position)) {
-			return [];
+			return this.definitionSelf();
 		}
 		if (this._typename.isPositionInside(position)) {
 			return this._typename.definition(position);
 		}
-		return [];
+		return super.definition(position);
 	}
 
 	

@@ -863,10 +863,12 @@ export class ContextFunctionCall extends Context{
 						return definitions;
 					}
 			}
+			return this.definitionSelf();
+			
 		} else if (this._castType?.isPositionInside(position)) {
 			return this._castType.definition(position);
 		}
-		return [];
+		return super.definition(position);
 	}
 	
 
@@ -874,10 +876,10 @@ export class ContextFunctionCall extends Context{
 		if (!this._name?.range) {
 			return;
 		}
-
+		
 		var rangeBegin: Position | undefined;
 		var rangeEnd: Position | undefined;
-
+		
 		if (this._object?.range) {
 			rangeBegin = this._object.range.start;
 		}
@@ -887,14 +889,14 @@ export class ContextFunctionCall extends Context{
 		if (this._castType?.range) {
 			rangeEnd = this._castType.range.end;
 		}
-
+		
 		if (!rangeBegin) {
 			rangeBegin = this._name.range.start;
 		}
 		if (!rangeEnd) {
 			rangeEnd = this._name.range.end;
 		}
-
+		
 		this.range = Range.create(rangeBegin, rangeEnd);
 	}
 

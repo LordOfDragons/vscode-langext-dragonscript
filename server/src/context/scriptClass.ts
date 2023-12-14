@@ -340,7 +340,7 @@ export class ContextClass extends Context{
 	
 	public definition(position: Position): Definition {
 		if (this._name.isPositionInside(position)) {
-			return [];
+			return this.definitionSelf();
 		} else if (this._extends?.isPositionInside(position)) {
 			return this._extends.definition(position);
 		} else {
@@ -350,7 +350,7 @@ export class ContextClass extends Context{
 				}
 			}
 		}
-		return [];
+		return super.definition(position);
 	}
 
 

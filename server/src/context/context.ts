@@ -123,6 +123,11 @@ export class Context {
 		return [];
 	}
 	
+	protected definitionSelf(): Definition {
+		const l = this.resolveLocationSelf();
+		return l ? [l] : [];
+	}
+	
 	public resolveLocation(range?: Range): Location | undefined {
 		const uri = this.getDocumentUri();
 		return uri && range ? Location.create(uri, range) : undefined;

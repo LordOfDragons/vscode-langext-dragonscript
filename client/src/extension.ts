@@ -59,8 +59,8 @@ export function activate(context: ExtensionContext) {
 		// Register the server for dragonscript documents
 		documentSelector: [{ scheme: 'file', language: 'dragonscript' }],
 		synchronize: {
-			// Notify the server about file changes to '.clientrc files contained in the workspace
-			fileEvents: workspace.createFileSystemWatcher('**/.clientrc')
+			// Notify the server about file changes to '.ds files contained in the workspace
+			fileEvents: workspace.createFileSystemWatcher('**/*.ds')
 		}
 	};
 

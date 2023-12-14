@@ -272,7 +272,7 @@ export class ContextMember extends Context{
 	
 	public definition(position: Position): Definition {
 		if (!this._name?.range) {
-			return [];
+			return this.definitionSelf();
 		}
 		
 		var location: Location | undefined;

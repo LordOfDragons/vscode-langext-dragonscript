@@ -1,0 +1,23 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "npm",
+			"script": "build",
+			"path": "server",
+			"group": "build",
+			"problemMatcher": [],
+			"label": "npm: build - server",
+			"detail": "npm run compile && npm run copy-assets"
+		},
+		{
+			"type": "npm",
+			"script": "build",
+			"path": "client",
+			"group": "build",
+			"problemMatcher": [],
+			"label": "npm: build - client",
+			"detail": "npm run compile && npm run copy-assets"
+		}
+	]
+}

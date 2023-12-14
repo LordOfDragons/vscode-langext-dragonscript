@@ -4,17 +4,17 @@
 // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
 {
 	"version": "0.2.0",
-    "configurations": [
-        {
-            "name": "Launch Client",
-            "type": "extensionHost",
-            "request": "launch",
-            "runtimeExecutable": "${execPath}",
-            "args": [
-                "--extensionDevelopmentPath=${workspaceFolder}",
+	"configurations": [
+		{
+			"name": "Launch Client",
+			"type": "extensionHost",
+			"request": "launch",
+			"runtimeExecutable": "${execPath}",
+			"args": [
+				"--extensionDevelopmentPath=${workspaceFolder}",
 				"${workspaceRoot}/test/test.code-workspace"
-            ],
-            "outFiles": ["${workspaceRoot}/client/out/**/*.js"],
+			],
+			"outFiles": ["${workspaceRoot}/client/out/**/*.js"],
 			/*
 			// hangs if used
 			"preLaunchTask": {
@@ -22,7 +22,7 @@
 				"script": "watch"
 			}
 			*/
-        },
+		},
 		{
 			"type": "node",
 			"request": "attach",

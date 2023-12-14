@@ -39,7 +39,8 @@ import {
 	Hover,
 	Location,
 	LocationLink,
-	Definition} from 'vscode-languageserver/node'
+	Definition,
+	FileChangeType} from 'vscode-languageserver/node'
 
 import {
 	TextDocument
@@ -317,9 +318,14 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	//test(ResolveNamespace.root, "");
 }
 
-connection.onDidChangeWatchedFiles(_change => {
-	// Monitored files have change in VSCode
-	connection.console.log('We received an file change event');
+connection.onDidChangeWatchedFiles(change => {
+	/*
+	change.changes.forEach(each => {
+		//if (each.type === FileChangeType.Changed) {
+			console.log(`onDidChangeWatchedFiles ${each.uri}`);
+		//}
+	});
+	*/
 });
 
 connection.onDocumentSymbol(
