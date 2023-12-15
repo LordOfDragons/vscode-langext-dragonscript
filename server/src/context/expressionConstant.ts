@@ -250,7 +250,7 @@ export class ContextConstant extends Context{
 
 	
 	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
-		console.log(`${prefix}Constant ${this._name}`);
+		console.log(`${prefix}Constant ${this._name} ${this.logRange}`);
 	}
 }
 

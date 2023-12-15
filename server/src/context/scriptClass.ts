@@ -355,7 +355,7 @@ export class ContextClass extends Context{
 
 
 	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
-		console.log(`${prefix}Class: ${this._typeModifiers} ${this._name}`);
+		console.log(`${prefix}Class: ${this._typeModifiers} ${this._name} ${this.logRange}`);
 		if (this._extends) {
 			console.log(`${prefixLines}- Extend ${this._extends.name}`);
 		}

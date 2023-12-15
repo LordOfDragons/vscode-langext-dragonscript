@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-import { Definition, Diagnostic, DiagnosticRelatedInformation, DiagnosticSeverity, DocumentSymbol, Hover, Location, Position, Range, RemoteConsole, URI } from "vscode-languageserver";
+import { CompletionItem, Definition, Diagnostic, DiagnosticRelatedInformation, DiagnosticSeverity, DocumentSymbol, Hover, Location, Position, Range, RemoteConsole, URI } from "vscode-languageserver";
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
 import { capabilities } from "../server";
 import { ResolveState } from "../resolve/state";
@@ -120,6 +120,10 @@ export class Context {
 	}
 	
 	public definition(position: Position): Definition {
+		return [];
+	}
+	
+	public completion(position: Position): CompletionItem[] {
 		return [];
 	}
 	
@@ -285,7 +289,7 @@ export class Context {
 	}
 
 	/** Debug log children. */
-	protected logChildren(children: Context[] | undefined, console: RemoteConsole, prefix: string, prefixSuffix: string = "") {
+	protected logChildren(children: Context[] | undefined, console: RemoteConsole, prefix: string, prefixSuffix: string = ""): void {
 		if (children) {
 			let prefixChild = `${prefix}- ${prefixSuffix}`;
 			let prefixLinesChild = `${prefix}  `;
@@ -296,12 +300,16 @@ export class Context {
 	}
 
 	/** Debug log child. */
-	protected logChild(child: Context | undefined, console: RemoteConsole, prefix: string, prefixSuffix: string = "") {
+	protected logChild(child: Context | undefined, console: RemoteConsole, prefix: string, prefixSuffix: string = ""): void {
 		if (child) {
 			let prefixChild = `${prefix}- ${prefixSuffix}`;
 			let prefixLinesChild = `${prefix}  `;
 			child.log(console, prefixChild, prefixLinesChild);
 		}
+	}
+	
+	protected get logRange(): string {
+		return Helpers.logRange(this.range);
 	}
 }
 

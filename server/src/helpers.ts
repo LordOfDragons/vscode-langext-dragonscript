@@ -85,6 +85,15 @@ export class Helpers {
 	public static isPositionInsideTokens(start: IToken, end: IToken, position: Position): boolean {
 		return Helpers.isPositionInsideRange(Helpers.rangeFrom(start, end), position);
 	}
+	
+	public static logPosition(position: Position | undefined) {
+		return `[${position?.line}:${position?.character}]`;
+	}
+	
+	public static logRange(range: Range | undefined) {
+		return `[${range?.start.line}:${range?.start.character} -> ${range?.end.line}:${range?.end.character}]`;
+		//return `range(${range?.start.line}:${range?.start.character} -> ${range?.end.line}:${range?.end.character})`;
+	}
 
 	public static numToBin(value: number, leadingZeros: boolean = false): string {
 		var skipZero = !leadingZeros;

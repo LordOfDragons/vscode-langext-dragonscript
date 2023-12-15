@@ -233,7 +233,7 @@ export class ContextBlock extends Context{
 			s = `${s}${delimiter}${each.typename.name} ${each.name}`;
 			delimiter = ", ";
 		}
-		s = `${s})`;
+		s = `${s}) ${this.logRange}`;
 		console.log(s);
 
 		this.logChild(this._statements, console, prefixLines);

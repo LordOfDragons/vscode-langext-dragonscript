@@ -275,7 +275,7 @@ export class ContextInterface extends Context{
 
 
 	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
-		console.log(`${prefix}Interface: ${this._typeModifiers} ${this._name}`);
+		console.log(`${prefix}Interface: ${this._typeModifiers} ${this._name} ${this.logRange}`);
 		for (const each of this._implements) {
 			console.log(`${prefixLines}- Implements ${each.name}`);
 		}

@@ -50,6 +50,6 @@ export class ContextRequiresPackage extends Context{
 
 	
 	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
-		console.log(`${prefix}Requires: ${this._name}`);
+		console.log(`${prefix}Requires: ${this._name} ${this.logRange}`);
 	}
 }

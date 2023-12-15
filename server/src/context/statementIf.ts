@@ -219,7 +219,7 @@ export class ContextIf extends Context {
 	
 	
 	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
-		console.log(`${prefix}If-Else`);
+		console.log(`${prefix}If-Else ${this.logRange}`);
 		this.logChild(this._condition, console, prefixLines, "Cond: ");
 		console.log(`${prefixLines}- If`);
 		this.logChild(this._ifstatements, console, `${prefixLines}  `);

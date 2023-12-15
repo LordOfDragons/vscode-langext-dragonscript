@@ -91,9 +91,9 @@ export class ContextThrow extends Context{
 	
 	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
 		if (this._exception) {
-			this._exception?.log(console, `${prefix}Throw: `, `${prefixLines}  `);
+			this._exception?.log(console, `${prefix}Throw: ${this.logRange}`, `${prefixLines}  `);
 		} else {
-			console.log(`${prefix}Throw`);
+			console.log(`${prefix}Throw ${this.logRange}`);
 		}
 	}
 }

@@ -118,7 +118,7 @@ export class ContextInlineIfElse extends Context{
 	
 	
 	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
-		console.log(`${prefix}Inline If-Else`);
+		console.log(`${prefix}Inline If-Else ${this.logRange}`);
 		this._condition.log(console, `${prefixLines}- Cond: `, `${prefixLines}  `);
 		this._ifvalue.log(console, `${prefixLines}- If: `, `${prefixLines}  `);
 		this._elsevalue.log(console, `${prefixLines}- Else: `, `${prefixLines}  `);

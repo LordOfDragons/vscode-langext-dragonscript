@@ -221,7 +221,7 @@ export class ContextSelect extends Context {
 	
 	
 	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
-		console.log(`${prefix}Select`);
+		console.log(`${prefix}Select ${this.logRange}`);
 		this.logChild(this._value, console, prefixLines, "Value: ");
 		for (const each of this._cases) {
 			each.log(console, prefixLines);

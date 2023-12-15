@@ -113,7 +113,8 @@ public class OuterClass extends ClassExtendImplement
 			each.equals( this.pFunc().toString() )
 			return true
 		end )
-		pMember3 = SimpleEnum.withOrder(0)
+		pMember3 = SimpleEnum.withOrder(0   )
+		pMember3
 		
 		var TestClassA1 a1 = TestClassA1.new(pMember1)
 		pMember1 = a1.getSomeVariable()

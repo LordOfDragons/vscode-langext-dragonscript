@@ -48,7 +48,6 @@ import { ResolveSearch } from "../resolve/search";
 import { ResolveSignature, ResolveSignatureArgument } from "../resolve/signature";
 import { ResolveFunction } from "../resolve/function";
 import { ContextMember } from "./expressionMember";
-import { debugLogMessage } from "../server";
 
 
 export class ContextFunctionCall extends Context{
@@ -284,36 +283,52 @@ export class ContextFunctionCall extends Context{
 			memberIndex: integer, object: Context | undefined, parent: Context): ContextFunctionCall {
 		let cfc = new ContextFunctionCall(node, memberIndex, parent);
 		cfc._object = object ? object : ContextBuilder.createExpressionBaseObject(node.children.object[0], cfc);
-
-		let member = node.children.member![memberIndex].children;
-		cfc._name = new Identifier(member.name[0]);
+		
 		cfc._operator = false;
 		cfc._functionType = ContextFunctionCall.FunctionType.function;
-
-		const args = member.functionCall![0].children.argument;
-		if (args) {
-			for (const each of args) {
-				cfc._arguments.push(ContextBuilder.createExpressionAssign(each.children.expressionAssign[0], cfc));
+		
+		var endPosition: Position | undefined;
+		
+		if (node.children.member) {
+			let member = node.children.member[memberIndex].children;
+			cfc._name = new Identifier(member.name[0]);
+			
+			if (member.functionCall) {
+				const fc = member.functionCall[0].children;
+				if (fc.argument) {
+					for (const each of fc.argument) {
+						cfc._arguments.push(ContextBuilder.createExpressionAssign(each.children.expressionAssign[0], cfc));
+					}
+				}
+				endPosition = Helpers.positionFrom(fc.rightParanthesis[0], false);
 			}
 		}
-		cfc.updateRange();
+		
+		cfc.updateRange(endPosition);
 		return cfc;
 	}
 
 	public static newFunctionCallDirect(node: ExpressionMemberCstNode, parent: Context): ContextFunctionCall {
 		let cfc = new ContextFunctionCall(node, -1, parent);
-
+		
 		cfc._name = new Identifier(node.children.name[0]);
 		cfc._operator = false;
 		cfc._functionType = ContextFunctionCall.FunctionType.function;
-
-		const args = node.children.functionCall![0].children.argument;
-		if (args) {
-			for (const each of args) {
-				cfc._arguments.push(ContextBuilder.createExpressionAssign(each.children.expressionAssign[0], cfc));
+		
+		var endPosition: Position | undefined;
+			
+		if (node.children.functionCall) {
+			const fc = node.children.functionCall[0].children;
+			const args = fc.argument;
+			if (args) {
+				for (const each of args) {
+					cfc._arguments.push(ContextBuilder.createExpressionAssign(each.children.expressionAssign[0], cfc));
+				}
 			}
+			endPosition = Helpers.positionFrom(fc.rightParanthesis[0], false);
 		}
-		cfc.updateRange();
+		
+		cfc.updateRange(endPosition);
 		return cfc;
 	}
 
@@ -397,18 +412,21 @@ export class ContextFunctionCall extends Context{
 
 	public static newSuperCall(node: FunctionCallCstNode, parent: Context, name: IToken): ContextFunctionCall {
 		let cfc = new ContextFunctionCall(node, 0, parent);
-
+		
 		cfc._name = new Identifier(name);
 		cfc._operator = false;
 		cfc._functionType = ContextFunctionCall.FunctionType.functionSuper;
-
+		
 		const args = node.children.argument;
 		if (args) {
 			for (const each of args) {
 				cfc._arguments.push(ContextBuilder.createExpressionAssign(each.children.expressionAssign[0], cfc));
 			}
 		}
-		cfc.updateRange();
+		
+		const endPosition = Helpers.positionFrom(node.children.rightParanthesis[0], false);
+		
+		cfc.updateRange(endPosition);
 		return cfc;
 	}
 
@@ -719,23 +737,11 @@ export class ContextFunctionCall extends Context{
 		if (!Helpers.isPositionInsideRange(this.range, position)) {
 			return undefined;
 		}
-
-		if (this._name?.isPositionInside(position)) {
-			return this;
-		}
-
-		const c = this._object?.contextAtPosition(position);
-		if (c) {
-			return c;
-		}
-
-		if (this._castType?.isPositionInside(position)) {
-			return this;
-		}
-
-		return this.contextAtPositionList(this._arguments, position);
+		return this._object?.contextAtPosition(position)
+			?? this.contextAtPositionList(this._arguments, position)
+			?? this;
 	}
-
+	
 	protected updateHover(position: Position): Hover | null {
 		if (this._name?.isPositionInside(position)) {
 			let content = [];
@@ -872,37 +878,27 @@ export class ContextFunctionCall extends Context{
 	}
 	
 
-	protected updateRange(): void {
-		if (!this._name?.range) {
-			return;
-		}
+	protected updateRange(endPosition?: Position): void {
+		var rangeBegin = this._object?.range?.start ?? this._name?.range?.start;
+		var rangeEnd = endPosition;
 		
-		var rangeBegin: Position | undefined;
-		var rangeEnd: Position | undefined;
-		
-		if (this._object?.range) {
-			rangeBegin = this._object.range.start;
-		}
-		if (this._arguments.length > 0) {
-			rangeEnd = this._arguments[this._arguments.length - 1].range?.end;
-		}
-		if (this._castType?.range) {
-			rangeEnd = this._castType.range.end;
-		}
-		
-		if (!rangeBegin) {
-			rangeBegin = this._name.range.start;
-		}
 		if (!rangeEnd) {
-			rangeEnd = this._name.range.end;
+			if (this._arguments.length > 0) {
+				rangeEnd = this._arguments[this._arguments.length - 1].range?.end;
+			}
+			if (!rangeEnd) {
+				rangeEnd = this._castType?.range?.end ?? this._name?.range?.end;
+			}
 		}
 		
-		this.range = Range.create(rangeBegin, rangeEnd);
+		if (rangeBegin && rangeEnd) {
+			this.range = Range.create(rangeBegin, rangeEnd);
+		}
 	}
 
 	
 	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
-		console.log(`${prefix}Call ${this._name}`);
+		console.log(`${prefix}Call ${this._name ?? '-'} ${this.logRange}`);
 		this._object?.log(console, `${prefixLines}- Obj: `, `${prefixLines}  `);
 		for (const each of this._arguments) {
 			each.log(console, `${prefixLines}- Arg: `, `${prefixLines}  `);

@@ -133,9 +133,9 @@ export class ContextReturn extends Context{
 
 	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
 		if (this._value) {
-			this._value.log(console, `${prefix}Return: `, `${prefixLines}  `);
+			this._value.log(console, `${prefix}Return: ${this.logRange}`, `${prefixLines}  `);
 		} else {
-			console.log(`${prefix}Return`);
+			console.log(`${prefix}Return ${this.logRange}`);
 		}
 	}
 }

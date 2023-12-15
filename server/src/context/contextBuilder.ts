@@ -42,7 +42,7 @@ import { ExpressionCompareCstNode } from "../nodeclasses/expressionCompare";
 import { ExpressionPostfixCstNode } from "../nodeclasses/expressionPostfix";
 import { ExpressionUnaryCstNode } from "../nodeclasses/expressionUnary";
 import { ExpressionSpecialCstNode } from "../nodeclasses/expressionSpecial";
-import { ExpressionBaseObjectCstNode, ExpressionObjectCstNode } from "../nodeclasses/expressionObject";
+import { ExpressionBaseObjectCstNode, ExpressionGroupCstNode, ExpressionObjectCstNode } from "../nodeclasses/expressionObject";
 import { ExpressionAssignCstNode } from "../nodeclasses/expressionAssign";
 import { ContextFunctionCall } from "./expressionCall";
 import { ExpressionInlineIfElseCstNode } from "../nodeclasses/expressionInlineIfElse";
@@ -121,7 +121,11 @@ export class ContextBuilder{
 	public static createExpression(node: ExpressionCstNode, parent: Context): Context {
 		return this.createExpressionAssign(node.children.expressionAssign[0], parent);
 	}
-
+	
+	public static createExpressionGroup(node: ExpressionGroupCstNode, parent: Context): Context {
+		return this.createExpression(node.children.expression[0], parent);
+	}
+	
 	public static createExpressionAssign(node: ExpressionAssignCstNode, parent: Context): Context {
 		let c = node.children;
 		if (c.more) {
@@ -233,7 +237,7 @@ export class ContextBuilder{
 	public static createExpressionBaseObject(node: ExpressionBaseObjectCstNode, parent: Context): Context {
 		let c = node.children;
 		if (c.expressionGroup) {
-			return this.createExpression(c.expressionGroup[0].children.expression[0], parent);
+			return this.createExpressionGroup(c.expressionGroup[0], parent);
 		} else if (c.expressionConstant) {
 			return new ContextConstant(c.expressionConstant[0], parent);
 		} else if (c.expressionMember) {

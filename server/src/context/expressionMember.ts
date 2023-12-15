@@ -23,7 +23,7 @@
  */
 
 import { Context } from "./context";
-import { Definition, DiagnosticRelatedInformation, Hover, integer, Location, Position, Range, RemoteConsole } from "vscode-languageserver";
+import { CompletionItem, CompletionItemKind, Definition, DiagnosticRelatedInformation, Hover, integer, Location, Position, Range, RemoteConsole } from "vscode-languageserver";
 import { ContextBuilder } from "./contextBuilder";
 import { Identifier } from "./identifier";
 import { ExpressionMemberCstNode, ExpressionObjectCstNode } from "../nodeclasses/expressionObject";
@@ -62,15 +62,44 @@ export class ContextMember extends Context{
 			object: Context | undefined, parent: Context) {
 		let cm = new ContextMember(node, memberIndex, parent);
 		cm._object = object ? object : ContextBuilder.createExpressionBaseObject(node.children.object[0], cm);
-		cm._name = new Identifier(node.children.member![memberIndex].children.name[0]);
-		cm.updateRange();
+		
+		const name = node.children.member?.at(memberIndex)?.children.name[0];
+		if (name && name.image) {
+			cm._name = new Identifier(name);
+		}
+		
+		var period = node.children.period?.at(memberIndex);
+		var rangeObject = cm._object?.range;
+		var nameRange = cm._name?.range;
+		
+		var rangeBegin = rangeObject?.start;
+		var rangeEnd = nameRange?.end;
+		
+		if (!rangeBegin && period) {
+			rangeBegin = Helpers.positionFrom(period, true);
+		}
+		if (!rangeBegin && nameRange) {
+			rangeBegin = nameRange.start;
+		}
+		
+		if (!rangeEnd && period) {
+			rangeEnd = Helpers.positionFrom(period, false);
+		}
+		if (!rangeEnd && rangeObject) {
+			rangeEnd = rangeObject.end;
+		}
+		
+		if (rangeBegin && rangeEnd) {
+			cm.range = Range.create(rangeBegin, rangeEnd);
+		}
+		
 		return cm;
 	}
 
 	public static newMember(node: ExpressionMemberCstNode, parent: Context) {
 		let cm = new ContextMember(node, 0, parent);
 		cm._name = new Identifier(node.children.name[0]);
-		cm.updateRange();
+		cm.range = cm._name?.range;
 		return cm;
 	}
 
@@ -214,26 +243,10 @@ export class ContextMember extends Context{
 		if (!Helpers.isPositionInsideRange(this.range, position)) {
 			return undefined;
 		}
-
-		if (this._name?.isPositionInside(position)) {
-			return this;
-		}
-
-		return this._object?.contextAtPosition(position);
+		return this._object?.contextAtPosition(position) ?? this;
 	}
-
-
-	protected updateRange(): void {
-		if (!this._name?.range) {
-			return;
-		}
-
-		const rangeBegin = this.object?.range?.start || this._name.range.start;
-		const rangeEnd = this._name.range.end;
-
-		this.range = Range.create(rangeBegin, rangeEnd);
-	}
-
+	
+	
 	protected updateHover(position: Position): Hover | null {
 		if (!this._name?.range) {
 			return null;
@@ -288,9 +301,21 @@ export class ContextMember extends Context{
 		return location ? [location] : [];
 	}
 	
+	public completion(position: Position): CompletionItem[] {
+		var ct = this.expressionType;
+		if (!ct) {
+			ct = this._object?.expressionType;
+		}
+		if (!ct) {
+			super.completion(position);
+		}
+		
+		return [{label: `ContextMember ${ct?.resolveTextShort}`, kind: CompletionItemKind.Text, data: 1}];
+	}
+	
 	
 	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
-		console.log(`${prefix}Member ${this._name}`);
+		console.log(`${prefix}Member ${this._name ?? '-'} ${this.logRange}`);
 		this._object?.log(console, `${prefixLines}- Obj: `, `${prefixLines}  `);
 	}
 }

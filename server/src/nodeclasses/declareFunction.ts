@@ -48,7 +48,9 @@ export interface FunctionCallCstNode extends CstNode {
 }
 
 export type FunctionCallCstChildren = {
+	leftParanthesis: IToken[];
 	argument: ExpressionCstNode[];
+	rightParanthesis: IToken[];
 };
 
 

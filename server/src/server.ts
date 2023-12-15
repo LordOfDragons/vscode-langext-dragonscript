@@ -43,6 +43,7 @@ import {
 	FileChangeType} from 'vscode-languageserver/node'
 
 import {
+	Position,
 	TextDocument
 } from 'vscode-languageserver-textdocument'
 
@@ -57,6 +58,8 @@ import { PackageDEModule } from "./package/dragenginemodule";
 import { PackageDSLanguage } from "./package/dslanguage";
 import { ReportConfig } from './reportConfig';
 import { PackageWorkspace } from './package/workspacepackage';
+import { Context } from './context/context';
+import { Helpers } from './helpers';
 
 // Create a connection for the server, using Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -112,7 +115,8 @@ connection.onInitialize((params: InitializeParams) => {
 		capabilities: {
 			textDocumentSync: TextDocumentSyncKind.Incremental,
 			completionProvider: {
-				resolveProvider: true
+				resolveProvider: true,
+				triggerCharacters: ['.']
 			},
 			documentSymbolProvider: {
 				label: "DragonScript"
@@ -347,7 +351,51 @@ connection.onHover(
 );
 
 connection.onCompletion(
-	(_textDocumentPosition: TextDocumentPositionParams): CompletionItem[] => {
+	(params: TextDocumentPositionParams): CompletionItem[] => {
+		try {
+			const document: TextDocument | undefined = documents.get(params.textDocument.uri);
+			var scriptContext: ContextScript | undefined = scriptDocuments.get(params.textDocument.uri)?.context;
+			if (!document || !scriptContext) {
+				return [];
+			}
+			
+			console.log(`onCompletion ${Helpers.logPosition(params.position)}`);
+			/*
+			var offset: number = document.offsetAt(params.position);
+			var context: Context | undefined;
+			
+			while (offset >= 0) {
+				var position: Position = document.positionAt(offset);
+				context = scriptContext.contextAtPosition(position);
+				if (context) {
+					break;
+				}
+				offset = offset - 1;
+			}
+			
+			console.log(`found ${Helpers.logPosition(document.positionAt(offset))}`
+				+ ` ${context?.constructor.name} ${context?.resolveTextLong} ${context?.expressionType?.resolveTextShort} ${Helpers.logRange(context?.range)}`);
+			*/
+			
+			var context = scriptContext.contextAtPosition(params.position);
+			console.log(`found ${context?.constructor.name} ${context?.resolveTextLong} ${context?.expressionType?.resolveTextShort} ${Helpers.logRange(context?.range)}`);
+			
+			if (context) {
+				var context2: Context | undefined = context;
+				while (context2 && context2.type != Context.ContextType.Function) {
+					console.log(`check ${Helpers.logRange(context2.range)} ${context2.constructor.name} ${context2.resolveTextShort}`);
+					context2 = context2.parent;
+				}
+				context2?.log(connection.console);
+			}
+			
+			return context?.completion(params.position) || [];
+			
+		} catch (error) {
+			logError(error);
+			return [];
+		}
+		
 		// The pass parameter contains the position of the text document in
 		// which code complete got requested. For the example we ignore this
 		// info and always provide the same completion items.
@@ -366,8 +414,6 @@ connection.onCompletion(
 	}
 );
 
-// This handler resolves additional information for the item selected in
-// the completion list.
 connection.onCompletionResolve(
 	(item: CompletionItem): CompletionItem => {
 		if (item.data === 1) {

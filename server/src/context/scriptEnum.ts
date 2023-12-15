@@ -313,7 +313,7 @@ export class ContextEnumeration extends Context{
 
 
 	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
-		console.log(`${prefix}Enumeration: ${this._name} ${this._typeModifiers}`);
+		console.log(`${prefix}Enumeration: ${this._name} ${this._typeModifiers} ${this.logRange}`);
 		this.logChildren(this._entries, console, prefixLines);
 	}
 }

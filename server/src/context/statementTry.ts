@@ -146,7 +146,7 @@ export class ContextTryCatch extends Context {
 	
 	
 	public log(console: RemoteConsole, prefix: string = ""): void {
-		console.log(`${prefix}- Catch ${this._typename} ${this._variable}`);
+		console.log(`${prefix}- Catch ${this._typename} ${this._variable} ${this.logRange}`);
 		this._statements.log(console, `${prefix}  - `, `${prefix}    `);
 	}
 }
@@ -236,7 +236,7 @@ export class ContextTry extends Context {
 	
 	
 	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
-		console.log(`${prefix}Try`);
+		console.log(`${prefix}Try ${this.logRange}`);
 		this.logChild(this._statements, console, prefixLines);
 		for (const each of this._catches) {
 			each.log(console, prefixLines);

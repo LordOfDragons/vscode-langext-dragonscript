@@ -1,4 +1,5 @@
 import { CstNode, IToken } from "chevrotain";
+import { FunctionCallCstNode } from "./declareFunction";
 import { ExpressionCstNode } from "./expression";
 import { ExpressionBlockCstNode } from "./expressionBlock";
 
@@ -10,6 +11,7 @@ export interface ExpressionObjectCstNode extends CstNode {
 
 export type ExpressionObjectCstChildren = {
 	object: ExpressionBaseObjectCstNode[];
+	period?: IToken[];
 	member?: ExpressionMemberCstNode[];
 };
 
@@ -65,15 +67,5 @@ export interface ExpressionMemberCstNode extends CstNode {
 
 export type ExpressionMemberCstChildren = {
 	name: IToken[];
-	functionCall?: EunctionCallCstNode[];
-};
-
-
-export interface EunctionCallCstNode extends CstNode {
-	name: "functionCall";
-	children: EunctionCallCstChildren;
-}
-
-export type EunctionCallCstChildren = {
-	argument?: ExpressionCstNode[];
+	functionCall?: FunctionCallCstNode[];
 };

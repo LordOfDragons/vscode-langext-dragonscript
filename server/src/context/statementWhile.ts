@@ -104,7 +104,7 @@ export class ContextWhile extends Context{
 	
 	
 	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
-		console.log(`${prefix}While`);
+		console.log(`${prefix}While ${this.logRange}`);
 		this.logChild(this._condition, console, prefixLines, "Cond: ");
 		this.logChild(this._statements, console, prefixLines);
 	}
