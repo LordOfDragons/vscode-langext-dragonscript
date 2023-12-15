@@ -222,17 +222,8 @@ export class ContextInterface extends Context{
 		if (!Helpers.isPositionInsideRange(this.range, position)) {
 			return undefined;
 		}
-
-		if (this._name.isPositionInside(position)) {
-			return this;
-		}
-
-		for (const each of this._implements) {
-			if (each.isPositionInside(position)) {
-				return this;
-			}
-		}
-		return this.contextAtPositionList(this._declarations, position);
+		return this.contextAtPositionList(this._declarations, position)
+			?? this;
 	}
 
 	protected updateHover(position: Position): Hover | null {

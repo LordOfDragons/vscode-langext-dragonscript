@@ -102,10 +102,10 @@ export class ContextStatements extends Context{
 
 	public contextAtPosition(position: Position): Context | undefined {
 		if (!Helpers.isPositionInsideRange(this.range, position)) {
-			return undefined; //this._statements[0]?.contextAtPosition(position);
+			return undefined;
 		}
-
-		return this.contextAtPositionList(this._statements, position);
+		return this.contextAtPositionList(this._statements, position)
+			?? this;
 	}
 
 	/*

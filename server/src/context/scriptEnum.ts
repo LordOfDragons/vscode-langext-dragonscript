@@ -107,12 +107,7 @@ export class ContextEnumEntry extends Context{
 		if (!Helpers.isPositionInsideRange(this.range, position)) {
 			return undefined;
 		}
-
-		if (this._name.isPositionInside(position)) {
-			return this;
-		}
-
-		return undefined;
+		return this;
 	}
 
 	protected updateHover(position: Position): Hover | null {
@@ -282,12 +277,8 @@ export class ContextEnumeration extends Context{
 		if (!Helpers.isPositionInsideRange(this.range, position)) {
 			return undefined;
 		}
-
-		if (this._name.isPositionInside(position)) {
-			return this;
-		}
-
-		return this.contextAtPositionList(this._entries, position);
+		return this.contextAtPositionList(this._entries, position)
+			?? this;
 	}
 
 	protected updateHover(position: Position): Hover | null {

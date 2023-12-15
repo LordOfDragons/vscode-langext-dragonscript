@@ -100,10 +100,8 @@ export class ContextTryCatch extends Context {
 		if (!Helpers.isPositionInsideRange(this.range, position)) {
 			return undefined;
 		}
-		if (this._variable.isPositionInside(position) || this._typename.isPositionInside(position)) {
-			return this;
-		}
-		return this._statements.contextAtPosition(position);
+		return this._statements.contextAtPosition(position)
+			?? this;
 	}
 	
 	protected updateHover(position: Position): Hover | null {
@@ -223,7 +221,8 @@ export class ContextTry extends Context {
 			return undefined;
 		}
 		return this._statements.contextAtPosition(position)
-			?? this.contextAtPositionList(this._catches, position);
+			?? this.contextAtPositionList(this._catches, position)
+			?? this;
 	}
 	
 	public collectChildDocSymbols(list: DocumentSymbol[]) {

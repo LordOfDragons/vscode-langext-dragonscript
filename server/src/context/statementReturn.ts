@@ -120,10 +120,8 @@ export class ContextReturn extends Context{
 		if (!Helpers.isPositionInsideRange(this.range, position)) {
 			return undefined;
 		}
-		if (Helpers.isPositionInsideToken(this._node.children.return[0], position)) {
-			return this;
-		}
-		return this._value?.contextAtPosition(position);
+		return this._value?.contextAtPosition(position)
+			?? this;
 	}
 	
 	protected updateHover(position: Position): Hover | null {

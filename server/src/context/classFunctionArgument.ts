@@ -85,14 +85,7 @@ export class ContextFunctionArgument extends Context{
 		if (!Helpers.isPositionInsideRange(this.range, position)) {
 			return undefined;
 		}
-
-		if (this._name.isPositionInside(position)) {
-			return this;
-		}
-		if (this._typename.isPositionInside(position)) {
-			return this;
-		}
-		return undefined;
+		return this;
 	}
 
 	protected updateHover(position: Position): Hover | null {

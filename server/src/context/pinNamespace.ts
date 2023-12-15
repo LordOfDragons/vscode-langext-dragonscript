@@ -100,14 +100,7 @@ export class ContextPinNamespace extends Context{
 		if (!Helpers.isPositionInsideRange(this.range, position)) {
 			return undefined;
 		}
-
-		let ft = this._typename.firstToken;
-		let lt = this._typename.lastToken;
-		if (ft && lt && Helpers.isPositionInsideRange(Helpers.rangeFrom(ft, lt), position)) {
-			return this;
-		}
-
-		return undefined;
+		return this;
 	}
 
 	protected updateHover(position: Position): Hover | null {

@@ -109,7 +109,6 @@ export class ContextInlineIfElse extends Context{
 		if (!Helpers.isPositionInsideRange(this.range, position)) {
 			return undefined;
 		}
-		
 		return this._condition.contextAtPosition(position)
 			?? this._ifvalue.contextAtPosition(position)
 			?? this._elsevalue.contextAtPosition(position)

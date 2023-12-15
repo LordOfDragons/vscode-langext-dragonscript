@@ -87,9 +87,9 @@ export class ContextIfElif extends Context {
 		if (!Helpers.isPositionInsideRange(this.range, position)) {
 			return undefined;
 		}
-		
 		return this._condition.contextAtPosition(position)
-			?? this._statements.contextAtPosition(position);
+			?? this._statements.contextAtPosition(position)
+			?? this;
 	}
 	
 	public collectChildDocSymbols(list: DocumentSymbol[]) {
@@ -200,11 +200,11 @@ export class ContextIf extends Context {
 		if (!Helpers.isPositionInsideRange(this.range, position)) {
 			return undefined;
 		}
-		
 		return this._condition.contextAtPosition(position)
 			?? this._ifstatements.contextAtPosition(position)
 			?? this.contextAtPositionList(this._elif, position)
-			?? this._elsestatements?.contextAtPosition(position);
+			?? this._elsestatements?.contextAtPosition(position)
+			?? this;
 	}
 	
 	public collectChildDocSymbols(list: DocumentSymbol[]) {

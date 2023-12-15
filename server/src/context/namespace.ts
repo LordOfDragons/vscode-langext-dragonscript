@@ -92,14 +92,8 @@ export class ContextNamespace extends Context{
 		if (!Helpers.isPositionInsideRange(this.range, position)) {
 			return undefined;
 		}
-
-		let ft = this._typename.firstToken;
-		let lt = this._typename.lastToken;
-		if (ft && lt && Helpers.isPositionInsideRange(Helpers.rangeFrom(ft, lt), position)) {
-			return this;
-		} else {
-			return this.contextAtPositionList(this._statements, position);
-		}
+		return this.contextAtPositionList(this._statements, position)
+			?? this;
 	}
 
 

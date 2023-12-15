@@ -136,12 +136,12 @@ export class ContextFor extends Context{
 		if (!Helpers.isPositionInsideRange(this.range, position)) {
 			return undefined;
 		}
-		
 		return this._variable.contextAtPosition(position)
 			?? this._from.contextAtPosition(position)
 			?? this._to.contextAtPosition(position)
 			?? this._step?.contextAtPosition(position)
-			?? this._statements.contextAtPosition(position);
+			?? this._statements.contextAtPosition(position)
+			?? this;
 	}
 	
 	public collectChildDocSymbols(list: DocumentSymbol[]) {

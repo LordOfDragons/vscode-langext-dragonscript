@@ -180,9 +180,12 @@ export class ContextConstant extends Context{
 
 
 	public contextAtPosition(position: Position): Context | undefined {
-		return Helpers.isPositionInsideRange(this.range, position) ? this : undefined;
+		if (!Helpers.isPositionInsideRange(this.range, position)) {
+			return undefined;
+		}
+		return this;
 	}
-
+	
 	protected updateHover(position: Position): Hover | null {
 		if (!this._name.range) {
 			return null;

@@ -176,21 +176,11 @@ export class ContextClass extends Context{
 	}
 
 	public contextAtPosition(position: Position): Context | undefined {
-		if (Helpers.isPositionInsideRange(this.range, position)) {
-			if (this._name.isPositionInside(position)) {
-				return this;
-			} else if (this._extends?.isPositionInside(position)) {
-				return this;
-			} else {
-				for (const each of this._implements) {
-					if (each.isPositionInside(position)) {
-						return this;
-					}
-				}
-				return this.contextAtPositionList(this._declarations, position);
-			}
+		if (!Helpers.isPositionInsideRange(this.range, position)) {
+			return undefined;
 		}
-		return undefined;
+		return this.contextAtPositionList(this._declarations, position)
+			?? this;
 	}
 
 	public get fullyQualifiedName(): string {

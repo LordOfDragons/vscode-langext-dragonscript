@@ -85,7 +85,8 @@ export class ContextThrow extends Context{
 		if (!Helpers.isPositionInsideRange(this.range, position)) {
 			return undefined;
 		}
-		return this._exception?.contextAtPosition(position);
+		return this._exception?.contextAtPosition(position)
+			?? this;
 	}
 	
 	

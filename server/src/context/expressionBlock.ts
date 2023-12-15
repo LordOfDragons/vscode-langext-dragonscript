@@ -34,10 +34,12 @@ import { Helpers } from "../helpers";
 import { HoverInfo } from "../hoverinfo";
 import { ResolveNamespace } from "../resolve/namespace";
 import { TypeName } from "./typename";
+import { IToken } from "chevrotain";
 
 
 export class ContextBlock extends Context{
 	protected _node: ExpressionBlockCstNode;
+	protected _tokenBlock: IToken;
 	protected _arguments: ContextFunctionArgument[];
 	protected _statements: ContextStatements;
 	protected _resolveFunction?: ResolveFunction;
@@ -46,11 +48,15 @@ export class ContextBlock extends Context{
 
 	constructor(node: ExpressionBlockCstNode, parent: Context) {
 		super(Context.ContextType.Block, parent);
+		
+		const children = node.children.expressionBlockBegin[0].children;
+		
 		this._node = node;
+		this._tokenBlock = children.block[0];
 		this._arguments = [];
 		this._returnType = TypeName.typeObject;
 		
-		const funcArgs = node.children.expressionBlockBegin[0].children.functionArgument;
+		const funcArgs = children.functionArgument;
 		if (funcArgs) {
 			for (const each of funcArgs) {
 				this._arguments.push(new ContextFunctionArgument(each, this));
@@ -59,7 +65,7 @@ export class ContextBlock extends Context{
 		
 		this._statements = new ContextStatements(node.children.statements[0], this);
 		
-		let tokBegin = node.children.expressionBlockBegin[0].children.block[0];
+		let tokBegin = this._tokenBlock;
 		let tokEnd = node.children.expressionBlockEnd[0].children.end[0];
 		
 		this.range = Helpers.rangeFrom(tokBegin, tokEnd, true, false);
@@ -152,17 +158,14 @@ export class ContextBlock extends Context{
 		if (!Helpers.isPositionInsideRange(this.range, position)) {
 			return undefined;
 		}
-		if (Helpers.isPositionInsideToken(this._node.children.expressionBlockBegin[0].children.block[0], position)) {
-			return this;
-		}
 		return this.contextAtPositionList(this._arguments, position)
-			|| this._statements?.contextAtPosition(position);
+			?? this._statements?.contextAtPosition(position)
+			?? this;
 	}
 	
 	protected updateHover(position: Position): Hover | null {
-		let nodeBlock = this._node.children.expressionBlockBegin[0].children.block[0];
-		if (Helpers.isPositionInsideToken(nodeBlock, position)) {
-			return new HoverInfo(this.resolveTextLong, Helpers.rangeFrom(nodeBlock));
+		if (Helpers.isPositionInsideToken(this._tokenBlock, position)) {
+			return new HoverInfo(this.resolveTextLong, Helpers.rangeFrom(this._tokenBlock));
 		}
 		return null;
 	}

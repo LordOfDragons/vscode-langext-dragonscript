@@ -243,7 +243,8 @@ export class ContextMember extends Context{
 		if (!Helpers.isPositionInsideRange(this.range, position)) {
 			return undefined;
 		}
-		return this._object?.contextAtPosition(position) ?? this;
+		return this._object?.contextAtPosition(position)
+			?? this;
 	}
 	
 	
