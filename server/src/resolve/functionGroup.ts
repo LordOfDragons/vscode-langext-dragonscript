@@ -22,6 +22,7 @@
  * SOFTWARE.
  */
 
+import { MatchableName } from '../matchableName';
 import { ResolveFunction } from './function';
 import { ResolveSignature } from './signature';
 import { ResolveType } from './type';
@@ -32,6 +33,7 @@ import { ResolveType } from './type';
  */
 export class ResolveFunctionGroup{
 	protected _name: string;
+	protected _matchableName?: MatchableName;
 	protected _fullyQualifiedName?: string
 	protected _functions: ResolveFunction[] = [];
 
@@ -51,6 +53,13 @@ export class ResolveFunctionGroup{
 
 	public get name(): string {
 		return this._name;
+	}
+	
+	public get matchableName(): MatchableName {
+		if (!this._matchableName) {
+			this._matchableName = new MatchableName(this._name);
+		}
+		return this._matchableName;
 	}
 
 	public get fullyQualifiedName(): string {

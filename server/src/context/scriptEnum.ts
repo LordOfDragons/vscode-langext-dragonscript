@@ -46,6 +46,7 @@ export class ContextEnumEntry extends Context{
 	protected _node: EnumerationEntryCstNode;
 	protected _name: Identifier;
 	protected _resolveVariable?: ResolveVariable;
+	private static _typeModifiers?: Context.TypeModifierSet;
 
 
 	constructor(node: EnumerationEntryCstNode, docTextExt: string | undefined, parent: Context) {
@@ -86,6 +87,18 @@ export class ContextEnumEntry extends Context{
 	public get fullyQualifiedName(): string {
 		let n = this.parent?.fullyQualifiedName || "";
 		return n ? `${n}.${this._name}` : this._name.name;
+	}
+	
+	public static get typeModifiers(): Context.TypeModifierSet {
+		if (!ContextEnumEntry._typeModifiers) {
+			ContextEnumEntry._typeModifiers = new Context.TypeModifierSet(
+				undefined, Context.TypeModifier.Public, [
+					Context.TypeModifier.Public,
+					Context.TypeModifier.Static,
+					Context.TypeModifier.Fixed
+				]);
+		}
+		return ContextEnumEntry._typeModifiers;
 	}
 
 	public resolveMembers(state: ResolveState): void {

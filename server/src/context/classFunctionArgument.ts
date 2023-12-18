@@ -64,7 +64,7 @@ export class ContextFunctionArgument extends Context{
 	public get name(): Identifier {
 		return this._name
 	}
-
+	
 	public get typename(): TypeName {
 		return this._typename
 	}

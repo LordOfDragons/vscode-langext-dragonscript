@@ -26,6 +26,7 @@ import { DiagnosticRelatedInformation } from 'vscode-languageserver';
 import { ContextFunction } from '../context/classFunction';
 import { Context } from '../context/context';
 import { ContextBlock } from '../context/expressionBlock';
+import { ResolveClass } from './class';
 import { ResolveFunctionGroup } from './functionGroup';
 import { ResolveNamespace } from './namespace';
 import { ResolveSignature } from './signature';
@@ -41,6 +42,7 @@ export class ResolveFunction{
 	protected _fullyQualifiedName?: string
 	protected _returnType?: ResolveType;
 	protected _signature: ResolveSignature = new ResolveSignature();
+	protected _reportInfoText?: string;
 
 
 	constructor (context: ContextFunction | ContextBlock) {
@@ -54,7 +56,6 @@ export class ResolveFunction{
 			break;
 			
 		case Context.ContextType.Block:
-			let cxtblock = context as ContextBlock;
 			this._name = "run";
 			this._returnType = ResolveNamespace.classObject;
 			break;
@@ -128,11 +129,49 @@ export class ResolveFunction{
 		this.parent?.removeFunction(this);
 		this.parent = undefined;
 	}
+
+	/** Determine if class 'cls' can access variable. */
+	public canAccess(cls: ResolveClass) {
+		const pc = this.parent as ResolveClass;
+		if (!pc || !this.context) {
+			return false;
+		}
+		if (cls == pc) {
+			return true;
+		}
+		
+		if (this.context.type == Context.ContextType.Function) {
+			const f = this.context as ContextFunction;
+			
+			if (cls.isSubclass(pc)) {
+				return f.typeModifiers.isPublicOrProtected;
+			} else {
+				return f.typeModifiers.isPublic;
+			}
+			
+		} else if (this.context.type == Context.ContextType.Block) {
+			return true;
+			
+		} else {
+			return true;
+		}
+	}
 	
 	public addReportInfo(relatedInformation: DiagnosticRelatedInformation[], message: string) {
 		var info = this._context?.createReportInfo(message);
 		if (info) {
 			relatedInformation.push(info);
 		}
+	}
+
+	public get reportInfoText(): string {
+		if (!this._reportInfoText) {
+			this._reportInfoText = this.updateReportInfoText();
+		}
+		return this._reportInfoText ?? "?";
+	}
+	
+	protected updateReportInfoText(): string {
+		return this._context?.reportInfoText ?? this._name;
 	}
 }

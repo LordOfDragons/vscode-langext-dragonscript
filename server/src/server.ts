@@ -418,6 +418,7 @@ connection.onCompletion(
 
 connection.onCompletionResolve(
 	(item: CompletionItem): CompletionItem => {
+		/*
 		if (item.data === 1) {
 			item.detail = 'TypeScript details';
 			item.documentation = 'TypeScript documentation';
@@ -425,6 +426,7 @@ connection.onCompletionResolve(
 			item.detail = 'JavaScript details';
 			item.documentation = 'JavaScript documentation';
 		}
+		*/
 		return item;
 	}
 );

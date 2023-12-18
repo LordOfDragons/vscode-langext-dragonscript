@@ -137,7 +137,13 @@ export class ContextTryCatch extends Context {
 		if (search.onlyTypes) {
 			return;
 		}
-		if (this._variable.name == search.name) {
+		
+		if (search.matchableName) {
+			if (search.matchableName.matches(this._variable.matchableName)) {
+				search.arguments.push(this);
+			}
+			
+		} else if (this._variable.name == search.name || !search.name) {
 			search.arguments.push(this);
 		}
 	}

@@ -70,8 +70,12 @@ export class ResolveClass extends ResolveType {
 		
 		if (this.context) {
 			if (search.searchSuperClasses) {
+				const ignoreConstructors = search.ignoreConstructors;
+				search.ignoreConstructors = true;
 				(this.context.extends?.resolve as ResolveType)?.search(search);
+				search.ignoreConstructors = ignoreConstructors;
 			}
+			
 			for (const each of this.context.implements) {
 				(each.resolve as ResolveType)?.search(search);
 			}

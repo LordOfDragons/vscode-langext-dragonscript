@@ -32,6 +32,8 @@ import { ResolveSearch } from './search';
 import { ResolveSignature } from './signature';
 import { DiagnosticRelatedInformation, Location } from 'vscode-languageserver';
 import { Context } from '../context/context';
+import { MatchableName } from '../matchableName';
+import { ContextFunction } from '../context/classFunction';
 
 
 /**
@@ -41,6 +43,7 @@ import { Context } from '../context/context';
 export class ResolveType{
 	protected _type: ResolveType.Type;
 	protected _name: string;
+	protected _matchableName?: MatchableName;
 	protected _classes: Map<string, ResolveClass> = new Map();
 	protected _interfaces: Map<string, ResolveInterface> = new Map();
 	protected _enumerations: Map<string, ResolveEnumeration> = new Map();
@@ -90,6 +93,13 @@ export class ResolveType{
 
 	public get name(): string {
 		return this._name;
+	}
+	
+	public get matchableName(): MatchableName {
+		if (!this._matchableName) {
+			this._matchableName = new MatchableName(this._name);
+		}
+		return this._matchableName;
 	}
 
 	public get fullyQualifiedName(): string {
@@ -314,57 +324,54 @@ export class ResolveType{
 	
 
 	public search(search: ResolveSearch): void {
-		if (!search.name) {
-			return;
-		}
-
 		if (!search.onlyTypes) {
 			if (!search.onlyFunctions && !search.ignoreVariables) {
-				let v = this.variable(search.name);
-				if (v) {
-					search.variables.push(v);
+				if (search.matchableName) {
+					for (const [key, v] of this.variables) {
+						if (search.matchableName.matches(v.matchableName)) {
+							search.variables.push(v);
+						}
+					}
+					
+				} else if (search.name) {
+					let v = this.variable(search.name);
+					if (v) {
+						search.variables.push(v);
+					}
+					
+				} else {
+					for (const [key, v] of this.variables) {
+						search.variables.push(v);
+					}
 				}
 			}
 			
 			if (!search.onlyVariables && !search.ignoreFunctions) {
 				if (search.functionsFull.length == 0 || !search.stopAfterFirstFullMatch) {
-					let fg = this.functionGroup(search.name);
-					if (fg) {
-						if (search.signature) {
-							for (const each of fg.functions) {
-								const match = search.signature.matches(each.signature);
-								switch (match) {
-									case ResolveSignature.Match.Full:
-										search.functionsFull.push(each);
-										break;
-
-									case ResolveSignature.Match.Partial:
-										if (search.allowPartialMatch && !search.functionsPartial.find(
-											(each2) => each.signature.matchesExactly(each2.signature))
-										) {
-											search.functionsPartial.push(each);
-										}
-										break;
-
-									case ResolveSignature.Match.Wildcard:
-										if (search.allowWildcardMatch) {
-											search.functionsWildcard.push(each);
-										}
-										break;
-
-									default:
-										break;
-								}
+					if (search.matchableName) {
+						for (const [key, fg] of this.functionGroups) {
+							if (search.matchableName.matches(fg.matchableName)) {
+								this.searchFunctionGroup(search, fg);
 							}
-						} else {
-							for (const each of fg.functions) {
-								search.functionsAll.push(each);
-							}
+						}
+						
+					} else if (search.name) {
+						let fg = this.functionGroup(search.name);
+						if (fg) {
+							this.searchFunctionGroup(search, fg);
+						}
+						
+					} else {
+						for (const [key, fg] of this.functionGroups) {
+							this.searchFunctionGroup(search, fg);
 						}
 					}
 				}
 			}
 		}
+		
+		const ignoreConstructors = search.ignoreConstructors;
+		search.ignoreConstructors = true;
 		
 		if (this._childTypesBeforeSelf) {
 			this.searchChildTypes(search);
@@ -374,30 +381,123 @@ export class ResolveType{
 			this.searchSelf(search);
 			this.searchChildTypes(search);
 		}
+		
+		search.ignoreConstructors = ignoreConstructors;
 	}
 	
-	protected searchSelf(search: ResolveSearch): void {
-		if (!search.onlyVariables && !search.onlyFunctions) {
-			if (this._name == search.name) {
-				search.addType(this);
+	protected searchFunctionGroup(search: ResolveSearch, group: ResolveFunctionGroup): void {
+		if (search.signature) {
+			for (const each of group.functions) {
+				const match = search.signature.matches(each.signature);
+				switch (match) {
+					case ResolveSignature.Match.Full:
+						search.functionsFull.push(each);
+						break;
+						
+					case ResolveSignature.Match.Partial:
+						if (search.allowPartialMatch && !search.functionsPartial.find(
+							(each2) => each.signature.matchesExactly(each2.signature))
+						) {
+							search.functionsPartial.push(each);
+						}
+						break;
+						
+					case ResolveSignature.Match.Wildcard:
+						if (search.allowWildcardMatch) {
+							search.functionsWildcard.push(each);
+						}
+						break;
+						
+					default:
+						break;
+				}
+			}
+			
+		} else {
+			if (search.ignoreConstructors) {
+				for (const each of group.functions) {
+					const c = each.context;
+					if (c?.type == Context.ContextType.Function
+					&& (c as ContextFunction).functionType == ContextFunction.Type.Constructor) {
+						continue;
+					}
+					
+					search.functionsAll.push(each);
+				}
+				
+			} else {
+				for (const each of group.functions) {
+					search.functionsAll.push(each);
+				}
 			}
 		}
 	}
 	
+	protected searchSelf(search: ResolveSearch): void {
+		if (search.onlyVariables || search.onlyFunctions) {
+			return;
+		}
+		
+		if (search.matchableName) {
+			if (search.matchableName.matches(this.matchableName)) {
+				search.addType(this);
+			}
+			
+		} else if (this._name == search.name || !search.name) {
+			search.addType(this);
+		}
+	}
+	
 	protected searchChildTypes(search: ResolveSearch): void {
-		if (!search.onlyVariables && !search.onlyFunctions) {
+		if (search.onlyVariables || search.onlyFunctions) {
+			return;
+		}
+		
+		if (search.matchableName) {
+			for (const [key, c] of this.classes) {
+				if (search.matchableName.matches(c.matchableName)) {
+					search.addType(c);
+				}
+			}
+			
+			for (const [key, i] of this.interfaces) {
+				if (search.matchableName.matches(i.matchableName)) {
+					search.addType(i);
+				}
+			}
+			
+			for (const [key, e] of this.enumerations) {
+				if (search.matchableName.matches(e.matchableName)) {
+					search.addType(e);
+				}
+			}
+			
+		} else if (search.name) {
 			let c = this.class(search.name);
 			if (c) {
 				search.addType(c);
 			}
-
+			
 			let i = this.interface(search.name);
 			if (i) {
 				search.addType(i);
 			}
-
+			
 			let e = this.enumeration(search.name);
 			if (e) {
+				search.addType(e);
+			}
+			
+		} else {
+			for (const [key, c] of this.classes) {
+				search.addType(c);
+			}
+			
+			for (const [key, i] of this.interfaces) {
+				search.addType(i);
+			}
+			
+			for (const [key, e] of this.enumerations) {
 				search.addType(e);
 			}
 		}

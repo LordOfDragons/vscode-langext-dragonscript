@@ -120,8 +120,22 @@ export class ContextBlock extends Context{
 	}
 
 	public search(search: ResolveSearch, before: Context | undefined = undefined): void {
-		for (const each of this._arguments) {
-			if (search.name == each.name.name) {
+		if (search.matchableName) {
+			for (const each of this._arguments) {
+				if (search.matchableName.matches(each.name.matchableName)) {
+					search.arguments.push(each);
+				}
+			}
+			
+		} else if(search.name) {
+			for (const each of this._arguments) {
+				if (search.name == each.name.name) {
+					search.arguments.push(each);
+				}
+			}
+			
+		} else {
+			for (const each of this._arguments) {
 				search.arguments.push(each);
 			}
 		}

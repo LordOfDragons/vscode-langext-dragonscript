@@ -100,15 +100,29 @@ export class ResolveNamespace extends ResolveType {
 	
 
 	public search(search: ResolveSearch): void {
-		if (search.onlyVariables || search.onlyFunctions || !search.name) {
+		if (search.onlyVariables || search.onlyFunctions) {
 			return;
 		}
 		
 		super.search(search);
 		
-		let ns = this.namespace(search.name);
-		if (ns) {
-			search.addType(ns);
+		if (search.matchableName) {
+			for (const [key, ns] of this.namespaces) {
+				if (search.matchableName.matches(ns.matchableName)) {
+					search.addType(ns);
+				}
+			}
+			
+		} else if (search.name) {
+			const ns = this.namespace(search.name);
+			if (ns) {
+				search.addType(ns);
+			}
+			
+		} else {
+			for (const [key, ns] of this.namespaces) {
+				search.addType(ns);
+			}
 		}
 		
 		this.parent?.search(search);

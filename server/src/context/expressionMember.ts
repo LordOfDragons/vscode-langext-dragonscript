@@ -37,6 +37,10 @@ import { ContextVariable } from "./statementVariable";
 import { ResolveVariable } from "../resolve/variable";
 import { ContextClass } from "./scriptClass";
 import { ContextTryCatch } from "./statementTry";
+import { ResolveClass } from "../resolve/class";
+import { ResolveEnumeration } from "../resolve/enumeration";
+import { ResolveInterface } from "../resolve/interface";
+import { ResolveNamespace } from "../resolve/namespace";
 
 
 export class ContextMember extends Context{
@@ -175,13 +179,15 @@ export class ContextMember extends Context{
 		this._matches = new ResolveSearch();
 		this._matches.name = this._name.name;
 		this._matches.ignoreFunctions = true;
-
-		if (objtype) {
-			objtype.search(this._matches);
-		} else {
-			state.search(this._matches, this);
+		
+		if (this._matches.name) {
+			if (objtype) {
+				objtype.search(this._matches);
+			} else {
+				state.search(this._matches, this);
+			}
 		}
-
+		
 		const matchTypeCount = this._matches.matchTypeCount;
 		
 		if (matchTypeCount == 0) {
@@ -303,15 +309,127 @@ export class ContextMember extends Context{
 	}
 	
 	public completion(position: Position): CompletionItem[] {
-		var ct = this.expressionType;
-		if (!ct) {
-			ct = this._object?.expressionType;
-		}
-		if (!ct) {
-			super.completion(position);
+		const search = new ResolveSearch();
+		let items: CompletionItem[] = [];
+		
+		if (this._object) {
+			var objtype = this._object.expressionType;
+			if (objtype) {
+				items.push({label: `Member ${objtype.resolveTextShort}`, kind: CompletionItemKind.Text, data: 1});
+				// TODO if this._object is a type search only for functions
+				//search.onlyFunctions = true;
+				
+				objtype.search(search);
+				search.removeType(objtype);
+				
+				// TODO if this._object is a type display only constructor functions and types
+				//search.removeNonConstructorFunctions();
+			}
+			
+		} else {
+			if (this.expressionType) {
+				items.push({label: `Expression ${this.expressionType.resolveTextShort}`, kind: CompletionItemKind.Text, data: 1});
+				//state.search(search);
+			}
 		}
 		
-		return [{label: `ContextMember ${ct?.resolveTextShort}`, kind: CompletionItemKind.Text, data: 1}];
+		search.removeShadowedFunctions();
+		
+		for (const each of search.localVariables) {
+			items.push({
+				label: each.name.name + "(lv): " + each.resolveTextShort,
+				sortText: each.name.name,
+				filterText: each.name.name,
+				kind: CompletionItemKind.Variable,
+				data: 1});
+		}
+		
+		for (const each of search.arguments) {
+			items.push({
+				label: each.simpleName + "(a): " + each.resolveTextShort,
+				sortText: each.simpleName,
+				filterText: each.simpleName,
+				kind: CompletionItemKind.Variable,
+				data: 1});
+		}
+		
+		for (const each of search.functionsAll) {
+			if (each.context) {
+				const tfrc = (this.selfOrParentWithType(Context.ContextType.Class) as ContextClass)?.resolveClass;
+				if (tfrc && each.canAccess(tfrc)) {
+					items.push({
+						label: each.name,
+						sortText: each.name,
+						filterText: each.name,
+						detail: each.context.resolveTextShort,
+						kind: CompletionItemKind.Function,
+						data: 1});
+				}
+			}
+		}
+		
+		for (const each of search.variables) {
+			if (each.context) {
+				const tfrc = (this.selfOrParentWithType(Context.ContextType.Class) as ContextClass)?.resolveClass;
+				if (tfrc && each.canAccess(tfrc)) {
+					var title: string = 'variable';
+					
+					const typemods = each.typeModifiers;
+					if (typemods) {
+						if (typemods.isStatic && typemods.isFixed) {
+							title = 'constant';
+						}
+					}
+					
+					items.push({
+						label: each.name,
+						sortText: each.name,
+						filterText: each.name,
+						detail: `${title}: ${each.resolveTextShort}`,
+						kind: CompletionItemKind.Field,
+						data: 1});
+				}
+			}
+		}
+		
+		for (const each of search.types) {
+			var kind: CompletionItemKind | undefined;
+			var detail: string | undefined;
+			
+			switch (each.type) {
+			case ResolveType.Type.Class:
+				kind = CompletionItemKind.Class;
+				detail = `class: ${each.name}`;
+				break;
+				
+			case ResolveType.Type.Enumeration:
+				kind = CompletionItemKind.Enum;
+				detail = `enumeration: ${each.name}`;
+				break;
+				
+			case ResolveType.Type.Interface:
+				kind = CompletionItemKind.Interface;
+				detail = `interface: ${each.name}`;
+				break;
+				
+			case ResolveType.Type.Namespace:
+				kind = CompletionItemKind.Module;
+				detail = `namespace: ${each.name}`;
+				break;
+			}
+			
+			if (kind) {
+				items.push({
+					label: each.name,
+					sortText: each.name,
+					filterText: each.name,
+					detail: detail,
+					kind: kind,
+					data: 1});
+			}
+		}
+		
+		return items;
 	}
 	
 	

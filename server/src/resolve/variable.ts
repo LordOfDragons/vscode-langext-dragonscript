@@ -26,6 +26,7 @@ import { DiagnosticRelatedInformation } from 'vscode-languageserver';
 import { ContextClassVariable } from '../context/classVariable';
 import { Context } from '../context/context';
 import { ContextEnumEntry, ContextEnumeration } from '../context/scriptEnum';
+import { MatchableName } from '../matchableName';
 import { ResolveClass } from './class';
 import { ResolveType } from './type';
 
@@ -35,6 +36,7 @@ import { ResolveType } from './type';
  */
 export class ResolveVariable{
 	protected _name: string;
+	protected _matchableName?: MatchableName;
 	protected _context?: ContextClassVariable | ContextEnumEntry;
 	protected _fullyQualifiedName?: string
 	protected _variableType?: ResolveType;
@@ -63,6 +65,13 @@ export class ResolveVariable{
 
 	public get name(): string {
 		return this._name;
+	}
+	
+	public get matchableName(): MatchableName {
+		if (!this._matchableName) {
+			this._matchableName = new MatchableName(this._name);
+		}
+		return this._matchableName;
 	}
 
 	public get fullyQualifiedName(): string {
@@ -100,17 +109,23 @@ export class ResolveVariable{
 	}
 
 	protected updateResolveTextLong(): string[] {
-		var typeMods = "";
-
+		const typemods = this.typeModifiers?.typestring ?? "public";
+		const typename = this._variableType?.name;
+		const fqn = this.parent?.fullyQualifiedName;
+		return [`${typemods} **variable** *${typename}* *${fqn}*.**${this._name}**`];
+	}
+	
+	public get typeModifiers(): Context.TypeModifierSet | undefined {
 		if (this.context) {
 			if (this.context.type == Context.ContextType.ClassVariable) {
-				typeMods = (this.context as ContextClassVariable).typeModifiers.typestring;
+				return (this.context as ContextClassVariable).typeModifiers;
+			} else if (this.context.type == Context.ContextType.EnumerationEntry) {
+				return ContextEnumEntry.typeModifiers;
 			} else {
-				typeMods = "public";
+				return Context.defaultTypeModifiers;
 			}
 		}
-
-		return [`${typeMods} **variable** *${this._variableType?.name}* *${this.parent?.fullyQualifiedName}*.**${this._name}**`];
+		return undefined;
 	}
 
 	public get reportInfoText(): string {
@@ -121,17 +136,7 @@ export class ResolveVariable{
 	}
 
 	protected updateReportInfoText(): string {
-		var typeMods = "";
-
-		if (this.context) {
-			if (this.context.type == Context.ContextType.ClassVariable) {
-				typeMods = (this.context as ContextClassVariable).typeModifiers.typestring;
-			} else {
-				typeMods = "public";
-			}
-		}
-
-		return `${typeMods} ${this._variableType?.name} ${this.parent?.name}.${this._name}`;
+		return this._context?.reportInfoText ?? this._name;
 	}
 
 

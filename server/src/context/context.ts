@@ -44,7 +44,8 @@ export class Context {
 	protected _resolveTextShort?: string;
 	protected _resolveTextLong?: string[];
 	protected _reportInfoText?: string;
-
+	private static _defaultTypeModifiers?: Context.TypeModifierSet;
+	
 
 	constructor(type: Context.ContextType, parent?: Context) {
 		this._type = type;
@@ -87,7 +88,14 @@ export class Context {
 		}
 	}
 	
-
+	
+	public static get defaultTypeModifiers(): Context.TypeModifierSet {
+		if (!Context._defaultTypeModifiers) {
+			Context._defaultTypeModifiers = new Context.TypeModifierSet(undefined, Context.TypeModifier.Public);
+		}
+		return Context._defaultTypeModifiers;
+	}
+	
 	public get fullyQualifiedName(): string {
 		return this.parent?.fullyQualifiedName || "";
 	}
@@ -242,6 +250,10 @@ export class Context {
 		}
 	}
 	
+	public selfOrParentWithType(type: Context.ContextType): Context | undefined {
+		return this._type == type ? this : this.parent?.selfOrParentWithType(type);
+	}
+	
 
 	protected reportError(diagnostics: Diagnostic[], uri: string, range: Range, message: string) {
 		this.reportDiagnostic(diagnostics, uri, DiagnosticSeverity.Error, range, message);
@@ -379,56 +391,89 @@ export namespace Context {
 		protected _fixed: boolean = false;
 		protected _static: boolean = false;
 
-		constructor(node: TypeModifiersCstNode | undefined, defaultModifier: Context.TypeModifier) {
+		constructor(node: TypeModifiersCstNode | undefined, defaultModifier: Context.TypeModifier,
+				modifiers?: Context.TypeModifier[]) {
 			super();
 			
 			if (!node || !node.children.typeModifier) {
-				this.add(defaultModifier);
-				
-				switch (defaultModifier) {
-				case Context.TypeModifier.Public:
-					this._accessLevel = AccessLevel.Public;
-					break;
+				if (modifiers) {
+					for (const each of modifiers) {
+						this.add(each);
+						
+						switch (each) {
+						case Context.TypeModifier.Public:
+							this._accessLevel = AccessLevel.Public;
+							break;
+							
+						case Context.TypeModifier.Protected:
+							this._accessLevel = AccessLevel.Protected;
+							break;
+							
+						case Context.TypeModifier.Private:
+							this._accessLevel = AccessLevel.Private;
+							break;
+							
+						case Context.TypeModifier.Abstract:
+							this._abstract = true;
+							break;
+							
+						case Context.TypeModifier.Fixed:
+							this._fixed = true;
+							break;
+							
+						case Context.TypeModifier.Static:
+							this._static = true;
+							break;
+						}
+					}
 					
-				case Context.TypeModifier.Protected:
-					this._accessLevel = AccessLevel.Protected;
-					break;
+				} else {
+					this.add(defaultModifier);
 					
-				case Context.TypeModifier.Private:
-					this._accessLevel = AccessLevel.Private;
-					break;
+					switch (defaultModifier) {
+					case Context.TypeModifier.Public:
+						this._accessLevel = AccessLevel.Public;
+						break;
+						
+					case Context.TypeModifier.Protected:
+						this._accessLevel = AccessLevel.Protected;
+						break;
+						
+					case Context.TypeModifier.Private:
+						this._accessLevel = AccessLevel.Private;
+						break;
+					}
 				}
 				
-				return;
-			}
+			} else {
+				for (const each of node.children.typeModifier) {
+					if (each.children.public) {
+						this.add(Context.TypeModifier.Public);
+						this._accessLevel = AccessLevel.Public;
 
-			for (const each of node.children.typeModifier) {
-				if (each.children.public) {
-					this.add(Context.TypeModifier.Public);
-					this._accessLevel = AccessLevel.Public;
+					} else if (each.children.protected) {
+						this.add(Context.TypeModifier.Protected);
+						this._accessLevel = AccessLevel.Protected;
 
-				} else if (each.children.protected) {
-					this.add(Context.TypeModifier.Protected);
-					this._accessLevel = AccessLevel.Protected;
+					} else if (each.children.private) {
+						this.add(Context.TypeModifier.Private);
+						this._accessLevel = AccessLevel.Private;
 
-				} else if (each.children.private) {
-					this.add(Context.TypeModifier.Private);
-					this._accessLevel = AccessLevel.Private;
+					} else if (each.children.abstract) {
+						this.add(Context.TypeModifier.Abstract);
+						this._abstract = true;
 
-				} else if (each.children.abstract) {
-					this.add(Context.TypeModifier.Abstract);
-					this._abstract = true;
+					} else if (each.children.fixed) {
+						this.add(Context.TypeModifier.Fixed);
+						this._fixed = true;
 
-				} else if (each.children.fixed) {
-					this.add(Context.TypeModifier.Fixed);
-					this._fixed = true;
+					} else if (each.children.static) {
+						this.add(Context.TypeModifier.Static);
+						this._static = true;
 
-				} else if (each.children.static) {
-					this.add(Context.TypeModifier.Static);
-					this._static = true;
-
-				} else if (each.children.native) {
-					this.add(Context.TypeModifier.Native);
+					} else if (each.children.native) {
+						this.add(Context.TypeModifier.Native);
+					}
 				}
 			}
 		}

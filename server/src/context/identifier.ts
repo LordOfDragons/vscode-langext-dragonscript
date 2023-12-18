@@ -25,17 +25,19 @@
 import { IToken } from "chevrotain"
 import { Position, Range } from "vscode-languageserver";
 import { Helpers } from "../helpers";
+import { MatchableName } from "../matchableName";
 
 
 export class Identifier {
 	protected _token?: IToken;
 	protected _name: string;
 	protected _range?: Range;
-
-
+	protected _matchableName?: MatchableName;
+	
+	
 	constructor(token?: IToken, name?: string) {
 		this._token = token;
-
+		
 		if(name) {
 			this._name = name;
 		} else if (token) {
@@ -43,29 +45,36 @@ export class Identifier {
 		} else {
 			throw Error("Token and name can not both be undefined");
 		}
-
+		
 		if (token) {
 			this._range = Helpers.rangeFrom(token);
 		}
 	}
-
-
+	
+	
 	public get token(): IToken | undefined {
 		return this._token
 	}
-
+	
 	public get name(): string {
 		return this._name
 	}
-
+	
+	public get matchableName(): MatchableName {
+		if (!this._matchableName) {
+			this._matchableName = new MatchableName(this._name);
+		}
+		return this._matchableName;
+	}
+	
 	public get range(): Range | undefined {
 		return this._range;
 	}
-
+	
 	public isPositionInside(position: Position): boolean {
 		return Helpers.isPositionInsideRange(this._range, position);
 	}
-
+	
 	
 	toString() : string {
 		return this._name;

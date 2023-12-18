@@ -23,9 +23,12 @@
  */
 
 import { integer } from "vscode-languageserver";
+import { ContextFunction } from "../context/classFunction";
 import { ContextFunctionArgument } from "../context/classFunctionArgument";
+import { Context } from "../context/context";
 import { ContextTryCatch } from "../context/statementTry";
 import { ContextVariable } from "../context/statementVariable";
+import { MatchableName } from "../matchableName";
 import { ResolveFunction } from "./function";
 import { ResolveSignature } from "./signature";
 import { ResolveType } from "./type";
@@ -45,6 +48,7 @@ export class ResolveSearch {
 	constructor (copy?: ResolveSearch) {
 		if (copy) {
 			this.name = copy.name;
+			this.matchableName = copy.matchableName;
 			this.onlyTypes = copy.onlyTypes;
 			this.onlyVariables = copy.onlyVariables;
 			this.onlyFunctions = copy.onlyFunctions;
@@ -58,46 +62,52 @@ export class ResolveSearch {
 			this.searchSuperClasses = copy.searchSuperClasses;
 		}
 	}
-
-
-	/** Exact name to search for. */
+	
+	
+	/** Exact name to search for or empty string to find all. */
 	public name: string = "";
-
+	
+	/** Matchable name. If not undefined used instead of name. */
+	public matchableName?: MatchableName;
+	
 	/** Search only types. */
 	public onlyTypes: boolean = false;
-
+	
 	/** Search only variables. */
 	public onlyVariables: boolean = false;
-
+	
 	/** Search only functions. */
 	public onlyFunctions: boolean = false;
-
+	
 	/** Ignore variables. */
 	public ignoreVariables: boolean = false;
-
+	
 	/** Ignore functions. */
 	public ignoreFunctions: boolean = false;
-
+	
 	/** Find all matching types instead of the first one. */
 	public allMatchingTypes: boolean = false;
-
+	
 	/** Signature to match. Undefine in argument means anything. */
 	public signature?: ResolveSignature;
-
+	
 	/** Allow partial match for functions. */
 	public allowPartialMatch: boolean = true;
-
+	
 	/** Allow wildcard/error match for functions. */
 	public allowWildcardMatch: boolean = true;
-
+	
 	/** Stop matching after first full match. */
 	public stopAfterFirstFullMatch: boolean = true;
 	
 	/** Search in super classes. */
 	public searchSuperClasses: boolean = true;
 	
-
-
+	/** Ignore constructors. Internal use. */
+	public ignoreConstructors = false;
+	
+	
+	
 	/** Clear search result. */
 	public clearResults(): void {
 		this._localVariables.splice(0);
@@ -110,17 +120,17 @@ export class ResolveSearch {
 		this._types.splice(0);
 		this.signature = undefined;
 	}
-
+	
 	/** Local variables. */
 	public get localVariables(): ContextVariable[] {
 		return this._localVariables;
 	}
-
+	
 	/** Function, block or catch arguments. */
 	public get arguments(): (ContextFunctionArgument | ContextTryCatch)[] {
 		return this._arguments;
 	}
-
+	
 	public get variables(): ResolveVariable[] {
 		return this._variables;
 	}
@@ -144,11 +154,11 @@ export class ResolveSearch {
 	public get functionsAll(): ResolveFunction[] {
 		return this._functionsAll;
 	}
-
+	
 	public get types(): ResolveType[] {
 		return this._types;
 	}
-
+	
 	public addType(type: ResolveType): void {
 		if (this.allMatchingTypes) {
 			if (!this._types.includes(type)) {
@@ -161,8 +171,36 @@ export class ResolveSearch {
 			}
 		}
 	}
-
-
+	
+	/** Remove all shadows functions. */
+	public removeShadowedFunctions(): void {
+		const found = this._functionsAll;
+		this._functionsAll = [];
+		
+		for (const each of found) {
+			if (!this._functionsAll.find(f => f.name == each.name && f.signature.matchesExactly(each.signature))) {
+				this._functionsAll.push(each);
+			}
+		}
+	}
+	
+	/** Remove all non-constructor functions. */
+	public removeNonConstructorFunctions(): void {
+		this._functionsAll = this._functionsAll.filter(f => {
+			const c = f.context as ContextFunction;
+			return c?.type == Context.ContextType.Function && c.functionType == ContextFunction.Type.Constructor;
+		});
+	}
+	
+	/** Remove type if present. */
+	public removeType(type: ResolveType): void {
+		const index = this._types.indexOf(type);
+		if (index != -1) {
+			this._types.splice(index, 1);
+		}
+	}
+	
+	
 	/** Count of matches found. */
 	public get matchCount(): integer {
 		return this._localVariables.length + this._arguments.length
@@ -171,7 +209,7 @@ export class ResolveSearch {
 			+ this._functionsWildcard.length + this._types.length
 			+ this._functionsAll.length + this._types.length;
 	}
-
+	
 	/** Count of match type group found. */
 	public get matchTypeCount(): integer {
 		var count = 0;

@@ -48,6 +48,7 @@ import { ResolveSearch } from "../resolve/search";
 import { ResolveSignature, ResolveSignatureArgument } from "../resolve/signature";
 import { ResolveFunction } from "../resolve/function";
 import { ContextMember } from "./expressionMember";
+import { ContextClass } from "./scriptClass";
 
 
 export class ContextFunctionCall extends Context{
@@ -64,8 +65,9 @@ export class ContextFunctionCall extends Context{
 	protected _arguments: Context[];
 	protected _castType?: TypeName;
 	protected _functionType: ContextFunctionCall.FunctionType = ContextFunctionCall.FunctionType.function;
-
+	
 	private _matches: ResolveSearch | undefined;
+	private _matchFunction?: ResolveFunction;
 	
 	
 	protected constructor(node: ExpressionAdditionCstNode | ExpressionBitOperationCstNode
@@ -439,6 +441,7 @@ export class ContextFunctionCall extends Context{
 		this._castType?.dispose();
 
 		this._matches = undefined;
+		this._matchFunction = undefined;
 	}
 
 
@@ -504,7 +507,8 @@ export class ContextFunctionCall extends Context{
 				return;
 			}
 		}
-
+		
+		this._matchFunction = undefined;
 		this._matches = new ResolveSearch();
 		if (this._functionType == ContextFunctionCall.FunctionType.functionSuper) {
 			this._matches.name = 'new';
@@ -527,19 +531,21 @@ export class ContextFunctionCall extends Context{
 		for (const each of this._arguments) {
 			this._matches.signature.addArgument(each.expressionType, undefined, each.expressionAutoCast);
 		}
-
-		if (objtype) {
-			objtype.search(this._matches);
-		} else if (this._functionType == ContextFunctionCall.FunctionType.functionSuper) {
-			if (this._name.name == 'this') {
-				state.topScopeClass?.resolveClass?.search(this._matches);
+		
+		if (this._matches.name) {
+			if (objtype) {
+				objtype.search(this._matches);
+			} else if (this._functionType == ContextFunctionCall.FunctionType.functionSuper) {
+				if (this._name.name == 'this') {
+					state.topScopeClass?.resolveClass?.search(this._matches);
+				} else {
+					(state.topScopeClass?.resolveClass?.context?.extends?.resolve as ResolveType)?.search(this._matches);
+				}
 			} else {
-				(state.topScopeClass?.resolveClass?.context?.extends?.resolve as ResolveType)?.search(this._matches);
+				state.search(this._matches, this);
 			}
-		} else {
-			state.search(this._matches, this);
 		}
-
+		
 		switch (this._functionType) {
 			case ContextFunctionCall.FunctionType.assign:
 				if (this._object) {
@@ -566,17 +572,18 @@ export class ContextFunctionCall extends Context{
 			default:
 				if (this._matches.functionsFull.length > 0) {
 					if (this._matches.functionsFull.length == 1) {
-						this.expressionType = this._matches.functionsFull[0].returnType;
+						this._matchFunction = this._matches.functionsFull[0];
 					}
 				} else if (this._matches.functionsPartial.length > 0) {
 					if (this._matches.functionsPartial.length == 1) {
-						this.expressionType = this._matches.functionsPartial[0].returnType;
+						this._matchFunction = this._matches.functionsPartial[0];
 					}
 				} else if (this._matches.functionsWildcard.length > 0) {
 					if (this._matches.functionsWildcard.length == 1) {
-						this.expressionType = this._matches.functionsWildcard[0].returnType;
+						this._matchFunction = this._matches.functionsWildcard[0];
 					}
 				}
+				this.expressionType = this._matchFunction?.returnType;
 				break;
 		}
 		
@@ -619,7 +626,7 @@ export class ContextFunctionCall extends Context{
 				}break;
 				
 			default:
-				if (this._matches) {
+				if (this._matches && this._matches.name) {
 					if (this._matches.functionsFull.length == 0) {
 						if (this._matches.functionsPartial.length > 1) {
 							let ri: DiagnosticRelatedInformation[] = [];
@@ -649,6 +656,20 @@ export class ContextFunctionCall extends Context{
 								each.context?.addReportInfo(ri, `Candidate: ${each.context.reportInfoText}`);
 							}
 							state.reportError(this._name.range, `Function call ${this._name}${this._matches.signature?.resolveTextShort} not found`, ri);
+						}
+					}
+					
+					if (this._matchFunction) {
+						const tfcc = state.topScopeFunction?.parent as ContextClass;
+						if (tfcc?.type == Context.ContextType.Class) {
+							const tfrc = tfcc.resolveClass;
+							if (tfrc && !this._matchFunction.canAccess(tfrc)) {
+								let ri: DiagnosticRelatedInformation[] = [];
+								this._matchFunction.addReportInfo(ri, `Function: ${this._matchFunction.reportInfoText}`);
+								this._matchFunction.parent?.addReportInfo(ri, `Owner Class: ${this._matchFunction.parent.reportInfoText}`);
+								tfrc.addReportInfo(ri, `Accessing Class: ${tfrc.reportInfoText}`);
+								state.reportError(this._name.range, `Can not access function ${this._matchFunction.name}`, ri);
+							}
 						}
 					}
 				}
