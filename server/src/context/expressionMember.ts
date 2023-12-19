@@ -318,14 +318,19 @@ export class ContextMember extends Context{
 		if (this._object) {
 			var objtype = this._object.expressionType;
 			if (objtype) {
-				// TODO if this._object is a type search only for static members
-				//search.onlyStatic = true;
-				
-				objtype.search(search);
-				search.removeType(objtype);
-				
-				// TODO if this._object is a type display only constructor functions and types
-				//search.removeNonConstructorFunctions();
+				switch (this._object.expressionTypeType) {
+				case Context.ExpressionType.Object:
+					search.ignoreStatic = true;
+					objtype.search(search);
+					search.removeType(objtype);
+					break;
+					
+				case Context.ExpressionType.Type:
+					search.onlyStatic = true;
+					objtype.search(search);
+					search.removeType(objtype);
+					break;
+				}
 			}
 			
 		} else {

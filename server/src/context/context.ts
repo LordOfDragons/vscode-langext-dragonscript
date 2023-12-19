@@ -393,94 +393,66 @@ export namespace Context {
 		protected _fixed: boolean = false;
 		protected _static: boolean = false;
 
-		constructor(node: TypeModifiersCstNode | undefined, defaultModifier: Context.TypeModifier,
-				modifiers?: Context.TypeModifier[]) {
+		constructor(node: TypeModifiersCstNode | undefined, defaultModifier: Context.TypeModifier) {
 			super();
 			
 			if (!node || !node.children.typeModifier) {
-				if (modifiers) {
-					for (const each of modifiers) {
-						this.add(each);
-						
-						switch (each) {
-						case Context.TypeModifier.Public:
-							this._accessLevel = AccessLevel.Public;
-							break;
-							
-						case Context.TypeModifier.Protected:
-							this._accessLevel = AccessLevel.Protected;
-							break;
-							
-						case Context.TypeModifier.Private:
-							this._accessLevel = AccessLevel.Private;
-							break;
-							
-						case Context.TypeModifier.Abstract:
-							this._abstract = true;
-							break;
-							
-						case Context.TypeModifier.Fixed:
-							this._fixed = true;
-							break;
-							
-						case Context.TypeModifier.Static:
-							this._static = true;
-							break;
-						}
-					}
-					
-				} else {
-					this.add(defaultModifier);
-					
-					switch (defaultModifier) {
-					case Context.TypeModifier.Public:
-						this._accessLevel = AccessLevel.Public;
-						break;
-						
-					case Context.TypeModifier.Protected:
-						this._accessLevel = AccessLevel.Protected;
-						break;
-						
-					case Context.TypeModifier.Private:
-						this._accessLevel = AccessLevel.Private;
-						break;
-					}
-				}
+				this.add(defaultModifier);
 				
 			} else {
 				for (const each of node.children.typeModifier) {
 					if (each.children.public) {
 						this.add(Context.TypeModifier.Public);
-						this._accessLevel = AccessLevel.Public;
-
 					} else if (each.children.protected) {
 						this.add(Context.TypeModifier.Protected);
-						this._accessLevel = AccessLevel.Protected;
-
 					} else if (each.children.private) {
 						this.add(Context.TypeModifier.Private);
-						this._accessLevel = AccessLevel.Private;
-
 					} else if (each.children.abstract) {
 						this.add(Context.TypeModifier.Abstract);
-						this._abstract = true;
-
 					} else if (each.children.fixed) {
 						this.add(Context.TypeModifier.Fixed);
-						this._fixed = true;
-
 					} else if (each.children.static) {
 						this.add(Context.TypeModifier.Static);
-						this._static = true;
-
 					} else if (each.children.native) {
 						this.add(Context.TypeModifier.Native);
 					}
 				}
 			}
 		}
-
-
+		
+		
+		public add(value: Context.TypeModifier): this {
+			super.add(value);
+			
+			switch (value) {
+			case Context.TypeModifier.Public:
+				this._accessLevel = AccessLevel.Public;
+				break;
+				
+			case Context.TypeModifier.Protected:
+				this._accessLevel = AccessLevel.Protected;
+				break;
+				
+			case Context.TypeModifier.Private:
+				this._accessLevel = AccessLevel.Private;
+				break;
+				
+			case Context.TypeModifier.Abstract:
+				this._abstract = true;
+				break;
+				
+			case Context.TypeModifier.Fixed:
+				this._fixed = true;
+				break;
+				
+			case Context.TypeModifier.Static:
+				this._static = true;
+				break;
+			}
+			
+			return this;
+		}
+		
 		public get accessLevel(): AccessLevel {
 			return this._accessLevel;
 		}

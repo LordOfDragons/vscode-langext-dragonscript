@@ -89,6 +89,9 @@ export class ResolveSearch {
 	/** Only static members. */
 	public onlyStatic: boolean = false;
 	
+	/** Ignore static members. */
+	public ignoreStatic: boolean = false;
+	
 	/** Find all matching types instead of the first one. */
 	public allMatchingTypes: boolean = false;
 	
@@ -244,16 +247,28 @@ export class ResolveSearch {
 	
 	/** Accept variable using non-name related filters. */
 	public acceptVariable(variable: ResolveVariable): boolean {
-		if (this.onlyStatic && !variable.typeModifiers?.isStatic) {
-			return false;
+		if (this.onlyStatic) {
+			if (!variable.typeModifiers?.isStatic) {
+				return false;
+			}
+		} else if (this.ignoreStatic) {
+			if (variable.typeModifiers?.isStatic) {
+				return false;
+			}
 		}
 		return true;
 	}
 	
 	/** Accept function using non-name related filters. */
 	public acceptFunction(rfunction: ResolveFunction): boolean {
-		if (this.onlyStatic && !rfunction.typeModifiers?.isStatic) {
-			return false;
+		if (this.onlyStatic) {
+			if (!rfunction.typeModifiers?.isStatic) {
+				return false;
+			}
+		} else if (this.ignoreStatic) {
+			if (rfunction.typeModifiers?.isStatic) {
+				return false;
+			}
 		}
 		if (this.ignoreConstructors
 			&& rfunction.context?.type == Context.ContextType.Function
@@ -268,7 +283,6 @@ export class ResolveSearch {
 		if (!this.allMatchingTypes && this._types.length > 0) {
 			return false;
 		}
-		
 		return true;
 	}
 	

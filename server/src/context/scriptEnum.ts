@@ -91,12 +91,9 @@ export class ContextEnumEntry extends Context{
 	
 	public static get typeModifiers(): Context.TypeModifierSet {
 		if (!ContextEnumEntry._typeModifiers) {
-			ContextEnumEntry._typeModifiers = new Context.TypeModifierSet(
-				undefined, Context.TypeModifier.Public, [
-					Context.TypeModifier.Public,
-					Context.TypeModifier.Static,
-					Context.TypeModifier.Fixed
-				]);
+			ContextEnumEntry._typeModifiers = new Context.TypeModifierSet(undefined, Context.TypeModifier.Public);
+			ContextEnumEntry._typeModifiers.add(Context.TypeModifier.Static);
+			ContextEnumEntry._typeModifiers.add(Context.TypeModifier.Fixed);
 		}
 		return ContextEnumEntry._typeModifiers;
 	}
