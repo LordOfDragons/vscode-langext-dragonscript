@@ -119,7 +119,7 @@ export class ContextBlock extends Context{
 		return this._resolveFunction;
 	}
 
-	public search(search: ResolveSearch, before: Context | undefined = undefined): void {
+	public search(search: ResolveSearch, before?: Context): void {
 		if (search.matchableName) {
 			for (const each of this._arguments) {
 				if (search.matchableName.matches(each.name.matchableName)) {

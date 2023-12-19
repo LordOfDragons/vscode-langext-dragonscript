@@ -312,8 +312,11 @@ export class ContextMember extends Context{
 	
 	public completion(document: TextDocument, position: Position): CompletionItem[] {
 		var range: Range | undefined = this._name?.range ?? Range.create(position, position);
-		const search = new ResolveSearch();
 		let items: CompletionItem[] = [];
+		
+		const search = new ResolveSearch();
+		search.allMatchingTypes = true;
+		search.ignoreShadowedFunctions = true;
 		
 		if (this._object) {
 			var objtype = this._object.expressionType;
@@ -334,16 +337,19 @@ export class ContextMember extends Context{
 			}
 			
 		} else {
-			if (this.expressionType) {
-				items.push({label: `Expression ${this.expressionType.resolveTextShort}`, kind: CompletionItemKind.Text, data: 1});
-				//state.search(search);
-				items.push(...ContextClass.createCompletionItemThisSuper(this, range));
-				items.push(...ContextConstant.createCompletionItemBooleans(range));
-				items.push(ContextConstant.createCompletionItemNull(range));
+			this.searchExpression(search, true, this);
+			
+			/*
+			const objtype = ContextClass.thisContext(this)?.resolveClass;
+			if (objtype) {
+				objtype.search(search);
 			}
+			*/
+			
+			items.push(...ContextClass.createCompletionItemThisSuper(this, range));
+			items.push(...ContextConstant.createCompletionItemBooleans(range));
+			items.push(ContextConstant.createCompletionItemNull(range));
 		}
-		
-		search.removeShadowedFunctions();
 		
 		for (const each of search.localVariables) {
 			items.push({

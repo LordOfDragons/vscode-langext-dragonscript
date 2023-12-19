@@ -28,6 +28,7 @@ import { ContextBuilder } from "./contextBuilder";
 import { StatementsCstNode } from "../nodeclasses/statement";
 import { ResolveState } from "../resolve/state";
 import { Helpers } from "../helpers";
+import { ResolveSearch } from "../resolve/search";
 
 
 export class ContextStatements extends Context{
@@ -98,8 +99,18 @@ export class ContextStatements extends Context{
 			each.collectChildDocSymbols(list);
 		}
 	}
-
-
+	
+	public searchExpression(search: ResolveSearch, moveUp: boolean, before: Context): void {
+		super.searchExpression(search, moveUp, before);
+		for (const each of this._statements) {
+			if (each === before) {
+				break;
+			}
+			each.searchExpression(search, false, before);
+		}
+	}
+	
+	
 	public contextAtPosition(position: Position): Context | undefined {
 		if (!Helpers.isPositionInsideRange(this.range, position)) {
 			return undefined;

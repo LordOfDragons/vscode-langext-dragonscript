@@ -325,7 +325,7 @@ export class ContextClass extends Context{
 		return null;
 	}
 
-	public search(search: ResolveSearch, before: Context | undefined = undefined): void {
+	public search(search: ResolveSearch, before?: Context): void {
 		this._resolveClass?.search(search);
 	}
 	
@@ -345,16 +345,26 @@ export class ContextClass extends Context{
 	}
 	
 	
+	public static thisContext(context: Context): ContextClass | undefined {
+		const parent = context.selfOrParentWithType(Context.ContextType.Class) as ContextClass;
+		return parent?.type == Context.ContextType.Class ? parent : undefined;
+	}
+	
+	public static superContext(context: Context): ContextClass | undefined {
+		const parent = ContextClass.thisContext(context)?.extends?.resolve as ResolveClass;
+		return parent?.type == ResolveType.Type.Class ? parent.context : undefined;
+	}
+	
 	public static createCompletionItemThisSuper(context: Context, range: Range): CompletionItem[] {
 		let items: CompletionItem[] = [];
 		
-		const parent = context.selfOrParentWithType(Context.ContextType.Class) as ContextClass;
-		if (parent?.type == Context.ContextType.Class && parent?.resolveClass) {
+		const parent = ContextClass.thisContext(context);
+		if (parent?.resolveClass) {
 			items.push(parent.resolveClass.createCompletionItemThis(range));
 			
-			const parent2 = parent.extends?.resolve as ResolveType;
-			if (parent2?.type == ResolveType.Type.Class) {
-				items.push(parent2.createCompletionItemSuper(range));
+			const parent2 = ContextClass.superContext(context);
+			if (parent2?.resolveClass) {
+				items.push(parent2?.resolveClass.createCompletionItemSuper(range));
 			}
 		}
 		

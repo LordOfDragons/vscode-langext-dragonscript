@@ -199,7 +199,7 @@ export class ContextNamespace extends Context{
 		return null;
 	}
 
-	public search(search: ResolveSearch, before: Context | undefined = undefined): void {
+	public search(search: ResolveSearch, before?: Context): void {
 		this._resolveNamespace?.search(search);
 	}
 	

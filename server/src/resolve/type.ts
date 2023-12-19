@@ -175,7 +175,7 @@ export class ResolveType{
 		return {label: this._name,
 			sortText: this._name,
 			filterText: this._name,
-			detail: `${this.completionItemTitle}: ${this.resolveTextShort}`,
+			detail: `${this.completionItemTitle}: ${this.fullyQualifiedName}`,
 			kind: this.completionItemKind};
 	}
 	
@@ -189,7 +189,7 @@ export class ResolveType{
 	
 	public createCompletionItemThis(range: Range): CompletionItem {
 		return {label: 'this',
-			detail: `${this.resolveTextShort}`,
+			detail: `${this.completionItemTitle} ${this.fullyQualifiedName}`,
 			kind: CompletionItemKind.Keyword,
 			insertTextFormat: InsertTextFormat.PlainText,
 			textEdit: TextEdit.replace(range, 'this')};
@@ -197,7 +197,7 @@ export class ResolveType{
 	
 	public createCompletionItemSuper(range: Range): CompletionItem {
 		return {label: 'super',
-			detail: `${this.resolveTextShort}`,
+			detail: `${this.completionItemTitle} ${this.fullyQualifiedName}`,
 			kind: CompletionItemKind.Keyword,
 			insertTextFormat: InsertTextFormat.PlainText,
 			textEdit: TextEdit.replace(range, 'super')};

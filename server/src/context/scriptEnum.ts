@@ -301,7 +301,7 @@ export class ContextEnumeration extends Context{
 		return new HoverInfo(content, this._name.range);
 	}
 
-	public search(search: ResolveSearch, before: Context | undefined = undefined): void {
+	public search(search: ResolveSearch, before?: Context): void {
 		this._resolveEnum?.search(search);
 	}
 	

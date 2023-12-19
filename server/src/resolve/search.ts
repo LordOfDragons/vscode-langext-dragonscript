@@ -54,7 +54,9 @@ export class ResolveSearch {
 			this.onlyFunctions = copy.onlyFunctions;
 			this.ignoreVariables = copy.ignoreVariables;
 			this.ignoreFunctions = copy.ignoreFunctions;
+			this.ignoreShadowedFunctions = copy.ignoreShadowedFunctions;
 			this.onlyStatic = copy.onlyStatic;
+			this.ignoreStatic = copy.ignoreStatic;
 			this.allMatchingTypes = copy.allMatchingTypes;
 			this.signature = copy.signature;
 			this.allowPartialMatch = copy.allowPartialMatch;
@@ -85,6 +87,9 @@ export class ResolveSearch {
 	
 	/** Ignore functions. */
 	public ignoreFunctions: boolean = false;
+	
+	/** Ignore shadowed functions. */
+	public ignoreShadowedFunctions: boolean = false;
 	
 	/** Only static members. */
 	public onlyStatic: boolean = false;
@@ -274,6 +279,12 @@ export class ResolveSearch {
 			&& rfunction.context?.type == Context.ContextType.Function
 			&& (rfunction.context as ContextFunction).functionType == ContextFunction.Type.Constructor) {
 				return false;
+		}
+		if (this.ignoreShadowedFunctions) {
+			if (this._functionsAll.find(f => f.name == rfunction.name
+			&& f.signature.matchesExactly(rfunction.signature))) {
+				return false;
+			}
 		}
 		return true;
 	}

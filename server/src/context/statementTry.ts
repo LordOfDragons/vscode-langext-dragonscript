@@ -133,7 +133,7 @@ export class ContextTryCatch extends Context {
 		return `${this._typename} ${this._variable}`;
 	}
 	
-	public search(search: ResolveSearch, before: Context | undefined = undefined): void {
+	public search(search: ResolveSearch, before?: Context): void {
 		if (search.onlyTypes) {
 			return;
 		}

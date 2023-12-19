@@ -247,7 +247,7 @@ export class ContextInterface extends Context{
 		return null;
 	}
 
-	public search(search: ResolveSearch, before: Context | undefined = undefined): void {
+	public search(search: ResolveSearch, before?: Context): void {
 		this._resolveInterface?.search(search);
 	}
 	

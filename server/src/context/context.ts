@@ -236,7 +236,14 @@ export class Context {
 	}
 	
 	
-	public search(search: ResolveSearch, before: Context | undefined = undefined): void {
+	public search(search: ResolveSearch, before?: Context): void {
+	}
+	
+	public searchExpression(search: ResolveSearch, moveUp: boolean, before: Context): void {
+		if (moveUp) {
+			this.parent?.searchExpression(search, true, before);
+		}
+		this.search(search, before);
 	}
 	
 	protected requireCastable(state: ResolveState, context: Context | undefined,
