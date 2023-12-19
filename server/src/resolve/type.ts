@@ -30,7 +30,7 @@ import { ResolveFunction } from './function';
 import { ResolveVariable } from './variable';
 import { ResolveSearch } from './search';
 import { ResolveSignature } from './signature';
-import { DiagnosticRelatedInformation, Location } from 'vscode-languageserver';
+import { CompletionItem, CompletionItemKind, DiagnosticRelatedInformation, InsertTextFormat, Location, Range, TextEdit } from 'vscode-languageserver';
 import { Context } from '../context/context';
 import { MatchableName } from '../matchableName';
 import { ContextFunction } from '../context/classFunction';
@@ -168,8 +168,42 @@ export class ResolveType{
 	public resolveLocation(): Location[] {
 		return [];
 	}
-
-
+	
+	
+	
+	public createCompletionItem(): CompletionItem {
+		return {label: this._name,
+			sortText: this._name,
+			filterText: this._name,
+			detail: `${this.completionItemTitle}: ${this.resolveTextShort}`,
+			kind: this.completionItemKind};
+	}
+	
+	protected get completionItemTitle(): string {
+		return 'type';
+	}
+	
+	protected get completionItemKind(): CompletionItemKind {
+		return CompletionItemKind.Module;
+	}
+	
+	public createCompletionItemThis(range: Range): CompletionItem {
+		return {label: 'this',
+			detail: `${this.resolveTextShort}`,
+			kind: CompletionItemKind.Keyword,
+			insertTextFormat: InsertTextFormat.PlainText,
+			textEdit: TextEdit.replace(range, 'this')};
+	}
+	
+	public createCompletionItemSuper(range: Range): CompletionItem {
+		return {label: 'super',
+			detail: `${this.resolveTextShort}`,
+			kind: CompletionItemKind.Keyword,
+			insertTextFormat: InsertTextFormat.PlainText,
+			textEdit: TextEdit.replace(range, 'super')};
+	}
+	
+	
 	public parent?: ResolveType;
 
 	public removeFromParent(): void {
@@ -328,20 +362,21 @@ export class ResolveType{
 			if (!search.onlyFunctions && !search.ignoreVariables) {
 				if (search.matchableName) {
 					for (const [key, v] of this.variables) {
-						if (search.matchableName.matches(v.matchableName)) {
-							search.variables.push(v);
+						if (!search.matchableName.matches(v.matchableName)) {
+							continue;
 						}
+						search.addVariable(v);
 					}
 					
 				} else if (search.name) {
 					let v = this.variable(search.name);
 					if (v) {
-						search.variables.push(v);
+						search.addVariable(v);
 					}
 					
 				} else {
 					for (const [key, v] of this.variables) {
-						search.variables.push(v);
+						search.addVariable(v);
 					}
 				}
 			}
@@ -351,19 +386,25 @@ export class ResolveType{
 					if (search.matchableName) {
 						for (const [key, fg] of this.functionGroups) {
 							if (search.matchableName.matches(fg.matchableName)) {
-								this.searchFunctionGroup(search, fg);
+								for (const each of fg.functions) {
+									search.addFunction(each);
+								}
 							}
 						}
 						
 					} else if (search.name) {
 						let fg = this.functionGroup(search.name);
 						if (fg) {
-							this.searchFunctionGroup(search, fg);
+							for (const each of fg.functions) {
+								search.addFunction(each);
+							}
 						}
 						
 					} else {
 						for (const [key, fg] of this.functionGroups) {
-							this.searchFunctionGroup(search, fg);
+							for (const each of fg.functions) {
+								search.addFunction(each);
+							}
 						}
 					}
 				}
@@ -383,54 +424,6 @@ export class ResolveType{
 		}
 		
 		search.ignoreConstructors = ignoreConstructors;
-	}
-	
-	protected searchFunctionGroup(search: ResolveSearch, group: ResolveFunctionGroup): void {
-		if (search.signature) {
-			for (const each of group.functions) {
-				const match = search.signature.matches(each.signature);
-				switch (match) {
-					case ResolveSignature.Match.Full:
-						search.functionsFull.push(each);
-						break;
-						
-					case ResolveSignature.Match.Partial:
-						if (search.allowPartialMatch && !search.functionsPartial.find(
-							(each2) => each.signature.matchesExactly(each2.signature))
-						) {
-							search.functionsPartial.push(each);
-						}
-						break;
-						
-					case ResolveSignature.Match.Wildcard:
-						if (search.allowWildcardMatch) {
-							search.functionsWildcard.push(each);
-						}
-						break;
-						
-					default:
-						break;
-				}
-			}
-			
-		} else {
-			if (search.ignoreConstructors) {
-				for (const each of group.functions) {
-					const c = each.context;
-					if (c?.type == Context.ContextType.Function
-					&& (c as ContextFunction).functionType == ContextFunction.Type.Constructor) {
-						continue;
-					}
-					
-					search.functionsAll.push(each);
-				}
-				
-			} else {
-				for (const each of group.functions) {
-					search.functionsAll.push(each);
-				}
-			}
-		}
 	}
 	
 	protected searchSelf(search: ResolveSearch): void {

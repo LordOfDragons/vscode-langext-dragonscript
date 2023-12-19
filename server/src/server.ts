@@ -391,28 +391,12 @@ connection.onCompletion(
 			}
 			*/
 			
-			return context?.completion(params.position) || [];
+			return context?.completion(document, params.position) || [];
 			
 		} catch (error) {
 			logError(error);
 			return [];
 		}
-		
-		// The pass parameter contains the position of the text document in
-		// which code complete got requested. For the example we ignore this
-		// info and always provide the same completion items.
-		return [
-			{
-				label: 'TypeScript',
-				kind: CompletionItemKind.Text,
-				data: 1
-			},
-			{
-				label: 'JavaScript',
-				kind: CompletionItemKind.Text,
-				data: 2
-			}
-		];
 	}
 );
 

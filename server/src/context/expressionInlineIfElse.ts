@@ -93,6 +93,7 @@ export class ContextInlineIfElse extends Context{
 		
 		this.expressionType = this._ifvalue.expressionType;
 		this.expressionAutoCast = this._ifvalue.expressionAutoCast;
+		this.expressionTypeType = this._ifvalue.expressionTypeType;
 		
 		this.requireCastable(state, this._condition, ResolveNamespace.classBool, 'Condition');
 		this.requireCastable(state, this._elsevalue, this._ifvalue.expressionType, 'Else');

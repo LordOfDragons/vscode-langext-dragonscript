@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-import { Location } from 'vscode-languageserver';
+import { CompletionItemKind, Location } from 'vscode-languageserver';
 import { Context } from '../context/context';
 import { ContextNamespace } from '../context/namespace';
 import { ResolveClass } from './class';
@@ -175,6 +175,10 @@ export class ResolveNamespace extends ResolveType {
 		return rootNamespace.class('Exception')!;
 	}
 	
+	public static get classVoid(): ResolveClass {
+		return rootNamespace.class('void')!;
+	}
+	
 	
 	public resolveLocation(): Location[] {
 		let list: Location[] = [];
@@ -185,6 +189,14 @@ export class ResolveNamespace extends ResolveType {
 			}
 		}
 		return list;
+	}
+	
+	protected get completionItemTitle(): string {
+		return 'namespace';
+	}
+	
+	protected get completionItemKind(): CompletionItemKind {
+		return CompletionItemKind.Module;
 	}
 
 

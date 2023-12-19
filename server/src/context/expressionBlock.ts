@@ -154,6 +154,7 @@ export class ContextBlock extends Context{
 	
 	public resolveStatements(state: ResolveState): void {
 		this.expressionType = ResolveNamespace.classBlock;
+		this.expressionTypeType = Context.ExpressionType.Object;
 		
 		this._resolveFunction?.dispose();
 		this._resolveFunction = undefined;

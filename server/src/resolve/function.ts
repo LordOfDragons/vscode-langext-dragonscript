@@ -22,7 +22,8 @@
  * SOFTWARE.
  */
 
-import { DiagnosticRelatedInformation } from 'vscode-languageserver';
+import { CompletionItem, CompletionItemKind, DiagnosticRelatedInformation, InsertTextFormat, Range, TextEdit } from 'vscode-languageserver';
+import { TextDocument } from 'vscode-languageserver-textdocument';
 import { ContextFunction } from '../context/classFunction';
 import { Context } from '../context/context';
 import { ContextBlock } from '../context/expressionBlock';
@@ -65,10 +66,7 @@ export class ResolveFunction{
 		}
 		
 		for (const each of context.arguments) {
-			var type = each.typename.resolve;
-			if (!type) {
-				type = ResolveNamespace.root.class('void');
-			}
+			const type = each.typename.resolve ?? ResolveNamespace.classVoid;
 			this._signature.addArgument(type, each.name.name);
 		}
 	}
@@ -124,6 +122,17 @@ export class ResolveFunction{
 	public get signature(): ResolveSignature {
 		return this._signature;
 	}
+	
+	public get typeModifiers(): Context.TypeModifierSet | undefined {
+		if (this.context) {
+			if (this.context.type == Context.ContextType.Function) {
+				return (this.context as ContextFunction).typeModifiers;
+			} else {
+				return Context.defaultTypeModifiers;
+			}
+		}
+		return undefined;
+	}
 
 	public removeFromParent(): void {
 		this.parent?.removeFunction(this);
@@ -173,5 +182,71 @@ export class ResolveFunction{
 	
 	protected updateReportInfoText(): string {
 		return this._context?.reportInfoText ?? this._name;
+	}
+	
+	public createCompletionItem(document: TextDocument, range: Range): CompletionItem {
+		var text: string = this._name;
+		var title: string;
+		
+		if (this._context) {
+			switch (this._context.type) {
+			case Context.ContextType.Function:{
+				const ct = this._context as ContextFunction;
+				switch (ct.functionType) {
+				case ContextFunction.Type.Constructor:
+					title = 'constructor';
+					text = text + this.createSnippetSignature();
+					break;
+					
+				case ContextFunction.Type.Destructor:
+					title = 'destructor';
+					text = text + '()';
+					break;
+					
+				case ContextFunction.Type.Operator:
+					title = 'operator';
+					break;
+					
+				default:
+					title = 'function';
+					text = text + this.createSnippetSignature();
+					break;
+				}
+				}break;
+				
+			case Context.ContextType.Block:
+				title = 'block';
+				text = text + this.createSnippetSignature();
+				break;
+				
+			default:
+				title = 'function';
+			}
+		} else {
+			title = 'function';
+		}
+		
+		return {label: this._name,
+			sortText: this._name,
+			filterText: this._name,
+			detail: `${title}: ${this.context?.resolveTextShort}`,
+			kind: CompletionItemKind.Function,
+			insertTextFormat: InsertTextFormat.Snippet,
+			textEdit: TextEdit.replace(range, text)};
+	}
+	
+	public createSnippetSignature(): string {
+		var snippet: string[] = ['('];
+		var tabIndex: number = 1;
+		
+		for (const each of this._signature.arguments) {
+			if (tabIndex > 1) {
+				snippet.push(', ');
+			}
+			snippet.push(`\${${tabIndex}:${each.name}}`);
+			tabIndex++;
+		}
+		snippet.push(')');
+		return snippet.join('');
 	}
 }

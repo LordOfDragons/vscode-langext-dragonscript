@@ -25,7 +25,7 @@
 import { Context } from "./context"
 import { DeclareClassCstNode } from "../nodeclasses/declareClass";
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
-import { Definition, DocumentSymbol, Hover, Position, RemoteConsole, SymbolKind } from "vscode-languageserver"
+import { CompletionItem, Definition, DocumentSymbol, Hover, Position, Range, RemoteConsole, SymbolKind } from "vscode-languageserver"
 import { TypeName } from "./typename"
 import { ContextInterface } from "./scriptInterface";
 import { ContextEnumeration } from "./scriptEnum";
@@ -40,6 +40,7 @@ import { ResolveState } from "../resolve/state";
 import { ResolveType } from "../resolve/type";
 import { Helpers } from "../helpers";
 import { ResolveSearch } from "../resolve/search";
+import { TextDocument } from "vscode-languageserver-textdocument";
 
 
 export class ContextClass extends Context{
@@ -342,8 +343,25 @@ export class ContextClass extends Context{
 		}
 		return super.definition(position);
 	}
-
-
+	
+	
+	public static createCompletionItemThisSuper(context: Context, range: Range): CompletionItem[] {
+		let items: CompletionItem[] = [];
+		
+		const parent = context.selfOrParentWithType(Context.ContextType.Class) as ContextClass;
+		if (parent?.type == Context.ContextType.Class && parent?.resolveClass) {
+			items.push(parent.resolveClass.createCompletionItemThis(range));
+			
+			const parent2 = parent.extends?.resolve as ResolveType;
+			if (parent2?.type == ResolveType.Type.Class) {
+				items.push(parent2.createCompletionItemSuper(range));
+			}
+		}
+		
+		return items;
+	}
+	
+	
 	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
 		console.log(`${prefix}Class: ${this._typeModifiers} ${this._name} ${this.logRange}`);
 		if (this._extends) {

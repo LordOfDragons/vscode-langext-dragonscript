@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-import { Definition, DiagnosticRelatedInformation, Location } from 'vscode-languageserver';
+import { CompletionItemKind, Definition, DiagnosticRelatedInformation, Location } from 'vscode-languageserver';
 import { ContextClass } from '../context/scriptClass';
 import { debugLogMessage, debugLogObjProps } from '../server';
 import { ResolveSearch } from './search';
@@ -119,7 +119,15 @@ export class ResolveClass extends ResolveType {
 		const l = this._context?.resolveLocationSelf();
 		return l ? [l] : [];
 	}
-
+	
+	protected get completionItemTitle(): string {
+		return 'class';
+	}
+	
+	protected get completionItemKind(): CompletionItemKind {
+		return CompletionItemKind.Class;
+	}
+	
 	protected onInvalidate(): void {
 		super.onInvalidate();
 	}

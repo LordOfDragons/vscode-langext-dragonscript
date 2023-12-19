@@ -30,6 +30,7 @@ import { Helpers } from "../helpers";
 import { ResolveType } from "../resolve/type";
 import { ResolveSearch } from "../resolve/search";
 import { ResolveSignature, ResolveSignatureArgument } from "../resolve/signature";
+import { TextDocument } from "vscode-languageserver-textdocument";
 
 
 /** Base context. */
@@ -41,6 +42,7 @@ export class Context {
 	public range?: Range
 	public expressionType?: ResolveType;
 	public expressionAutoCast: Context.AutoCast = Context.AutoCast.No;
+	public expressionTypeType: Context.ExpressionType = Context.ExpressionType.Void;
 	protected _resolveTextShort?: string;
 	protected _resolveTextLong?: string[];
 	protected _reportInfoText?: string;
@@ -131,7 +133,7 @@ export class Context {
 		return [];
 	}
 	
-	public completion(position: Position): CompletionItem[] {
+	public completion(document: TextDocument, position: Position): CompletionItem[] {
 		return [];
 	}
 	
@@ -232,8 +234,8 @@ export class Context {
 			*/
 		}
 	}
-
-
+	
+	
 	public search(search: ResolveSearch, before: Context | undefined = undefined): void {
 	}
 	
@@ -293,8 +295,8 @@ export class Context {
 
 		diagnostics.push(diagnostic);
 	}
-
-
+	
+	
 	/** Debug. */
 	log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
 		console.log(`${prefix}Context: ${Context.ContextType[this._type]}`);
@@ -604,5 +606,17 @@ export namespace Context {
 		
 		/** Auto cast value of type int. */
 		ValueInt
+	}
+	
+	/** Expression type. */
+	export enum ExpressionType {
+		/** Expression is neither an object nor a type (void). */
+		Void,
+		
+		/** Expression is an object. */
+		Object,
+		
+		/** Expression is a type. */
+		Type
 	}
 }

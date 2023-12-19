@@ -37,10 +37,8 @@ import { ContextVariable } from "./statementVariable";
 import { ResolveVariable } from "../resolve/variable";
 import { ContextClass } from "./scriptClass";
 import { ContextTryCatch } from "./statementTry";
-import { ResolveClass } from "../resolve/class";
-import { ResolveEnumeration } from "../resolve/enumeration";
-import { ResolveInterface } from "../resolve/interface";
-import { ResolveNamespace } from "../resolve/namespace";
+import { TextDocument } from "vscode-languageserver-textdocument";
+import { ContextConstant } from "./expressionConstant";
 
 
 export class ContextMember extends Context{
@@ -192,19 +190,22 @@ export class ContextMember extends Context{
 		
 		if (matchTypeCount == 0) {
 			state.reportError(this._name.range, `Unknown member ${this._name}`);
-
+			
 		} else {
 			if (this._matches.arguments.length > 0) {
 				this._resolveArgument = this._matches.arguments[0];
 				this.expressionType = this._resolveArgument.typename.resolve as ResolveType;
-
+				this.expressionTypeType = Context.ExpressionType.Object;
+				
 			} else if (this._matches.localVariables.length > 0) {
 				this._resolveLocalVariable = this._matches.localVariables[0];
 				this.expressionType = this._resolveLocalVariable.typename.resolve as ResolveType;
-
+				this.expressionTypeType = Context.ExpressionType.Object;
+				
 			} else if (this._matches.variables.length > 0) {
 				this._resolveVariable = this._matches.variables[0];
 				this.expressionType = this._resolveVariable.variableType;
+				this.expressionTypeType = Context.ExpressionType.Object;
 				
 				const tfcc = state.topScopeFunction?.parent as ContextClass;
 				if (tfcc?.type == Context.ContextType.Class) {
@@ -217,12 +218,13 @@ export class ContextMember extends Context{
 						state.reportError(this._name.range, `Can not access variable ${this._resolveVariable.name}`, ri);
 					}
 				}
-	
+				
 			} else if (this._matches.types.length > 0) {
 				this._resolveType = this._matches.types[0];
 				this.expressionType = this._resolveType;
+				this.expressionTypeType = Context.ExpressionType.Type;
 			}
-
+			
 			/*
 			if (matchTypeCount > 1) {
 				var content = [`Ambigous member ${this._name}. Possible candidates:`];
@@ -308,16 +310,16 @@ export class ContextMember extends Context{
 		return location ? [location] : [];
 	}
 	
-	public completion(position: Position): CompletionItem[] {
+	public completion(document: TextDocument, position: Position): CompletionItem[] {
+		var range: Range | undefined = this._name?.range ?? Range.create(position, position);
 		const search = new ResolveSearch();
 		let items: CompletionItem[] = [];
 		
 		if (this._object) {
 			var objtype = this._object.expressionType;
 			if (objtype) {
-				items.push({label: `Member ${objtype.resolveTextShort}`, kind: CompletionItemKind.Text, data: 1});
-				// TODO if this._object is a type search only for functions
-				//search.onlyFunctions = true;
+				// TODO if this._object is a type search only for static members
+				//search.onlyStatic = true;
 				
 				objtype.search(search);
 				search.removeType(objtype);
@@ -330,6 +332,9 @@ export class ContextMember extends Context{
 			if (this.expressionType) {
 				items.push({label: `Expression ${this.expressionType.resolveTextShort}`, kind: CompletionItemKind.Text, data: 1});
 				//state.search(search);
+				items.push(...ContextClass.createCompletionItemThisSuper(this, range));
+				items.push(...ContextConstant.createCompletionItemBooleans(range));
+				items.push(ContextConstant.createCompletionItemNull(range));
 			}
 		}
 		
@@ -340,8 +345,7 @@ export class ContextMember extends Context{
 				label: each.name.name + "(lv): " + each.resolveTextShort,
 				sortText: each.name.name,
 				filterText: each.name.name,
-				kind: CompletionItemKind.Variable,
-				data: 1});
+				kind: CompletionItemKind.Variable});
 		}
 		
 		for (const each of search.arguments) {
@@ -349,21 +353,14 @@ export class ContextMember extends Context{
 				label: each.simpleName + "(a): " + each.resolveTextShort,
 				sortText: each.simpleName,
 				filterText: each.simpleName,
-				kind: CompletionItemKind.Variable,
-				data: 1});
+				kind: CompletionItemKind.Variable});
 		}
 		
 		for (const each of search.functionsAll) {
 			if (each.context) {
 				const tfrc = (this.selfOrParentWithType(Context.ContextType.Class) as ContextClass)?.resolveClass;
 				if (tfrc && each.canAccess(tfrc)) {
-					items.push({
-						label: each.name,
-						sortText: each.name,
-						filterText: each.name,
-						detail: each.context.resolveTextShort,
-						kind: CompletionItemKind.Function,
-						data: 1});
+					items.push(each.createCompletionItem(document, range));
 				}
 			}
 		}
@@ -372,61 +369,13 @@ export class ContextMember extends Context{
 			if (each.context) {
 				const tfrc = (this.selfOrParentWithType(Context.ContextType.Class) as ContextClass)?.resolveClass;
 				if (tfrc && each.canAccess(tfrc)) {
-					var title: string = 'variable';
-					
-					const typemods = each.typeModifiers;
-					if (typemods) {
-						if (typemods.isStatic && typemods.isFixed) {
-							title = 'constant';
-						}
-					}
-					
-					items.push({
-						label: each.name,
-						sortText: each.name,
-						filterText: each.name,
-						detail: `${title}: ${each.resolveTextShort}`,
-						kind: CompletionItemKind.Field,
-						data: 1});
+					items.push(each.createCompletionItem(document, range));
 				}
 			}
 		}
 		
 		for (const each of search.types) {
-			var kind: CompletionItemKind | undefined;
-			var detail: string | undefined;
-			
-			switch (each.type) {
-			case ResolveType.Type.Class:
-				kind = CompletionItemKind.Class;
-				detail = `class: ${each.name}`;
-				break;
-				
-			case ResolveType.Type.Enumeration:
-				kind = CompletionItemKind.Enum;
-				detail = `enumeration: ${each.name}`;
-				break;
-				
-			case ResolveType.Type.Interface:
-				kind = CompletionItemKind.Interface;
-				detail = `interface: ${each.name}`;
-				break;
-				
-			case ResolveType.Type.Namespace:
-				kind = CompletionItemKind.Module;
-				detail = `namespace: ${each.name}`;
-				break;
-			}
-			
-			if (kind) {
-				items.push({
-					label: each.name,
-					sortText: each.name,
-					filterText: each.name,
-					detail: detail,
-					kind: kind,
-					data: 1});
-			}
+			items.push(each.createCompletionItem());
 		}
 		
 		return items;

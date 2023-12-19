@@ -30,6 +30,7 @@ import { ResolveState } from "../resolve/state";
 import { Helpers } from "../helpers";
 import { ResolveSignature, ResolveSignatureArgument } from "../resolve/signature";
 import { ResolveType } from "../resolve/type";
+import { ResolveNamespace } from "../resolve/namespace";
 
 
 export class ContextReturn extends Context{
@@ -82,7 +83,7 @@ export class ContextReturn extends Context{
 		const frt = cbf.returnType?.resolve as ResolveType;
 		const ov = this._value;
 		
-		if (frt && frt.fullyQualifiedName != 'void') {
+		if (frt && frt != ResolveNamespace.classVoid) {
 			if (ov) {
 				const tv = ov?.expressionType;
 				if (ResolveSignatureArgument.typeMatches(tv, frt, ov.expressionAutoCast) == ResolveSignature.Match.No) {

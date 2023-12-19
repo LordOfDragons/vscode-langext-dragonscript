@@ -553,6 +553,7 @@ export class ContextFunctionCall extends Context{
 				} else {
 					this.expressionType = state.topScopeClass?.resolveClass;
 				}
+				this.expressionTypeType = Context.ExpressionType.Object;
 				break;
 		
 			case ContextFunctionCall.FunctionType.equals:
@@ -563,10 +564,12 @@ export class ContextFunctionCall extends Context{
 			case ContextFunctionCall.FunctionType.castable:
 			case ContextFunctionCall.FunctionType.typeof:
 				this.expressionType = ResolveNamespace.classBool;
+				this.expressionTypeType = Context.ExpressionType.Object;
 				break;
 
 			case ContextFunctionCall.FunctionType.cast:
 				this.expressionType = this._castType?.resolve as ResolveType;
+				this.expressionTypeType = Context.ExpressionType.Object;
 				break;
 				
 			default:
@@ -584,6 +587,8 @@ export class ContextFunctionCall extends Context{
 					}
 				}
 				this.expressionType = this._matchFunction?.returnType;
+				this.expressionTypeType = this.expressionType != ResolveNamespace.classVoid
+					? Context.ExpressionType.Object : Context.ExpressionType.Void;
 				break;
 		}
 		

@@ -54,6 +54,7 @@ export class ResolveSearch {
 			this.onlyFunctions = copy.onlyFunctions;
 			this.ignoreVariables = copy.ignoreVariables;
 			this.ignoreFunctions = copy.ignoreFunctions;
+			this.onlyStatic = copy.onlyStatic;
 			this.allMatchingTypes = copy.allMatchingTypes;
 			this.signature = copy.signature;
 			this.allowPartialMatch = copy.allowPartialMatch;
@@ -84,6 +85,9 @@ export class ResolveSearch {
 	
 	/** Ignore functions. */
 	public ignoreFunctions: boolean = false;
+	
+	/** Only static members. */
+	public onlyStatic: boolean = false;
 	
 	/** Find all matching types instead of the first one. */
 	public allMatchingTypes: boolean = false;
@@ -159,18 +163,55 @@ export class ResolveSearch {
 		return this._types;
 	}
 	
-	public addType(type: ResolveType): void {
-		if (this.allMatchingTypes) {
-			if (!this._types.includes(type)) {
-				this._types.push(type);
+	
+	public addVariable(variable: ResolveVariable): void {
+		if (!this.acceptVariable(variable)) {
+			return;
+		}
+		
+		this._variables.push(variable);
+	}
+	
+	public addFunction(rfunction: ResolveFunction): void {
+		if (!this.acceptFunction(rfunction)) {
+			return;
+		}
+		
+		if (this.signature) {
+			const match = this.signature.matches(rfunction.signature);
+			switch (match) {
+				case ResolveSignature.Match.Full:
+					this._functionsFull.push(rfunction);
+					break;
+					
+				case ResolveSignature.Match.Partial:
+					if (this.allowPartialMatch && !this._functionsPartial.find(
+						f => rfunction.signature.matchesExactly(f.signature))) {
+							this._functionsPartial.push(rfunction);
+					}
+					break;
+					
+				case ResolveSignature.Match.Wildcard:
+					if (this.allowWildcardMatch) {
+						this._functionsWildcard.push(rfunction);
+					}
+					break;
 			}
-			
 		} else {
-			if (this._types.length == 0) {
-				this._types.push(type);
-			}
+			this._functionsAll.push(rfunction);
 		}
 	}
+	
+	public addType(type: ResolveType): void {
+		if (!this.acceptType(type)) {
+			return;
+		}
+		
+		if (!this._types.includes(type)) {
+			this._types.push(type);
+		}
+	}
+	
 	
 	/** Remove all shadows functions. */
 	public removeShadowedFunctions(): void {
@@ -198,6 +239,37 @@ export class ResolveSearch {
 		if (index != -1) {
 			this._types.splice(index, 1);
 		}
+	}
+	
+	
+	/** Accept variable using non-name related filters. */
+	public acceptVariable(variable: ResolveVariable): boolean {
+		if (this.onlyStatic && !variable.typeModifiers?.isStatic) {
+			return false;
+		}
+		return true;
+	}
+	
+	/** Accept function using non-name related filters. */
+	public acceptFunction(rfunction: ResolveFunction): boolean {
+		if (this.onlyStatic && !rfunction.typeModifiers?.isStatic) {
+			return false;
+		}
+		if (this.ignoreConstructors
+			&& rfunction.context?.type == Context.ContextType.Function
+			&& (rfunction.context as ContextFunction).functionType == ContextFunction.Type.Constructor) {
+				return false;
+		}
+		return true;
+	}
+	
+	/** Accept type using non-name related filters. */
+	public acceptType(type: ResolveType): boolean {
+		if (!this.allMatchingTypes && this._types.length > 0) {
+			return false;
+		}
+		
+		return true;
 	}
 	
 	

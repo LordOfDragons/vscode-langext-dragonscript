@@ -23,7 +23,7 @@
  */
 
 import { Context } from "./context";
-import { Hover, Position, RemoteConsole } from "vscode-languageserver";
+import { CompletionItem, CompletionItemKind, Hover, InsertTextFormat, Position, Range, RemoteConsole, TextEdit } from "vscode-languageserver";
 import { ExpressionConstantCstNode } from "../nodeclasses/expressionObject";
 import { Identifier } from "./identifier";
 import { ResolveState } from "../resolve/state";
@@ -176,9 +176,10 @@ export class ContextConstant extends Context{
 		}
 
 		this.expressionType = this._resolveType;
+		this.expressionTypeType = Context.ExpressionType.Object;
 	}
-
-
+	
+	
 	public contextAtPosition(position: Position): Context | undefined {
 		if (!Helpers.isPositionInsideRange(this.range, position)) {
 			return undefined;
@@ -250,7 +251,26 @@ export class ContextConstant extends Context{
 
 		return new HoverInfo([content.join('')], this._name.range);
 	}
-
+	
+	
+	public static createCompletionItemBooleans(range: Range): CompletionItem[] {
+		let items: CompletionItem[] = [];
+		for (const each of ['true', 'false']) {
+			items.push({label: each,
+				kind: CompletionItemKind.Keyword,
+				insertTextFormat: InsertTextFormat.PlainText,
+				textEdit: TextEdit.replace(range, each)});
+		};
+		return items;
+	}
+	
+	public static createCompletionItemNull(range: Range): CompletionItem {
+		return {label: 'null',
+				kind: CompletionItemKind.Keyword,
+				insertTextFormat: InsertTextFormat.PlainText,
+				textEdit: TextEdit.replace(range, 'null')};
+	}
+	
 	
 	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
 		console.log(`${prefix}Constant ${this._name} ${this.logRange}`);

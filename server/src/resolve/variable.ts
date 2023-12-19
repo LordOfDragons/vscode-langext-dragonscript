@@ -22,7 +22,8 @@
  * SOFTWARE.
  */
 
-import { DiagnosticRelatedInformation } from 'vscode-languageserver';
+import { CompletionItem, CompletionItemKind, DiagnosticRelatedInformation, InsertTextFormat, Range, TextEdit } from 'vscode-languageserver';
+import { TextDocument } from 'vscode-languageserver-textdocument';
 import { ContextClassVariable } from '../context/classVariable';
 import { Context } from '../context/context';
 import { ContextEnumEntry, ContextEnumeration } from '../context/scriptEnum';
@@ -188,5 +189,30 @@ export class ResolveVariable{
 		if (info) {
 			relatedInformation.push(info);
 		}
+	}
+	
+	public createCompletionItem(document: TextDocument, range: Range): CompletionItem {
+		var kind: CompletionItemKind = CompletionItemKind.Field;
+		var title: string = 'variable';
+		var text: string = this._name;
+		
+		const typemods = this.typeModifiers;
+		if (typemods) {
+			if (typemods.isStatic && typemods.isFixed) {
+				title = 'constant';
+				
+				if (this.parent?.type == ResolveType.Type.Enumeration) {
+					kind = CompletionItemKind.EnumMember;
+				}
+			}
+		}
+		
+		return {label: this._name,
+			sortText: this._name,
+			filterText: this._name,
+			detail: `${title}: ${this.resolveTextShort}`,
+			kind: kind,
+			insertTextFormat: InsertTextFormat.Snippet,
+			textEdit: TextEdit.replace(range, text)};
 	}
 }

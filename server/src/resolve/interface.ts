@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-import { DiagnosticRelatedInformation, Location } from 'vscode-languageserver';
+import { CompletionItemKind, DiagnosticRelatedInformation, Location } from 'vscode-languageserver';
 import { ContextInterface } from '../context/scriptInterface';
 import { ResolveNamespace } from './namespace';
 import { ResolveSearch } from './search';
@@ -105,6 +105,14 @@ export class ResolveInterface extends ResolveType {
 	public resolveLocation(): Location[] {
 		const l = this._context?.resolveLocationSelf();
 		return l ? [l] : [];
+	}
+	
+	protected get completionItemTitle(): string {
+		return 'interface';
+	}
+	
+	protected get completionItemKind(): CompletionItemKind {
+		return CompletionItemKind.Interface;
 	}
 
 	protected onInvalidate(): void {
