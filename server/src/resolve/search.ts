@@ -42,7 +42,7 @@ export class ResolveSearch {
 	protected _functionsPartial: ResolveFunction[] = [];
 	protected _functionsWildcard: ResolveFunction[] = [];
 	protected _functionsAll: ResolveFunction[] = [];
-	protected _types: ResolveType[] = [];
+	protected _types: Set<ResolveType> = new Set();
 
 
 	constructor (copy?: ResolveSearch) {
@@ -50,6 +50,7 @@ export class ResolveSearch {
 			this.name = copy.name;
 			this.matchableName = copy.matchableName;
 			this.onlyTypes = copy.onlyTypes;
+			this.ignoreTypes = copy.ignoreTypes;
 			this.onlyVariables = copy.onlyVariables;
 			this.onlyFunctions = copy.onlyFunctions;
 			this.ignoreVariables = copy.ignoreVariables;
@@ -75,6 +76,9 @@ export class ResolveSearch {
 	
 	/** Search only types. */
 	public onlyTypes: boolean = false;
+	
+	/** Ignore types. */
+	public ignoreTypes: boolean = false;
 	
 	/** Search only variables. */
 	public onlyVariables: boolean = false;
@@ -129,7 +133,7 @@ export class ResolveSearch {
 		this._functionsPartial.splice(0);
 		this._functionsWildcard.splice(0);
 		this._functionsAll.splice(0);
-		this._types.splice(0);
+		this._types.clear();
 		this.signature = undefined;
 	}
 	
@@ -167,7 +171,7 @@ export class ResolveSearch {
 		return this._functionsAll;
 	}
 	
-	public get types(): ResolveType[] {
+	public get types(): Set<ResolveType> {
 		return this._types;
 	}
 	
@@ -215,9 +219,7 @@ export class ResolveSearch {
 			return;
 		}
 		
-		if (!this._types.includes(type)) {
-			this._types.push(type);
-		}
+		this._types.add(type);
 	}
 	
 	
@@ -243,10 +245,7 @@ export class ResolveSearch {
 	
 	/** Remove type if present. */
 	public removeType(type: ResolveType): void {
-		const index = this._types.indexOf(type);
-		if (index != -1) {
-			this._types.splice(index, 1);
-		}
+		this._types.delete(type);
 	}
 	
 	
@@ -291,7 +290,7 @@ export class ResolveSearch {
 	
 	/** Accept type using non-name related filters. */
 	public acceptType(type: ResolveType): boolean {
-		if (!this.allMatchingTypes && this._types.length > 0) {
+		if (!this.allMatchingTypes && this._types.size > 0) {
 			return false;
 		}
 		return true;
@@ -302,9 +301,9 @@ export class ResolveSearch {
 	public get matchCount(): integer {
 		return this._localVariables.length + this._arguments.length
 			+ this._variables.length + this._functionsFull.length
-			+ this._functionsPartial.length + this._types.length
-			+ this._functionsWildcard.length + this._types.length
-			+ this._functionsAll.length + this._types.length;
+			+ this._functionsPartial.length + this._types.size
+			+ this._functionsWildcard.length + this._types.size
+			+ this._functionsAll.length + this._types.size;
 	}
 	
 	/** Count of match type group found. */
@@ -317,7 +316,7 @@ export class ResolveSearch {
 		count += this._functionsPartial.length;
 		count += this._functionsWildcard.length;
 		count += this._functionsAll.length;
-		count += this._types.length;
+		count += this._types.size;
 		return count;
 	}
 }

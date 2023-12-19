@@ -95,7 +95,8 @@ export class ContextPinNamespace extends Context{
 			state.pins.push(ns);
 		}
 	}
-
+	
+	
 	public contextAtPosition(position: Position): Context | undefined {
 		if (!Helpers.isPositionInsideRange(this.range, position)) {
 			return undefined;

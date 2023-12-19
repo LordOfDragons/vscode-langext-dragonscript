@@ -138,7 +138,20 @@ export class ContextScript extends Context{
 	public get statements(): Context[] {
 		return this._statements;
 	}
-
+	
+	public lastStatementWithType(type: Context.ContextType, before?: Context): Context | undefined {
+		var found: Context | undefined;
+		for (const each of this._statements) {
+			if (each === before) {
+				break;
+			}
+			if (each.type == type) {
+				found = each;
+			}
+		}
+		return found;
+	}
+	
 	public contextAtPosition(position: Position): Context | undefined {
 		return this.contextAtPositionList(this._statements, position);
 	}

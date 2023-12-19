@@ -341,6 +341,7 @@ export namespace Context {
 		Script,
 		Namespace,
 		PinNamespace,
+		RequiresPackage,
 		Class,
 		Interface,
 		Enumeration,

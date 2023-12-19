@@ -29,11 +29,10 @@ import { ResolveFunctionGroup } from './functionGroup';
 import { ResolveFunction } from './function';
 import { ResolveVariable } from './variable';
 import { ResolveSearch } from './search';
-import { ResolveSignature } from './signature';
-import { CompletionItem, CompletionItemKind, DiagnosticRelatedInformation, InsertTextFormat, Location, Range, TextEdit } from 'vscode-languageserver';
+import { CompletionItem, CompletionItemKind, DiagnosticRelatedInformation, InsertTextFormat, Location, MarkupKind, Position, Range, TextEdit } from 'vscode-languageserver';
 import { Context } from '../context/context';
 import { MatchableName } from '../matchableName';
-import { ContextFunction } from '../context/classFunction';
+import { TextDocument } from 'vscode-languageserver-textdocument';
 
 
 /**
@@ -171,12 +170,28 @@ export class ResolveType{
 	
 	
 	
-	public createCompletionItem(): CompletionItem {
+	public createCompletionItem(range: Range, withPin?: Position): CompletionItem {
+		var documentation: string[] = [];
+		var extraEdits: TextEdit[] = [];
+		
+		if (withPin) {
+			const pin = this.pinNamespace;
+			if (pin) {
+				documentation.push('Requires:');
+				documentation.push('```dragonscript\n' + `pin ${pin}\n` + '```');
+				extraEdits.push(TextEdit.insert(withPin, `\npin ${pin}`));
+			}
+		}
+		
 		return {label: this._name,
 			sortText: this._name,
 			filterText: this._name,
 			detail: `${this.completionItemTitle}: ${this.fullyQualifiedName}`,
-			kind: this.completionItemKind};
+			kind: this.completionItemKind,
+			documentation: {kind: MarkupKind.Markdown, value: documentation.join('  \n')},
+			insertTextFormat: InsertTextFormat.Snippet,
+			textEdit: TextEdit.replace(range, this._name),
+			additionalTextEdits: extraEdits};
 	}
 	
 	protected get completionItemTitle(): string {
@@ -185,6 +200,16 @@ export class ResolveType{
 	
 	protected get completionItemKind(): CompletionItemKind {
 		return CompletionItemKind.Module;
+	}
+	
+	protected get pinNamespace(): string | undefined {
+		if (this.type == ResolveType.Type.Namespace) {
+			return undefined;
+		}
+		if (this.parent?.type != ResolveType.Type.Namespace) {
+			return undefined;
+		}
+		return this.parent?.fullyQualifiedName;
 	}
 	
 	public createCompletionItemThis(range: Range): CompletionItem {
@@ -361,7 +386,7 @@ export class ResolveType{
 		if (!search.onlyTypes) {
 			if (!search.onlyFunctions && !search.ignoreVariables) {
 				if (search.matchableName) {
-					for (const [key, v] of this.variables) {
+					for (const [,v] of this.variables) {
 						if (!search.matchableName.matches(v.matchableName)) {
 							continue;
 						}
@@ -375,7 +400,7 @@ export class ResolveType{
 					}
 					
 				} else {
-					for (const [key, v] of this.variables) {
+					for (const [,v] of this.variables) {
 						search.addVariable(v);
 					}
 				}
@@ -384,7 +409,7 @@ export class ResolveType{
 			if (!search.onlyVariables && !search.ignoreFunctions) {
 				if (search.functionsFull.length == 0 || !search.stopAfterFirstFullMatch) {
 					if (search.matchableName) {
-						for (const [key, fg] of this.functionGroups) {
+						for (const [,fg] of this.functionGroups) {
 							if (search.matchableName.matches(fg.matchableName)) {
 								for (const each of fg.functions) {
 									search.addFunction(each);
@@ -401,7 +426,7 @@ export class ResolveType{
 						}
 						
 					} else {
-						for (const [key, fg] of this.functionGroups) {
+						for (const [,fg] of this.functionGroups) {
 							for (const each of fg.functions) {
 								search.addFunction(each);
 							}
@@ -427,7 +452,7 @@ export class ResolveType{
 	}
 	
 	protected searchSelf(search: ResolveSearch): void {
-		if (search.onlyVariables || search.onlyFunctions) {
+		if (search.onlyVariables || search.onlyFunctions || search.ignoreTypes) {
 			return;
 		}
 		
@@ -442,24 +467,24 @@ export class ResolveType{
 	}
 	
 	protected searchChildTypes(search: ResolveSearch): void {
-		if (search.onlyVariables || search.onlyFunctions) {
+		if (search.onlyVariables || search.onlyFunctions || search.ignoreTypes) {
 			return;
 		}
 		
 		if (search.matchableName) {
-			for (const [key, c] of this.classes) {
+			for (const [,c] of this.classes) {
 				if (search.matchableName.matches(c.matchableName)) {
 					search.addType(c);
 				}
 			}
 			
-			for (const [key, i] of this.interfaces) {
+			for (const [,i] of this.interfaces) {
 				if (search.matchableName.matches(i.matchableName)) {
 					search.addType(i);
 				}
 			}
 			
-			for (const [key, e] of this.enumerations) {
+			for (const [,e] of this.enumerations) {
 				if (search.matchableName.matches(e.matchableName)) {
 					search.addType(e);
 				}
@@ -482,15 +507,15 @@ export class ResolveType{
 			}
 			
 		} else {
-			for (const [key, c] of this.classes) {
+			for (const [,c] of this.classes) {
 				search.addType(c);
 			}
 			
-			for (const [key, i] of this.interfaces) {
+			for (const [,i] of this.interfaces) {
 				search.addType(i);
 			}
 			
-			for (const [key, e] of this.enumerations) {
+			for (const [,e] of this.enumerations) {
 				search.addType(e);
 			}
 		}

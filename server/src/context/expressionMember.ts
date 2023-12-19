@@ -39,6 +39,10 @@ import { ContextClass } from "./scriptClass";
 import { ContextTryCatch } from "./statementTry";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { ContextConstant } from "./expressionConstant";
+import { ResolveNamespace } from "../resolve/namespace";
+import { ContextScript } from "./script";
+import { ContextNamespace } from "./namespace";
+import { RefactoringHelper } from "../refactoringHelper";
 
 
 export class ContextMember extends Context{
@@ -219,8 +223,8 @@ export class ContextMember extends Context{
 					}
 				}
 				
-			} else if (this._matches.types.length > 0) {
-				this._resolveType = this._matches.types[0];
+			} else if (this._matches.types.size > 0) {
+				this._resolveType = this._matches.types.values().next().value;
 				this.expressionType = this._resolveType;
 				this.expressionTypeType = Context.ExpressionType.Type;
 			}
@@ -318,6 +322,9 @@ export class ContextMember extends Context{
 		search.allMatchingTypes = true;
 		search.ignoreShadowedFunctions = true;
 		
+		var visibleTypes: Set<ResolveType> | undefined;
+		var insertPinPosition: Position | undefined;
+		
 		if (this._object) {
 			var objtype = this._object.expressionType;
 			if (objtype) {
@@ -336,15 +343,21 @@ export class ContextMember extends Context{
 				}
 			}
 			
+			visibleTypes = new Set(search.types);
+			
 		} else {
 			this.searchExpression(search, true, this);
 			
-			/*
+			search.onlyTypes = true;
+			
 			const objtype = ContextClass.thisContext(this)?.resolveClass;
 			if (objtype) {
 				objtype.search(search);
 			}
-			*/
+			
+			visibleTypes = new Set(search.types);
+			
+			ResolveNamespace.root.searchGlobalTypes(search);
 			
 			items.push(...ContextClass.createCompletionItemThisSuper(this, range));
 			items.push(...ContextConstant.createCompletionItemBooleans(range));
@@ -386,7 +399,15 @@ export class ContextMember extends Context{
 		}
 		
 		for (const each of search.types) {
-			items.push(each.createCompletionItem());
+			if (!visibleTypes?.has(each)) {
+				if (!insertPinPosition) {
+					insertPinPosition = RefactoringHelper.insertPinPosition(this);
+				}
+				items.push(each.createCompletionItem(range, insertPinPosition));
+				
+			} else {
+				items.push(each.createCompletionItem(range));
+			}
 		}
 		
 		return items;
