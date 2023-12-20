@@ -40,8 +40,6 @@ import { ContextTryCatch } from "./statementTry";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { ContextConstant } from "./expressionConstant";
 import { ResolveNamespace } from "../resolve/namespace";
-import { ContextScript } from "./script";
-import { ContextNamespace } from "./namespace";
 import { RefactoringHelper } from "../refactoringHelper";
 
 
@@ -260,7 +258,7 @@ export class ContextMember extends Context{
 	}
 	
 	
-	protected updateHover(position: Position): Hover | null {
+	protected updateHover(_position: Position): Hover | null {
 		if (!this._name?.range) {
 			return null;
 		}
@@ -296,7 +294,7 @@ export class ContextMember extends Context{
 		return new HoverInfo(content, this._name.range);
 	}
 	
-	public definition(position: Position): Definition {
+	public definition(_position: Position): Definition {
 		if (!this._name?.range) {
 			return this.definitionSelf();
 		}

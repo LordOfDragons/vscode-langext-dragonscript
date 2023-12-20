@@ -203,6 +203,16 @@ export class ContextNamespace extends Context{
 		this._resolveNamespace?.search(search);
 	}
 	
+	public searchExpression(search: ResolveSearch, moveUp: boolean, before: Context): void {
+		super.searchExpression(search, moveUp, before);
+		for (const each of this._statements) {
+			if (each === before) {
+				break;
+			}
+			each.searchExpression(search, false, before);
+		}
+	}
+	
 	public definition(position: Position): Definition {
 		return this._typename.definition(position);
 	}

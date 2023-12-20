@@ -30,6 +30,8 @@ import { HoverInfo } from "../hoverinfo";
 import { ResolveState } from "../resolve/state";
 import { ResolveNamespace } from "../resolve/namespace";
 import { Helpers } from "../helpers";
+import { ResolveSearch } from "../resolve/search";
+import { ResolveType } from "../resolve/type";
 
 
 export class ContextPinNamespace extends Context{
@@ -90,12 +92,19 @@ export class ContextPinNamespace extends Context{
 	}
 
 	protected addPinToState(state: ResolveState): void {
-		const ns = this._typename.lastPart?.resolve;
-		if (ns && ns instanceof ResolveNamespace) {
+		const ns = this._typename.lastPart?.resolve as ResolveNamespace;
+		if (ns?.type == ResolveType.Type.Namespace) {
 			state.pins.push(ns);
 		}
 	}
 	
+	public searchExpression(search: ResolveSearch, moveUp: boolean, before: Context): void {
+		super.searchExpression(search, moveUp, before);
+		const ns = this._typename.lastPart?.resolve as ResolveNamespace;
+		if (ns?.type == ResolveType.Type.Namespace) {
+			ns.search(search);
+		}
+	}
 	
 	public contextAtPosition(position: Position): Context | undefined {
 		if (!Helpers.isPositionInsideRange(this.range, position)) {
