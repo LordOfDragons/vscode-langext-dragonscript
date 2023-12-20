@@ -105,7 +105,9 @@ export class ResolveNamespace extends ResolveType {
 		}
 		
 		this.searchNamespace(search);
-		this.parent?.search(search);
+		if (!search.ignoreNamespaceParents) {
+			this.parent?.search(search);
+		}
 	}
 	
 	/** Search all namespaces and all global classes. */

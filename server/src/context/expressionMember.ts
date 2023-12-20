@@ -41,6 +41,7 @@ import { TextDocument } from "vscode-languageserver-textdocument";
 import { ContextConstant } from "./expressionConstant";
 import { ResolveNamespace } from "../resolve/namespace";
 import { RefactoringHelper } from "../refactoringHelper";
+import { CompletionHelper } from "../completionHelper";
 
 
 export class ContextMember extends Context{
@@ -313,102 +314,13 @@ export class ContextMember extends Context{
 	}
 	
 	public completion(document: TextDocument, position: Position): CompletionItem[] {
-		var range: Range | undefined = this._name?.range ?? Range.create(position, position);
-		let items: CompletionItem[] = [];
-		
-		const search = new ResolveSearch();
-		search.allMatchingTypes = true;
-		search.ignoreShadowedFunctions = true;
-		
-		var visibleTypes: Set<ResolveType> | undefined;
-		var insertPinPosition: Position | undefined;
+		const range = this._name?.range ?? Range.create(position, position);
 		
 		if (this._object) {
-			var objtype = this._object.expressionType;
-			if (objtype) {
-				switch (this._object.expressionTypeType) {
-				case Context.ExpressionType.Object:
-					search.ignoreStatic = true;
-					objtype.search(search);
-					search.removeType(objtype);
-					break;
-					
-				case Context.ExpressionType.Type:
-					search.onlyStatic = true;
-					objtype.search(search);
-					search.removeType(objtype);
-					break;
-				}
-			}
-			
-			visibleTypes = new Set(search.types);
-			
+			return CompletionHelper.createObject(range, this, this._object);
 		} else {
-			this.searchExpression(search, true, this);
-			
-			search.onlyTypes = true;
-			
-			const objtype = ContextClass.thisContext(this)?.resolveClass;
-			if (objtype) {
-				objtype.search(search);
-			}
-			
-			visibleTypes = new Set(search.types);
-			
-			ResolveNamespace.root.searchGlobalTypes(search);
-			
-			items.push(...ContextClass.createCompletionItemThisSuper(this, range));
-			items.push(...ContextConstant.createCompletionItemBooleans(range));
-			items.push(ContextConstant.createCompletionItemNull(range));
+			return CompletionHelper.createStatementOrExpression(range, this);
 		}
-		
-		for (const each of search.localVariables) {
-			items.push({
-				label: each.name.name + "(lv): " + each.resolveTextShort,
-				sortText: each.name.name,
-				filterText: each.name.name,
-				kind: CompletionItemKind.Variable});
-		}
-		
-		for (const each of search.arguments) {
-			items.push({
-				label: each.simpleName + "(a): " + each.resolveTextShort,
-				sortText: each.simpleName,
-				filterText: each.simpleName,
-				kind: CompletionItemKind.Variable});
-		}
-		
-		for (const each of search.functionsAll) {
-			if (each.context) {
-				const tfrc = (this.selfOrParentWithType(Context.ContextType.Class) as ContextClass)?.resolveClass;
-				if (tfrc && each.canAccess(tfrc)) {
-					items.push(each.createCompletionItem(document, range));
-				}
-			}
-		}
-		
-		for (const each of search.variables) {
-			if (each.context) {
-				const tfrc = (this.selfOrParentWithType(Context.ContextType.Class) as ContextClass)?.resolveClass;
-				if (tfrc && each.canAccess(tfrc)) {
-					items.push(each.createCompletionItem(document, range));
-				}
-			}
-		}
-		
-		for (const each of search.types) {
-			if (!visibleTypes?.has(each)) {
-				if (!insertPinPosition) {
-					insertPinPosition = RefactoringHelper.insertPinPosition(this);
-				}
-				items.push(each.createCompletionItem(range, insertPinPosition));
-				
-			} else {
-				items.push(each.createCompletionItem(range));
-			}
-		}
-		
-		return items;
 	}
 	
 	

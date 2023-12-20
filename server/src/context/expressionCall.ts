@@ -23,7 +23,7 @@
  */
 
 import { Context } from "./context";
-import { Definition, DiagnosticRelatedInformation, DocumentSymbol, Hover, integer, Position, Range, RemoteConsole } from "vscode-languageserver";
+import { CompletionItem, Definition, DiagnosticRelatedInformation, DocumentSymbol, Hover, integer, Position, Range, RemoteConsole } from "vscode-languageserver";
 import { ContextBuilder } from "./contextBuilder";
 import { Identifier } from "./identifier";
 import { ExpressionAdditionCstNode } from "../nodeclasses/expressionAddition";
@@ -49,6 +49,8 @@ import { ResolveSignature, ResolveSignatureArgument } from "../resolve/signature
 import { ResolveFunction } from "../resolve/function";
 import { ContextMember } from "./expressionMember";
 import { ContextClass } from "./scriptClass";
+import { TextDocument } from "vscode-languageserver-textdocument";
+import { CompletionHelper } from "../completionHelper";
 
 
 export class ContextFunctionCall extends Context{
@@ -903,7 +905,28 @@ export class ContextFunctionCall extends Context{
 		return super.definition(position);
 	}
 	
-
+	public completion(_document: TextDocument, position: Position): CompletionItem[] {
+		const range = this._name?.range ?? Range.create(position, position);
+		
+		if (Helpers.isPositionInsideRange(range, position)) {
+			if (this._object) {
+				if (this._operator) {
+					return CompletionHelper.createObjectOperators(range, this, this._object);
+					
+				} else {
+					return CompletionHelper.createObject(range, this, this._object);
+				}
+				
+			} else {
+				return CompletionHelper.createStatementOrExpression(range, this);
+			}
+			
+		} else {
+			return CompletionHelper.createExpression(Range.create(position, position), this);
+		}
+	}
+	
+	
 	protected updateRange(endPosition?: Position): void {
 		var rangeBegin = this._object?.range?.start ?? this._name?.range?.start;
 		var rangeEnd = endPosition;

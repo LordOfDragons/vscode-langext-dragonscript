@@ -25,7 +25,7 @@
 import { Context } from "./context"
 import { DeclareClassCstNode } from "../nodeclasses/declareClass";
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
-import { CompletionItem, Definition, DocumentSymbol, Hover, Position, Range, RemoteConsole, SymbolKind } from "vscode-languageserver"
+import { Definition, DocumentSymbol, Hover, Position, RemoteConsole, SymbolKind } from "vscode-languageserver"
 import { TypeName } from "./typename"
 import { ContextInterface } from "./scriptInterface";
 import { ContextEnumeration } from "./scriptEnum";
@@ -40,7 +40,6 @@ import { ResolveState } from "../resolve/state";
 import { ResolveType } from "../resolve/type";
 import { Helpers } from "../helpers";
 import { ResolveSearch } from "../resolve/search";
-import { TextDocument } from "vscode-languageserver-textdocument";
 
 
 export class ContextClass extends Context{
@@ -353,22 +352,6 @@ export class ContextClass extends Context{
 	public static superContext(context: Context): ContextClass | undefined {
 		const parent = ContextClass.thisContext(context)?.extends?.resolve as ResolveClass;
 		return parent?.type == ResolveType.Type.Class ? parent.context : undefined;
-	}
-	
-	public static createCompletionItemThisSuper(context: Context, range: Range): CompletionItem[] {
-		let items: CompletionItem[] = [];
-		
-		const parent = ContextClass.thisContext(context);
-		if (parent?.resolveClass) {
-			items.push(parent.resolveClass.createCompletionItemThis(range));
-			
-			const parent2 = ContextClass.superContext(context);
-			if (parent2?.resolveClass) {
-				items.push(parent2?.resolveClass.createCompletionItemSuper(range));
-			}
-		}
-		
-		return items;
 	}
 	
 	

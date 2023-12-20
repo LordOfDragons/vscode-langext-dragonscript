@@ -23,7 +23,7 @@
  */
 
 import { Context } from "./context";
-import { CompletionItem, CompletionItemKind, Hover, InsertTextFormat, Position, Range, RemoteConsole, TextEdit } from "vscode-languageserver";
+import { CompletionItem, Hover, Position, Range, RemoteConsole } from "vscode-languageserver";
 import { ExpressionConstantCstNode } from "../nodeclasses/expressionObject";
 import { Identifier } from "./identifier";
 import { ResolveState } from "../resolve/state";
@@ -31,6 +31,8 @@ import { ResolveType } from "../resolve/type";
 import { ResolveNamespace } from "../resolve/namespace";
 import { HoverInfo } from "../hoverinfo";
 import { Helpers } from "../helpers";
+import { TextDocument } from "vscode-languageserver-textdocument";
+import { CompletionHelper } from "../completionHelper";
 
 
 export class ContextConstant extends Context{
@@ -252,23 +254,9 @@ export class ContextConstant extends Context{
 		return new HoverInfo([content.join('')], this._name.range);
 	}
 	
-	
-	public static createCompletionItemBooleans(range: Range): CompletionItem[] {
-		let items: CompletionItem[] = [];
-		for (const each of ['true', 'false']) {
-			items.push({label: each,
-				kind: CompletionItemKind.Keyword,
-				insertTextFormat: InsertTextFormat.PlainText,
-				textEdit: TextEdit.replace(range, each)});
-		};
-		return items;
-	}
-	
-	public static createCompletionItemNull(range: Range): CompletionItem {
-		return {label: 'null',
-				kind: CompletionItemKind.Keyword,
-				insertTextFormat: InsertTextFormat.PlainText,
-				textEdit: TextEdit.replace(range, 'null')};
+	public completion(_document: TextDocument, position: Position): CompletionItem[] {
+		const range = this._name?.range ?? Range.create(position, position);
+		return CompletionHelper.createStatementOrExpression(range, this);
 	}
 	
 	

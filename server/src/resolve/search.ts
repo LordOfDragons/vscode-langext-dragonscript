@@ -56,8 +56,10 @@ export class ResolveSearch {
 			this.ignoreVariables = copy.ignoreVariables;
 			this.ignoreFunctions = copy.ignoreFunctions;
 			this.ignoreShadowedFunctions = copy.ignoreShadowedFunctions;
+			this.ignoreNamespaceParents = copy.ignoreNamespaceParents;
 			this.onlyStatic = copy.onlyStatic;
 			this.ignoreStatic = copy.ignoreStatic;
+			this.onlyOperators = copy.onlyOperators;
 			this.allMatchingTypes = copy.allMatchingTypes;
 			this.signature = copy.signature;
 			this.allowPartialMatch = copy.allowPartialMatch;
@@ -95,8 +97,14 @@ export class ResolveSearch {
 	/** Ignore shadowed functions. */
 	public ignoreShadowedFunctions: boolean = false;
 	
+	/** Ignore namespace parents. */
+	public ignoreNamespaceParents: boolean = false;
+	
 	/** Only static members. */
 	public onlyStatic: boolean = false;
+	
+	/** Only operator members. */
+	public onlyOperators: boolean = false;
 	
 	/** Ignore static members. */
 	public ignoreStatic: boolean = false;
@@ -274,17 +282,26 @@ export class ResolveSearch {
 				return false;
 			}
 		}
-		if (this.ignoreConstructors
-			&& rfunction.context?.type == Context.ContextType.Function
-			&& (rfunction.context as ContextFunction).functionType == ContextFunction.Type.Constructor) {
-				return false;
+		
+		if (this.onlyOperators
+		&& rfunction.context?.type == Context.ContextType.Function
+		&& (rfunction.context as ContextFunction).functionType != ContextFunction.Type.Operator) {
+			return false;
 		}
+		
+		if (this.ignoreConstructors
+		&& rfunction.context?.type == Context.ContextType.Function
+		&& (rfunction.context as ContextFunction).functionType == ContextFunction.Type.Constructor) {
+			return false;
+		}
+		
 		if (this.ignoreShadowedFunctions) {
 			if (this._functionsAll.find(f => f.name == rfunction.name
 			&& f.signature.matchesExactly(rfunction.signature))) {
 				return false;
 			}
 		}
+		
 		return true;
 	}
 	

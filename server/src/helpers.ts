@@ -86,6 +86,26 @@ export class Helpers {
 		return Helpers.isPositionInsideRange(Helpers.rangeFrom(start, end), position);
 	}
 	
+	public static isPositionBefore(a: Position, b: Position): boolean {
+		if (a.line < b.line) {
+			return true;
+		} else if (a.line > b.line) {
+			return false;
+		} else {
+			return a.character < b.character;
+		}
+	}
+	
+	public static isPositionAfter(a: Position, b: Position): boolean {
+		if (a.line > b.line) {
+			return true;
+		} else if (a.line < b.line) {
+			return false;
+		} else {
+			return a.character > b.character;
+		}
+	}
+	
 	public static logPosition(position: Position | undefined) {
 		return `[${position?.line}:${position?.character}]`;
 	}

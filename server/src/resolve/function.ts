@@ -184,7 +184,7 @@ export class ResolveFunction{
 		return this._context?.reportInfoText ?? this._name;
 	}
 	
-	public createCompletionItem(document: TextDocument, range: Range): CompletionItem {
+	public createCompletionItem(range: Range): CompletionItem {
 		var text: string = this._name;
 		var title: string;
 		

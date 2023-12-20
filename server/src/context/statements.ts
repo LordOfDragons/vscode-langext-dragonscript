@@ -23,12 +23,14 @@
  */
 
 import { Context } from "./context";
-import { DocumentSymbol, Position, Range, RemoteConsole } from "vscode-languageserver";
+import { CompletionItem, DocumentSymbol, Position, Range, RemoteConsole } from "vscode-languageserver";
 import { ContextBuilder } from "./contextBuilder";
 import { StatementsCstNode } from "../nodeclasses/statement";
 import { ResolveState } from "../resolve/state";
 import { Helpers } from "../helpers";
 import { ResolveSearch } from "../resolve/search";
+import { TextDocument } from "vscode-languageserver-textdocument";
+import { CompletionHelper } from "../completionHelper";
 
 
 export class ContextStatements extends Context{
@@ -118,16 +120,12 @@ export class ContextStatements extends Context{
 		return this.contextAtPositionList(this._statements, position)
 			?? this;
 	}
-
-	/*
-	protected updateHover(position: Position): Hover | null {
-		let content = [];
-		content.push(`${this._statements[0].type} ${this._statements[0].range}`);
-		return new HoverInfo(content, this.range);
+	
+	public completion(_document: TextDocument, position: Position): CompletionItem[] {
+		return CompletionHelper.createStatement(Range.create(position, position), this);
 	}
-	*/
-
-
+	
+	
 	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
 		for (const each of this._statements) {
 			each.log(console, prefix, prefixLines);

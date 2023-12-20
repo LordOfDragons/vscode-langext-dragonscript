@@ -191,7 +191,7 @@ export class ResolveVariable{
 		}
 	}
 	
-	public createCompletionItem(document: TextDocument, range: Range): CompletionItem {
+	public createCompletionItem(range: Range): CompletionItem {
 		var kind: CompletionItemKind = CompletionItemKind.Field;
 		var title: string = 'variable';
 		var text: string = this._name;
