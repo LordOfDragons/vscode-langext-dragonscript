@@ -108,7 +108,7 @@ export class ContextStatements extends Context{
 			if (each === before) {
 				break;
 			}
-			each.searchExpression(search, false, before);
+			each.searchExpression(search, false, this);
 		}
 	}
 	

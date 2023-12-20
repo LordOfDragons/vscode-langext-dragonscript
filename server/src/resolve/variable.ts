@@ -23,7 +23,6 @@
  */
 
 import { CompletionItem, CompletionItemKind, DiagnosticRelatedInformation, InsertTextFormat, Range, TextEdit } from 'vscode-languageserver';
-import { TextDocument } from 'vscode-languageserver-textdocument';
 import { ContextClassVariable } from '../context/classVariable';
 import { Context } from '../context/context';
 import { ContextEnumEntry, ContextEnumeration } from '../context/scriptEnum';
@@ -213,6 +212,7 @@ export class ResolveVariable{
 			detail: `${title}: ${this.resolveTextShort}`,
 			kind: kind,
 			insertTextFormat: InsertTextFormat.Snippet,
-			textEdit: TextEdit.replace(range, text)};
+			textEdit: TextEdit.replace(range, text),
+			commitCharacters: ['.', ' ', ')', ':', '/', '\\']};
 	}
 }

@@ -51,6 +51,7 @@ import { ContextMember } from "./expressionMember";
 import { ContextClass } from "./scriptClass";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { CompletionHelper } from "../completionHelper";
+import { debugLogMessage } from "../server";
 
 
 export class ContextFunctionCall extends Context{
@@ -712,6 +713,61 @@ export class ContextFunctionCall extends Context{
 		}
 	}
 	
+	public expectedTypesForArgument(index: number): ResolveType[] {
+		let types: ResolveType[] = [];
+		
+		switch (this._functionType) {
+			case ContextFunctionCall.FunctionType.cast:
+			case ContextFunctionCall.FunctionType.castable:
+			case ContextFunctionCall.FunctionType.typeof:
+				break;
+				
+			case ContextFunctionCall.FunctionType.assign:
+			case ContextFunctionCall.FunctionType.equals:
+			case ContextFunctionCall.FunctionType.notEquals:
+				if (this._object?.expressionType) {
+					types.push(this._object?.expressionType);
+				}
+				break;
+				
+			case ContextFunctionCall.FunctionType.logicalAnd:
+			case ContextFunctionCall.FunctionType.logicalOr:
+				types.push(ResolveNamespace.classBool);
+				break;
+				
+			case ContextFunctionCall.FunctionType.not:
+				types.push(ResolveNamespace.classVoid);
+				break;
+				
+			default:
+				if (this._matches?.name) {
+					let signatures: ResolveSignature[] = [];
+					
+					if (this._matches.functionsFull.length > 0) {
+						for (const each of this._matches.functionsFull) {
+							signatures.push(each.signature);
+						}
+					} else if (this._matches.functionsPartial.length > 0) {
+						for (const each of this._matches.functionsPartial) {
+							signatures.push(each.signature);
+						}
+					} else if (this._matches.functionsWildcard.length > 0) {
+						for (const each of this._matches.functionsWildcard) {
+							signatures.push(each.signature);
+						}
+					}
+					
+					for (const each of signatures) {
+						const type = each.arguments.at(index)?.type;
+						if (type && !types.includes(type)) {
+							types.push(type);
+						}
+					}
+				}
+		}
+		return types;
+	}
+	
 	protected sameTarget(other: Context): boolean {
 		if (!this._object || other.type != this._object.type) {
 			return false;
@@ -922,7 +978,19 @@ export class ContextFunctionCall extends Context{
 			}
 			
 		} else {
-			return CompletionHelper.createExpression(Range.create(position, position), this);
+			var types: ResolveType[] | undefined;
+			if (this._operator) {
+				switch (this._functionType) {
+					case ContextFunctionCall.FunctionType.cast:
+					case ContextFunctionCall.FunctionType.castable:
+					case ContextFunctionCall.FunctionType.typeof:
+						return CompletionHelper.createType(Range.create(position, position), this);
+				}
+				
+				types = this.expectedTypesForArgument(0);
+			}
+			
+			return CompletionHelper.createExpression(Range.create(position, position), this, types);
 		}
 	}
 	

@@ -487,23 +487,27 @@ export class ContextFunction extends Context{
 	}
 	
 	public search(search: ResolveSearch, before?: Context): void {
+		if (search.onlyTypes) {
+			return;
+		}
+		
 		if (search.matchableName) {
 			for (const each of this._arguments) {
 				if (search.matchableName.matches(each.name.matchableName)) {
-					search.arguments.push(each);
+					search.addArgument(each);
 				}
 			}
 			
 		} else if (search.name) {
 			for (const each of this._arguments) {
 				if (search.name == each.name.name) {
-					search.arguments.push(each);
+					search.addArgument(each);
 				}
 			}
 			
 		} else {
 			for (const each of this._arguments) {
-				search.arguments.push(each);
+				search.addArgument(each);
 			}
 		}
 	}

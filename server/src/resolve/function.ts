@@ -185,6 +185,7 @@ export class ResolveFunction{
 	}
 	
 	public createCompletionItem(range: Range): CompletionItem {
+		let commitCharacters: string[] = [' ', ':', '/', '\\'];
 		var text: string = this._name;
 		var title: string;
 		
@@ -205,11 +206,13 @@ export class ResolveFunction{
 					
 				case ContextFunction.Type.Operator:
 					title = 'operator';
+					commitCharacters.push('.');
 					break;
 					
 				default:
 					title = 'function';
 					text = text + this.createSnippetSignature();
+					commitCharacters.push('.');
 					break;
 				}
 				}break;
@@ -221,9 +224,11 @@ export class ResolveFunction{
 				
 			default:
 				title = 'function';
+				commitCharacters.push('.');
 			}
 		} else {
 			title = 'function';
+			commitCharacters.push('.');
 		}
 		
 		return {label: this._name,
@@ -232,7 +237,8 @@ export class ResolveFunction{
 			detail: `${title}: ${this.context?.resolveTextShort}`,
 			kind: CompletionItemKind.Function,
 			insertTextFormat: InsertTextFormat.Snippet,
-			textEdit: TextEdit.replace(range, text)};
+			textEdit: TextEdit.replace(range, text),
+			commitCharacters: commitCharacters};
 	}
 	
 	public createSnippetSignature(): string {

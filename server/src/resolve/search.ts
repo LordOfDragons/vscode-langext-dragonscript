@@ -65,6 +65,7 @@ export class ResolveSearch {
 			this.allowPartialMatch = copy.allowPartialMatch;
 			this.allowWildcardMatch = copy.allowWildcardMatch;
 			this.stopAfterFirstFullMatch = copy.stopAfterFirstFullMatch;
+			this.onlyCastable = copy.onlyCastable;
 			this.searchSuperClasses = copy.searchSuperClasses;
 		}
 	}
@@ -127,6 +128,9 @@ export class ResolveSearch {
 	/** Search in super classes. */
 	public searchSuperClasses: boolean = true;
 	
+	/** Only results castable to one or more types in the list. */
+	public onlyCastable?: ResolveType[];
+	
 	/** Ignore constructors. Internal use. */
 	public ignoreConstructors = false;
 	
@@ -183,6 +187,22 @@ export class ResolveSearch {
 		return this._types;
 	}
 	
+	
+	public addArgument(argument: ContextFunctionArgument | ContextTryCatch): void {
+		if (!this.acceptArgument(argument)) {
+			return;
+		}
+		
+		this._arguments.push(argument);
+	}
+	
+	public addLocalVariable(variable: ContextVariable): void {
+		if (!this.acceptLocalVariable(variable)) {
+			return;
+		}
+		
+		this._localVariables.push(variable);
+	}
 	
 	public addVariable(variable: ResolveVariable): void {
 		if (!this.acceptVariable(variable)) {
@@ -257,17 +277,50 @@ export class ResolveSearch {
 	}
 	
 	
+	/** Accept argument using non-name related filters. */
+	public acceptArgument(argument: ContextFunctionArgument | ContextTryCatch): boolean {
+		if (this.onlyCastable){
+			const type = argument.typename.resolve as ResolveType;
+			if (type && !this.onlyCastable.find(t => type.castable(t))) {
+				return false;
+			}
+		}
+		
+		return true;
+	}
+	
+	/** Accept local variable using non-name related filters. */
+	public acceptLocalVariable(variable: ContextVariable): boolean {
+		if (this.onlyCastable){
+			const type = variable.typename.resolve as ResolveType;
+			if (type && !this.onlyCastable.find(t => type.castable(t))) {
+				return false;
+			}
+		}
+		
+		return true;
+	}
+	
 	/** Accept variable using non-name related filters. */
 	public acceptVariable(variable: ResolveVariable): boolean {
 		if (this.onlyStatic) {
 			if (!variable.typeModifiers?.isStatic) {
 				return false;
 			}
+			
 		} else if (this.ignoreStatic) {
 			if (variable.typeModifiers?.isStatic) {
 				return false;
 			}
 		}
+		
+		if (this.onlyCastable){
+			const type = variable.variableType;
+			if (type && !this.onlyCastable.find(t => type.castable(t))) {
+				return false;
+			}
+		}
+		
 		return true;
 	}
 	
@@ -277,6 +330,7 @@ export class ResolveSearch {
 			if (!rfunction.typeModifiers?.isStatic) {
 				return false;
 			}
+			
 		} else if (this.ignoreStatic) {
 			if (rfunction.typeModifiers?.isStatic) {
 				return false;
@@ -302,6 +356,13 @@ export class ResolveSearch {
 			}
 		}
 		
+		if (this.onlyCastable){
+			const type = rfunction.returnType;
+			if (type && !this.onlyCastable.find(t => type.castable(t))) {
+				return false;
+			}
+		}
+		
 		return true;
 	}
 	
@@ -310,6 +371,11 @@ export class ResolveSearch {
 		if (!this.allMatchingTypes && this._types.size > 0) {
 			return false;
 		}
+		
+		if (this.onlyCastable && !this.onlyCastable.find(t => type.castable(t))) {
+			return false;
+		}
+		
 		return true;
 	}
 	

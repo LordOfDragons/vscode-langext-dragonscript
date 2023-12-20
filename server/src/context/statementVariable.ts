@@ -161,11 +161,11 @@ export class ContextVariable extends Context {
 		
 		if (search.matchableName) {
 			if (search.matchableName.matches(this._name.matchableName)) {
-				search.localVariables.push(this);
+				search.addLocalVariable(this);
 			}
 			
 		} else if (this._name.name == search.name || !search.name) {
-			search.localVariables.push(this);
+			search.addLocalVariable(this);
 		}
 	}
 	

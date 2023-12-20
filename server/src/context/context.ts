@@ -241,7 +241,7 @@ export class Context {
 	
 	public searchExpression(search: ResolveSearch, moveUp: boolean, before: Context): void {
 		if (moveUp) {
-			this.parent?.searchExpression(search, true, before);
+			this.parent?.searchExpression(search, true, this);
 		}
 		this.search(search, before);
 	}

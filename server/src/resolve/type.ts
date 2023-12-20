@@ -191,7 +191,8 @@ export class ResolveType{
 			documentation: {kind: MarkupKind.Markdown, value: documentation.join('  \n')},
 			insertTextFormat: InsertTextFormat.Snippet,
 			textEdit: TextEdit.replace(range, this._name),
-			additionalTextEdits: extraEdits};
+			additionalTextEdits: extraEdits,
+			commitCharacters: ['.', ' ', ')', ':', '/', '\\']};
 	}
 	
 	protected get completionItemTitle(): string {
@@ -217,7 +218,8 @@ export class ResolveType{
 			detail: `${this.completionItemTitle} ${this.fullyQualifiedName}`,
 			kind: CompletionItemKind.Keyword,
 			insertTextFormat: InsertTextFormat.PlainText,
-			textEdit: TextEdit.replace(range, 'this')};
+			textEdit: TextEdit.replace(range, 'this'),
+			commitCharacters: ['.', ' ', ')', ':', '/', '\\']};
 	}
 	
 	public createCompletionItemSuper(range: Range): CompletionItem {
@@ -225,7 +227,8 @@ export class ResolveType{
 			detail: `${this.completionItemTitle} ${this.fullyQualifiedName}`,
 			kind: CompletionItemKind.Keyword,
 			insertTextFormat: InsertTextFormat.PlainText,
-			textEdit: TextEdit.replace(range, 'super')};
+			textEdit: TextEdit.replace(range, 'super'),
+			commitCharacters: ['.', ' ', ')', ':', '/', '\\']};
 	}
 	
 	

@@ -59,7 +59,8 @@ export class CompletionHelper {
 			items.push({label: each,
 				kind: CompletionItemKind.Keyword,
 				insertTextFormat: InsertTextFormat.PlainText,
-				textEdit: TextEdit.replace(range, each)});
+				textEdit: TextEdit.replace(range, each),
+				commitCharacters: ['.', ' ', ')', ':', '/', '\\']});
 		};
 		return items;
 	}
@@ -75,7 +76,7 @@ export class CompletionHelper {
 	/** Create completion item for 'cast' keyword. */
 	public static createCast(range: Range): CompletionItem {
 		return {label: 'cast',
-			kind: CompletionItemKind.Keyword,
+			kind: CompletionItemKind.Snippet,
 			insertTextFormat: InsertTextFormat.Snippet,
 			textEdit: TextEdit.replace(range, 'cast ${1:type}')};
 	}
@@ -83,7 +84,7 @@ export class CompletionHelper {
 	/** Create completion item for 'castable' keyword. */
 	public static createCastable(range: Range): CompletionItem {
 		return {label: 'castable',
-			kind: CompletionItemKind.Keyword,
+			kind: CompletionItemKind.Snippet,
 			insertTextFormat: InsertTextFormat.Snippet,
 			textEdit: TextEdit.replace(range, 'castable ${1:type}')};
 	}
@@ -91,7 +92,7 @@ export class CompletionHelper {
 	/** Create completion item for 'typeof' keyword. */
 	public static createTypeof(range: Range): CompletionItem {
 		return {label: 'typeof',
-			kind: CompletionItemKind.Keyword,
+			kind: CompletionItemKind.Snippet,
 			insertTextFormat: InsertTextFormat.Snippet,
 			textEdit: TextEdit.replace(range, 'typeof ${1:type}')};
 	}
@@ -103,7 +104,7 @@ export class CompletionHelper {
 		items.push({label: 'block: Object argument',
 			sortText: 'block',
 			filterText: 'block',
-			kind: CompletionItemKind.Keyword,
+			kind: CompletionItemKind.Snippet,
 			insertTextFormat: InsertTextFormat.Snippet,
 			textEdit: TextEdit.replace(range,
 				'block \${1:Object} \${2:argument}\n' +
@@ -120,7 +121,7 @@ export class CompletionHelper {
 		items.push({label: 'if',
 			sortText: 'if',
 			filterText: 'if',
-			kind: CompletionItemKind.Keyword,
+			kind: CompletionItemKind.Snippet,
 			insertTextFormat: InsertTextFormat.Snippet,
 			textEdit: TextEdit.replace(range,
 				'if \${1:condition}\n' + 
@@ -130,7 +131,7 @@ export class CompletionHelper {
 		items.push({label: 'if else',
 			sortText: 'if',
 			filterText: 'if',
-			kind: CompletionItemKind.Keyword,
+			kind: CompletionItemKind.Snippet,
 			insertTextFormat: InsertTextFormat.Snippet,
 			textEdit: TextEdit.replace(range,
 				'if \${1:condition}\n' +
@@ -149,7 +150,7 @@ export class CompletionHelper {
 		items.push({label: 'for',
 			sortText: 'for',
 			filterText: 'for',
-			kind: CompletionItemKind.Keyword,
+			kind: CompletionItemKind.Snippet,
 			insertTextFormat: InsertTextFormat.Snippet,
 			textEdit: TextEdit.replace(range,
 				'for \${1:variable} = ${2:fromIndex} to ${3:toIndex}\n' +
@@ -159,7 +160,7 @@ export class CompletionHelper {
 		items.push({label: 'for step',
 			sortText: 'for',
 			filterText: 'for',
-			kind: CompletionItemKind.Keyword,
+			kind: CompletionItemKind.Snippet,
 			insertTextFormat: InsertTextFormat.Snippet,
 			textEdit: TextEdit.replace(range,
 				'for \${1:variable} = ${2:fromIndex} to ${3:toIndex} step ${4:stepSize}\n' +
@@ -169,7 +170,7 @@ export class CompletionHelper {
 		items.push({label: 'for downto',
 			sortText: 'for',
 			filterText: 'for',
-			kind: CompletionItemKind.Keyword,
+			kind: CompletionItemKind.Snippet,
 			insertTextFormat: InsertTextFormat.Snippet,
 			textEdit: TextEdit.replace(range,
 				'for \${1:variable} = ${2:fromIndex} downto ${3:toIndex}\n' +
@@ -179,7 +180,7 @@ export class CompletionHelper {
 		items.push({label: 'for downto step',
 			sortText: 'for',
 			filterText: 'for',
-			kind: CompletionItemKind.Keyword,
+			kind: CompletionItemKind.Snippet,
 			insertTextFormat: InsertTextFormat.Snippet,
 			textEdit: TextEdit.replace(range,
 				'for \${1:variable} = ${2:fromIndex} downto ${3:toIndex} step ${5:stepSize}\n' +
@@ -192,7 +193,7 @@ export class CompletionHelper {
 	/** Create completion item for 'select' keyword. */
 	public static createSelect(range: Range): CompletionItem {
 		return {label: 'select',
-			kind: CompletionItemKind.Keyword,
+			kind: CompletionItemKind.Snippet,
 			insertTextFormat: InsertTextFormat.Snippet,
 			textEdit: TextEdit.replace(range,
 				'select \${1:expression}\n' +
@@ -206,7 +207,7 @@ export class CompletionHelper {
 	/** Create completion item for 'while' keyword. */
 	public static createWhile(range: Range): CompletionItem {
 		return {label: 'while',
-			kind: CompletionItemKind.Keyword,
+			kind: CompletionItemKind.Snippet,
 			insertTextFormat: InsertTextFormat.Snippet,
 			textEdit: TextEdit.replace(range,
 				'while \${1:condition}\n' +
@@ -217,7 +218,7 @@ export class CompletionHelper {
 	/** Create completion item for 'try' keyword. */
 	public static createTry(range: Range): CompletionItem {
 		return {label: 'try',
-			kind: CompletionItemKind.Keyword,
+			kind: CompletionItemKind.Snippet,
 			insertTextFormat: InsertTextFormat.Snippet,
 			textEdit: TextEdit.replace(range,
 				'try\n' +
@@ -260,7 +261,8 @@ export class CompletionHelper {
 			kind: CompletionItemKind.Variable,
 			detail: `local variable ${variable.resolveTextShort}`,
 			insertTextFormat: InsertTextFormat.PlainText,
-			textEdit: TextEdit.replace(range, name)};
+			textEdit: TextEdit.replace(range, name),
+			commitCharacters: ['.', ' ', ')', ':', '/', '\\']};
 	}
 	
 	/** Create completion item for function or catch argument. */
@@ -271,7 +273,8 @@ export class CompletionHelper {
 			kind: CompletionItemKind.Variable,
 			detail: `argument ${argument.resolveTextShort}`,
 			insertTextFormat: InsertTextFormat.PlainText,
-			textEdit: TextEdit.replace(range, name)}
+			textEdit: TextEdit.replace(range, name),
+			commitCharacters: ['.', ' ', ')', ':', '/', '\\']}
 	}
 	
 	
@@ -340,8 +343,8 @@ export class CompletionHelper {
 	}
 	
 	/** Create expression completions. */
-	public static createExpression(range: Range, context: Context): CompletionItem[] {
-		let search = CompletionHelper.searchExpression(context);
+	public static createExpression(range: Range, context: Context, castable?: ResolveType[]): CompletionItem[] {
+		let search = CompletionHelper.searchExpression(context, castable);
 		const visibleTypes = new Set(search.types);
 		
 		ResolveNamespace.root.searchGlobalTypes(search);
@@ -361,14 +364,35 @@ export class CompletionHelper {
 		}
 	}
 	
-	private static searchExpression(context: Context): ResolveSearch {
+	private static searchExpression(context: Context, castable?: ResolveType[]): ResolveSearch {
 		let search = new ResolveSearch();
 		search.allMatchingTypes = true;
 		search.ignoreShadowedFunctions = true;
+		if (castable && castable?.length > 0) {
+			search.onlyCastable = castable;
+		}
 		
 		context.searchExpression(search, true, context);
 		
 		search.onlyTypes = true;
+		
+		const objtype = ContextClass.thisContext(context)?.resolveClass;
+		if (objtype) {
+			objtype.search(search);
+		}
+		
+		return search;
+	}
+	
+	private static searchExpressionType(context: Context, castable?: ResolveType[]): ResolveSearch {
+		let search = new ResolveSearch();
+		search.allMatchingTypes = true;
+		search.onlyTypes = true;
+		if (castable && castable?.length > 0) {
+			search.onlyCastable = castable;
+		}
+		
+		context.searchExpression(search, true, context);
 		
 		const objtype = ContextClass.thisContext(context)?.resolveClass;
 		if (objtype) {
@@ -436,6 +460,18 @@ export class CompletionHelper {
 		items.push(CompletionHelper.createCastable(range));
 		items.push(CompletionHelper.createTypeof(range));
 		
+		return items;
+	}
+	
+	/** Create type completions. */
+	public static createType(range: Range, context: Context, castable?: ResolveType[]): CompletionItem[] {
+		let search = CompletionHelper.searchExpressionType(context, castable);
+		const visibleTypes = new Set(search.types);
+		
+		ResolveNamespace.root.searchGlobalTypes(search);
+		
+		let items: CompletionItem[] = [];
+		items.push(...CompletionHelper.createFromSearch(range, context, search, visibleTypes));
 		return items;
 	}
 }
