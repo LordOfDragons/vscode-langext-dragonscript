@@ -994,6 +994,17 @@ export class ContextFunctionCall extends Context{
 		}
 	}
 	
+	public expectTypes(context: Context): ResolveType[] | undefined {
+		debugLogMessage(`function call: expect ${this._name?.name}`);
+		if (context === this._object) {
+			debugLogMessage(`function call: ask higher up ${this.parent?.constructor.name}`);
+			return this.parent?.expectTypes(this);
+		}
+		const index = this._arguments.indexOf(context);
+		debugLogMessage(`function call: index ${index}`);
+		return index != -1 ? this.expectedTypesForArgument(index) : super.expectTypes(context);
+	}
+	
 	
 	protected updateRange(endPosition?: Position): void {
 		var rangeBegin = this._object?.range?.start ?? this._name?.range?.start;

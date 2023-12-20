@@ -32,19 +32,22 @@ import { RefactoringHelper } from "./refactoringHelper";
 import { ResolveNamespace } from "./resolve/namespace";
 import { ResolveSearch } from "./resolve/search";
 import { ResolveType } from "./resolve/type";
+import { debugLogMessage } from "./server";
 
 
 export class CompletionHelper {
 	/** Create completion item for 'this' and 'super' keyword. */
-	public static createThisSuper(context: Context, range: Range): CompletionItem[] {
+	public static createThisSuper(context: Context, range: Range, castable?: ResolveType[]): CompletionItem[] {
 		let items: CompletionItem[] = [];
 		
 		const parent = ContextClass.thisContext(context);
-		if (parent?.resolveClass) {
+		const tp = parent?.resolveClass;
+		if (tp && (!castable || castable.find(t => tp.castable(t)))) {
 			items.push(parent.resolveClass.createCompletionItemThis(range));
 			
 			const parent2 = ContextClass.superContext(context);
-			if (parent2?.resolveClass) {
+			const tp2 = parent2?.resolveClass;
+			if (tp2 && (!castable || castable.find(t => tp2.castable(t)))) {
 				items.push(parent2?.resolveClass.createCompletionItemSuper(range));
 			}
 		}
@@ -130,6 +133,16 @@ export class CompletionHelper {
 				'end')});
 		
 		return items;
+	}
+	
+	/** Create completion item for inline if-else keyword. */
+	public static createInlineIfElse(range: Range): CompletionItem {
+		return {label: 'inline if-else',
+			sortText: 'if',
+			filterText: 'if',
+			kind: CompletionItemKind.Snippet,
+			insertTextFormat: InsertTextFormat.Snippet,
+			textEdit: TextEdit.replace(range, 'if ${1:trueValue} else ${2:falseValue}')};
 	}
 	
 	/** Create completion items for 'if' keyword. */
@@ -247,15 +260,27 @@ export class CompletionHelper {
 	}
 	
 	/** Create completion items for keywords usable inside expressions. */
-	public static createExpressionKeywords(context: Context, range: Range): CompletionItem[] {
+	public static createExpressionKeywords(context: Context, range: Range, castable?: ResolveType[]): CompletionItem[] {
 		let items: CompletionItem[] = [];
-		items.push(...CompletionHelper.createThisSuper(context, range));
-		items.push(...CompletionHelper.createBooleans(range));
-		items.push(CompletionHelper.createNull(range));
-		items.push(...CompletionHelper.createBlock(context, range));
-		items.push(CompletionHelper.createCast(range));
-		items.push(CompletionHelper.createCastable(range));
-		items.push(CompletionHelper.createTypeof(range));
+		
+		items.push(CompletionHelper.createInlineIfElse(range));
+		items.push(...CompletionHelper.createThisSuper(context, range, castable));
+		
+		if (!castable || castable.includes(ResolveNamespace.classBool)) {
+			items.push(...CompletionHelper.createBooleans(range));
+			items.push(CompletionHelper.createCast(range));
+			items.push(CompletionHelper.createCastable(range));
+			items.push(CompletionHelper.createTypeof(range));
+		}
+		
+		if (!castable || castable.includes(ResolveNamespace.classBlock)) {
+			items.push(...CompletionHelper.createBlock(context, range));
+		}
+		
+		if (!castable || castable.find(t => !t.isPrimitive)) {
+			items.push(CompletionHelper.createNull(range));
+		}
+		
 		return items;
 	}
 	
@@ -362,23 +387,29 @@ export class CompletionHelper {
 	
 	/** Create expression completions. */
 	public static createExpression(range: Range, context: Context, castable?: ResolveType[]): CompletionItem[] {
+		if (!castable) {
+			castable = context.parent?.expectTypes(context);
+			debugLogMessage(`castable ${context.parent?.constructor.name}:`);
+			castable?.forEach(t => debugLogMessage(`- ${t.resolveTextShort}`));
+		}
+		
 		let search = CompletionHelper.searchExpression(context, castable);
 		const visibleTypes = new Set(search.types);
 		
 		ResolveNamespace.root.searchGlobalTypes(search);
 		
 		let items: CompletionItem[] = [];
-		items.push(...CompletionHelper.createExpressionKeywords(context, range));
+		items.push(...CompletionHelper.createExpressionKeywords(context, range, castable));
 		items.push(...CompletionHelper.createFromSearch(range, context, search, visibleTypes));
 		return items;
 	}
 	
 	/** Create statement or expression completions. */
-	public static createStatementOrExpression(range: Range, context: Context): CompletionItem[] {
+	public static createStatementOrExpression(range: Range, context: Context, castable?: ResolveType[]): CompletionItem[] {
 		if (context.parent?.type == Context.ContextType.Statements) {
 			return CompletionHelper.createStatement(range, context);
 		} else {
-			return CompletionHelper.createExpression(range, context);
+			return CompletionHelper.createExpression(range, context, castable);
 		}
 	}
 	

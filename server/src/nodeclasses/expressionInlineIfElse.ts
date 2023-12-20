@@ -1,4 +1,4 @@
-import { CstNode } from "chevrotain";
+import { CstNode, IToken } from "chevrotain";
 import { ExpressionLogicCstNode } from "./expressionLogic";
 
 
@@ -19,6 +19,8 @@ export interface ExpressionInlineIfElseMoreCstNode extends CstNode {
 }
 
 export type ExpressionInlineIfElseMoreCstChildren = {
+	if: IToken[];
 	expressionIf: ExpressionLogicCstNode[];
+	else: IToken[];
 	expressionElse: ExpressionLogicCstNode[];
 };

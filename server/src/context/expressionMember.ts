@@ -42,6 +42,7 @@ import { ContextConstant } from "./expressionConstant";
 import { ResolveNamespace } from "../resolve/namespace";
 import { RefactoringHelper } from "../refactoringHelper";
 import { CompletionHelper } from "../completionHelper";
+import { debugLogMessage } from "../server";
 
 
 export class ContextMember extends Context{
@@ -313,7 +314,7 @@ export class ContextMember extends Context{
 		return location ? [location] : [];
 	}
 	
-	public completion(document: TextDocument, position: Position): CompletionItem[] {
+	public completion(_document: TextDocument, position: Position): CompletionItem[] {
 		const range = this._name?.range ?? Range.create(position, position);
 		
 		if (this._object) {
@@ -321,6 +322,15 @@ export class ContextMember extends Context{
 		} else {
 			return CompletionHelper.createStatementOrExpression(range, this);
 		}
+	}
+	
+	public expectTypes(context: Context): ResolveType[] | undefined {
+		debugLogMessage(`member: expect ${this._name?.name}`);
+		if (context === this._object) {
+			debugLogMessage(`member: ask higher up ${this.parent?.constructor.name}`);
+			return this.parent?.expectTypes(this);
+		}
+		return super.expectTypes(context);
 	}
 	
 	

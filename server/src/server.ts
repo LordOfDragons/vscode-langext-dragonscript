@@ -380,7 +380,7 @@ connection.onCompletion(
 			var context = scriptContext.contextAtPosition(params.position);
 			console.log(`found ${context?.constructor.name} ${context?.resolveTextLong} ${context?.expressionType?.resolveTextShort} ${Helpers.logRange(context?.range)}`);
 			
-			/*
+			
 			if (context) {
 				var context2: Context | undefined = context;
 				while (context2 && context2.type != Context.ContextType.Function) {
@@ -389,7 +389,7 @@ connection.onCompletion(
 				}
 				context2?.log(connection.console);
 			}
-			*/
+			
 			
 			return context?.completion(document, params.position) || [];
 			

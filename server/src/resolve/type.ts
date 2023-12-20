@@ -32,7 +32,6 @@ import { ResolveSearch } from './search';
 import { CompletionItem, CompletionItemKind, DiagnosticRelatedInformation, InsertTextFormat, Location, MarkupKind, Position, Range, TextEdit } from 'vscode-languageserver';
 import { Context } from '../context/context';
 import { MatchableName } from '../matchableName';
-import { TextDocument } from 'vscode-languageserver-textdocument';
 
 
 /**
@@ -57,6 +56,7 @@ export class ResolveType{
 	protected _childTypesBeforeSelf = false;
 	protected _resolveTextType = 'type ';
 	public autoCast: Context.AutoCast = Context.AutoCast.No;
+	public isPrimitive = false;
 
 
 	constructor (name: string, type: ResolveType.Type) {

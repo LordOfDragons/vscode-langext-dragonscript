@@ -263,6 +263,9 @@ export class Context {
 		return this._type == type ? this : this.parent?.selfOrParentWithType(type);
 	}
 	
+	public expectTypes(context: Context): ResolveType[] | undefined {
+		return [];
+	}
 
 	protected reportError(diagnostics: Diagnostic[], uri: string, range: Range, message: string) {
 		this.reportDiagnostic(diagnostics, uri, DiagnosticSeverity.Error, range, message);

@@ -23,12 +23,15 @@
  */
 
 import { Context } from "./context";
-import { DocumentSymbol, Position, Range, RemoteConsole } from "vscode-languageserver";
+import { CompletionItem, DocumentSymbol, Position, Range, RemoteConsole } from "vscode-languageserver";
 import { ContextBuilder } from "./contextBuilder";
 import { ExpressionInlineIfElseCstNode } from "../nodeclasses/expressionInlineIfElse";
 import { ResolveState } from "../resolve/state";
 import { ResolveNamespace } from "../resolve/namespace";
 import { Helpers } from "../helpers";
+import { TextDocument } from "vscode-languageserver-textdocument";
+import { CompletionHelper } from "../completionHelper";
+import { ResolveType } from "../resolve/type";
 
 
 export class ContextInlineIfElse extends Context{
@@ -114,6 +117,42 @@ export class ContextInlineIfElse extends Context{
 			?? this._ifvalue.contextAtPosition(position)
 			?? this._elsevalue.contextAtPosition(position)
 			?? this;
+	}
+	
+	public completion(document: TextDocument, position: Position): CompletionItem[] {
+		const nc = this._node.children.more?.at(0)?.children;
+		const range = Range.create(position, position);
+		
+		if (!nc) {
+			return CompletionHelper.createExpression(range, this, [ResolveNamespace.classBool]);
+		}
+		
+		const rangeIf = Helpers.rangeFrom(nc.if[0]);
+		const rangeElse = Helpers.rangeFrom(nc.else[0]);
+		
+		if (Helpers.isPositionBefore(position, rangeIf.start)) {
+			return CompletionHelper.createExpression(range, this, [ResolveNamespace.classBool]);
+			
+		} else if (Helpers.isPositionAfter(position, rangeIf.end) && Helpers.isPositionBefore(position, rangeElse.start)) {
+			return CompletionHelper.createExpression(range, this);
+			
+		} else if (Helpers.isPositionAfter(position, rangeElse.end)) {
+			return CompletionHelper.createExpression(range, this,
+				this._ifvalue.expressionType ? [this._ifvalue.expressionType] : undefined);
+		}
+		
+		return [];
+	}
+	
+	public expectTypes(context: Context): ResolveType[] | undefined {
+		if (context === this._condition) {
+			return [ResolveNamespace.classBool];
+		} else if (context === this._elsevalue) {
+			if (this._ifvalue.expressionType) {
+				return [this._ifvalue.expressionType];
+			}
+		}
+		return super.expectTypes(context);
 	}
 	
 	

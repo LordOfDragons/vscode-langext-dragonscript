@@ -148,23 +148,29 @@ export class ResolveNamespace extends ResolveType {
 
 
 	public static get classBool(): ResolveClass {
-		return rootNamespace.class('bool')!;
+		let c = rootNamespace.class('bool')!;
+		c.isPrimitive = true;
+		return c;
 	}
 
 	public static get classByte(): ResolveClass {
 		let c = rootNamespace.class('byte')!;
 		c.autoCast = Context.AutoCast.ValueByte;
+		c.isPrimitive = true;
 		return c;
 	}
 
 	public static get classInt(): ResolveClass {
 		let c = rootNamespace.class('int')!;
 		c.autoCast = Context.AutoCast.ValueInt;
+		c.isPrimitive = true;
 		return c;
 	}
 
 	public static get classFloat(): ResolveClass {
-		return rootNamespace.class('float')!;
+		let c = rootNamespace.class('float')!;
+		c.isPrimitive = true;
+		return c;
 	}
 
 	public static get classString(): ResolveClass {
