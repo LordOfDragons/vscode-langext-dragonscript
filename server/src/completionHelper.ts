@@ -101,13 +101,31 @@ export class CompletionHelper {
 	public static createBlock(context: Context, range: Range): CompletionItem[] {
 		let items: CompletionItem[] = [];
 		
-		items.push({label: 'block: Object argument',
+		items.push({label: 'block',
+			kind: CompletionItemKind.Snippet,
+			insertTextFormat: InsertTextFormat.Snippet,
+			textEdit: TextEdit.replace(range,
+				'block\n' +
+				'\t\${0}\n' +
+				'end')});
+		
+		items.push({label: 'block: 1 argument',
 			sortText: 'block',
 			filterText: 'block',
 			kind: CompletionItemKind.Snippet,
 			insertTextFormat: InsertTextFormat.Snippet,
 			textEdit: TextEdit.replace(range,
 				'block \${1:Object} \${2:argument}\n' +
+				'\t\${0}\n' +
+				'end')});
+		
+		items.push({label: 'block: 2 arguments',
+			sortText: 'block',
+			filterText: 'block',
+			kind: CompletionItemKind.Snippet,
+			insertTextFormat: InsertTextFormat.Snippet,
+			textEdit: TextEdit.replace(range,
+				'block \${1:Object} \${2:argument1}, \${3:Object} \${4: argument2}\n' +
 				'\t\${0}\n' +
 				'end')});
 		
