@@ -51,7 +51,6 @@ import { ContextMember } from "./expressionMember";
 import { ContextClass } from "./scriptClass";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { CompletionHelper } from "../completionHelper";
-import { debugLogMessage } from "../server";
 
 
 export class ContextFunctionCall extends Context{
@@ -287,6 +286,10 @@ export class ContextFunctionCall extends Context{
 	public static newFunctionCall(node: ExpressionObjectCstNode,
 			memberIndex: integer, object: Context | undefined, parent: Context): ContextFunctionCall {
 		let cfc = new ContextFunctionCall(node, memberIndex, parent);
+		
+		if (object) {
+			object.parent = cfc;
+		}
 		cfc._object = object ? object : ContextBuilder.createExpressionBaseObject(node.children.object[0], cfc);
 		
 		cfc._operator = false;
@@ -995,13 +998,10 @@ export class ContextFunctionCall extends Context{
 	}
 	
 	public expectTypes(context: Context): ResolveType[] | undefined {
-		debugLogMessage(`function call: expect ${this._name?.name}`);
 		if (context === this._object) {
-			debugLogMessage(`function call: ask higher up ${this.parent?.constructor.name}`);
 			return this.parent?.expectTypes(this);
 		}
 		const index = this._arguments.indexOf(context);
-		debugLogMessage(`function call: index ${index}`);
 		return index != -1 ? this.expectedTypesForArgument(index) : super.expectTypes(context);
 	}
 	

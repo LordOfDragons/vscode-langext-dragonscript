@@ -23,7 +23,7 @@
  */
 
 import { Context } from "./context";
-import { CompletionItem, CompletionItemKind, Definition, DiagnosticRelatedInformation, Hover, integer, Location, Position, Range, RemoteConsole } from "vscode-languageserver";
+import { CompletionItem, Definition, DiagnosticRelatedInformation, Hover, integer, Location, Position, Range, RemoteConsole } from "vscode-languageserver";
 import { ContextBuilder } from "./contextBuilder";
 import { Identifier } from "./identifier";
 import { ExpressionMemberCstNode, ExpressionObjectCstNode } from "../nodeclasses/expressionObject";
@@ -38,11 +38,7 @@ import { ResolveVariable } from "../resolve/variable";
 import { ContextClass } from "./scriptClass";
 import { ContextTryCatch } from "./statementTry";
 import { TextDocument } from "vscode-languageserver-textdocument";
-import { ContextConstant } from "./expressionConstant";
-import { ResolveNamespace } from "../resolve/namespace";
-import { RefactoringHelper } from "../refactoringHelper";
 import { CompletionHelper } from "../completionHelper";
-import { debugLogMessage } from "../server";
 
 
 export class ContextMember extends Context{
@@ -67,6 +63,10 @@ export class ContextMember extends Context{
 	public static newObject(node: ExpressionObjectCstNode, memberIndex: integer,
 			object: Context | undefined, parent: Context) {
 		let cm = new ContextMember(node, memberIndex, parent);
+		
+		if (object) {
+			object.parent = cm;
+		}
 		cm._object = object ? object : ContextBuilder.createExpressionBaseObject(node.children.object[0], cm);
 		
 		const name = node.children.member?.at(memberIndex)?.children.name[0];
@@ -325,9 +325,7 @@ export class ContextMember extends Context{
 	}
 	
 	public expectTypes(context: Context): ResolveType[] | undefined {
-		debugLogMessage(`member: expect ${this._name?.name}`);
 		if (context === this._object) {
-			debugLogMessage(`member: ask higher up ${this.parent?.constructor.name}`);
 			return this.parent?.expectTypes(this);
 		}
 		return super.expectTypes(context);

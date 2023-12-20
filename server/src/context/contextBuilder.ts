@@ -219,6 +219,11 @@ export class ContextBuilder{
 	public static createExpressionObject(node: ExpressionObjectCstNode, parent: Context): Context {
 		let c = node.children;
 		if (c.member) {
+			// PROBLEM: a.b.c()
+			// this causes first a to be created with parent parent (wrong parent, should be b).
+			// then b is created using a as object with parent parent (wrong parent, should be c).
+			// then c is created using b as object with parent parent (correct parent).
+			// the problem is a and b having wrong parent.
 			let last: ContextMember | ContextFunctionCall | undefined;
 			let memberIndex: integer = 0;
 			for (const each of c.member) {
