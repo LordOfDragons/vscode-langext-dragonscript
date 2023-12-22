@@ -24,7 +24,7 @@
 
 import { Context } from "./context";
 import { OpenNamespaceCstNode } from "../nodeclasses/openNamespace";
-import { Definition, DocumentSymbol, Hover, Position, RemoteConsole, SymbolKind } from "vscode-languageserver";
+import { Definition, DocumentSymbol, Hover, Position, RemoteConsole, SymbolInformation, SymbolKind } from "vscode-languageserver";
 import { TypeName } from "./typename";
 import { HoverInfo } from "../hoverinfo";
 import { ResolveNamespace } from "../resolve/namespace";
@@ -50,9 +50,8 @@ export class ContextNamespace extends Context{
 		let tokName = this._typename.lastToken || tokNS;
 
 		this.range = Helpers.rangeFrom(tokNS, tokName, true, false);
-		this.documentSymbol = DocumentSymbol.create(this._typename.lastPart.name.name,
-			this._typename.name, SymbolKind.Namespace, this.range,
-			Helpers.rangeFrom(tokName, tokName, true, true));
+		this.documentSymbol = DocumentSymbol.create(this._typename.lastPart.name.name, this._typename.name,
+			SymbolKind.Namespace, this.range, Helpers.rangeFrom(tokName, tokName, true, true));
 	}
 
 	dispose(): void {
@@ -86,6 +85,13 @@ export class ContextNamespace extends Context{
 	
 	public get resolveNamespace(): ResolveNamespace | undefined {
 		return this._resolveNamespace;
+	}
+	
+	public collectWorkspaceSymbols(list: SymbolInformation[]): void {
+		super.collectWorkspaceSymbols(list);
+		for (const each of this._statements) {
+			each.collectWorkspaceSymbols(list);
+		}
 	}
 
 	public contextAtPosition(position: Position): Context | undefined {

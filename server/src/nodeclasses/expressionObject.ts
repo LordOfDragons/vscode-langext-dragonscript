@@ -35,7 +35,9 @@ export interface ExpressionGroupCstNode extends CstNode {
 }
 
 export type ExpressionGroupCstChildren = {
+	leftParanthesis: IToken[];
 	expression: ExpressionCstNode[];
+	rightParanthesis: IToken[];
 };
 
 

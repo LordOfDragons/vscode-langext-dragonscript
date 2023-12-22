@@ -26,30 +26,35 @@ import { Package } from "./package";
 
 export class Packages {
 	protected _packages: Map<string,Package> = new Map<string,Package>();
-
-
+	
+	
 	constructor() {
 	}
-
+	
 	public dispose(): void {
 		for (const each of this._packages.values()) {
 			each.dispose();
 		}
 	}
-
-
+	
+	
 	public get(id: string): Package | undefined {
 		if (this._packages.has(id)) {
 			return this._packages.get(id);
 		}
 		return undefined;
 	}
-
+	
 	public add(apackage: Package): void {
 		if (this._packages.has(apackage.id)) {
 			throw Error("Package exists already");
 		}
-
 		this._packages.set(apackage.id, apackage);
+	}
+	
+	public forEach(visitor: (each: Package) => void): void {
+		for (const each of this._packages.values()) {
+			visitor(each);
+		}
 	}
 }

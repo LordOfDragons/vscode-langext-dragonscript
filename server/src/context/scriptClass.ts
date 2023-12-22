@@ -25,7 +25,7 @@
 import { Context } from "./context"
 import { DeclareClassCstNode } from "../nodeclasses/declareClass";
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
-import { Definition, DocumentSymbol, Hover, Position, RemoteConsole, SymbolKind } from "vscode-languageserver"
+import { Definition, DocumentSymbol, Hover, Position, RemoteConsole, SymbolInformation, SymbolKind } from "vscode-languageserver"
 import { TypeName } from "./typename"
 import { ContextInterface } from "./scriptInterface";
 import { ContextEnumeration } from "./scriptEnum";
@@ -173,6 +173,13 @@ export class ContextClass extends Context{
 
 	public get inheritanceResolved(): boolean {
 		return this._inheritanceResolved;
+	}
+	
+	public collectWorkspaceSymbols(list: SymbolInformation[]): void {
+		super.collectWorkspaceSymbols(list);
+		for (const each of this._declarations) {
+			each.collectWorkspaceSymbols(list);
+		}
 	}
 
 	public contextAtPosition(position: Position): Context | undefined {

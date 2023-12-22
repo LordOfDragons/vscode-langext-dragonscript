@@ -930,7 +930,7 @@ export class DSParser extends CstParser{
 			{ALT: () => this.SUBRULE(this.expressionMember)},
 			{ALT: () => this.SUBRULE(this.expressionBlock)}
 		])
-	})
+	} /*, {resyncEnabled: false}*/)
 
 	public expressionGroup = this.RULE("expressionGroup", () => {
 		this.CONSUME(DSLexer.tokenLParan)

@@ -24,7 +24,7 @@
 
 import { Context } from "./context";
 import { ScriptCstNode } from "../nodeclasses/script";
-import { DocumentSymbol, Position, RemoteConsole, URI } from "vscode-languageserver";
+import { DocumentSymbol, Position, RemoteConsole, SymbolInformation, URI } from "vscode-languageserver";
 import { ContextPinNamespace } from "./pinNamespace";
 import { ContextNamespace } from "./namespace";
 import { ContextClass } from "./scriptClass";
@@ -42,6 +42,7 @@ export class ContextScript extends Context{
 	protected _requires: ContextRequiresPackage[] = [];
 	protected _namespaces: ContextNamespace[] = [];
 	public documentSymbols: DocumentSymbol[] = [];
+	public workspaceSymbols: SymbolInformation[] = [];
 	public uri?: URI;
 
 
@@ -102,18 +103,18 @@ export class ContextScript extends Context{
 				});
 			}
 		}
-
+		
 		for (const each of this._namespaces) {
 			each.addChildDocumentSymbols(each.statements);
 		}
-
+		
 		for (const each of this._statements) {
 			if (each.documentSymbol) {
 				this.documentSymbols.push(each.documentSymbol);
 			}
 		}
 	}
-
+	
 	public dispose(): void {
 		super.dispose();
 		for (const each of this._statements) {
@@ -123,7 +124,7 @@ export class ContextScript extends Context{
 
 
 	
-	public getDocumentUri(): URI | undefined {
+	public get documentUri(): URI | undefined {
 		return this.uri;
 	}
 	
@@ -150,6 +151,13 @@ export class ContextScript extends Context{
 			}
 		}
 		return found;
+	}
+	
+	public collectWorkspaceSymbols(list: SymbolInformation[]): void {
+		super.collectWorkspaceSymbols(list);
+		for (const each of this._statements) {
+			each.collectWorkspaceSymbols(list);
+		}
 	}
 	
 	public contextAtPosition(position: Position): Context | undefined {

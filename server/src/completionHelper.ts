@@ -32,7 +32,6 @@ import { RefactoringHelper } from "./refactoringHelper";
 import { ResolveNamespace } from "./resolve/namespace";
 import { ResolveSearch } from "./resolve/search";
 import { ResolveType } from "./resolve/type";
-import { debugLogMessage } from "./server";
 
 
 export class CompletionHelper {
@@ -389,8 +388,6 @@ export class CompletionHelper {
 	public static createExpression(range: Range, context: Context, castable?: ResolveType[]): CompletionItem[] {
 		if (!castable) {
 			castable = context.parent?.expectTypes(context);
-			debugLogMessage(`castable ${context.parent?.constructor.name}:`);
-			castable?.forEach(t => debugLogMessage(`- ${t.resolveTextShort}`));
 		}
 		
 		let search = CompletionHelper.searchExpression(context, castable);

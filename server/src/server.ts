@@ -40,7 +40,9 @@ import {
 	Location,
 	LocationLink,
 	Definition,
-	FileChangeType} from 'vscode-languageserver/node'
+	FileChangeType,
+	WorkspaceSymbolParams,
+	SymbolInformation} from 'vscode-languageserver/node'
 
 import {
 	Position,
@@ -122,7 +124,8 @@ connection.onInitialize((params: InitializeParams) => {
 				label: "DragonScript"
 			},
 			hoverProvider: true,
-			definitionProvider: true
+			definitionProvider: true,
+			workspaceSymbolProvider: true
 		}
 	};
 	
@@ -337,6 +340,15 @@ connection.onDocumentSymbol(
 		return scriptDocuments.get(params.textDocument.uri)?.context?.documentSymbols || [];
 	}
 );
+
+connection.onWorkspaceSymbol(
+	(params: WorkspaceSymbolParams): SymbolInformation[] => {
+		//console.log(`onWorkspaceSymbols: ${params.query}`);
+		let symbols: SymbolInformation[] = [];
+		workspacePackages.forEach (p => p.scriptDocuments.forEach (s => s.context?.collectWorkspaceSymbols(symbols)));
+		return symbols;
+	}
+)
 
 connection.onHover(
 	(params: TextDocumentPositionParams): Hover | null => {

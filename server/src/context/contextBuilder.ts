@@ -52,6 +52,7 @@ import { ContextMember } from "./expressionMember";
 import { ContextConstant } from "./expressionConstant";
 import { ContextBlock } from "./expressionBlock";
 import { integer } from "vscode-languageserver";
+import { ContextGroup } from "./group";
 
 
 /** Context builder. */
@@ -123,7 +124,7 @@ export class ContextBuilder{
 	}
 	
 	public static createExpressionGroup(node: ExpressionGroupCstNode, parent: Context): Context {
-		return this.createExpression(node.children.expression[0], parent);
+		return new ContextGroup(node, parent);
 	}
 	
 	public static createExpressionAssign(node: ExpressionAssignCstNode, parent: Context): Context {

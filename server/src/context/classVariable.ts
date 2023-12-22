@@ -26,7 +26,7 @@ import { Context } from "./context";
 import { ClassVariableCstNode } from "../nodeclasses/declareClass";
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
 import { FullyQualifiedClassNameCstNode } from "../nodeclasses/fullyQualifiedClassName";
-import { Definition, DocumentSymbol, Hover, Position, RemoteConsole, SymbolKind } from "vscode-languageserver";
+import { Definition, DocumentSymbol, Hover, Position, RemoteConsole, SymbolInformation, SymbolKind } from "vscode-languageserver";
 import { TypeName } from "./typename";
 import { ContextBuilder } from "./contextBuilder";
 import { Identifier } from "./identifier";
@@ -69,9 +69,9 @@ export class ContextClassVariable extends Context{
 
 		let tokBegin = firstVar ? this._name.token : typeNode.children.identifier[0];
 		if (tokBegin) {
+			const symkind = this._typeModifiers.has(Context.TypeModifier.Fixed) ? SymbolKind.Constant : SymbolKind.Variable;
 			this.range = Helpers.rangeFrom(tokBegin, endToken, true, false);
-			this.documentSymbol = DocumentSymbol.create(this._name.name, this._typename.name,
-				this._typeModifiers.has(Context.TypeModifier.Fixed) ? SymbolKind.Constant : SymbolKind.Variable,
+			this.documentSymbol = DocumentSymbol.create(this._name.name, this._typename.name, symkind,
 				this.range, Helpers.rangeFrom(tokBegin, endToken, true, true));
 		}
 	}

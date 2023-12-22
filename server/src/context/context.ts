@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-import { CompletionItem, Definition, Diagnostic, DiagnosticRelatedInformation, DiagnosticSeverity, DocumentSymbol, Hover, Location, Position, Range, RemoteConsole, URI } from "vscode-languageserver";
+import { CompletionItem, Definition, Diagnostic, DiagnosticRelatedInformation, DiagnosticSeverity, DocumentSymbol, Hover, Location, Position, Range, RemoteConsole, SymbolInformation, URI } from "vscode-languageserver";
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
 import { capabilities } from "../server";
 import { ResolveState } from "../resolve/state";
@@ -38,6 +38,7 @@ export class Context {
 	protected _type: Context.ContextType;
 	public parent?: Context;
 	public documentSymbol?: DocumentSymbol;
+	public workspaceSymbol?: SymbolInformation;
 	protected _hover: Hover | null | undefined;
 	public range?: Range
 	public expressionType?: ResolveType;
@@ -63,11 +64,11 @@ export class Context {
 
 
 	/** Type. */
-	public get type(): Context.ContextType{
+	public get type(): Context.ContextType {
 		return this._type;
 	}
 	
-	public addChildDocumentSymbols(list: Context[]) {
+	public addChildDocumentSymbols(list: Context[]): void {
 		if (!this.documentSymbol || list.length == 0) {
 			return;
 		}
@@ -84,11 +85,24 @@ export class Context {
 		}
 	}
 	
-	public collectChildDocSymbols(list: DocumentSymbol[]) {
+	public collectChildDocSymbols(list: DocumentSymbol[]): void {
 		if (this.documentSymbol) {
 			list.push(this.documentSymbol);
 		}
 	}
+	
+	public collectWorkspaceSymbols(list: SymbolInformation[]): void {
+		if (!this.documentSymbol) {
+			return;
+		}
+		
+		if (!this.workspaceSymbol) {
+			this.workspaceSymbol = SymbolInformation.create(this.documentSymbol.name,
+				this.documentSymbol.kind, this.documentSymbol.range, this.documentUri);
+		}
+		list.push(this.workspaceSymbol)
+	}
+	
 	
 	
 	public static get defaultTypeModifiers(): Context.TypeModifierSet {
@@ -143,7 +157,7 @@ export class Context {
 	}
 	
 	public resolveLocation(range?: Range): Location | undefined {
-		const uri = this.getDocumentUri();
+		const uri = this.documentUri;
 		return uri && range ? Location.create(uri, range) : undefined;
 	}
 	
@@ -199,12 +213,12 @@ export class Context {
 		return undefined;
 	}
 	
-	public getDocumentUri(): URI | undefined {
-		return this.parent?.getDocumentUri();
+	public get documentUri(): URI | undefined {
+		return this.parent?.documentUri;
 	}
 	
 	public getReportLocation(): Location {
-		return Location.create(this.getDocumentUri() ?? "",
+		return Location.create(this.documentUri ?? "",
 			this.documentSymbol?.range ?? this.range ??
 				Range.create(Position.create(1, 1), Position.create(1, 1)));
 	}
@@ -371,6 +385,7 @@ export namespace Context {
 		Block,
 		Try,
 		TryCatch,
+		Group,
 		Generic
 	}
 

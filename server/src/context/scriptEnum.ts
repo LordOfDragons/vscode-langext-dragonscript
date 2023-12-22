@@ -25,7 +25,7 @@
 import { Context } from "./context"
 import { DeclareEnumerationCstNode, EnumerationEntryCstNode } from "../nodeclasses/declareEnumeration";
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
-import { Definition, DocumentSymbol, Hover, Position, RemoteConsole, SymbolKind } from "vscode-languageserver"
+import { Definition, DocumentSymbol, Hover, Position, RemoteConsole, SymbolInformation, SymbolKind } from "vscode-languageserver"
 import { Identifier } from "./identifier";
 import { HoverInfo } from "../hoverinfo";
 import { ResolveState } from "../resolve/state";
@@ -59,8 +59,8 @@ export class ContextEnumEntry extends Context{
 		if (tokBegin) {
 			let tokEnd = eoc.newline ? eoc.newline[0] : eoc.commandSeparator![0];
 			this.range = Helpers.rangeFrom(tokBegin, tokEnd);
-			this.documentSymbol = DocumentSymbol.create(this._name.name, docTextExt,
-				SymbolKind.EnumMember, this.range, this.range);
+			this.documentSymbol = DocumentSymbol.create(this._name.name,
+				docTextExt, SymbolKind.EnumMember, this.range, this.range);
 		}
 	}
 
@@ -213,6 +213,13 @@ export class ContextEnumeration extends Context{
 
 	public get simpleName(): string {
 		return this._name.name;
+	}
+	
+	public collectWorkspaceSymbols(list: SymbolInformation[]): void {
+		super.collectWorkspaceSymbols(list);
+		for (const each of this._entries) {
+			each.collectWorkspaceSymbols(list);
+		}
 	}
 	
 	public get resolveEnumeration(): ResolveEnumeration | undefined {
