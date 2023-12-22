@@ -280,7 +280,7 @@ export class ResolveSearch {
 	/** Accept argument using non-name related filters. */
 	public acceptArgument(argument: ContextFunctionArgument | ContextTryCatch): boolean {
 		if (this.onlyCastable){
-			const type = argument.typename.resolve as ResolveType;
+			const type = argument.typename.resolve?.resolved as ResolveType;
 			if (type && !this.onlyCastable.find(t => type.castable(t))) {
 				return false;
 			}
@@ -292,7 +292,7 @@ export class ResolveSearch {
 	/** Accept local variable using non-name related filters. */
 	public acceptLocalVariable(variable: ContextVariable): boolean {
 		if (this.onlyCastable){
-			const type = variable.typename.resolve as ResolveType;
+			const type = variable.typename.resolve?.resolved as ResolveType;
 			if (type && !this.onlyCastable.find(t => type.castable(t))) {
 				return false;
 			}

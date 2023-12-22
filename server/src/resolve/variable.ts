@@ -26,88 +26,43 @@ import { CompletionItem, CompletionItemKind, DiagnosticRelatedInformation, Inser
 import { ContextClassVariable } from '../context/classVariable';
 import { Context } from '../context/context';
 import { ContextEnumEntry, ContextEnumeration } from '../context/scriptEnum';
-import { MatchableName } from '../matchableName';
 import { ResolveClass } from './class';
+import { Resolved } from './resolved';
 import { ResolveType } from './type';
 
 
-/**
- * Variable in a class or enumeration.
- */
-export class ResolveVariable{
-	protected _name: string;
-	protected _matchableName?: MatchableName;
+/** Variable in a class or enumeration. */
+export class ResolveVariable extends Resolved{
 	protected _context?: ContextClassVariable | ContextEnumEntry;
-	protected _fullyQualifiedName?: string
 	protected _variableType?: ResolveType;
-	protected _resolveTextShort?: string;
-	protected _resolveTextLong?: string[];
-	protected _reportInfoText?: string;
-
-
+	
+	
 	constructor (context: ContextClassVariable | ContextEnumEntry) {
-		this._name = context.name.name;
+		super(context.name.name, Resolved.Type.Variable);
 		this._context = context;
-
+		
 		if (context.type == Context.ContextType.ClassVariable) {
-			this._variableType = (context as ContextClassVariable).typename?.resolve;
+			this._variableType = (context as ContextClassVariable).typename?.resolve?.resolved as ResolveType;
 		} else {
 			this._variableType = (context.parent as ContextEnumeration).resolveEnumeration;
 		}
 	}
-
+	
 	public dispose(): void {
 		this._context = undefined;
-		this.removeFromParent();
+		super.dispose();
 		this._variableType = undefined;
 	}
-
-
-	public get name(): string {
-		return this._name;
-	}
 	
-	public get matchableName(): MatchableName {
-		if (!this._matchableName) {
-			this._matchableName = new MatchableName(this._name);
-		}
-		return this._matchableName;
-	}
-
-	public get fullyQualifiedName(): string {
-		if (!this._fullyQualifiedName) {
-			if (this.parent) {
-				const pfqn = this.parent.fullyQualifiedName;
-				this._fullyQualifiedName = pfqn != "" ? `${pfqn}.${this._name}` : this._name;
-			} else {
-				this._fullyQualifiedName = this._name;
-			}
-		}
-		return this._fullyQualifiedName;
-	}
-
+	
 	public get displayName(): string {
 		return this.fullyQualifiedName;
 	}
-
-	public get resolveTextShort(): string {
-		if (!this._resolveTextShort) {
-			this._resolveTextShort = this.updateResolveTextShort();
-		}
-		return this._resolveTextShort ?? "?";
-	}
-
+	
 	protected updateResolveTextShort(): string {
 		return `${this._variableType?.name} ${this.parent?.name}.${this._name}`;
 	}
-
-	public get resolveTextLong(): string[] {
-		if (!this._resolveTextLong) {
-			this._resolveTextLong = this.updateResolveTextLong();
-		}
-		return this._resolveTextLong ?? ["?"];
-	}
-
+	
 	protected updateResolveTextLong(): string[] {
 		const typemods = this.typeModifiers?.typestring ?? "public";
 		const typename = this._variableType?.name;
@@ -127,35 +82,25 @@ export class ResolveVariable{
 		}
 		return undefined;
 	}
-
-	public get reportInfoText(): string {
-		if (!this._reportInfoText) {
-			this._reportInfoText = this.updateReportInfoText();
-		}
-		return this._reportInfoText ?? "?";
-	}
-
+	
 	protected updateReportInfoText(): string {
 		return this._context?.reportInfoText ?? this._name;
 	}
-
-
-	public parent?: ResolveType;
-
-
+	
+	
 	public get context(): ContextClassVariable | ContextEnumEntry | undefined {
 		return this._context;
 	}
-
+	
 	public get variableType(): ResolveType | undefined {
 		return this._variableType;
 	}
-
+	
 	public removeFromParent(): void {
-		this.parent?.removeVariable(this);
-		this.parent = undefined;
+		(this.parent as ResolveType)?.removeVariable(this);
+		super.removeFromParent();
 	}
-
+	
 	/** Determine if class 'cls' can access variable. */
 	public canAccess(cls: ResolveClass) {
 		const pc = this.parent as ResolveClass;
@@ -165,7 +110,7 @@ export class ResolveVariable{
 		if (cls == pc) {
 			return true;
 		}
-
+		
 		if (this.context.type == Context.ContextType.ClassVariable) {
 			const v = this.context as ContextClassVariable;
 			

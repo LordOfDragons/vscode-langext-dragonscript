@@ -22,75 +22,44 @@
  * SOFTWARE.
  */
 
-import { MatchableName } from '../matchableName';
 import { ResolveFunction } from './function';
+import { Resolved } from './resolved';
 import { ResolveSignature } from './signature';
-import { ResolveType } from './type';
- 
-  
-/**
- * Group of functions in a class or interface sharing the same name.
- */
-export class ResolveFunctionGroup{
-	protected _name: string;
-	protected _matchableName?: MatchableName;
-	protected _fullyQualifiedName?: string
+
+
+/** Group of functions in a class or interface sharing the same name. */
+export class ResolveFunctionGroup extends Resolved{
 	protected _functions: ResolveFunction[] = [];
-
-
+	
+	
 	constructor (name: string) {
-		this._name = name;
+		super(name, Resolved.Type.FunctionGroup);
 	}
-
+	
 	public dispose(): void {
 		for (const each of this._functions) {
 			each.parent = undefined;
 			each.functionGroup = undefined;
 			each.dispose();
 		}
-	}
-
-
-	public get name(): string {
-		return this._name;
+		super.dispose();
 	}
 	
-	public get matchableName(): MatchableName {
-		if (!this._matchableName) {
-			this._matchableName = new MatchableName(this._name);
-		}
-		return this._matchableName;
-	}
-
-	public get fullyQualifiedName(): string {
-		if (!this._fullyQualifiedName) {
-			if (this.parent) {
-				const pfqn = this.parent.fullyQualifiedName;
-				this._fullyQualifiedName = pfqn != "" ? `${pfqn}.${this._name}` : this._name;
-			} else {
-				this._fullyQualifiedName = this._name;
-			}
-		}
-		return this._fullyQualifiedName;
-	}
-
+	
 	public get displayName(): string {
 		return this.fullyQualifiedName;
 	}
-
-
-	public parent?: ResolveType;
-
-
+	
+	
 	public get functions(): ResolveFunction[] {
 		return this._functions;
 	}
-
+	
 	public addFunction(func: ResolveFunction): void {
 		this._functions.push(func);
 		func.functionGroup = this;
 	}
-
+	
 	public findFunction(signature: ResolveSignature): ResolveFunction | undefined {
 		for (const each of this._functions) {
 			if (each.signature.matchesExactly(signature)) {
@@ -99,11 +68,11 @@ export class ResolveFunctionGroup{
 		}
 		return undefined;
 	}
-
+	
 	public hasFunctionWithSignature(func: ResolveFunction): boolean {
 		return this.findFunction(func.signature) !== undefined;
 	}
-
+	
 	public removeFunction(func: ResolveFunction): void {
 		const i = this._functions.indexOf(func);
 		if (i != -1) {

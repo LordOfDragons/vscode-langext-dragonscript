@@ -103,7 +103,7 @@ export class ContextVariable extends Context {
 		if (this._firstVariable) {
 			this._typename.resolve = this._firstVariable._typename.resolve;
 		} else {
-			this._typename.resolveType(state);
+			this._typename.resolveType(state, this);
 		}
 		
 		this._value?.resolveMembers(state);

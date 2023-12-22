@@ -169,7 +169,7 @@ export class ContextConstant extends Context{
 				break;
 
 			case ContextConstant.ConstantType.super:
-				this._resolveType = state.topScopeClass?.extends?.resolve;
+				this._resolveType = state.topScopeClass?.extends?.resolve?.resolved as ResolveType;
 				break;
 				
 			case ContextConstant.ConstantType.null:

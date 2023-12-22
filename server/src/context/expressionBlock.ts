@@ -106,7 +106,11 @@ export class ContextBlock extends Context{
 	public get arguments(): ContextFunctionArgument[] {
 		return this._arguments;
 	}
-
+	
+	public get simpleName(): string {
+		return "run";
+	}
+	
 	public get statements(): ContextStatements | undefined {
 		return this.statements;
 	}
@@ -146,7 +150,7 @@ export class ContextBlock extends Context{
 	}
 	
 	public resolveMembers(state: ResolveState): void {
-		this._returnType.resolveType(state);
+		this._returnType.resolveType(state, this);
 		
 		state.withScopeContext(this, () => {
 			for (const each of this._arguments) {

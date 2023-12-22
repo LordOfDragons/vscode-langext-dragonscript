@@ -80,7 +80,7 @@ export class ContextReturn extends Context{
 			return;
 		}
 		
-		const frt = cbf.returnType?.resolve as ResolveType;
+		const frt = cbf.returnType?.resolve?.resolved as ResolveType;
 		const ov = this._value;
 		
 		if (frt && frt != ResolveNamespace.classVoid) {

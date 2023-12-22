@@ -193,8 +193,8 @@ export class ContextInterface extends Context{
 		this._inheritanceResolved = true;
 		
 		for (const each of this._implements) {
-			const t = each.resolveType(state);
-			if (t && !(t.type == ResolveType.Type.Interface)) {
+			const t = each.resolveType(state, this);
+			if (t?.resolved && !(t.resolved.type == ResolveType.Type.Interface)) {
 				const r = each.range;
 				if (r) {
 					state.reportError(r, `${each.name} is not an interface.`);

@@ -31,45 +31,45 @@ import { ResolveType } from './type';
 
 export class ResolveInterface extends ResolveType {
 	protected _context?: ContextInterface;
-
-
+	
+	
 	constructor (context: ContextInterface) {
 		super(context.name.name, ResolveType.Type.Interface);
 		this._context = context;
 		this._resolveTextType = 'interface';
 	}
-
+	
 	public dispose(): void {
 		super.dispose();
 		this._context = undefined;
 	}
-
-
+	
+	
 	public get context(): ContextInterface | undefined {
 		return this._context;
 	}
-
+	
 	public set context(context: ContextInterface | undefined) {
 		this._context = context;
 		this.invalidate();
 	}
-
-
+	
+	
 	public removeFromParent(): void {
-		this.parent?.removeInterface(this);
-		this.parent = undefined;
+		(this.parent as ResolveType)?.removeInterface(this);
+		super.removeFromParent();
 	}
 	
 	public createReportInfo(message: string): DiagnosticRelatedInformation | undefined {
 		return this._context?.createReportInfo(message);
 	}
-
+	
 	public search(search: ResolveSearch): void {
 		super.search(search);
 		
 		if (this.context) {
 			for (const each of this.context.implements) {
-				(each.resolve as ResolveType)?.search(search);
+				(each.resolve?.resolved as ResolveType)?.search(search);
 			}
 			ResolveNamespace.classObject.search(search);
 		}
@@ -86,7 +86,7 @@ export class ResolveInterface extends ResolveType {
 		switch (type.type) {
 		case ResolveType.Type.Interface:
 			for (const each of this.context.implements) {
-				if ((each.resolve as ResolveType).castable(type)) {
+				if ((each.resolve?.resolved as ResolveType).castable(type)) {
 					return true;
 				}
 			}
@@ -113,19 +113,5 @@ export class ResolveInterface extends ResolveType {
 	
 	protected get completionItemKind(): CompletionItemKind {
 		return CompletionItemKind.Interface;
-	}
-
-	protected onInvalidate(): void {
-		super.onInvalidate();
-	}
-
-	protected onValidate(): void {
-		super.onValidate();
-
-		if (this._context) {
-			for (const each of this._context.declarations) {
-				
-			}
-		}
 	}
 }

@@ -30,33 +30,33 @@ import { ResolveType } from './type';
 
 export class ResolveEnumeration extends ResolveType {
 	protected _context?: ContextEnumeration;
-
-
+	
+	
 	constructor (context: ContextEnumeration) {
 		super(context.name.name, ResolveType.Type.Enumeration);
 		this._context = context;
 		this._resolveTextType = 'enumeration';
 	}
-
+	
 	public dispose(): void {
 		super.dispose();
 		this._context = undefined;
 	}
-
-
+	
+	
 	public get context(): ContextEnumeration | undefined {
 		return this._context;
 	}
-
+	
 	public set context(context: ContextEnumeration | undefined) {
 		this._context = context;
 		this.invalidate();
 	}
-
-
+	
+	
 	public removeFromParent(): void {
-		this.parent?.removeEnumeration(this);
-		this.parent = undefined;
+		(this.parent as ResolveType)?.removeEnumeration(this);
+		super.removeFromParent();
 	}
 	
 	public createReportInfo(message: string): DiagnosticRelatedInformation | undefined {
@@ -95,19 +95,5 @@ export class ResolveEnumeration extends ResolveType {
 	public resolveLocation(): Location[] {
 		const l = this._context?.resolveLocationSelf();
 		return l ? [l] : [];
-	}
-	
-	protected onInvalidate(): void {
-		super.onInvalidate();
-	}
-
-	protected onValidate(): void {
-		super.onValidate();
-		
-		if (this._context) {
-			for (const each of this._context.entries) {
-				
-			}
-		}
 	}
 }

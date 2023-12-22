@@ -78,7 +78,7 @@ export class ContextFunctionArgument extends Context{
 	}
 
 	public resolveMembers(state: ResolveState): void {
-		this._typename?.resolveType(state);
+		this._typename?.resolveType(state, this);
 	}
 	
 	public contextAtPosition(position: Position): Context | undefined {

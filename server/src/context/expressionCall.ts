@@ -490,7 +490,7 @@ export class ContextFunctionCall extends Context{
 		for (const each of this._arguments) {
 			each.resolveMembers(state);
 		}
-		this._castType?.resolveType(state);
+		this._castType?.resolveType(state, this);
 	}
 	
 	public resolveStatements(state: ResolveState): void {
@@ -545,7 +545,7 @@ export class ContextFunctionCall extends Context{
 				if (this._name.name == 'this') {
 					state.topScopeClass?.resolveClass?.search(this._matches);
 				} else {
-					(state.topScopeClass?.resolveClass?.context?.extends?.resolve as ResolveType)?.search(this._matches);
+					(state.topScopeClass?.resolveClass?.context?.extends?.resolve?.resolved as ResolveType)?.search(this._matches);
 				}
 			} else {
 				state.search(this._matches, this);
@@ -574,7 +574,7 @@ export class ContextFunctionCall extends Context{
 				break;
 
 			case ContextFunctionCall.FunctionType.cast:
-				this.expressionType = this._castType?.resolve as ResolveType;
+				this.expressionType = this._castType?.resolve?.resolved as ResolveType;
 				this.expressionTypeType = Context.ExpressionType.Object;
 				break;
 				
@@ -656,7 +656,7 @@ export class ContextFunctionCall extends Context{
 								if (this._name.name == 'this') {
 									state.topScopeClass?.resolveClass?.search(matches2);
 								} else {
-									(state.topScopeClass?.resolveClass?.context?.extends?.resolve as ResolveType)?.search(matches2);
+									(state.topScopeClass?.resolveClass?.context?.extends?.resolve?.resolved as ResolveType)?.search(matches2);
 								}
 							} else {
 								state.search(matches2, this);
@@ -835,15 +835,15 @@ export class ContextFunctionCall extends Context{
 			
 			switch (this._functionType) {
 				case ContextFunctionCall.FunctionType.cast:
-					content.push(`**operator cast** ${(this._castType?.resolve as ResolveType)?.resolveTextLong}`);
+					content.push(`**operator cast** ${this._castType?.resolve?.resolved?.resolveTextLong}`);
 					break;
 					
 				case ContextFunctionCall.FunctionType.castable:
-					content.push(`bool **operator castable** ${(this._castType?.resolve as ResolveType)?.resolveTextLong}`);
+					content.push(`bool **operator castable** ${this._castType?.resolve?.resolved?.resolveTextLong}`);
 					break;
 					
 				case ContextFunctionCall.FunctionType.typeof:
-					content.push(`bool **operator typeof** ${(this._castType?.resolve as ResolveType)?.resolveTextLong}`);
+					content.push(`bool **operator typeof** ${this._castType?.resolve?.resolved?.resolveTextLong}`);
 					break;
 					
 				case ContextFunctionCall.FunctionType.assign:

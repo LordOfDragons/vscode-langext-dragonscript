@@ -74,7 +74,7 @@ export class ContextTryCatch extends Context {
 	
 	
 	public resolveMembers(state: ResolveState): void {
-		this._typename.resolveType(state);
+		this._typename.resolveType(state, this);
 		
 		state.withScopeContext(this, () => {
 			this._statements.resolveMembers(state);
@@ -86,7 +86,7 @@ export class ContextTryCatch extends Context {
 			this._statements.resolveStatements(state);
 		});
 		
-		const t1 = this._typename.resolve as ResolveType;
+		const t1 = this._typename.resolve?.resolved as ResolveType;
 		const t2 = ResolveNamespace.classException;
 		if (t1 && ResolveSignatureArgument.typeMatches(t1, t2, Context.AutoCast.No) == ResolveSignature.Match.No) {
 			let ri: DiagnosticRelatedInformation[] = [];

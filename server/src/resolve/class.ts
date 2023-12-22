@@ -22,43 +22,42 @@
  * SOFTWARE.
  */
 
-import { CompletionItemKind, Definition, DiagnosticRelatedInformation, Location } from 'vscode-languageserver';
+import { CompletionItemKind, DiagnosticRelatedInformation, Location } from 'vscode-languageserver';
 import { ContextClass } from '../context/scriptClass';
-import { debugLogMessage, debugLogObjProps } from '../server';
 import { ResolveSearch } from './search';
 import { ResolveType } from './type'
 
 
 export class ResolveClass extends ResolveType {
 	protected _context?: ContextClass;
-
-
+	
+	
 	constructor (context?: ContextClass, name?: string) {
 		super(context?.name.name || name || "??", ResolveType.Type.Class);
 		this._context = context;
 		this._resolveTextType = 'class';
 	}
-
+	
 	public dispose(): void {
 		super.dispose();
 		this._context = undefined;
 	}
-
-
+	
+	
 	public primitiveType: ResolveClass.PrimitiveType = ResolveClass.PrimitiveType.Object;
-
+	
 	public get context(): ContextClass | undefined {
 		return this._context;
 	}
-
+	
 	public set context(context: ContextClass | undefined) {
 		this._context = context;
 		this.invalidate();
 	}
-
+	
 	public removeFromParent(): void {
-		this.parent?.removeClass(this);
-		this.parent = undefined;
+		(this.parent as ResolveType)?.removeClass(this);
+		super.removeFromParent();
 	}
 	
 	public createReportInfo(message: string): DiagnosticRelatedInformation | undefined {
@@ -72,25 +71,25 @@ export class ResolveClass extends ResolveType {
 			if (search.searchSuperClasses) {
 				const ignoreConstructors = search.ignoreConstructors;
 				search.ignoreConstructors = true;
-				(this.context.extends?.resolve as ResolveType)?.search(search);
+				(this.context.extends?.resolve?.resolved as ResolveType)?.search(search);
 				search.ignoreConstructors = ignoreConstructors;
 			}
 			
 			for (const each of this.context.implements) {
-				(each.resolve as ResolveType)?.search(search);
+				(each.resolve?.resolved as ResolveType)?.search(search);
 			}
 		}
 	}
-
+	
 	public isSuperclass(cls: ResolveClass): boolean {
 		return cls.isSubclass(this);
 	}
-
+	
 	public isSubclass(cls: ResolveClass): boolean {
-		const pc = this._context?.extends?.resolve as ResolveClass;
+		const pc = this._context?.extends?.resolve?.resolved as ResolveClass;
 		return pc && (pc === cls || pc.isSubclass(cls));
 	}
-
+	
 	public castable(type: ResolveType): boolean {
 		if (type === this) {
 			return true;
@@ -101,18 +100,18 @@ export class ResolveClass extends ResolveType {
 		
 		if (type.type == ResolveType.Type.Interface) {
 			for (const each of this.context.implements) {
-				if ((each.resolve as ResolveType).castable(type)) {
+				if ((each.resolve?.resolved as ResolveType).castable(type)) {
 					return true;
 				}
 			}
 		}
 		
-		const r = this.context.extends?.resolve as ResolveType;
+		const r = this.context.extends?.resolve?.resolved as ResolveType;
 		if (r && r.castable(type)) {
 			return true;
 		}
 		
-		return this.parent?.castable(type) ?? false;
+		return (this.parent as ResolveType)?.castable(type) ?? false;
 	}
 	
 	public resolveLocation(): Location[] {
@@ -128,13 +127,9 @@ export class ResolveClass extends ResolveType {
 		return CompletionItemKind.Class;
 	}
 	
-	protected onInvalidate(): void {
-		super.onInvalidate();
-	}
-
 	protected onValidate(): void {
 		super.onValidate();
-
+		
 		if (this._context) {
 			for (const each of this._context.declarations) {
 				
@@ -142,7 +137,6 @@ export class ResolveClass extends ResolveType {
 		}
 	}
 }
-
 
 export namespace ResolveClass {
 	export enum PrimitiveType {

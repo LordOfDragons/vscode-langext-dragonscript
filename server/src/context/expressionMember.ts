@@ -198,12 +198,12 @@ export class ContextMember extends Context{
 		} else {
 			if (this._matches.arguments.length > 0) {
 				this._resolveArgument = this._matches.arguments[0];
-				this.expressionType = this._resolveArgument.typename.resolve as ResolveType;
+				this.expressionType = this._resolveArgument.typename.resolve?.resolved as ResolveType;
 				this.expressionTypeType = Context.ExpressionType.Object;
 				
 			} else if (this._matches.localVariables.length > 0) {
 				this._resolveLocalVariable = this._matches.localVariables[0];
-				this.expressionType = this._resolveLocalVariable.typename.resolve as ResolveType;
+				this.expressionType = this._resolveLocalVariable.typename.resolve?.resolved as ResolveType;
 				this.expressionTypeType = Context.ExpressionType.Object;
 				
 			} else if (this._matches.variables.length > 0) {

@@ -23,7 +23,7 @@
  */
 
 import { IToken } from "chevrotain"
-import { Definition, Hover, Location, Position, Range } from "vscode-languageserver";
+import { Definition, Hover, Position, Range } from "vscode-languageserver";
 import { HoverInfo } from "../hoverinfo";
 import { FullyQualifiedClassNameCstNode } from "../nodeclasses/fullyQualifiedClassName"
 import { ResolveNamespace } from "../resolve/namespace";
@@ -38,19 +38,20 @@ import { ContextClass } from "./scriptClass";
 import { ContextInterface } from "./scriptInterface";
 import { ContextNamespace } from "./namespace";
 import { Helpers } from "../helpers";
-import { debugLogMessage } from "../server";
+import { Resolved, ResolveUsage } from "../resolve/resolved";
 
 
 export class TypeNamePart {
 	protected _name: Identifier;
-	
+	protected _resolve?: ResolveUsage;
 	
 	constructor(token?: IToken, name?: string) {
 		this._name = new Identifier(token, name);
 	}
 	
 	dispose(): void {
-		this.resolve = undefined
+		this._resolve?.dispose();
+		this._resolve = undefined;
 	}
 	
 	
@@ -61,8 +62,21 @@ export class TypeNamePart {
 	public get name(): Identifier {
 		return this._name
 	}
-
-	public resolve?: any
+	
+	public get resolve(): ResolveUsage | undefined {
+		return this._resolve;
+	}
+	
+	public setResolve(resolved: Resolved | undefined, context: Context, target?: any): ResolveUsage | undefined {
+		this._resolve?.dispose();
+		this._resolve = undefined;
+		
+		if (resolved) {
+			this._resolve = new ResolveUsage(resolved, context, target);
+		}
+		
+		return this._resolve;
+	}
 }
 
 
@@ -70,7 +84,7 @@ export class TypeName {
 	protected _node?: FullyQualifiedClassNameCstNode
 	protected _parts: TypeNamePart[]
 	protected _name: string
-	public resolve?: any
+	public resolve?: ResolveUsage;
 
 
 	constructor(node?: FullyQualifiedClassNameCstNode) {
@@ -93,6 +107,7 @@ export class TypeName {
 		for (const each of this._parts) {
 			each.dispose();
 		}
+		this.resolve = undefined;
 	}
 
 
@@ -143,10 +158,12 @@ export class TypeName {
 	public get lastToken(): IToken | undefined {
 		return this.lastPart.name.token;
 	}
-
 	
-	public resolveNamespace(state: ResolveState): ResolveNamespace | undefined {
+	
+	public resolveNamespace(state: ResolveState, context: Context, target?: any): ResolveUsage | undefined {
 		var ns = ResolveNamespace.root;
+		this.resolve = undefined;
+		
 		for (const each of this._parts) {
 			if (!ns.isNamespace(each.name.name)) {
 				state.reportError(each.name.range, `"${each.name.name}" in "${ns.name}" is not a namespace`);
@@ -154,24 +171,26 @@ export class TypeName {
 			}
 			
 			ns = ns.namespaceOrAdd(each.name.name);
-			each.resolve = ns;
+			this.resolve = each.setResolve(ns, context, target);
 		}
-
-		return this.resolve = ns;
+		
+		return this.resolve;
 	}
 
-	public resolveType(state: ResolveState): ResolveType | undefined {
+	public resolveType(state: ResolveState, context: Context, target?: any): ResolveUsage | undefined {
 		if (this._parts.length == 0) {
 			return undefined;
 		}
 		
 		var type: ResolveType | undefined;
 		var first = true;
+		this.resolve = undefined;
 		
 		for (const each of this._parts) {
 			// first entry has to resolve to a basic class
 			if (first) {
-				const nextType = this.resolveBaseType(state);
+				this.resolve = this.resolveBaseType(state, context, target);
+				const nextType = this.resolve?.resolved as ResolveType;
 				if (!nextType) {
 					state.reportError(each.name.range, `"${each.name.name}" not found.`);
 					return undefined;
@@ -184,7 +203,7 @@ export class TypeName {
 			} else {
 				const nextType = type!.findType(each.name.name);
 				if (nextType) {
-					each.resolve = nextType;
+					this.resolve = each.setResolve(nextType, context, target);
 					type = nextType;
 					continue;
 				}
@@ -194,10 +213,10 @@ export class TypeName {
 			}
 		}
 		
-		return this.resolve = type;
+		return this.resolve;
 	}
-
-	protected resolveBaseType(state: ResolveState): ResolveType | undefined {
+	
+	protected resolveBaseType(state: ResolveState, context: Context, target?: any): ResolveUsage | undefined {
 		var scopeNS: ResolveNamespace | undefined;
 
 		// first part has to be:
@@ -205,6 +224,7 @@ export class TypeName {
 		const name = part.name.name;
 		
 		const sostack = state.scopeContextStack;
+		this.resolve = undefined;
 		
 		for (let i = sostack.length - 1; i >= 0; --i) {
 			const scope = sostack[i];
@@ -219,8 +239,7 @@ export class TypeName {
 						// - an inner type of the parent class
 						const t = this.resolveTypeInClassChain(state, pc, name, true, false);
 						if (t) {
-							part.resolve = t;
-							return t;
+							return part.setResolve(t, context, target);
 						}
 					}
 					break;
@@ -231,8 +250,7 @@ export class TypeName {
 						// - an inner type of the parent interface
 						const t = this.resolveTypeInInterfaceChain(state, pi, name, false);
 						if (t) {
-							part.resolve = t;
-							return t;
+							return part.setResolve(t, context, target);
 						}
 					}
 					break;
@@ -256,8 +274,7 @@ export class TypeName {
 						// - an inner type of the super class chain
 						const t = this.resolveTypeInClassChain(state, pc, name, false, true);
 						if (t) {
-							part.resolve = t;
-							return t;
+							return part.setResolve(t, context, target);
 						}
 					}
 					break;
@@ -268,8 +285,7 @@ export class TypeName {
 						// - an inner type of the super interface chain
 						const t = this.resolveTypeInInterfaceChain(state, pi, name, true);
 						if (t) {
-							part.resolve = t;
-							return t;
+							return part.setResolve(t, context, target);
 						}
 					}
 					break;
@@ -293,8 +309,7 @@ export class TypeName {
 					if (scopeNS) {
 						const t = this.resolveTypeInNamespaceChain(state, scopeNS, name);
 						if (t) {
-							part.resolve = t;
-							return t;
+							return part.setResolve(t, context, target);
 						}
 					}
 					break;
@@ -304,8 +319,7 @@ export class TypeName {
 		{
 			const t = ResolveNamespace.root.findType(name);
 			if (t) {
-				part.resolve = t;
-				return t;
+				return part.setResolve(t, context, target);
 			}
 		}
 
@@ -313,8 +327,7 @@ export class TypeName {
 		for (const pin of state.pins) {
 			const t = this.resolveTypeInNamespaceChain(state, pin, name);
 			if (t) {
-				part.resolve = t;
-				return t;
+				return part.setResolve(t, context, target);
 			}
 		}
 
@@ -326,8 +339,7 @@ export class TypeName {
 				if (ns) {
 					const t = this.resolveNamespaceInNamespaceChain(state, ns, name);
 					if (t) {
-						part.resolve = t;
-						return t;
+						return part.setResolve(t, context, target);
 					}
 				}
 			}
@@ -337,8 +349,7 @@ export class TypeName {
 		for (const pin of state.pins) {
 			const t = this.resolveNamespaceInNamespaceChain(state, pin, name);
 			if (t) {
-				part.resolve = t;
-				return t;
+				return part.setResolve(t, context, target);
 			}
 		}
 
@@ -359,18 +370,18 @@ export class TypeName {
 				state.requiresAnotherTurn = true;
 			}
 
-			const t2 = rclass.context.extends?.resolve;
+			const t2 = rclass.context.extends?.resolve?.resolved as ResolveClass;
 			if (t2?.type == ResolveType.Type.Class) {
-				const t3 = this.resolveTypeInClassChain(state, t2 as ResolveClass, name, true, true);
+				const t3 = this.resolveTypeInClassChain(state, t2, name, true, true);
 				if (t3) {
 					return t3;
 				}
 			}
 
 			for (const each of rclass.context.implements) {
-				const t2 = each.resolve;
+				const t2 = each.resolve?.resolved as ResolveInterface;
 				if (t2?.type == ResolveType.Type.Interface) {
-					const t3 = this.resolveTypeInInterfaceChain(state, t2 as ResolveInterface, name, true);
+					const t3 = this.resolveTypeInInterfaceChain(state, t2, name, true);
 					if (t3) {
 						return t3;
 					}
@@ -405,9 +416,9 @@ export class TypeName {
 			}
 			
 			for (const each of iface.context.implements) {
-				const t2 = each.resolve;
+				const t2 = each.resolve?.resolved as ResolveInterface;
 				if (t2?.type == ResolveType.Type.Interface) {
-					const t3 = this.resolveTypeInInterfaceChain(state, t2 as ResolveInterface, name, true);
+					const t3 = this.resolveTypeInInterfaceChain(state, t2, name, true);
 					if (t3) {
 						return t3;
 					}
@@ -467,25 +478,26 @@ export class TypeName {
 			let part = this._parts[i];
 			if (part.name.isPositionInside(position)) {
 				let content = [];
-
-				if (part.resolve) {
-					if (part.resolve.type == ResolveType.Type.Class) {
-						const c = part.resolve as ResolveClass;
+				const pr = part.resolve?.resolved;
+				
+				if (pr) {
+					if (pr.type == ResolveType.Type.Class) {
+						const c = pr as ResolveClass;
 						content.push(`**class ${c.name}**`);
-						this.hoverAddParent(content, c.parent);
+						this.hoverAddParent(content, c.parent as ResolveType);
 
-					} else if (part.resolve.type == ResolveType.Type.Interface) {
-						const i = part.resolve as ResolveInterface;
+					} else if (pr.type == ResolveType.Type.Interface) {
+						const i = pr as ResolveInterface;
 						content.push(`**interface ${i.name}**`);
-						this.hoverAddParent(content, i.parent);
+						this.hoverAddParent(content, i.parent as ResolveType);
 
-					} else if (part.resolve.type == ResolveType.Type.Enumeration) {
-						const e = part.resolve as ResolveEnumeration;
+					} else if (pr.type == ResolveType.Type.Enumeration) {
+						const e = pr as ResolveEnumeration;
 						content.push(`**enumeration ${e.name}**`);
-						this.hoverAddParent(content, e.parent);
+						this.hoverAddParent(content, e.parent as ResolveType);
 
-					} else if (part.resolve.type == ResolveType.Type.Namespace) {
-						const ns = part.resolve as ResolveNamespace;
+					} else if (pr.type == ResolveType.Type.Namespace) {
+						const ns = pr as ResolveNamespace;
 						content.push(`**namespace ${ns.name}**`);
 						this.hoverAddParent(content, ns);
 					}
@@ -512,10 +524,7 @@ export class TypeName {
 		for (i=0; i<plen; i++) {
 			let part = this._parts[i];
 			if (part.name.isPositionInside(position)) {
-				if (part.resolve) {
-					return (part.resolve as ResolveType).resolveLocation();
-				}
-				return [];
+				return part.resolve?.resolved?.resolveLocation() ?? [];
 			}
 		};
 		return [];

@@ -136,7 +136,7 @@ export class ContextNamespace extends Context{
 
 	public resolveClasses(state: ResolveState): void {
 		this._resolveNamespace?.removeContext(this);
-		this._resolveNamespace = this._typename.resolveNamespace(state);
+		this._resolveNamespace = this._typename.resolveNamespace(state, this)?.resolved as ResolveNamespace;
 		this._resolveNamespace?.addContext(this);
 
 		state.withScopeContext(this, () => {

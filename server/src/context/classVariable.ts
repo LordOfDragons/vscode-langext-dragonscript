@@ -127,7 +127,7 @@ export class ContextClassVariable extends Context{
 		if (this._firstVariable) {
 			this._typename.resolve = this._firstVariable._typename.resolve;
 		} else {
-			this._typename.resolveType(state);
+			this._typename.resolveType(state, this);
 		}
 		
 		this._resolveVariable?.dispose();
@@ -155,7 +155,7 @@ export class ContextClassVariable extends Context{
 	public resolveStatements(state: ResolveState): void {
 		if (this.resolveVariable) {
 			const parentClass = this.resolveVariable.parent as ResolveClass;
-			let pcr = parentClass?.context?.extends?.resolve as ResolveType;
+			let pcr = parentClass?.context?.extends?.resolve?.resolved as ResolveType;
 			while (pcr) {
 				const v = pcr.variable(this._name.name);
 				if (v) {
@@ -164,7 +164,7 @@ export class ContextClassVariable extends Context{
 					}
 					break;
 				}
-				pcr = (pcr.parent as ResolveClass)?.context?.extends?.resolve as ResolveType;
+				pcr = (pcr.parent as ResolveClass)?.context?.extends?.resolve?.resolved as ResolveType;
 			}
 		}
 

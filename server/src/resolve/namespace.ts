@@ -33,8 +33,8 @@ import { ResolveType } from './type';
 export class ResolveNamespace extends ResolveType {
 	protected _contexts: ContextNamespace[] = [];
 	protected _namespaces: Map<string, ResolveNamespace> = new Map();
-
-
+	
+	
 	constructor (name: string) {
 		super(name, ResolveType.Type.Namespace);
 		
@@ -46,21 +46,17 @@ export class ResolveNamespace extends ResolveType {
 			this.addClass(new ResolveClass(undefined, "void"));
 		}
 	}
-
-	public dispose(): void {
-		super.dispose();
-	}
-
-
+	
+	
 	public get contexts(): ContextNamespace[] {
 		return this._contexts;
 	}
-
+	
 	public addContext(context: ContextNamespace) {
 		this._contexts.push(context);
 		this.invalidate();
 	}
-
+	
 	public removeContext(context: ContextNamespace) {
 		let index = this._contexts.indexOf(context);
 		if (index != -1) {
@@ -68,19 +64,19 @@ export class ResolveNamespace extends ResolveType {
 			this.invalidate();
 		}
 	}
-
-
+	
+	
 	public get namespaces(): Map<string, ResolveNamespace> {
 		this.validate();
 		return this._namespaces;
 	}
-
+	
 	public namespace(name: string): ResolveNamespace | undefined {
 		let ns = this._namespaces.get(name);
 		ns?.validate();
 		return ns;
 	}
-
+	
 	public namespaceOrAdd(name: string): ResolveNamespace {
 		let ns = this._namespaces.get(name);
 		if (!ns) {
@@ -90,15 +86,14 @@ export class ResolveNamespace extends ResolveType {
 		}
 		return ns;
 	}
-
-
+	
+	
 	public isNamespace(name: string): boolean {
 		// TODO also check interface and enumerations once done
 		return !this._classes.has(name);
 	}
-
 	
-
+	
 	public search(search: ResolveSearch): void {
 		if (search.onlyVariables || search.onlyFunctions || search.ignoreTypes) {
 			return;
@@ -106,7 +101,7 @@ export class ResolveNamespace extends ResolveType {
 		
 		this.searchNamespace(search);
 		if (!search.ignoreNamespaceParents) {
-			this.parent?.search(search);
+			(this.parent as ResolveType)?.search(search);
 		}
 	}
 	
@@ -140,55 +135,55 @@ export class ResolveNamespace extends ResolveType {
 			}
 		}
 	}
-
+	
 	public static get root(): ResolveNamespace {
 		rootNamespace.validate();
 		return rootNamespace;
 	}
-
-
+	
+	
 	public static get classBool(): ResolveClass {
 		let c = rootNamespace.class('bool')!;
 		c.isPrimitive = true;
 		return c;
 	}
-
+	
 	public static get classByte(): ResolveClass {
 		let c = rootNamespace.class('byte')!;
 		c.autoCast = Context.AutoCast.ValueByte;
 		c.isPrimitive = true;
 		return c;
 	}
-
+	
 	public static get classInt(): ResolveClass {
 		let c = rootNamespace.class('int')!;
 		c.autoCast = Context.AutoCast.ValueInt;
 		c.isPrimitive = true;
 		return c;
 	}
-
+	
 	public static get classFloat(): ResolveClass {
 		let c = rootNamespace.class('float')!;
 		c.isPrimitive = true;
 		return c;
 	}
-
+	
 	public static get classString(): ResolveClass {
 		return rootNamespace.class('String')!;
 	}
-
+	
 	public static get classBlock(): ResolveClass {
 		return rootNamespace.class('Block')!;
 	}
-
+	
 	public static get classEnumeration(): ResolveClass {
 		return rootNamespace.class('Enumeration')!;
 	}
-
+	
 	public static get classObject(): ResolveClass {
 		return rootNamespace.class('Object')!;
 	}
-
+	
 	public static get classException(): ResolveClass {
 		return rootNamespace.class('Exception')!;
 	}
@@ -216,23 +211,13 @@ export class ResolveNamespace extends ResolveType {
 	protected get completionItemKind(): CompletionItemKind {
 		return CompletionItemKind.Module;
 	}
-
-
+	
+	
 	protected onInvalidate(): void {
 		super.onInvalidate();
-
+		
 		for (const each of this._namespaces.values()) {
 			each.invalidate();
-		}
-	}
-
-	protected onValidate(): void {
-		super.onValidate();
-
-		for (const context of this._contexts) {
-			for (const statement of context.statements) {
-
-			}
 		}
 	}
 }

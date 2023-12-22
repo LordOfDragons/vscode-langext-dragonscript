@@ -23,13 +23,13 @@
  */
 
 import { CompletionItem, CompletionItemKind, DiagnosticRelatedInformation, InsertTextFormat, Range, TextEdit } from 'vscode-languageserver';
-import { TextDocument } from 'vscode-languageserver-textdocument';
 import { ContextFunction } from '../context/classFunction';
 import { Context } from '../context/context';
 import { ContextBlock } from '../context/expressionBlock';
 import { ResolveClass } from './class';
 import { ResolveFunctionGroup } from './functionGroup';
 import { ResolveNamespace } from './namespace';
+import { Resolved } from './resolved';
 import { ResolveSignature } from './signature';
 import { ResolveType } from './type';
 
@@ -37,27 +37,23 @@ import { ResolveType } from './type';
 /**
  * Function in a class or interface.
  */
-export class ResolveFunction{
-	protected _name: string;
+export class ResolveFunction extends Resolved{
 	protected _context?: ContextFunction | ContextBlock;
-	protected _fullyQualifiedName?: string
 	protected _returnType?: ResolveType;
 	protected _signature: ResolveSignature = new ResolveSignature();
-	protected _reportInfoText?: string;
-
-
+	
+	
 	constructor (context: ContextFunction | ContextBlock) {
+		super(context.simpleName, Resolved.Type.Function);
 		this._context = context;
 		
 		switch (context.type) {
 		case Context.ContextType.Function:
 			let cxtfunc = context as ContextFunction;
-			this._name = cxtfunc.name.name;
-			this._returnType = cxtfunc.returnType?.resolve;
+			this._returnType = cxtfunc.returnType?.resolve?.resolved as ResolveType;
 			break;
 			
 		case Context.ContextType.Block:
-			this._name = "run";
 			this._returnType = ResolveNamespace.classObject;
 			break;
 			
@@ -66,7 +62,7 @@ export class ResolveFunction{
 		}
 		
 		for (const each of context.arguments) {
-			const type = each.typename.resolve ?? ResolveNamespace.classVoid;
+			const type = (each.typename.resolve?.resolved as ResolveType) ?? ResolveNamespace.classVoid;
 			this._signature.addArgument(type, each.name.name);
 		}
 	}
@@ -78,39 +74,20 @@ export class ResolveFunction{
 		this._signature.dispose();
 		this.functionGroup = undefined;
 	}
-
-
+	
+	
 	public functionGroup?: ResolveFunctionGroup
-
-
-	public get name(): string {
-		return this._name;
-	}
-
-	public get fullyQualifiedName(): string {
-		if (!this._fullyQualifiedName) {
-			if (this.parent) {
-				const pfqn = this.parent.fullyQualifiedName;
-				this._fullyQualifiedName = pfqn != "" ? `${pfqn}.${this._name}` : this._name;
-			} else {
-				this._fullyQualifiedName = this._name;
-			}
-		}
-		return this._fullyQualifiedName;
-	}
-
+	
+	
 	public get displayName(): string {
 		return this.fullyQualifiedName;
 	}
-
-
-	public parent?: ResolveType;
-
-
+	
+	
 	public get context(): ContextFunction | ContextBlock | undefined {
 		return this._context;
 	}
-
+	
 	public get returnType(): ResolveType | undefined {
 		return this._returnType;
 	}
@@ -118,7 +95,7 @@ export class ResolveFunction{
 	public replaceReturnType(type: ResolveType): void {
 		this._returnType = type;
 	}
-
+	
 	public get signature(): ResolveSignature {
 		return this._signature;
 	}
@@ -133,12 +110,12 @@ export class ResolveFunction{
 		}
 		return undefined;
 	}
-
+	
 	public removeFromParent(): void {
-		this.parent?.removeFunction(this);
-		this.parent = undefined;
+		(this.parent as ResolveType)?.removeFunction(this);
+		super.removeFromParent();
 	}
-
+	
 	/** Determine if class 'cls' can access variable. */
 	public canAccess(cls: ResolveClass) {
 		const pc = this.parent as ResolveClass;
@@ -172,7 +149,7 @@ export class ResolveFunction{
 			relatedInformation.push(info);
 		}
 	}
-
+	
 	public get reportInfoText(): string {
 		if (!this._reportInfoText) {
 			this._reportInfoText = this.updateReportInfoText();

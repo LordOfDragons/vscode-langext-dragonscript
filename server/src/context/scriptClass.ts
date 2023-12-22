@@ -260,8 +260,8 @@ export class ContextClass extends Context{
 		this._inheritanceResolved = true;
 
 		if (this._extends) {
-			const t = this._extends.resolveType(state);
-			if (t?.type != ResolveType.Type.Class) {
+			const t = this._extends.resolveType(state, this);
+			if (t?.resolved?.type != ResolveType.Type.Class) {
 				const r = this._extends.range;
 				if (r) {
 					state.reportError(r, `${this._extends.name} is not a class.`);
@@ -270,8 +270,8 @@ export class ContextClass extends Context{
 		}
 		
 		for (const each of this._implements) {
-			const t = each.resolveType(state);
-			if (t?.type != ResolveType.Type.Interface) {
+			const t = each.resolveType(state, this);
+			if (t?.resolved?.type != ResolveType.Type.Interface) {
 				const r = each.range;
 				if (r) {
 					state.reportError(r, `${each.name} is not an interface.`);
@@ -357,7 +357,7 @@ export class ContextClass extends Context{
 	}
 	
 	public static superContext(context: Context): ContextClass | undefined {
-		const parent = ContextClass.thisContext(context)?.extends?.resolve as ResolveClass;
+		const parent = ContextClass.thisContext(context)?.extends?.resolve?.resolved as ResolveClass;
 		return parent?.type == ResolveType.Type.Class ? parent.context : undefined;
 	}
 	
