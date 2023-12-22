@@ -23,7 +23,7 @@
  */
 
 import { Context } from "./context";
-import { CompletionItem, Definition, DiagnosticRelatedInformation, DocumentSymbol, Hover, integer, Position, Range, RemoteConsole } from "vscode-languageserver";
+import { CompletionItem, Definition, DiagnosticRelatedInformation, DocumentSymbol, Hover, integer, Location, Position, Range, RemoteConsole } from "vscode-languageserver";
 import { ContextBuilder } from "./contextBuilder";
 import { Identifier } from "./identifier";
 import { ExpressionAdditionCstNode } from "../nodeclasses/expressionAddition";
@@ -51,6 +51,7 @@ import { ContextMember } from "./expressionMember";
 import { ContextClass } from "./scriptClass";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { CompletionHelper } from "../completionHelper";
+import { Resolved, ResolveUsage } from "../resolve/resolved";
 
 
 export class ContextFunctionCall extends Context{
@@ -932,21 +933,21 @@ export class ContextFunctionCall extends Context{
 						
 						if (this._matches.functionsFull.length > 0) {
 							if (this._matches.functionsFull.length == 1) {
-								const l = this._matches.functionsFull[0].context?.resolveLocationSelf();
+								const l = this._matches.functionsFull[0].context?.resolveLocationSelf;
 								if (l) {
 									definitions.push(l);
 								}
 							}
 						} else if (this._matches.functionsPartial.length > 0) {
 							for (const each of this._matches.functionsPartial) {
-								const l = each.context?.resolveLocationSelf();
+								const l = each.context?.resolveLocationSelf;
 								if (l) {
 									definitions.push(l);
 								}
 							}
 						} else if (this._matches.functionsWildcard.length > 0) {
 							for (const each of this._matches.functionsWildcard) {
-								const l = each.context?.resolveLocationSelf();
+								const l = each.context?.resolveLocationSelf;
 								if (l) {
 									definitions.push(l);
 								}
@@ -1022,6 +1023,22 @@ export class ContextFunctionCall extends Context{
 		if (rangeBegin && rangeEnd) {
 			this.range = Range.create(rangeBegin, rangeEnd);
 		}
+	}
+	
+	public resolvedAtPosition(position: Position): Resolved | undefined {
+		if (this._castType?.isPositionInside(position)) {
+			return this._castType.resolve?.resolved;
+		}
+		return super.resolvedAtPosition(position);
+	}
+	
+	public referenceFor(usage: ResolveUsage): Location | undefined {
+		return this._castType?.location(this)
+			?? super.referenceFor(usage);
+	}
+	
+	public get referenceSelf(): Location | undefined {
+		return this.resolveLocation(this._name?.range);
 	}
 
 	

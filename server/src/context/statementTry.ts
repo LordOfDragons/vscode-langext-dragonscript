@@ -23,7 +23,7 @@
  */
 
 import { Context } from "./context";
-import { DiagnosticRelatedInformation, DocumentSymbol, Hover, Position, RemoteConsole } from "vscode-languageserver";
+import { DiagnosticRelatedInformation, DocumentSymbol, Hover, Location, Position, RemoteConsole } from "vscode-languageserver";
 import { ContextStatements } from "./statements";
 import { StatementCatchCstNode, StatementTryCstNode } from "../nodeclasses/statementTry";
 import { TypeName } from "./typename";
@@ -35,6 +35,8 @@ import { ResolveNamespace } from "../resolve/namespace";
 import { ResolveSignature, ResolveSignatureArgument } from "../resolve/signature";
 import { HoverInfo } from "../hoverinfo";
 import { ResolveSearch } from "../resolve/search";
+import { Resolved, ResolveUsage } from "../resolve/resolved";
+import { ResolveArgument } from "../resolve/argument";
 
 
 export class ContextTryCatch extends Context {
@@ -42,6 +44,7 @@ export class ContextTryCatch extends Context {
 	protected _typename: TypeName;
 	protected _variable: Identifier;
 	protected _statements: ContextStatements;
+	protected _resolveArgument?: ResolveArgument;
 	
 	
 	constructor(node: StatementCatchCstNode, parent: Context) {
@@ -65,6 +68,8 @@ export class ContextTryCatch extends Context {
 	public dispose(): void {
 		this._typename.dispose();
 		this._statements.dispose();
+		this._resolveArgument?.dispose();
+		this._resolveArgument = undefined;
 	}
 	
 	
@@ -72,9 +77,22 @@ export class ContextTryCatch extends Context {
 		return this._typename;
 	}
 	
+	public get simpleName(): string {
+		return this._variable.name;
+	}
+	
+	public get resolveArgument(): ResolveArgument | undefined {
+		return this._resolveArgument;
+	}
+	
 	
 	public resolveMembers(state: ResolveState): void {
 		this._typename.resolveType(state, this);
+		
+		this._resolveArgument?.dispose();
+		this._resolveArgument = undefined;
+		
+		this._resolveArgument = new ResolveArgument(this);
 		
 		state.withScopeContext(this, () => {
 			this._statements.resolveMembers(state);
@@ -146,6 +164,24 @@ export class ContextTryCatch extends Context {
 		} else if (this._variable.name == search.name || !search.name) {
 			search.addArgument(this);
 		}
+	}
+	
+	public resolvedAtPosition(position: Position): Resolved | undefined {
+		if (this._variable.isPositionInside(position)) {
+			return this._resolveArgument;
+		} else if (this._typename?.isPositionInside(position)) {
+			return this._typename.resolve?.resolved;
+		}
+		return super.resolvedAtPosition(position);
+	}
+	
+	public referenceFor(usage: ResolveUsage): Location | undefined {
+		return this._typename?.location(this)
+			?? super.referenceFor(usage);
+	}
+	
+	public get referenceSelf(): Location | undefined {
+		return this.resolveLocation(this._variable.range);
 	}
 	
 	

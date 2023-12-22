@@ -23,7 +23,7 @@
  */
 
 import { Context } from "./context";
-import { Definition, DocumentSymbol, Hover, Position, RemoteConsole } from "vscode-languageserver";
+import { Definition, DocumentSymbol, Hover, Location, Position, RemoteConsole } from "vscode-languageserver";
 import { StatementVariableCstNode } from "../nodeclasses/statementVariables";
 import { TypeName } from "./typename";
 import { Identifier } from "./identifier";
@@ -34,6 +34,8 @@ import { Helpers } from "../helpers";
 import { IToken } from "chevrotain";
 import { HoverInfo } from "../hoverinfo";
 import { FullyQualifiedClassNameCstNode } from "../nodeclasses/fullyQualifiedClassName";
+import { Resolved, ResolveUsage } from "../resolve/resolved";
+import { ResolveLocalVariable } from "../resolve/localVariable";
 
 
 export class ContextVariable extends Context {
@@ -42,6 +44,7 @@ export class ContextVariable extends Context {
 	protected _typename: TypeName;
 	protected _value?: Context;
 	protected _firstVariable?: ContextVariable;
+	protected _resolveVariable?: ResolveLocalVariable;
 
 
 	constructor(node: StatementVariableCstNode,
@@ -66,9 +69,9 @@ export class ContextVariable extends Context {
 	}
 
 	public dispose(): void {
-		super.dispose();
-
 		super.dispose()
+		this._resolveVariable?.dispose();
+		this._resolveVariable = undefined;
 		this._typename.dispose();
 		this._value?.dispose;
 	}
@@ -97,6 +100,10 @@ export class ContextVariable extends Context {
 	public get simpleName(): string {
 		return this._name.name;
 	}
+	
+	public get resolveVariable(): ResolveLocalVariable | undefined {
+		return this._resolveVariable;
+	}
 
 
 	public resolveMembers(state: ResolveState): void {
@@ -105,6 +112,11 @@ export class ContextVariable extends Context {
 		} else {
 			this._typename.resolveType(state, this);
 		}
+		
+		this._resolveVariable?.dispose();
+		this._resolveVariable = undefined;
+		
+		this._resolveVariable = new ResolveLocalVariable(this);
 		
 		this._value?.resolveMembers(state);
 		
@@ -177,6 +189,24 @@ export class ContextVariable extends Context {
 			return this._typename.definition(position);
 		}
 		return super.definition(position);
+	}
+	
+	public resolvedAtPosition(position: Position): Resolved | undefined {
+		if (this._name.isPositionInside(position)) {
+			return this._resolveVariable;
+		} else if (this._typename?.isPositionInside(position)) {
+			return this._typename.resolve?.resolved;
+		}
+		return super.resolvedAtPosition(position);
+	}
+	
+	public referenceFor(usage: ResolveUsage): Location | undefined {
+		return this._typename?.location(this)
+			?? super.referenceFor(usage);
+	}
+	
+	public get referenceSelf(): Location | undefined {
+		return this.resolveLocation(this._name.range);
 	}
 
 

@@ -23,9 +23,10 @@
  */
 
 import { IToken } from "chevrotain"
-import { Position, Range } from "vscode-languageserver";
+import { Location, Position, Range } from "vscode-languageserver";
 import { Helpers } from "../helpers";
 import { MatchableName } from "../matchableName";
+import { Context } from "./context";
 
 
 export class Identifier {
@@ -73,6 +74,20 @@ export class Identifier {
 	
 	public isPositionInside(position: Position): boolean {
 		return Helpers.isPositionInsideRange(this._range, position);
+	}
+	
+	public location(context: Context): Location | undefined {
+		const range = this.range;
+		if (!range) {
+			return undefined;
+		}
+		
+		const uri = context.documentUri;
+		if (!uri) {
+			return undefined;
+		}
+		
+		return Location.create(uri, range);
 	}
 	
 	

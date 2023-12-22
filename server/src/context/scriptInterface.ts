@@ -25,7 +25,7 @@
 import { Context } from "./context"
 import { DeclareInterfaceCstNode } from "../nodeclasses/declareInterface";
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
-import { Definition, DocumentSymbol, Hover, Position, RemoteConsole, SymbolInformation, SymbolKind } from "vscode-languageserver"
+import { Definition, DocumentSymbol, Hover, Location, Position, RemoteConsole, SymbolInformation, SymbolKind } from "vscode-languageserver"
 import { TypeName } from "./typename"
 import { ContextClass } from "./scriptClass";
 import { ContextEnumeration } from "./scriptEnum";
@@ -39,6 +39,7 @@ import { ResolveNamespace } from "../resolve/namespace";
 import { ResolveType } from "../resolve/type";
 import { Helpers } from "../helpers";
 import { ResolveSearch } from "../resolve/search";
+import { Resolved, ResolveUsage } from "../resolve/resolved";
 
 
 export class ContextInterface extends Context{
@@ -269,6 +270,33 @@ export class ContextInterface extends Context{
 			}
 		}
 		return super.definition(position);
+	}
+	
+	public resolvedAtPosition(position: Position): Resolved | undefined {
+		if (this._name.isPositionInside(position)) {
+			return this._resolveInterface;
+		} else {
+			for (const each of this._implements) {
+				if (each.isPositionInside(position)) {
+					return each.resolve?.resolved;
+				}
+			}
+		}
+		return super.resolvedAtPosition(position);
+	}
+	
+	public referenceFor(usage: ResolveUsage): Location | undefined {
+		var r: Location | undefined;
+		for (const each of this._implements) {
+			if (each.resolve === usage) {
+				r = each.location(this);
+			}
+		}
+		return r ?? super.referenceFor(usage);
+	}
+	
+	public get referenceSelf(): Location | undefined {
+		return this.resolveLocation(this._name.range);
 	}
 
 

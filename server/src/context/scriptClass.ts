@@ -25,7 +25,7 @@
 import { Context } from "./context"
 import { DeclareClassCstNode } from "../nodeclasses/declareClass";
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
-import { Definition, DocumentSymbol, Hover, Position, RemoteConsole, SymbolInformation, SymbolKind } from "vscode-languageserver"
+import { Definition, DocumentSymbol, Hover, Location, Position, RemoteConsole, SymbolInformation, SymbolKind } from "vscode-languageserver"
 import { TypeName } from "./typename"
 import { ContextInterface } from "./scriptInterface";
 import { ContextEnumeration } from "./scriptEnum";
@@ -40,6 +40,7 @@ import { ResolveState } from "../resolve/state";
 import { ResolveType } from "../resolve/type";
 import { Helpers } from "../helpers";
 import { ResolveSearch } from "../resolve/search";
+import { Resolved, ResolveUsage } from "../resolve/resolved";
 
 
 export class ContextClass extends Context{
@@ -359,6 +360,39 @@ export class ContextClass extends Context{
 	public static superContext(context: Context): ContextClass | undefined {
 		const parent = ContextClass.thisContext(context)?.extends?.resolve?.resolved as ResolveClass;
 		return parent?.type == ResolveType.Type.Class ? parent.context : undefined;
+	}
+	
+	public resolvedAtPosition(position: Position): Resolved | undefined {
+		if (this._name.isPositionInside(position)) {
+			return this._resolveClass;
+		} else if (this._extends?.isPositionInside(position)) {
+			return this._extends.resolve?.resolved;
+		} else {
+			for (const each of this._implements) {
+				if (each.isPositionInside(position)) {
+					return each.resolve?.resolved;
+				}
+			}
+		}
+		return super.resolvedAtPosition(position);
+	}
+	
+	public referenceFor(usage: ResolveUsage): Location | undefined {
+		var r: Location | undefined;
+		if (this._extends?.resolve == usage) {
+			r = this._extends.location(this);
+		} else {
+			for (const each of this._implements) {
+				if (each.resolve === usage) {
+					r = each.location(this);
+				}
+			}
+		}
+		return r ?? super.referenceFor(usage);
+	}
+	
+	public get referenceSelf(): Location | undefined {
+		return this.resolveLocation(this._name.range);
 	}
 	
 	

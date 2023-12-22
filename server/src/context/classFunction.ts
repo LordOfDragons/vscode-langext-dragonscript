@@ -27,7 +27,7 @@ import { FunctionBeginCstNode } from "../nodeclasses/declareFunction";
 import { InterfaceFunctionCstNode } from "../nodeclasses/declareInterface";
 import { ClassFunctionCstNode } from "../nodeclasses/declareClass";
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
-import { Definition, DocumentSymbol, Hover, Position, RemoteConsole, SymbolInformation, SymbolKind } from "vscode-languageserver";
+import { Definition, DocumentSymbol, Hover, Location, Position, RemoteConsole, SymbolInformation, SymbolKind } from "vscode-languageserver";
 import { TypeName } from "./typename";
 import { ContextFunctionArgument } from "./classFunctionArgument";
 import { Identifier } from "./identifier";
@@ -42,6 +42,7 @@ import { ContextInterface } from "./scriptInterface";
 import { ContextFunctionCall } from "./expressionCall";
 import { Helpers } from "../helpers";
 import { ResolveSearch } from "../resolve/search";
+import { Resolved, ResolveUsage } from "../resolve/resolved";
 
 
 export class ContextFunction extends Context{
@@ -520,6 +521,24 @@ export class ContextFunction extends Context{
 			return this._returnType.definition(position);
 		}
 		return super.definition(position);
+	}
+	
+	public resolvedAtPosition(position: Position): Resolved | undefined {
+		if (this._name.isPositionInside(position)) {
+			return this._resolveFunction;
+		} else if (this._returnType?.isPositionInside(position)) {
+			return this._returnType.resolve?.resolved;
+		}
+		return super.resolvedAtPosition(position);
+	}
+	
+	public referenceFor(usage: ResolveUsage): Location | undefined {
+		return this._returnType?.location(this)
+			?? super.referenceFor(usage);
+	}
+	
+	public get referenceSelf(): Location | undefined {
+		return this.resolveLocation(this._name.range);
 	}
 
 

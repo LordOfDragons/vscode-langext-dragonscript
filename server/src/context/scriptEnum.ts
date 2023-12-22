@@ -25,7 +25,7 @@
 import { Context } from "./context"
 import { DeclareEnumerationCstNode, EnumerationEntryCstNode } from "../nodeclasses/declareEnumeration";
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
-import { Definition, DocumentSymbol, Hover, Position, RemoteConsole, SymbolInformation, SymbolKind } from "vscode-languageserver"
+import { Definition, DocumentSymbol, Hover, Location, Position, RemoteConsole, SymbolInformation, SymbolKind } from "vscode-languageserver"
 import { Identifier } from "./identifier";
 import { HoverInfo } from "../hoverinfo";
 import { ResolveState } from "../resolve/state";
@@ -40,6 +40,7 @@ import { ResolveSearch } from "../resolve/search";
 import { ResolveVariable } from "../resolve/variable";
 import { TypeName } from "./typename";
 import { ResolveFunction } from "../resolve/function";
+import { Resolved } from "../resolve/resolved";
 
 
 export class ContextEnumEntry extends Context{
@@ -317,6 +318,17 @@ export class ContextEnumeration extends Context{
 			return this.definitionSelf();
 		}
 		return super.definition(position);
+	}
+	
+	public resolvedAtPosition(position: Position): Resolved | undefined {
+		if (this._name.isPositionInside(position)) {
+			return this._resolveEnum;
+		}
+		return super.resolvedAtPosition(position);
+	}
+	
+	public get referenceSelf(): Location | undefined {
+		return this.resolveLocation(this._name.range);
 	}
 
 

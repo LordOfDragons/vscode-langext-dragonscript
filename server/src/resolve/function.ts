@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-import { CompletionItem, CompletionItemKind, DiagnosticRelatedInformation, InsertTextFormat, Range, TextEdit } from 'vscode-languageserver';
+import { CompletionItem, CompletionItemKind, DiagnosticRelatedInformation, InsertTextFormat, Location, Range, TextEdit } from 'vscode-languageserver';
 import { ContextFunction } from '../context/classFunction';
 import { Context } from '../context/context';
 import { ContextBlock } from '../context/expressionBlock';
@@ -159,6 +159,11 @@ export class ResolveFunction extends Resolved{
 	
 	protected updateReportInfoText(): string {
 		return this._context?.reportInfoText ?? this._name;
+	}
+	
+	public get references(): Location[] {
+		const r = this._context?.referenceSelf;
+		return r ? [r] : [];
 	}
 	
 	public createCompletionItem(range: Range): CompletionItem {

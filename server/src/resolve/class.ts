@@ -114,9 +114,14 @@ export class ResolveClass extends ResolveType {
 		return (this.parent as ResolveType)?.castable(type) ?? false;
 	}
 	
-	public resolveLocation(): Location[] {
-		const l = this._context?.resolveLocationSelf();
+	public get resolveLocation(): Location[] {
+		const l = this._context?.resolveLocationSelf;
 		return l ? [l] : [];
+	}
+	
+	public get references(): Location[] {
+		const r = this._context?.referenceSelf;
+		return r ? [r] : [];
 	}
 	
 	protected get completionItemTitle(): string {

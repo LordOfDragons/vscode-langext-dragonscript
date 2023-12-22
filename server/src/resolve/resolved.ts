@@ -37,11 +37,17 @@ export class ResolveUsage{
 		this._resolved = resolved;
 		this._context = context;
 		this._target = target;
-		resolved.addUsage(this);
+		
+		if (resolved.canUsage) {
+			resolved.addUsage(this);
+		}
 	}
 	
 	public dispose(): void {
-		this._resolved?.removeUsage(this);
+		if (this._resolved?.canUsage) {
+			this._resolved?.removeUsage(this);
+		}
+		
 		this._context = undefined;
 		this._target = undefined;
 	}
@@ -56,6 +62,10 @@ export class ResolveUsage{
 	
 	public get target(): any {
 		return this._target;
+	}
+	
+	public get reference(): Location | undefined {
+		return this.context?.referenceFor(this);
 	}
 	
 	/** For use by Resolved class only. */
@@ -92,8 +102,11 @@ export class Resolved{
 		
 		this.removeFromParent();
 	}
-
-
+	
+	
+	public canUsage: boolean = true;
+	
+	
 	public get type(): Resolved.Type {
 		return this._type;
 	}
@@ -173,7 +186,11 @@ export class Resolved{
 		}
 	}
 	
-	public resolveLocation(): Location[] {
+	public get resolveLocation(): Location[] {
+		return [];
+	}
+	
+	public get references(): Location[] {
 		return [];
 	}
 	
@@ -208,6 +225,8 @@ export namespace Resolved {
 		Enumeration,
 		Function,
 		FunctionGroup,
-		Variable
+		Variable,
+		Argument,
+		LocalVariable
 	}
 }

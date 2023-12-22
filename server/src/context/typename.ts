@@ -23,7 +23,7 @@
  */
 
 import { IToken } from "chevrotain"
-import { Definition, Hover, Position, Range } from "vscode-languageserver";
+import { Definition, Hover, Location, Position, Range } from "vscode-languageserver";
 import { HoverInfo } from "../hoverinfo";
 import { FullyQualifiedClassNameCstNode } from "../nodeclasses/fullyQualifiedClassName"
 import { ResolveNamespace } from "../resolve/namespace";
@@ -119,13 +119,15 @@ export class TypeName {
 		};
 		return tn;
 	}
-
+	
+	/*
 	public static typeToken(token: IToken): TypeName {
 		var tn = new TypeName();
 		tn._name = token.image;
 		tn._parts.push(new TypeNamePart(token));
 		return tn;
 	}
+	*/
 
 	public static get typeVoid(): TypeName {
 		return this.typeNamed('void');
@@ -468,6 +470,20 @@ export class TypeName {
 		return undefined;
 	}
 	
+	public location(context: Context): Location | undefined {
+		const range = this.range;
+		if (!range) {
+			return undefined;
+		}
+		
+		const uri = context.documentUri;
+		if (!uri) {
+			return undefined;
+		}
+		
+		return Location.create(uri, range);
+	}
+	
 	public isPositionInside(position: Position): boolean {
 		return Helpers.isPositionInsideRange(this.range, position);
 	}
@@ -524,7 +540,7 @@ export class TypeName {
 		for (i=0; i<plen; i++) {
 			let part = this._parts[i];
 			if (part.name.isPositionInside(position)) {
-				return part.resolve?.resolved?.resolveLocation() ?? [];
+				return part.resolve?.resolved?.resolveLocation ?? [];
 			}
 		};
 		return [];

@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-import { CompletionItem, CompletionItemKind, DiagnosticRelatedInformation, InsertTextFormat, Range, TextEdit } from 'vscode-languageserver';
+import { CompletionItem, CompletionItemKind, DiagnosticRelatedInformation, InsertTextFormat, Location, Range, TextEdit } from 'vscode-languageserver';
 import { ContextClassVariable } from '../context/classVariable';
 import { Context } from '../context/context';
 import { ContextEnumEntry, ContextEnumeration } from '../context/scriptEnum';
@@ -99,6 +99,11 @@ export class ResolveVariable extends Resolved{
 	public removeFromParent(): void {
 		(this.parent as ResolveType)?.removeVariable(this);
 		super.removeFromParent();
+	}
+	
+	public get references(): Location[] {
+		const r = this._context?.referenceSelf;
+		return r ? [r] : [];
 	}
 	
 	/** Determine if class 'cls' can access variable. */

@@ -31,6 +31,7 @@ import { ResolveType } from "../resolve/type";
 import { ResolveSearch } from "../resolve/search";
 import { ResolveSignature, ResolveSignatureArgument } from "../resolve/signature";
 import { TextDocument } from "vscode-languageserver-textdocument";
+import { Resolved, ResolveUsage } from "../resolve/resolved";
 
 
 /** Base context. */
@@ -152,7 +153,7 @@ export class Context {
 	}
 	
 	protected definitionSelf(): Definition {
-		const l = this.resolveLocationSelf();
+		const l = this.resolveLocationSelf;
 		return l ? [l] : [];
 	}
 	
@@ -161,8 +162,12 @@ export class Context {
 		return uri && range ? Location.create(uri, range) : undefined;
 	}
 	
-	public resolveLocationSelf(): Location | undefined {
+	public get resolveLocationSelf(): Location | undefined {
 		return this.resolveLocation(this.range);
+	}
+	
+	public get referenceSelf(): Location | undefined {
+		return this.resolveLocationSelf;
 	}
 	
 
@@ -210,6 +215,14 @@ export class Context {
 				return context;
 			}
 		}
+		return undefined;
+	}
+	
+	public resolvedAtPosition(position: Position): Resolved | undefined {
+		return undefined;
+	}
+	
+	public referenceFor(usage: ResolveUsage): Location | undefined {
 		return undefined;
 	}
 	

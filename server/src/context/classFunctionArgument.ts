@@ -24,43 +24,48 @@
 
 import { Context } from "./context"
 import { FunctionArgumentCstNode } from "../nodeclasses/declareFunction";
-import { Definition, DocumentSymbol, Hover, Position, RemoteConsole, SymbolKind } from "vscode-languageserver"
+import { Definition, DocumentSymbol, Hover, Location, Position, RemoteConsole, SymbolKind } from "vscode-languageserver"
 import { TypeName } from "./typename";
 import { Identifier } from "./identifier";
 import { ResolveState } from "../resolve/state";
 import { HoverInfo } from "../hoverinfo";
 import { Helpers } from "../helpers";
+import { Resolved, ResolveUsage } from "../resolve/resolved";
+import { ResolveArgument } from "../resolve/argument";
 
 
 export class ContextFunctionArgument extends Context{
 	protected _node: FunctionArgumentCstNode;
 	protected _name: Identifier;
 	protected _typename: TypeName;
-
-
+	protected _resolveArgument?: ResolveArgument;
+	
+	
 	constructor(node: FunctionArgumentCstNode, parent: Context) {
 		super(Context.ContextType.FunctionArgument, parent)
 		this._node = node
 		this._name = new Identifier(node.children.name[0]);
 		this._typename = new TypeName(node.children.type[0]);
-
+		
 		let tokBegin = node.children.type[0].children.identifier[0];
 		let tokEnd = node.children.name[0];
 		this.range = Helpers.rangeFrom(tokBegin, tokEnd, true, false);
 		this.documentSymbol = DocumentSymbol.create(this._name.name, this._typename.name,
 			SymbolKind.Variable, this.range, Helpers.rangeFrom(tokBegin, tokEnd, true, true));
 	}
-
+	
 	dispose(): void {
 		super.dispose()
+		this._resolveArgument?.dispose();
+		this._resolveArgument = undefined;
 		this._typename.dispose();
 	}
-
-
+	
+	
 	public get node(): FunctionArgumentCstNode {
 		return this._node
 	}
-
+	
 	public get name(): Identifier {
 		return this._name
 	}
@@ -68,17 +73,26 @@ export class ContextFunctionArgument extends Context{
 	public get typename(): TypeName {
 		return this._typename
 	}
-
+	
 	public get fullyQualifiedName(): string {
 		return this._name.name;
 	}
-
+	
 	public get simpleName(): string {
 		return this._name.name;
 	}
-
+	
+	public get resolveArgument(): ResolveArgument | undefined {
+		return this._resolveArgument;
+	}
+	
 	public resolveMembers(state: ResolveState): void {
 		this._typename?.resolveType(state, this);
+		
+		this._resolveArgument?.dispose();
+		this._resolveArgument = undefined;
+		
+		this._resolveArgument = new ResolveArgument(this);
 	}
 	
 	public contextAtPosition(position: Position): Context | undefined {
@@ -87,7 +101,7 @@ export class ContextFunctionArgument extends Context{
 		}
 		return this;
 	}
-
+	
 	protected updateHover(position: Position): Hover | null {
 		if (this._name.isPositionInside(position)) {
 			return new HoverInfo(this.resolveTextLong, this._name.range);
@@ -97,19 +111,19 @@ export class ContextFunctionArgument extends Context{
 		}
 		return null;
 	}
-
+	
 	protected updateResolveTextShort(): string {
 		return `${this._typename} ${this._name}`;
 	}
-
+	
 	protected updateResolveTextLong(): string[] {
 		let content = [];
-		content.push(`**parameter** *${this._typename}* **${this._name}**`);
+		content.push(`**argument** *${this._typename}* **${this._name}**`);
 		return content;
 	}
-
+	
 	protected updateReportInfoText(): string {
-		return `parameter ${this._typename} ${this._name}`;
+		return `argument ${this._typename} ${this._name}`;
 	}
 	
 	public definition(position: Position): Definition {
@@ -120,6 +134,24 @@ export class ContextFunctionArgument extends Context{
 			return this._typename.definition(position);
 		}
 		return super.definition(position);
+	}
+	
+	public resolvedAtPosition(position: Position): Resolved | undefined {
+		if (this._name.isPositionInside(position)) {
+			return this._resolveArgument;
+		} else if (this._typename?.isPositionInside(position)) {
+			return this._typename.resolve?.resolved;
+		}
+		return super.resolvedAtPosition(position);
+	}
+	
+	public referenceFor(usage: ResolveUsage): Location | undefined {
+		return this._typename?.location(this)
+			?? super.referenceFor(usage);
+	}
+	
+	public get referenceSelf(): Location | undefined {
+		return this.resolveLocation(this._name.range);
 	}
 
 	

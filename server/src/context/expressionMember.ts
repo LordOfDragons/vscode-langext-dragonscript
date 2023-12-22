@@ -303,13 +303,13 @@ export class ContextMember extends Context{
 		
 		var location: Location | undefined;
 		if (this._resolveArgument) {
-			location = this._resolveArgument.resolveLocationSelf();
+			location = this._resolveArgument.resolveLocationSelf;
 		} else if (this._resolveLocalVariable) {
-			location = this._resolveLocalVariable.resolveLocationSelf();
+			location = this._resolveLocalVariable.resolveLocationSelf;
 		} else if (this._resolveVariable) {
-			location = this._resolveVariable.context?.resolveLocationSelf();
+			location = this._resolveVariable.context?.resolveLocationSelf;
 		} else if (this._resolveType) {
-			return this._resolveType.resolveLocation();
+			return this._resolveType.resolveLocation;
 		}
 		return location ? [location] : [];
 	}
@@ -329,6 +329,10 @@ export class ContextMember extends Context{
 			return this.parent?.expectTypes(this);
 		}
 		return super.expectTypes(context);
+	}
+	
+	public get referenceSelf(): Location | undefined {
+		return this.resolveLocation(this._name?.range);
 	}
 	
 	

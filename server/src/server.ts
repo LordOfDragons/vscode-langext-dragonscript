@@ -42,7 +42,8 @@ import {
 	Definition,
 	FileChangeType,
 	WorkspaceSymbolParams,
-	SymbolInformation} from 'vscode-languageserver/node'
+	SymbolInformation,
+	ReferenceParams} from 'vscode-languageserver/node'
 
 import {
 	Position,
@@ -125,7 +126,8 @@ connection.onInitialize((params: InitializeParams) => {
 			},
 			hoverProvider: true,
 			definitionProvider: true,
-			workspaceSymbolProvider: true
+			workspaceSymbolProvider: true,
+			referencesProvider: true
 		}
 	};
 	
@@ -439,6 +441,30 @@ connection.onDefinition(
 	}
 );
 
+connection.onReferences(
+	(params: ReferenceParams): Location[] => {
+		const resolved = scriptDocuments.get(params.textDocument.uri)?.context?.
+			contextAtPosition(params.position)?.resolvedAtPosition(params.position);
+		let references: Location[] = [];
+		
+		console.log(`onReference context=${scriptDocuments.get(params.textDocument.uri)?.context?.
+			contextAtPosition(params.position)?.resolveTextShort} resolved=${resolved?.resolveTextShort}`);
+		if (resolved) {
+			if (params.context.includeDeclaration) {
+				references.push(...resolved.references);
+			}
+			
+			for (const each of resolved.usage) {
+				const r = each.reference;
+				if (r) {
+					references.push(r);
+				}
+			}
+		}
+		
+		return references;
+	}
+)
 function logError(error: any): void {
 	if (error instanceof Error) {
 		let err = error as Error;

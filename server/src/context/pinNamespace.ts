@@ -24,7 +24,7 @@
 
 import { Context } from "./context";
 import { PinNamespaceCstNode } from "../nodeclasses/pinNamespace";
-import { Definition, DocumentSymbol, Hover, Position, RemoteConsole, SymbolKind } from "vscode-languageserver";
+import { Definition, DocumentSymbol, Hover, Location, Position, RemoteConsole, SymbolKind } from "vscode-languageserver";
 import { TypeName } from "./typename";
 import { HoverInfo } from "../hoverinfo";
 import { ResolveState } from "../resolve/state";
@@ -32,6 +32,7 @@ import { ResolveNamespace } from "../resolve/namespace";
 import { Helpers } from "../helpers";
 import { ResolveSearch } from "../resolve/search";
 import { ResolveType } from "../resolve/type";
+import { Resolved, ResolveUsage } from "../resolve/resolved";
 
 
 export class ContextPinNamespace extends Context{
@@ -150,6 +151,29 @@ export class ContextPinNamespace extends Context{
 	
 	public definition(position: Position): Definition {
 		return this._typename.definition(position);
+	}
+	
+	public resolvedAtPosition(position: Position): Resolved | undefined {
+		for (const each of this._typename.parts) {
+			if (each.name.isPositionInside(position)) {
+				return each.resolve?.resolved;
+			}
+		}
+		return super.resolvedAtPosition(position);
+	}
+	
+	public referenceFor(usage: ResolveUsage): Location | undefined {
+		var r: Location | undefined;
+		for (const each of this._typename.parts) {
+			if (each.resolve === usage) {
+				return each.name.location(this);
+			}
+		}
+		return r ?? super.referenceFor(usage);
+	}
+	
+	public get referenceSelf(): Location | undefined {
+		return this.resolveLocation(this._typename.range);
 	}
 	
 

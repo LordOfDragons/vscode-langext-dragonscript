@@ -26,7 +26,7 @@ import { Context } from "./context";
 import { ClassVariableCstNode } from "../nodeclasses/declareClass";
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
 import { FullyQualifiedClassNameCstNode } from "../nodeclasses/fullyQualifiedClassName";
-import { Definition, DocumentSymbol, Hover, Position, RemoteConsole, SymbolInformation, SymbolKind } from "vscode-languageserver";
+import { Definition, DocumentSymbol, Hover, Location, Position, RemoteConsole, SymbolInformation, SymbolKind } from "vscode-languageserver";
 import { TypeName } from "./typename";
 import { ContextBuilder } from "./contextBuilder";
 import { Identifier } from "./identifier";
@@ -39,6 +39,7 @@ import { ContextClass } from "./scriptClass";
 import { ContextInterface } from "./scriptInterface";
 import { Helpers } from "../helpers";
 import { ResolveClass } from "../resolve/class";
+import { Resolved, ResolveUsage } from "../resolve/resolved";
 
 
 export class ContextClassVariable extends Context{
@@ -211,6 +212,24 @@ export class ContextClassVariable extends Context{
 			return this._typename.definition(position);
 		}
 		return super.definition(position);
+	}
+	
+	public resolvedAtPosition(position: Position): Resolved | undefined {
+		if (this._name.isPositionInside(position)) {
+			return this._resolveVariable;
+		} else if (!this._firstVariable && this._typename.isPositionInside(position)) {
+			return this._typename.resolve?.resolved;
+		}
+		return super.resolvedAtPosition(position);
+	}
+	
+	public referenceFor(usage: ResolveUsage): Location | undefined {
+		return (!this._firstVariable ? this._typename?.location(this) : undefined)
+			?? super.referenceFor(usage);
+	}
+	
+	public get referenceSelf(): Location | undefined {
+		return this.resolveLocation(this._name.range);
 	}
 
 

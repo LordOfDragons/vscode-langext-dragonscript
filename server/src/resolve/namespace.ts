@@ -43,7 +43,9 @@ export class ResolveNamespace extends ResolveType {
 		
 		if (name == "") {
 			// for the root namespace add some special classes
-			this.addClass(new ResolveClass(undefined, "void"));
+			let c = new ResolveClass(undefined, "void");
+			c.canUsage = false;
+			this.addClass(c);
 		}
 	}
 	
@@ -193,12 +195,23 @@ export class ResolveNamespace extends ResolveType {
 	}
 	
 	
-	public resolveLocation(): Location[] {
+	public get resolveLocation(): Location[] {
 		let list: Location[] = [];
 		for (const each of this._contexts) {
-			const l = each.resolveLocationSelf();
+			const l = each.resolveLocationSelf;
 			if (l) {
 				list.push(l);
+			}
+		}
+		return list;
+	}
+	
+	public get references(): Location[] {
+		let list: Location[] = [];
+		for (const each of this._contexts) {
+			const r = each.referenceSelf;
+			if (r) {
+				list.push(r);
 			}
 		}
 		return list;
