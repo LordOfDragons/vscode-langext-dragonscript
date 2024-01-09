@@ -117,6 +117,7 @@ public class OuterClass extends ClassExtendImplement
 		pMember3
 		AnotherTest
 		
+		
 		var TestClassA1 a1 = TestClassA1.new(pMember1)
 		pMember1 = a1.getSomeVariable()
 	end
