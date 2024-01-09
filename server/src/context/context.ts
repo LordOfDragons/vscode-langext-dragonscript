@@ -24,7 +24,7 @@
 
 import { CompletionItem, Definition, Diagnostic, DiagnosticRelatedInformation, DiagnosticSeverity, DocumentSymbol, Hover, Location, Position, Range, RemoteConsole, SymbolInformation, URI } from "vscode-languageserver";
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
-import { capabilities } from "../server";
+import { capabilities, logError } from "../server";
 import { ResolveState } from "../resolve/state";
 import { Helpers } from "../helpers";
 import { ResolveType } from "../resolve/type";
@@ -248,6 +248,7 @@ export class Context {
 		try {
 			code();
 		} catch (error) {
+			logError(error);
 			/*
 			if (error instanceof Error) {
 				let err = error as Error;
@@ -399,6 +400,7 @@ export namespace Context {
 		Try,
 		TryCatch,
 		Group,
+		Error,
 		Generic
 	}
 

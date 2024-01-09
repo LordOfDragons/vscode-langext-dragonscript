@@ -459,7 +459,7 @@ connection.onReferences(
 		return references;
 	}
 )
-function logError(error: any): void {
+export function logError(error: any): void {
 	if (error instanceof Error) {
 		let err = error as Error;
 		connection.console.error(err.name);
