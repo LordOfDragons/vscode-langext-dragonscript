@@ -258,6 +258,30 @@ export class CompletionHelper {
 				'end')};
 	}
 	
+	/** Create completion item for '=', '==' and '!=' operators. */
+	public static createBaseOperators(range: Range, type: ResolveType): CompletionItem[] {
+		return [
+			{label: '=',
+				detail: `operator: public ${type.name} =(${type.name} value)`,
+				kind: CompletionItemKind.Operator,
+				insertTextFormat: InsertTextFormat.Snippet,
+				textEdit: TextEdit.replace(range, '='),
+				commitCharacters: [' ', ':', '/', '\\']},
+			{label: '==',
+				detail: `operator: public bool ==(${type.name} value)`,
+				kind: CompletionItemKind.Operator,
+				insertTextFormat: InsertTextFormat.Snippet,
+				textEdit: TextEdit.replace(range, '=='),
+				commitCharacters: [' ', ':', '/', '\\']},
+			{label: '!=',
+				detail: `operator: public bool !=(${type.name} value)`,
+				kind: CompletionItemKind.Operator,
+				insertTextFormat: InsertTextFormat.Snippet,
+				textEdit: TextEdit.replace(range, '!='),
+				commitCharacters: [' ', ':', '/', '\\']},
+		];
+	}
+	
 	/** Create completion items for keywords usable inside expressions. */
 	public static createExpressionKeywords(context: Context, range: Range, castable?: ResolveType[]): CompletionItem[] {
 		let items: CompletionItem[] = [];
@@ -403,7 +427,7 @@ export class CompletionHelper {
 	
 	/** Create statement or expression completions. */
 	public static createStatementOrExpression(range: Range, context: Context, castable?: ResolveType[]): CompletionItem[] {
-		if (context.parent?.type == Context.ContextType.Statements) {
+		if (context.parent?.type === Context.ContextType.Statements) {
 			return CompletionHelper.createStatement(range, context);
 		} else {
 			return CompletionHelper.createExpression(range, context, castable);
@@ -493,7 +517,7 @@ export class CompletionHelper {
 		if (objtype) {
 			search.ignoreNamespaceParents = true;
 			
-			if (object.expressionTypeType == Context.ExpressionType.Object) {
+			if (object.expressionTypeType === Context.ExpressionType.Object) {
 				search.ignoreStatic = true;
 				objtype.search(search);
 			}
@@ -502,6 +526,9 @@ export class CompletionHelper {
 		}
 		
 		items.push(...CompletionHelper.createFromSearch(range, context, search, undefined));
+		if (objtype) {
+			items.push(...CompletionHelper.createBaseOperators(range, objtype));
+		}
 		items.push(CompletionHelper.createCast(range));
 		items.push(CompletionHelper.createCastable(range));
 		items.push(CompletionHelper.createTypeof(range));

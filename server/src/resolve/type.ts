@@ -123,10 +123,10 @@ export class ResolveType extends Resolved{
 	}
 	
 	protected get pinNamespace(): string | undefined {
-		if (this.type == ResolveType.Type.Namespace) {
+		if (this.type === ResolveType.Type.Namespace) {
 			return undefined;
 		}
-		if (this.parent?.type != ResolveType.Type.Namespace) {
+		if (this.parent?.type !== ResolveType.Type.Namespace) {
 			return undefined;
 		}
 		return this.parent?.fullyQualifiedName;

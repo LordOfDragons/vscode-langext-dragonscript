@@ -146,7 +146,7 @@ export class ContextScript extends Context{
 			if (each === before) {
 				break;
 			}
-			if (each.type == type) {
+			if (each.type === type) {
 				found = each;
 			}
 		}

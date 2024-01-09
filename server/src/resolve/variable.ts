@@ -41,7 +41,7 @@ export class ResolveVariable extends Resolved{
 		super(context.name.name, Resolved.Type.Variable);
 		this._context = context;
 		
-		if (context.type == Context.ContextType.ClassVariable) {
+		if (context.type === Context.ContextType.ClassVariable) {
 			this._variableType = (context as ContextClassVariable).typename?.resolve?.resolved as ResolveType;
 		} else {
 			this._variableType = (context.parent as ContextEnumeration).resolveEnumeration;
@@ -74,7 +74,7 @@ export class ResolveVariable extends Resolved{
 		if (this.context) {
 			if (this.context.type == Context.ContextType.ClassVariable) {
 				return (this.context as ContextClassVariable).typeModifiers;
-			} else if (this.context.type == Context.ContextType.EnumerationEntry) {
+			} else if (this.context.type === Context.ContextType.EnumerationEntry) {
 				return ContextEnumEntry.typeModifiers;
 			} else {
 				return Context.defaultTypeModifiers;
@@ -112,11 +112,11 @@ export class ResolveVariable extends Resolved{
 		if (!pc || !this.context) {
 			return false;
 		}
-		if (cls == pc) {
+		if (cls === pc) {
 			return true;
 		}
 		
-		if (this.context.type == Context.ContextType.ClassVariable) {
+		if (this.context.type === Context.ContextType.ClassVariable) {
 			const v = this.context as ContextClassVariable;
 			
 			if (cls.isSubclass(pc)) {
@@ -125,7 +125,7 @@ export class ResolveVariable extends Resolved{
 				return v.typeModifiers.isPublic;
 			}
 			
-		} else if (this.context.type == Context.ContextType.EnumerationEntry) {
+		} else if (this.context.type === Context.ContextType.EnumerationEntry) {
 			return true;
 			
 		} else {
@@ -150,7 +150,7 @@ export class ResolveVariable extends Resolved{
 			if (typemods.isStatic && typemods.isFixed) {
 				title = 'constant';
 				
-				if (this.parent?.type == ResolveType.Type.Enumeration) {
+				if (this.parent?.type === ResolveType.Type.Enumeration) {
 					kind = CompletionItemKind.EnumMember;
 				}
 			}

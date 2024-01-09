@@ -137,9 +137,9 @@ export class ContextClassVariable extends Context{
 		this._resolveVariable = new ResolveVariable(this);
 		if (this.parent) {
 			var container: ResolveType | undefined;
-			if (this.parent.type == Context.ContextType.Class) {
+			if (this.parent.type === Context.ContextType.Class) {
 				container = (this.parent as ContextClass).resolveClass;
-			} else if (this.parent.type == Context.ContextType.Interface) {
+			} else if (this.parent.type === Context.ContextType.Interface) {
 				container = (this.parent as ContextInterface).resolveInterface;
 			}
 

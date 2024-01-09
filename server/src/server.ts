@@ -391,7 +391,7 @@ connection.onCompletion(
 			/*
 			if (context) {
 				var context2: Context | undefined = context;
-				while (context2 && context2.type != Context.ContextType.Function) {
+				while (context2 && context2.type !== Context.ContextType.Function) {
 					console.log(`check ${Helpers.logRange(context2.range)} ${context2.constructor.name} ${context2.resolveTextShort}`);
 					context2 = context2.parent;
 				}

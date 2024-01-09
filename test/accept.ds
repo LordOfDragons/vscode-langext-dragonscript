@@ -107,7 +107,6 @@ public class OuterClass extends ClassExtendImplement
 	
 	public func new( String arg1, bool arg2 ) super( arg1, arg2 )
 		this.pMember1 = ( arg1 + SimpleEnum.entry1.order() * ( arg2 cast int )++ ).toInt()
-		//this.pMember1 = (arg1 + SimpleEnum.entry1.order() * )
 		pMember2 = null
 		this.callThat().pMember2 = OuterClass.new( this.pMember1 > 8 if "String literal" else this.toString(), null )
 		this.callMe( arg1.toInt() + 2, block int each

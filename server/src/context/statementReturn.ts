@@ -83,10 +83,10 @@ export class ContextReturn extends Context{
 		const frt = cbf.returnType?.resolve?.resolved as ResolveType;
 		const ov = this._value;
 		
-		if (frt && frt != ResolveNamespace.classVoid) {
+		if (frt && frt !== ResolveNamespace.classVoid) {
 			if (ov) {
 				const tv = ov?.expressionType;
-				if (ResolveSignatureArgument.typeMatches(tv, frt, ov.expressionAutoCast) == ResolveSignature.Match.No) {
+				if (ResolveSignatureArgument.typeMatches(tv, frt, ov.expressionAutoCast) === ResolveSignature.Match.No) {
 					let ri: DiagnosticRelatedInformation[] = [];
 					tv?.addReportInfo(ri, `Return Value Type: ${tv?.reportInfoText}`);
 					frt.addReportInfo(ri, `Function Return Type: ${frt.reportInfoText}`);

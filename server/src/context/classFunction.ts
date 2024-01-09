@@ -355,9 +355,9 @@ export class ContextFunction extends Context{
 		this._resolveFunction = new ResolveFunction(this);
 		if (this.parent) {
 			var container: ResolveType | undefined;
-			if (this.parent.type == Context.ContextType.Class) {
+			if (this.parent.type === Context.ContextType.Class) {
 				container = (this.parent as ContextClass).resolveClass;
-			} else if (this.parent.type == Context.ContextType.Interface) {
+			} else if (this.parent.type === Context.ContextType.Interface) {
 				container = (this.parent as ContextInterface).resolveInterface;
 			}
 

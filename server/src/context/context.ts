@@ -278,7 +278,7 @@ export class Context {
 			targetType: ResolveType | undefined, infoPrefix: string): void {
 		if (context && targetType) {
 			const ct = context.expressionType;
-			if (ct && ResolveSignatureArgument.typeMatches(ct, targetType, context.expressionAutoCast) == ResolveSignature.Match.No) {
+			if (ct && ResolveSignatureArgument.typeMatches(ct, targetType, context.expressionAutoCast) === ResolveSignature.Match.No) {
 				let ri: DiagnosticRelatedInformation[] = [];
 				ct.addReportInfo(ri, `Source Type: ${ct.reportInfoText}`);
 				targetType.addReportInfo(ri, `Target Type: ${targetType.reportInfoText}`);
@@ -288,11 +288,11 @@ export class Context {
 	}
 	
 	public selfOrParentWithType(type: Context.ContextType): Context | undefined {
-		return this._type == type ? this : this.parent?.selfOrParentWithType(type);
+		return this._type === type ? this : this.parent?.selfOrParentWithType(type);
 	}
 	
 	public expectTypes(context: Context): ResolveType[] | undefined {
-		return [];
+		return undefined;
 	}
 
 	protected reportError(diagnostics: Diagnostic[], uri: string, range: Range, message: string) {
@@ -499,15 +499,15 @@ export namespace Context {
 		}
 
 		public get isPublic(): boolean {
-			return this._accessLevel == AccessLevel.Public;
+			return this._accessLevel === AccessLevel.Public;
 		}
 
 		public get isProtected(): boolean {
-			return this._accessLevel == AccessLevel.Protected;
+			return this._accessLevel === AccessLevel.Protected;
 		}
 
 		public get isPrivate(): boolean {
-			return this._accessLevel == AccessLevel.Private;
+			return this._accessLevel === AccessLevel.Private;
 		}
 
 		public get isPublicOrProtected(): boolean {

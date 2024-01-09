@@ -267,7 +267,7 @@ export class ResolveSearch {
 	public removeNonConstructorFunctions(): void {
 		this._functionsAll = this._functionsAll.filter(f => {
 			const c = f.context as ContextFunction;
-			return c?.type == Context.ContextType.Function && c.functionType == ContextFunction.Type.Constructor;
+			return c?.type === Context.ContextType.Function && c.functionType === ContextFunction.Type.Constructor;
 		});
 	}
 	
@@ -338,14 +338,14 @@ export class ResolveSearch {
 		}
 		
 		if (this.onlyOperators
-		&& rfunction.context?.type == Context.ContextType.Function
-		&& (rfunction.context as ContextFunction).functionType != ContextFunction.Type.Operator) {
+		&& rfunction.context?.type === Context.ContextType.Function
+		&& (rfunction.context as ContextFunction).functionType !== ContextFunction.Type.Operator) {
 			return false;
 		}
 		
 		if (this.ignoreConstructors
-		&& rfunction.context?.type == Context.ContextType.Function
-		&& (rfunction.context as ContextFunction).functionType == ContextFunction.Type.Constructor) {
+		&& rfunction.context?.type === Context.ContextType.Function
+		&& (rfunction.context as ContextFunction).functionType === ContextFunction.Type.Constructor) {
 			return false;
 		}
 		

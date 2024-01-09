@@ -336,7 +336,7 @@ export class TypeName {
 		// - a namespace of the parent namespace chain
 		for (let i = sostack.length - 1; i >= 0; --i) {
 			const scope = sostack[i];
-			if (scope?.type == Context.ContextType.Namespace) {
+			if (scope?.type === Context.ContextType.Namespace) {
 				const ns = (scope as ContextNamespace).resolveNamespace;
 				if (ns) {
 					const t = this.resolveNamespaceInNamespaceChain(state, ns, name);
@@ -373,7 +373,7 @@ export class TypeName {
 			}
 
 			const t2 = rclass.context.extends?.resolve?.resolved as ResolveClass;
-			if (t2?.type == ResolveType.Type.Class) {
+			if (t2?.type === ResolveType.Type.Class) {
 				const t3 = this.resolveTypeInClassChain(state, t2, name, true, true);
 				if (t3) {
 					return t3;
@@ -382,7 +382,7 @@ export class TypeName {
 
 			for (const each of rclass.context.implements) {
 				const t2 = each.resolve?.resolved as ResolveInterface;
-				if (t2?.type == ResolveType.Type.Interface) {
+				if (t2?.type === ResolveType.Type.Interface) {
 					const t3 = this.resolveTypeInInterfaceChain(state, t2, name, true);
 					if (t3) {
 						return t3;
@@ -419,7 +419,7 @@ export class TypeName {
 			
 			for (const each of iface.context.implements) {
 				const t2 = each.resolve?.resolved as ResolveInterface;
-				if (t2?.type == ResolveType.Type.Interface) {
+				if (t2?.type === ResolveType.Type.Interface) {
 					const t3 = this.resolveTypeInInterfaceChain(state, t2, name, true);
 					if (t3) {
 						return t3;
@@ -440,7 +440,7 @@ export class TypeName {
 
 		// TODO: interface, enumeration
 
-		if (ns.parent?.type == ResolveType.Type.Namespace) {
+		if (ns.parent?.type === ResolveType.Type.Namespace) {
 			return this.resolveTypeInNamespaceChain(state, ns.parent as ResolveNamespace, name);
 		}
 
@@ -454,7 +454,7 @@ export class TypeName {
 			return ns2;
 		}
 
-		if (ns.parent?.type == ResolveType.Type.Namespace) {
+		if (ns.parent?.type === ResolveType.Type.Namespace) {
 			return this.resolveNamespaceInNamespaceChain(state, ns.parent as ResolveNamespace, name);
 		}
 
@@ -497,22 +497,22 @@ export class TypeName {
 				const pr = part.resolve?.resolved;
 				
 				if (pr) {
-					if (pr.type == ResolveType.Type.Class) {
+					if (pr.type === ResolveType.Type.Class) {
 						const c = pr as ResolveClass;
 						content.push(`**class ${c.name}**`);
 						this.hoverAddParent(content, c.parent as ResolveType);
 
-					} else if (pr.type == ResolveType.Type.Interface) {
+					} else if (pr.type === ResolveType.Type.Interface) {
 						const i = pr as ResolveInterface;
 						content.push(`**interface ${i.name}**`);
 						this.hoverAddParent(content, i.parent as ResolveType);
 
-					} else if (pr.type == ResolveType.Type.Enumeration) {
+					} else if (pr.type === ResolveType.Type.Enumeration) {
 						const e = pr as ResolveEnumeration;
 						content.push(`**enumeration ${e.name}**`);
 						this.hoverAddParent(content, e.parent as ResolveType);
 
-					} else if (pr.type == ResolveType.Type.Namespace) {
+					} else if (pr.type === ResolveType.Type.Namespace) {
 						const ns = pr as ResolveNamespace;
 						content.push(`**namespace ${ns.name}**`);
 						this.hoverAddParent(content, ns);
