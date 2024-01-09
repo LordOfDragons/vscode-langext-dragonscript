@@ -94,7 +94,7 @@ export class ContextPinNamespace extends Context{
 
 	protected addPinToState(state: ResolveState): void {
 		const ns = this._typename.lastPart?.resolve?.resolved as ResolveNamespace;
-		if (ns?.type == ResolveType.Type.Namespace) {
+		if (ns?.type === ResolveType.Type.Namespace) {
 			state.pins.push(ns);
 		}
 	}
@@ -102,7 +102,7 @@ export class ContextPinNamespace extends Context{
 	public searchExpression(search: ResolveSearch, moveUp: boolean, before: Context): void {
 		super.searchExpression(search, moveUp, before);
 		const ns = this._typename.lastPart?.resolve?.resolved as ResolveNamespace;
-		if (ns?.type == ResolveType.Type.Namespace) {
+		if (ns?.type === ResolveType.Type.Namespace) {
 			ns.search(search);
 		}
 	}

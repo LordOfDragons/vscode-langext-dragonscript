@@ -53,6 +53,7 @@ import { ContextConstant } from "./expressionConstant";
 import { ContextBlock } from "./expressionBlock";
 import { integer } from "vscode-languageserver";
 import { ContextGroup } from "./group";
+import { ContextError } from "./error";
 
 
 /** Context builder. */
@@ -256,7 +257,7 @@ export class ContextBuilder{
 		} else if (c.expressionBlock) {
 			return new ContextBlock(c.expressionBlock[0], parent);
 		} else {
-			throw Error("Empty expression base object!");
+			return new ContextError(parent);
 		}
 	}
 }

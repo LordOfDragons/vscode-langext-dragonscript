@@ -38,7 +38,7 @@ export class RefactoringHelper {
 				if (each === before) {
 					break;
 				}
-				if (each.type == Context.ContextType.PinNamespace) {
+				if (each.type === Context.ContextType.PinNamespace) {
 					pin = each;
 				}
 			}
@@ -56,7 +56,7 @@ export class RefactoringHelper {
 					if (each === before) {
 						break;
 					}
-					if (each.type == Context.ContextType.PinNamespace) {
+					if (each.type === Context.ContextType.PinNamespace) {
 						pin = each;
 					}
 				}

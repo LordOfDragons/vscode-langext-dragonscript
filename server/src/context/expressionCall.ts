@@ -517,7 +517,7 @@ export class ContextFunctionCall extends Context{
 		
 		this._matchFunction = undefined;
 		this._matches = new ResolveSearch();
-		if (this._functionType == ContextFunctionCall.FunctionType.functionSuper) {
+		if (this._functionType === ContextFunctionCall.FunctionType.functionSuper) {
 			this._matches.name = 'new';
 		} else {
 			this._matches.name = this._name.name;
@@ -542,7 +542,7 @@ export class ContextFunctionCall extends Context{
 		if (this._matches.name) {
 			if (objtype) {
 				objtype.search(this._matches);
-			} else if (this._functionType == ContextFunctionCall.FunctionType.functionSuper) {
+			} else if (this._functionType === ContextFunctionCall.FunctionType.functionSuper) {
 				if (this._name.name == 'this') {
 					state.topScopeClass?.resolveClass?.search(this._matches);
 				} else {
@@ -594,7 +594,7 @@ export class ContextFunctionCall extends Context{
 					}
 				}
 				this.expressionType = this._matchFunction?.returnType;
-				this.expressionTypeType = this.expressionType != ResolveNamespace.classVoid
+				this.expressionTypeType = this.expressionType !== ResolveNamespace.classVoid
 					? Context.ExpressionType.Object : Context.ExpressionType.Void;
 				break;
 		}
@@ -612,7 +612,7 @@ export class ContextFunctionCall extends Context{
 			case ContextFunctionCall.FunctionType.notEquals:{
 				const o1 = this._arguments.at(0);
 				const o2 = this._object;
-				if (o1 && o2 && ResolveSignatureArgument.exprMatches(o1, o2) == ResolveSignature.Match.No) {
+				if (o1 && o2 && ResolveSignatureArgument.exprMatches(o1, o2) === ResolveSignature.Match.No) {
 					const at1 = o1.expressionType;
 					const at2 = o2.expressionType;
 					let ri: DiagnosticRelatedInformation[] = [];
@@ -628,7 +628,7 @@ export class ContextFunctionCall extends Context{
 				const o1 = this._object;
 				if (o1) {
 					const at1 = o1.expressionType;
-					if (at1 && ResolveSignatureArgument.typeMatches(at1, this.expressionType, o1.expressionAutoCast) == ResolveSignature.Match.No) {
+					if (at1 && ResolveSignatureArgument.typeMatches(at1, this.expressionType, o1.expressionAutoCast) === ResolveSignature.Match.No) {
 						let ri: DiagnosticRelatedInformation[] = [];
 						this.expressionType?.addReportInfo(ri, `Source Type: ${this.expressionType?.reportInfoText}`);
 						at1?.addReportInfo(ri, `Target Type: ${at1?.reportInfoText}`);
@@ -653,7 +653,7 @@ export class ContextFunctionCall extends Context{
 							
 							if (objtype) {
 								objtype.search(matches2);
-							} else if (this._functionType == ContextFunctionCall.FunctionType.functionSuper) {
+							} else if (this._functionType === ContextFunctionCall.FunctionType.functionSuper) {
 								if (this._name.name == 'this') {
 									state.topScopeClass?.resolveClass?.search(matches2);
 								} else {
@@ -673,7 +673,7 @@ export class ContextFunctionCall extends Context{
 					
 					if (this._matchFunction) {
 						const tfcc = state.topScopeFunction?.parent as ContextClass;
-						if (tfcc?.type == Context.ContextType.Class) {
+						if (tfcc?.type === Context.ContextType.Class) {
 							const tfrc = tfcc.resolveClass;
 							if (tfrc && !this._matchFunction.canAccess(tfrc)) {
 								let ri: DiagnosticRelatedInformation[] = [];
@@ -773,7 +773,7 @@ export class ContextFunctionCall extends Context{
 	}
 	
 	protected sameTarget(other: Context): boolean {
-		if (!this._object || other.type != this._object.type) {
+		if (!this._object || other.type !== this._object.type) {
 			return false;
 		}
 		
@@ -783,13 +783,13 @@ export class ContextFunctionCall extends Context{
 				const m2 = other as ContextMember;
 				
 				if (m1.resolveArgument) {
-					return m1.resolveArgument == m2.resolveArgument;
+					return m1.resolveArgument === m2.resolveArgument;
 					
 				} else if (m1.resolveLocalVariable) {
-					return m1.resolveLocalVariable == m2.resolveLocalVariable;
+					return m1.resolveLocalVariable === m2.resolveLocalVariable;
 					
 				} else if (m1.resolveVariable) {
-					//return m1.resolveVariable == m2.resolveVariable;
+					//return m1.resolveVariable === m2.resolveVariable;
 					// this is not working since the object can be different.
 					// but how to check this?
 				}
@@ -871,7 +871,7 @@ export class ContextFunctionCall extends Context{
 						const at1 = o1.expressionType;
 						const at2 = o2.expressionType;
 						
-						if (o1.expressionAutoCast == Context.AutoCast.KeywordNull) {
+						if (o1.expressionAutoCast === Context.AutoCast.KeywordNull) {
 							content.push(`${at2?.resolveTextLong} **${opname}** **null**`);
 						} else {
 							content.push(`${at2?.resolveTextLong} **${opname}** ${at1?.resolveTextLong}`);

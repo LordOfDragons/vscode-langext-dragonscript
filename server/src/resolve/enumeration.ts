@@ -85,7 +85,7 @@ export class ResolveEnumeration extends ResolveType {
 			return true;
 		}
 		
-		if (type.type == ResolveType.Type.Class && type.fullyQualifiedName == 'Object') {
+		if (type.type === ResolveType.Type.Class && type.fullyQualifiedName == 'Object') {
 			return true;
 		}
 		

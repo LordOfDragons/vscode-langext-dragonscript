@@ -212,7 +212,7 @@ export class ContextMember extends Context{
 				this.expressionTypeType = Context.ExpressionType.Object;
 				
 				const tfcc = state.topScopeFunction?.parent as ContextClass;
-				if (tfcc?.type == Context.ContextType.Class) {
+				if (tfcc?.type === Context.ContextType.Class) {
 					const tfrc = tfcc.resolveClass;
 					if (tfrc && !this._resolveVariable.canAccess(tfrc)) {
 						let ri: DiagnosticRelatedInformation[] = [];

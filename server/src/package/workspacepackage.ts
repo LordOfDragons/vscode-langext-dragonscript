@@ -95,7 +95,7 @@ export class PackageWorkspace extends Package {
 		this._timerResolve = setTimeout(() => myself.resolveAll(new ReportConfig), 1000);
 	}
 	
-	protected async resolveLogDiagnostics(diagnostics: Promise<Diagnostic[]>, uri: string): Promise<void> {
-		reportDiagnostics(uri, await diagnostics);
+	protected resolveLogDiagnostics(diagnostics: Diagnostic[], uri: string): void {
+		reportDiagnostics(uri, diagnostics);
 	}
 }

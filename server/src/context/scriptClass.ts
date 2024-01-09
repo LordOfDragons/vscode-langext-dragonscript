@@ -231,11 +231,11 @@ export class ContextClass extends Context{
 
 		if (this.parent) {
 			var container: ResolveType | undefined;
-			if (this.parent.type == Context.ContextType.Class) {
+			if (this.parent.type === Context.ContextType.Class) {
 				container = (this.parent as ContextClass).resolveClass;
-			} else if (this.parent.type == Context.ContextType.Interface) {
+			} else if (this.parent.type === Context.ContextType.Interface) {
 				container = (this.parent as ContextInterface).resolveInterface;
-			} else if (this.parent.type == Context.ContextType.Namespace) {
+			} else if (this.parent.type === Context.ContextType.Namespace) {
 				container = (this.parent as ContextNamespace).resolveNamespace;
 			} else {
 				container = ResolveNamespace.root;
@@ -262,7 +262,7 @@ export class ContextClass extends Context{
 
 		if (this._extends) {
 			const t = this._extends.resolveType(state, this);
-			if (t?.resolved?.type != ResolveType.Type.Class) {
+			if (t?.resolved?.type !== ResolveType.Type.Class) {
 				const r = this._extends.range;
 				if (r) {
 					state.reportError(r, `${this._extends.name} is not a class.`);
@@ -272,7 +272,7 @@ export class ContextClass extends Context{
 		
 		for (const each of this._implements) {
 			const t = each.resolveType(state, this);
-			if (t?.resolved?.type != ResolveType.Type.Interface) {
+			if (t?.resolved?.type !== ResolveType.Type.Interface) {
 				const r = each.range;
 				if (r) {
 					state.reportError(r, `${each.name} is not an interface.`);
@@ -354,12 +354,12 @@ export class ContextClass extends Context{
 	
 	public static thisContext(context: Context): ContextClass | undefined {
 		const parent = context.selfOrParentWithType(Context.ContextType.Class) as ContextClass;
-		return parent?.type == Context.ContextType.Class ? parent : undefined;
+		return parent?.type === Context.ContextType.Class ? parent : undefined;
 	}
 	
 	public static superContext(context: Context): ContextClass | undefined {
 		const parent = ContextClass.thisContext(context)?.extends?.resolve?.resolved as ResolveClass;
-		return parent?.type == ResolveType.Type.Class ? parent.context : undefined;
+		return parent?.type === ResolveType.Type.Class ? parent.context : undefined;
 	}
 	
 	public resolvedAtPosition(position: Position): Resolved | undefined {
@@ -379,7 +379,7 @@ export class ContextClass extends Context{
 	
 	public referenceFor(usage: ResolveUsage): Location | undefined {
 		var r: Location | undefined;
-		if (this._extends?.resolve == usage) {
+		if (this._extends?.resolve === usage) {
 			r = this._extends.location(this);
 		} else {
 			for (const each of this._implements) {

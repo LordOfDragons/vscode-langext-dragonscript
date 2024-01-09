@@ -27,7 +27,7 @@ import { FunctionBeginCstNode } from "../nodeclasses/declareFunction";
 import { InterfaceFunctionCstNode } from "../nodeclasses/declareInterface";
 import { ClassFunctionCstNode } from "../nodeclasses/declareClass";
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
-import { Definition, DocumentSymbol, Hover, Location, Position, RemoteConsole, SymbolInformation, SymbolKind } from "vscode-languageserver";
+import { CompletionItem, Definition, DocumentSymbol, Hover, Location, Position, Range, RemoteConsole, SymbolInformation, SymbolKind } from "vscode-languageserver";
 import { TypeName } from "./typename";
 import { ContextFunctionArgument } from "./classFunctionArgument";
 import { Identifier } from "./identifier";
@@ -43,6 +43,8 @@ import { ContextFunctionCall } from "./expressionCall";
 import { Helpers } from "../helpers";
 import { ResolveSearch } from "../resolve/search";
 import { Resolved, ResolveUsage } from "../resolve/resolved";
+import { TextDocument } from "vscode-languageserver-textdocument";
+import { CompletionHelper } from "../completionHelper";
 
 
 export class ContextFunction extends Context{
@@ -355,9 +357,9 @@ export class ContextFunction extends Context{
 		this._resolveFunction = new ResolveFunction(this);
 		if (this.parent) {
 			var container: ResolveType | undefined;
-			if (this.parent.type == Context.ContextType.Class) {
+			if (this.parent.type === Context.ContextType.Class) {
 				container = (this.parent as ContextClass).resolveClass;
-			} else if (this.parent.type == Context.ContextType.Interface) {
+			} else if (this.parent.type === Context.ContextType.Interface) {
 				container = (this.parent as ContextInterface).resolveInterface;
 			}
 
@@ -539,6 +541,10 @@ export class ContextFunction extends Context{
 	
 	public get referenceSelf(): Location | undefined {
 		return this.resolveLocation(this._name.range);
+	}
+	
+	public completion(_document: TextDocument, position: Position): CompletionItem[] {
+		return CompletionHelper.createType(Range.create(position, position), this);
 	}
 
 

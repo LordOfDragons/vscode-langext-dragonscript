@@ -30,7 +30,6 @@ import {
 	InitializeParams,
 	DidChangeConfigurationNotification,
 	CompletionItem,
-	CompletionItemKind,
 	TextDocumentPositionParams,
 	TextDocumentSyncKind,
 	InitializeResult,
@@ -38,9 +37,7 @@ import {
 	DocumentSymbol,
 	Hover,
 	Location,
-	LocationLink,
 	Definition,
-	FileChangeType,
 	WorkspaceSymbolParams,
 	SymbolInformation,
 	ReferenceParams,
@@ -48,7 +45,6 @@ import {
 	DocumentHighlight} from 'vscode-languageserver/node'
 
 import {
-	Position,
 	TextDocument
 } from 'vscode-languageserver-textdocument'
 
@@ -63,7 +59,6 @@ import { PackageDEModule } from "./package/dragenginemodule";
 import { PackageDSLanguage } from "./package/dslanguage";
 import { ReportConfig } from './reportConfig';
 import { PackageWorkspace } from './package/workspacepackage';
-import { Context } from './context/context';
 import { Helpers } from './helpers';
 
 // Create a connection for the server, using Node's IPC as a transport.
@@ -292,8 +287,8 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	
 	let reportConfig = new ReportConfig;
 	
-	const diagnostics: Diagnostic[] = [];
-	await validator.parse(scriptDocument, textDocument, diagnostics);
+	scriptDocument.diagnosticsLexer = [];
+	await validator.parse(scriptDocument, textDocument);
 	
 	if (scriptDocument.node) {
 		try {
@@ -307,23 +302,22 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 		scriptDocument.context = undefined;
 	}
 	
-	for (const each of await scriptDocument.resolveClasses(reportConfig)) {
-		diagnostics.push(each)
-	}
-	for (const each of await scriptDocument.resolveInheritance(reportConfig)) {
-		diagnostics.push(each)
-	}
-	for (const each of await scriptDocument.resolveMembers(reportConfig)) {
-		diagnostics.push(each)
-	}
-	for (const each of await scriptDocument.resolveStatements(reportConfig)) {
-		diagnostics.push(each)
-	}
+	scriptDocument.diagnosticsClasses = await scriptDocument.resolveClasses(reportConfig);
+	scriptDocument.diagnosticsInheritance = await scriptDocument.resolveInheritance(reportConfig);
+	scriptDocument.diagnosticsResolveMembers = await scriptDocument.resolveMembers(reportConfig);
+	scriptDocument.diagnosticsResolveStatements = await scriptDocument.resolveStatements(reportConfig);
 	
 	//let elapsedTime = Date.now() - startTime;
 	//connection.console.info(`Parsed '${scriptDocument.uri}' in ${elapsedTime / 1000}s`);
 	
 	//scriptDocument.context?.log(connection.console);
+	
+	const diagnostics: Diagnostic[] = [];
+	diagnostics.push(...scriptDocument.diagnosticsLexer);
+	diagnostics.push(...scriptDocument.diagnosticsClasses);
+	diagnostics.push(...scriptDocument.diagnosticsInheritance);
+	diagnostics.push(...scriptDocument.diagnosticsResolveMembers);
+	diagnostics.push(...scriptDocument.diagnosticsResolveStatements);
 	
 	connection.sendDiagnostics({uri: textDocument.uri, diagnostics})
 	
@@ -400,7 +394,7 @@ connection.onCompletion(
 			/*
 			if (context) {
 				var context2: Context | undefined = context;
-				while (context2 && context2.type != Context.ContextType.Function) {
+				while (context2 && context2.type !== Context.ContextType.Function) {
 					console.log(`check ${Helpers.logRange(context2.range)} ${context2.constructor.name} ${context2.resolveTextShort}`);
 					context2 = context2.parent;
 				}
@@ -486,7 +480,7 @@ connection.onDocumentHighlight(
 	}
 )
 
-function logError(error: any): void {
+export function logError(error: any): void {
 	if (error instanceof Error) {
 		let err = error as Error;
 		connection.console.error(err.name);

@@ -106,7 +106,7 @@ export class ContextTryCatch extends Context {
 		
 		const t1 = this._typename.resolve?.resolved as ResolveType;
 		const t2 = ResolveNamespace.classException;
-		if (t1 && ResolveSignatureArgument.typeMatches(t1, t2, Context.AutoCast.No) == ResolveSignature.Match.No) {
+		if (t1 && ResolveSignatureArgument.typeMatches(t1, t2, Context.AutoCast.No) === ResolveSignature.Match.No) {
 			let ri: DiagnosticRelatedInformation[] = [];
 			t1.addReportInfo(ri, `Source Type: ${t1.reportInfoText}`);
 			t2.addReportInfo(ri, `Target Type: ${t2.reportInfoText}`);

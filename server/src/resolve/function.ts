@@ -102,7 +102,7 @@ export class ResolveFunction extends Resolved{
 	
 	public get typeModifiers(): Context.TypeModifierSet | undefined {
 		if (this.context) {
-			if (this.context.type == Context.ContextType.Function) {
+			if (this.context.type === Context.ContextType.Function) {
 				return (this.context as ContextFunction).typeModifiers;
 			} else {
 				return Context.defaultTypeModifiers;
@@ -122,11 +122,11 @@ export class ResolveFunction extends Resolved{
 		if (!pc || !this.context) {
 			return false;
 		}
-		if (cls == pc) {
+		if (cls === pc) {
 			return true;
 		}
 		
-		if (this.context.type == Context.ContextType.Function) {
+		if (this.context.type === Context.ContextType.Function) {
 			const f = this.context as ContextFunction;
 			
 			if (cls.isSubclass(pc)) {
@@ -135,7 +135,7 @@ export class ResolveFunction extends Resolved{
 				return f.typeModifiers.isPublic;
 			}
 			
-		} else if (this.context.type == Context.ContextType.Block) {
+		} else if (this.context.type === Context.ContextType.Block) {
 			return true;
 			
 		} else {

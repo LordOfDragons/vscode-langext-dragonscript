@@ -164,11 +164,11 @@ export class ContextInterface extends Context{
 		this._resolveInterface = new ResolveInterface(this);
 		if (this.parent) {
 			var container: ResolveType | undefined;
-			if (this.parent.type == Context.ContextType.Class) {
+			if (this.parent.type === Context.ContextType.Class) {
 				container = (this.parent as ContextClass).resolveClass;
-			} else if (this.parent.type == Context.ContextType.Interface) {
+			} else if (this.parent.type === Context.ContextType.Interface) {
 				container = (this.parent as ContextInterface).resolveInterface;
-			} else if (this.parent.type == Context.ContextType.Namespace) {
+			} else if (this.parent.type === Context.ContextType.Namespace) {
 				container = (this.parent as ContextNamespace).resolveNamespace;
 			} else {
 				container = ResolveNamespace.root;
@@ -195,7 +195,7 @@ export class ContextInterface extends Context{
 		
 		for (const each of this._implements) {
 			const t = each.resolveType(state, this);
-			if (t?.resolved && !(t.resolved.type == ResolveType.Type.Interface)) {
+			if (t?.resolved && !(t.resolved.type === ResolveType.Type.Interface)) {
 				const r = each.range;
 				if (r) {
 					state.reportError(r, `${each.name} is not an interface.`);

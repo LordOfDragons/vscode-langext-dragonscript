@@ -65,14 +65,14 @@ export class ResolveSignatureArgument{
 		if (!fromType || !toType) {
 			return ResolveSignature.Match.Wildcard;
 		}
-		if (fromType == toType) {
+		if (fromType === toType) {
 			return ResolveSignature.Match.Full;
 		}
 		if (fromType.castable(toType)) {
 			return ResolveSignature.Match.Partial;
 		}
 		
-		if (autoCast == Context.AutoCast.No && fromType?.autoCast) {
+		if (autoCast === Context.AutoCast.No && fromType?.autoCast) {
 			autoCast = fromType.autoCast;
 		}
 		
@@ -226,7 +226,7 @@ export class ResolveSignature{
 		for (var i=0; i<len; i++) {
 			const at1 = this.arguments[i].type;
 			const at2 = signature.arguments[i].type;
-			if (!at1 || !at2 || at1 != at2) {
+			if (!at1 || !at2 || at1 !== at2) {
 				return false;
 			}
 		}

@@ -59,10 +59,11 @@ export class ScriptValidator {
 	}
 
 
-	public async parse(scriptDocument: ScriptDocument, textDocument: TextDocument, diagnostics: Diagnostic[]): Promise<void> {
-		await this.doRequires(scriptDocument, diagnostics);
-		const lexed = this.doLex(textDocument, scriptDocument.settings, diagnostics);
-		scriptDocument.node = this.doParse(textDocument, scriptDocument.settings, lexed, diagnostics);
+	public async parse(scriptDocument: ScriptDocument, textDocument: TextDocument): Promise<void> {
+		scriptDocument.diagnosticsLexer = [];
+		await this.doRequires(scriptDocument, scriptDocument.diagnosticsLexer);
+		const lexed = this.doLex(textDocument, scriptDocument.settings, scriptDocument.diagnosticsLexer);
+		scriptDocument.node = this.doParse(textDocument, scriptDocument.settings, lexed, scriptDocument.diagnosticsLexer);
 	}
 
 	public async parseLog(scriptDocument: ScriptDocument, text: string, logs: string[]): Promise<void> {

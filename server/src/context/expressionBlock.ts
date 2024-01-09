@@ -23,7 +23,7 @@
  */
 
 import { Context } from "./context";
-import { Definition, DocumentSymbol, Hover, Location, Position, RemoteConsole, SymbolKind } from "vscode-languageserver";
+import { CompletionItem, Definition, DocumentSymbol, Hover, Location, Position, Range, RemoteConsole, SymbolKind } from "vscode-languageserver";
 import { ExpressionBlockCstNode } from "../nodeclasses/expressionBlock";
 import { ContextFunctionArgument } from "./classFunctionArgument";
 import { ContextStatements } from "./statements";
@@ -35,6 +35,8 @@ import { HoverInfo } from "../hoverinfo";
 import { ResolveNamespace } from "../resolve/namespace";
 import { TypeName } from "./typename";
 import { IToken } from "chevrotain";
+import { TextDocument } from "vscode-languageserver-textdocument";
+import { CompletionHelper } from "../completionHelper";
 
 
 export class ContextBlock extends Context{
@@ -253,6 +255,10 @@ export class ContextBlock extends Context{
 	
 	public get referenceSelf(): Location | undefined {
 		return this.resolveLocation(Helpers.rangeFrom(this._tokenBlock));
+	}
+	
+	public completion(_document: TextDocument, position: Position): CompletionItem[] {
+		return CompletionHelper.createType(Range.create(position, position), this);
 	}
 	
 	

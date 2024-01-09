@@ -24,7 +24,7 @@
 
 import { Context } from "./context"
 import { FunctionArgumentCstNode } from "../nodeclasses/declareFunction";
-import { Definition, DocumentSymbol, Hover, Location, Position, RemoteConsole, SymbolKind } from "vscode-languageserver"
+import { CompletionItem, Definition, DocumentSymbol, Hover, Location, Position, Range, RemoteConsole, SymbolKind } from "vscode-languageserver"
 import { TypeName } from "./typename";
 import { Identifier } from "./identifier";
 import { ResolveState } from "../resolve/state";
@@ -32,6 +32,8 @@ import { HoverInfo } from "../hoverinfo";
 import { Helpers } from "../helpers";
 import { Resolved, ResolveUsage } from "../resolve/resolved";
 import { ResolveArgument } from "../resolve/argument";
+import { TextDocument } from "vscode-languageserver-textdocument";
+import { CompletionHelper } from "../completionHelper";
 
 
 export class ContextFunctionArgument extends Context{
@@ -153,7 +155,18 @@ export class ContextFunctionArgument extends Context{
 	public get referenceSelf(): Location | undefined {
 		return this.resolveLocation(this._name.range);
 	}
-
+	
+	public completion(document: TextDocument, position: Position): CompletionItem[] {
+		const npos = this._name.range?.start;
+		if (!npos || Helpers.isPositionBefore(position, npos)) {
+			const range = this._typename.range;
+			if (range) {
+				return CompletionHelper.createType(range, this);
+			}
+		}
+		return super.completion(document, position);
+	}
+	
 	
 	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
 		console.log(`${prefix}Argument ${this._typename.name} ${this._name}`)
