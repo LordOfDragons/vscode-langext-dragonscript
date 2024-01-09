@@ -39,6 +39,11 @@ export class ScriptDocument {
 
 	public requiresAnotherTurn: boolean = false;
 	public revision: number = 1;
+	public diagnosticsLexer: Diagnostic[] = [];
+	public diagnosticsClasses: Diagnostic[] = [];
+	public diagnosticsInheritance: Diagnostic[] = [];
+	public diagnosticsResolveMembers: Diagnostic[] = [];
+	public diagnosticsResolveStatements: Diagnostic[] = [];
 
 
 	constructor(uri: string, console: RemoteConsole, settings: DSSettings) {
@@ -50,7 +55,6 @@ export class ScriptDocument {
 	public dispose(): void {
 		this._context?.dispose();
 	}
-
 
 
 	public get console(): RemoteConsole {

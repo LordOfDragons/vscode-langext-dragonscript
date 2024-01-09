@@ -29,7 +29,7 @@ import { Diagnostic, DiagnosticSeverity, RemoteConsole } from "vscode-languagese
 import { ContextScript } from "../context/script";
 import { ReportConfig } from "../reportConfig";
 import { ScriptDocument } from "../scriptDocument";
-import { getDocumentSettings, globalSettings, scriptDocuments, validator } from "../server";
+import { getDocumentSettings, scriptDocuments, validator } from "../server";
 
 export class Package {
 	protected _console: RemoteConsole;
@@ -122,21 +122,36 @@ export class Package {
 	protected async resolveAll(reportConfig: ReportConfig): Promise<void> {
 		var docs: ScriptDocument[] = [...this._scriptDocuments];
 		
+		for (const each of docs) {
+			each.diagnosticsInheritance = [];
+			each.diagnosticsResolveMembers = [];
+			each.diagnosticsResolveStatements = [];
+		}
+		
 		while (docs.length > 0) {
-			await Promise.all(docs.map(each => {
-				this.resolveLogDiagnostics(each.resolveInheritance(reportConfig), each.uri);
+			await Promise.all(docs.map(async each => {
+				each.diagnosticsInheritance = await each.resolveInheritance(reportConfig);
 			}));
-			
 			docs = docs.filter(each => each.requiresAnotherTurn);
 		}
 		
-		await Promise.all(this._scriptDocuments.map(each => {
-			this.resolveLogDiagnostics(each.resolveMembers(reportConfig), each.uri);
+		await Promise.all(this._scriptDocuments.map(async each => {
+			each.diagnosticsResolveMembers = await each.resolveMembers(reportConfig);
 		}));
 		
-		await Promise.all(this._scriptDocuments.map(each => {
-			this.resolveLogDiagnostics(each.resolveStatements(reportConfig), each.uri);
+		await Promise.all(this._scriptDocuments.map(async each => {
+			each.diagnosticsResolveStatements = await each.resolveStatements(reportConfig);
 		}));
+		
+		for (const each of this._scriptDocuments) {
+			const diagnostics: Diagnostic[] = [];
+			diagnostics.push(...each.diagnosticsLexer);
+			diagnostics.push(...each.diagnosticsClasses);
+			diagnostics.push(...each.diagnosticsInheritance);
+			diagnostics.push(...each.diagnosticsResolveMembers);
+			diagnostics.push(...each.diagnosticsResolveStatements);
+			this.resolveLogDiagnostics(diagnostics, each.uri);
+		}
 	}
 
 	protected async loadFile(path: string, reportConfig: ReportConfig): Promise<void> {
@@ -149,10 +164,10 @@ export class Package {
 			scriptDocument = new ScriptDocument(uri, this.console, settings);
 			scriptDocuments.add(scriptDocument);
 		}
-
+		
 		let text: string = await readFile(path, 'utf8');
 		let logs: string[] = [];
-
+		
 		try {
 			await validator.parseLog(scriptDocument, text, logs);
 		} catch (error) {
@@ -206,11 +221,12 @@ export class Package {
 		//scriptDocument.console.info(`Package '${this._id}' (${this._finishedCounter}/${this._files.length}): Parsed '${path}' in ${elapsedTime / 1000}s`);
 
 		// this can run asynchronous
-		this.resolveLogDiagnostics(scriptDocument.resolveClasses(reportConfig), scriptDocument.uri);
+		scriptDocument.diagnosticsClasses = await scriptDocument.resolveClasses(reportConfig);
+		this.resolveLogDiagnostics(scriptDocument.diagnosticsClasses, scriptDocument.uri);
 	}
 
-	protected async resolveLogDiagnostics(diagnostics: Promise<Diagnostic[]>, uri: string): Promise<void> {
-		for (const each of await diagnostics) {
+	protected resolveLogDiagnostics(diagnostics: Diagnostic[], uri: string): void {
+		for (const each of diagnostics) {
 			var severity;
 			switch (each.severity ?? DiagnosticSeverity.Information) {
 				case DiagnosticSeverity.Error:
