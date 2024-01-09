@@ -43,7 +43,9 @@ import {
 	FileChangeType,
 	WorkspaceSymbolParams,
 	SymbolInformation,
-	ReferenceParams} from 'vscode-languageserver/node'
+	ReferenceParams,
+	DocumentHighlightParams,
+	DocumentHighlight} from 'vscode-languageserver/node'
 
 import {
 	Position,
@@ -127,7 +129,8 @@ connection.onInitialize((params: InitializeParams) => {
 			hoverProvider: true,
 			definitionProvider: true,
 			workspaceSymbolProvider: true,
-			referencesProvider: true
+			referencesProvider: true,
+			documentHighlightProvider: true
 		}
 	};
 	
@@ -465,6 +468,24 @@ connection.onReferences(
 		return references;
 	}
 )
+
+connection.onDocumentHighlight(
+	(params: DocumentHighlightParams): DocumentHighlight[] => {
+		let hilight: DocumentHighlight[] = [];
+
+		const resolved = scriptDocuments.get(params.textDocument.uri)?.context?.
+			contextAtPosition(params.position)?.resolvedAtPosition(params.position);
+		let references: Location[] = [];
+		
+		console.log(`onDocumentHighlight context=${scriptDocuments.get(params.textDocument.uri)?.context?.
+			contextAtPosition(params.position)?.resolveTextShort} resolved=${resolved?.resolveTextShort}`);
+		if (resolved) {
+		}
+
+		return hilight;
+	}
+)
+
 function logError(error: any): void {
 	if (error instanceof Error) {
 		let err = error as Error;
