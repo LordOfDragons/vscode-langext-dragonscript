@@ -137,7 +137,7 @@ export class ContextFunction extends Context{
 			}
 
 			let declEnd = fdecl2.endOfCommand[0].children;
-			tokEnd = (declEnd.newline || declEnd.commandSeparator)![0];
+			tokEnd = (declEnd.newline || declEnd.commandSeparator)?.at(0) ?? tokEnd;
 			docSymKind = SymbolKind.Constructor;
 
 		} else if (fdecl.children.classDestructor) {
@@ -147,7 +147,7 @@ export class ContextFunction extends Context{
 			this._returnType = TypeName.typeVoid;
 
 			let declEnd = fdecl2.endOfCommand[0].children;
-			tokEnd = (declEnd.newline || declEnd.commandSeparator)![0];
+			tokEnd = (declEnd.newline || declEnd.commandSeparator)?.at(0) ?? tokEnd;
 
 		} else if (fdecl.children.regularFunction) {
 			let fdecl2 = fdecl.children.regularFunction[0].children;
@@ -237,7 +237,7 @@ export class ContextFunction extends Context{
 			}
 
 			let declEnd = fdecl2.endOfCommand[0].children;
-			tokEnd = (declEnd.newline || declEnd.commandSeparator)![0];
+			tokEnd = (declEnd.newline || declEnd.commandSeparator)?.at(0) ?? tokEnd;
 
 		} else {
 			this._functionType = ContextFunction.Type.Regular;
@@ -250,7 +250,14 @@ export class ContextFunction extends Context{
 
 			let declEnd = cfdecl.children.functionEnd;
 			if (declEnd) {
-				tokEnd = (declEnd[0].children.end || declEnd[0].children.endOfCommand)![0];
+				if (declEnd[0].children.end) {
+					tokEnd = declEnd[0].children.end[0];
+				} else {
+					let declEnd2 = declEnd[0].children.endOfCommand?.at(0)?.children;
+					if (declEnd2) {
+						tokEnd = (declEnd2.newline || declEnd2.commandSeparator)?.at(0) ?? tokEnd;
+					}
+				}
 			}
 		}
 

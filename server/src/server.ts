@@ -68,7 +68,16 @@ const connection = createConnection(ProposedFeatures.all)
 export function debugLogObjProps(message: string, obj: any) {
 	if (obj) {
 		let s = Object.keys(obj).reduce((a, b) => `${a}, ${b}`);
-		debugLogMessage(`${message}: (${typeof obj}) ${s}`);
+		debugLogMessage(`${message}: (${obj.constructor?.name}) ${s}`);
+	} else {
+		debugLogMessage(`${message}: object is undefined`);
+	}
+}
+
+export function debugLogObj(message: string, obj: any) {
+	if (obj) {
+		let s = Object.keys(obj).map(a => `${a}=${obj[a]}`).reduce((a, b) => `${a}, ${b}`);
+		debugLogMessage(`${message}: (${obj.constructor?.name}) ${s}`);
 	} else {
 		debugLogMessage(`${message}: object is undefined`);
 	}

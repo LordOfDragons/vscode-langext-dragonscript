@@ -52,6 +52,7 @@ import { ContextClass } from "./scriptClass";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { CompletionHelper } from "../completionHelper";
 import { Resolved, ResolveUsage } from "../resolve/resolved";
+import { debugLogMessage } from "../server";
 
 
 export class ContextFunctionCall extends Context{
@@ -306,10 +307,16 @@ export class ContextFunctionCall extends Context{
 				const fc = member.functionCall[0].children;
 				if (fc.argument) {
 					for (const each of fc.argument) {
-						cfc._arguments.push(ContextBuilder.createExpressionAssign(each.children.expressionAssign[0], cfc));
+						const ac = ContextBuilder.createExpressionAssign(each.children.expressionAssign[0], cfc);
+						cfc._arguments.push(ac);
+						if (ac.range) {
+							endPosition = ac.range.end;
+						}
 					}
 				}
-				endPosition = Helpers.positionFrom(fc.rightParanthesis[0], false);
+				if (fc.rightParanthesis) {
+					endPosition = Helpers.positionFrom(fc.rightParanthesis[0], false);
+				}
 			}
 		}
 		
@@ -331,10 +338,16 @@ export class ContextFunctionCall extends Context{
 			const args = fc.argument;
 			if (args) {
 				for (const each of args) {
-					cfc._arguments.push(ContextBuilder.createExpressionAssign(each.children.expressionAssign[0], cfc));
+					const ac = ContextBuilder.createExpressionAssign(each.children.expressionAssign[0], cfc);
+					cfc._arguments.push(ac);
+					if (ac.range) {
+						endPosition = ac.range.end;
+					}
 				}
 			}
-			endPosition = Helpers.positionFrom(fc.rightParanthesis[0], false);
+			if (fc.rightParanthesis) {
+				endPosition = Helpers.positionFrom(fc.rightParanthesis[0], false);
+			}
 		}
 		
 		cfc.updateRange(endPosition);
@@ -426,14 +439,22 @@ export class ContextFunctionCall extends Context{
 		cfc._operator = false;
 		cfc._functionType = ContextFunctionCall.FunctionType.functionSuper;
 		
+		var endPosition: Position | undefined;
+		
 		const args = node.children.argument;
 		if (args) {
 			for (const each of args) {
-				cfc._arguments.push(ContextBuilder.createExpressionAssign(each.children.expressionAssign[0], cfc));
+				const ac = ContextBuilder.createExpressionAssign(each.children.expressionAssign[0], cfc);
+				cfc._arguments.push(ac);
+				if (ac.range) {
+					endPosition = ac.range.end;
+				}
 			}
 		}
 		
-		const endPosition = Helpers.positionFrom(node.children.rightParanthesis[0], false);
+		if (node.children.rightParanthesis) {
+			endPosition = Helpers.positionFrom(node.children.rightParanthesis[0], false);
+		}
 		
 		cfc.updateRange(endPosition);
 		return cfc;
