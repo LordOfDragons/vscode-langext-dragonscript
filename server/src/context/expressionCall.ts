@@ -1061,7 +1061,7 @@ export class ContextFunctionCall extends Context{
 	public get referenceSelf(): Location | undefined {
 		return this.resolveLocation(this._name?.range);
 	}
-
+	
 	
 	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
 		console.log(`${prefix}Call ${this._name ?? '-'} ${this.logRange}`);

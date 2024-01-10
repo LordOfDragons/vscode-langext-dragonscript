@@ -456,8 +456,8 @@ connection.onReferences(
 			contextAtPosition(params.position)?.resolvedAtPosition(params.position);
 		let references: Location[] = [];
 		
-		console.log(`onReference context=${scriptDocuments.get(params.textDocument.uri)?.context?.
-			contextAtPosition(params.position)?.resolveTextShort} resolved=${resolved?.resolveTextShort}`);
+		//console.log(`onReference context=${scriptDocuments.get(params.textDocument.uri)?.context?.
+		//	contextAtPosition(params.position)?.resolveTextShort} resolved=${resolved?.resolveTextShort}`);
 		if (resolved) {
 			if (params.context.includeDeclaration) {
 				references.push(...resolved.references);

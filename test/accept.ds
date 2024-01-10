@@ -121,11 +121,6 @@ public class OuterClass extends ClassExtendImplement
 			
 		end
 		
-		select pMember1
-		case SimpleEnum
-			
-		end
-		
 		select pMember3
 		case SimpleEnum
 			
