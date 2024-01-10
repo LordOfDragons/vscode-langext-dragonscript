@@ -30,6 +30,7 @@ import { ContextStatements } from "./statements";
 import { Helpers } from "../helpers";
 import { ResolveState } from "../resolve/state";
 import { ResolveNamespace } from "../resolve/namespace";
+import { ResolveType } from "../resolve/type";
 
 
 export class ContextIfElif extends Context {
@@ -135,7 +136,7 @@ export class ContextIf extends Context {
 		}
 		
 		const tokBegin = node.children.statementIfBegin[0].children.if[0];
-		let tokEnd = node.children.statementIfEnd[0].children.end[0];
+		let tokEnd = node.children.statementIfEnd[0].children.end?.at(0);
 		
 		this.range = Helpers.rangeFrom(tokBegin, tokEnd, true, false);
 	}
@@ -215,6 +216,13 @@ export class ContextIf extends Context {
 			each.collectChildDocSymbols(list);
 		}
 		this._elsestatements?.collectChildDocSymbols(list);
+	}
+	
+	public expectTypes(context: Context): ResolveType[] | undefined {
+		if (context == this._condition) {
+			return [ResolveNamespace.classBool];
+		}
+		return undefined;
 	}
 	
 	

@@ -26,12 +26,15 @@ import { CompletionItem, CompletionItemKind, InsertTextFormat, Position, Range, 
 import { ContextFunctionArgument } from "./context/classFunctionArgument";
 import { Context } from "./context/context";
 import { ContextClass } from "./context/scriptClass";
+import { ContextIf } from "./context/statementIf";
+import { ContextSelect } from "./context/statementSelect";
 import { ContextTryCatch } from "./context/statementTry";
 import { ContextVariable } from "./context/statementVariable";
 import { RefactoringHelper } from "./refactoringHelper";
 import { ResolveNamespace } from "./resolve/namespace";
 import { ResolveSearch } from "./resolve/search";
 import { ResolveType } from "./resolve/type";
+import { debugLogMessage } from "./server";
 
 
 export class CompletionHelper {
@@ -62,7 +65,7 @@ export class CompletionHelper {
 				kind: CompletionItemKind.Keyword,
 				insertTextFormat: InsertTextFormat.PlainText,
 				textEdit: TextEdit.replace(range, each),
-				commitCharacters: ['.', ' ', ')', ':', '/', '\\']});
+				commitCharacters: ['.']});
 		};
 		return items;
 	}
@@ -173,13 +176,47 @@ export class CompletionHelper {
 		return items;
 	}
 	
+	/** Create completion item for 'elif' keyword. */
+	public static createElif(range: Range): CompletionItem {
+		range = Range.create(Position.create(range.start.line, Math.max(range.start.character - 1, 0)), range.end);
+		
+		return {label: 'elif',
+			kind: CompletionItemKind.Snippet,
+			insertTextFormat: InsertTextFormat.Snippet,
+			textEdit: TextEdit.replace(range,
+				'elif \${1:condition}\n' + 
+				'\t\${0}')};
+	}
+	
+	/** Create completion item for 'case' keyword. */
+	public static createSelectCase(range: Range): CompletionItem {
+		range = Range.create(Position.create(range.start.line, Math.max(range.start.character - 1, 0)), range.end);
+		
+		return {label: 'case',
+			kind: CompletionItemKind.Snippet,
+			insertTextFormat: InsertTextFormat.Snippet,
+			textEdit: TextEdit.replace(range,
+				'case \${1:constant}\n' + 
+				'\t\${0}')};
+	}
+	
+	/** Create completion item for 'else' keyword. */
+	public static createSelectElse(range: Range): CompletionItem {
+		range = Range.create(Position.create(range.start.line, Math.max(range.start.character - 1, 0)), range.end);
+		
+		return {label: 'else',
+			kind: CompletionItemKind.Snippet,
+			insertTextFormat: InsertTextFormat.Snippet,
+			textEdit: TextEdit.replace(range,
+				'else\n' + 
+				'\t\${0}')};
+	}
+	
 	/** Create completion items for 'for' keyword. */
 	public static createFor(range: Range): CompletionItem[] {
 		let items: CompletionItem[] = [];
 		
 		items.push({label: 'for',
-			sortText: 'for',
-			filterText: 'for',
 			kind: CompletionItemKind.Snippet,
 			insertTextFormat: InsertTextFormat.Snippet,
 			textEdit: TextEdit.replace(range,
@@ -258,6 +295,30 @@ export class CompletionHelper {
 				'end')};
 	}
 	
+	/** Create completion item for 'return' keyword. */
+	public static createReturn(range: Range): CompletionItem {
+		return {label: 'return',
+			kind: CompletionItemKind.Snippet,
+			insertTextFormat: InsertTextFormat.Snippet,
+			textEdit: TextEdit.replace(range, 'return\n\${0}')};
+	}
+	
+	/** Create completion item for 'break' keyword. */
+	public static createBreak(range: Range): CompletionItem {
+		return {label: 'break',
+			kind: CompletionItemKind.Snippet,
+			insertTextFormat: InsertTextFormat.Snippet,
+			textEdit: TextEdit.replace(range, 'break\n\${0}')};
+	}
+	
+	/** Create completion item for 'continue' keyword. */
+	public static createContinue(range: Range): CompletionItem {
+		return {label: 'continue',
+			kind: CompletionItemKind.Snippet,
+			insertTextFormat: InsertTextFormat.Snippet,
+			textEdit: TextEdit.replace(range, 'continue\n\${0}')};
+	}
+	
 	/** Create completion item for '=', '==' and '!=' operators. */
 	public static createBaseOperators(range: Range, type: ResolveType): CompletionItem[] {
 		return [
@@ -265,20 +326,17 @@ export class CompletionHelper {
 				detail: `operator: public ${type.name} =(${type.name} value)`,
 				kind: CompletionItemKind.Operator,
 				insertTextFormat: InsertTextFormat.Snippet,
-				textEdit: TextEdit.replace(range, '='),
-				commitCharacters: [' ', ':', '/', '\\']},
+				textEdit: TextEdit.replace(range, '=')},
 			{label: '==',
 				detail: `operator: public bool ==(${type.name} value)`,
 				kind: CompletionItemKind.Operator,
 				insertTextFormat: InsertTextFormat.Snippet,
-				textEdit: TextEdit.replace(range, '=='),
-				commitCharacters: [' ', ':', '/', '\\']},
+				textEdit: TextEdit.replace(range, '==')},
 			{label: '!=',
 				detail: `operator: public bool !=(${type.name} value)`,
 				kind: CompletionItemKind.Operator,
 				insertTextFormat: InsertTextFormat.Snippet,
-				textEdit: TextEdit.replace(range, '!='),
-				commitCharacters: [' ', ':', '/', '\\']},
+				textEdit: TextEdit.replace(range, '!=')},
 		];
 	}
 	
@@ -310,11 +368,55 @@ export class CompletionHelper {
 	/** Create completion items for keywords only usable inside statements. */
 	public static createStatementKeywords(context: Context, range: Range): CompletionItem[] {
 		let items: CompletionItem[] = [];
+		
 		items.push(...CompletionHelper.createIf(range));
 		items.push(...CompletionHelper.createFor(range));
 		items.push(CompletionHelper.createSelect(range));
 		items.push(CompletionHelper.createWhile(range));
 		items.push(CompletionHelper.createTry(range));
+		items.push(CompletionHelper.createReturn(range));
+		
+		const p = context.parent;
+		if (p?.type === Context.ContextType.Statements && p.parent) {
+			switch (p.parent.type) {
+			case Context.ContextType.If:
+				if ((p.parent as ContextIf).elsestatements != p) {
+					items.push(CompletionHelper.createElif(range));
+				}
+				break;
+				
+			case Context.ContextType.IfElif:
+				items.push(CompletionHelper.createElif(range));
+				break;
+				
+			case Context.ContextType.Select:
+				if ((p.parent as ContextSelect).elsestatements != p) {
+					items.push(CompletionHelper.createSelectCase(range));
+					if (!(p.parent as ContextSelect).elsestatements) {
+						items.push(CompletionHelper.createSelectElse(range));
+					}
+				}
+				break;
+				
+			case Context.ContextType.SelectCase:
+				items.push(CompletionHelper.createSelectCase(range));
+				if (!(p.parent as ContextSelect).elsestatements) {
+					items.push(CompletionHelper.createSelectElse(range));
+				}
+				break;
+			}
+		}
+		
+		if (context.selfOrParentWithType(Context.ContextType.For)
+		|| context.selfOrParentWithType(Context.ContextType.While)) {
+			items.push(CompletionHelper.createBreak(range));
+			items.push(CompletionHelper.createContinue(range));
+			
+		} else if (context.selfOrParentWithType(Context.ContextType.Select)
+		|| context.selfOrParentWithType(Context.ContextType.SelectCase)) {
+			items.push(CompletionHelper.createBreak(range));
+		}
+		
 		return items;
 	}
 	
@@ -328,7 +430,7 @@ export class CompletionHelper {
 			detail: `local variable ${variable.resolveTextShort}`,
 			insertTextFormat: InsertTextFormat.PlainText,
 			textEdit: TextEdit.replace(range, name),
-			commitCharacters: ['.', ' ', ')', ':', '/', '\\']};
+			commitCharacters: ['.']};
 	}
 	
 	/** Create completion item for function or catch argument. */
@@ -340,7 +442,7 @@ export class CompletionHelper {
 			detail: `argument ${argument.resolveTextShort}`,
 			insertTextFormat: InsertTextFormat.PlainText,
 			textEdit: TextEdit.replace(range, name),
-			commitCharacters: ['.', ' ', ')', ':', '/', '\\']}
+			commitCharacters: ['.']}
 	}
 	
 	
@@ -412,11 +514,13 @@ export class CompletionHelper {
 	public static createExpression(range: Range, context: Context, castable?: ResolveType[]): CompletionItem[] {
 		if (!castable) {
 			castable = context.parent?.expectTypes(context);
+			debugLogMessage(`createExpression castable ${castable?.at(0)?.resolveTextShort}`);
 		}
 		
 		let search = CompletionHelper.searchExpression(context, castable);
 		const visibleTypes = new Set(search.types);
 		
+		search.onlyCastable = undefined;
 		ResolveNamespace.root.searchGlobalTypes(search);
 		
 		let items: CompletionItem[] = [];
@@ -439,7 +543,7 @@ export class CompletionHelper {
 		search.allMatchingTypes = true;
 		search.ignoreShadowedFunctions = true;
 		if (castable && castable?.length > 0) {
-			search.onlyCastable = castable;
+			//search.onlyCastable = castable;
 		}
 		
 		context.searchExpression(search, true, context);
@@ -459,7 +563,7 @@ export class CompletionHelper {
 		search.allMatchingTypes = true;
 		search.onlyTypes = true;
 		if (castable && castable?.length > 0) {
-			search.onlyCastable = castable;
+			//search.onlyCastable = castable;
 		}
 		
 		context.searchExpression(search, true, context);
@@ -479,6 +583,7 @@ export class CompletionHelper {
 		let search = new ResolveSearch();
 		search.allMatchingTypes = true;
 		search.ignoreShadowedFunctions = true;
+		//search.onlyCastable = context.parent?.expectTypes(context);
 		
 		var objtype = object.expressionType;
 		if (objtype) {

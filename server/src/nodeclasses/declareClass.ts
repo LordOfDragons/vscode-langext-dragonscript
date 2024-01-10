@@ -103,5 +103,5 @@ export interface ClassEndCstNode extends CstNode {
 }
 
 export type ClassEndCstChildren = {
-	end: IToken[];
+	end?: IToken[];
 };

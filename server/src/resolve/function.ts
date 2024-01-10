@@ -167,7 +167,7 @@ export class ResolveFunction extends Resolved{
 	}
 	
 	public createCompletionItem(range: Range): CompletionItem {
-		let commitCharacters: string[] = [' ', ':', '/', '\\'];
+		let commitCharacters: string[] = [];
 		var text: string = this._name;
 		var title: string;
 		

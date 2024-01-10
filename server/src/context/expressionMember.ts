@@ -39,10 +39,12 @@ import { ContextClass } from "./scriptClass";
 import { ContextTryCatch } from "./statementTry";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { CompletionHelper } from "../completionHelper";
+import { IToken } from "chevrotain";
 
 
 export class ContextMember extends Context{
 	protected _node: ExpressionObjectCstNode | ExpressionMemberCstNode;
+	protected _tokenPeriod?: IToken;
 	protected _memberIndex: integer;
 	protected _object?: Context;
 	protected _name?: Identifier;
@@ -74,22 +76,22 @@ export class ContextMember extends Context{
 			cm._name = new Identifier(name);
 		}
 		
-		var period = node.children.period?.at(memberIndex);
+		cm._tokenPeriod = node.children.period?.at(memberIndex);
 		var rangeObject = cm._object?.range;
 		var nameRange = cm._name?.range;
 		
 		var rangeBegin = rangeObject?.start;
 		var rangeEnd = nameRange?.end;
 		
-		if (!rangeBegin && period) {
-			rangeBegin = Helpers.positionFrom(period, true);
+		if (!rangeBegin && cm._tokenPeriod) {
+			rangeBegin = Helpers.positionFrom(cm._tokenPeriod, true);
 		}
 		if (!rangeBegin && nameRange) {
 			rangeBegin = nameRange.start;
 		}
 		
-		if (!rangeEnd && period) {
-			rangeEnd = Helpers.positionFrom(period, false);
+		if (!rangeEnd && cm._tokenPeriod) {
+			rangeEnd = Helpers.positionFrom(cm._tokenPeriod, false);
 		}
 		if (!rangeEnd && rangeObject) {
 			rangeEnd = rangeObject.end;
@@ -317,7 +319,7 @@ export class ContextMember extends Context{
 	public completion(_document: TextDocument, position: Position): CompletionItem[] {
 		const range = this._name?.range ?? Range.create(position, position);
 		
-		if (this._object) {
+		if (this._object && this._tokenPeriod) {
 			return CompletionHelper.createObject(range, this, this._object);
 		} else {
 			return CompletionHelper.createStatementOrExpression(range, this);

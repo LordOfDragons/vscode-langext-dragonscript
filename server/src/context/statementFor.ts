@@ -30,6 +30,7 @@ import { StatementForCstNode } from "../nodeclasses/statementFor";
 import { Helpers } from "../helpers";
 import { ResolveState } from "../resolve/state";
 import { ResolveNamespace } from "../resolve/namespace";
+import { ContextError } from "./error";
 
 
 export class ContextFor extends Context{
@@ -47,13 +48,14 @@ export class ContextFor extends Context{
 		this._node = node;
 
 		let forBegin = node.children.statementForBegin[0].children;
-		let forTo = forBegin.statementForTo[0].children;
+		let forTo = forBegin.statementForTo?.at(0)?.children;
+		let forFrom = forBegin.statementForFrom?.at(0)?.children;
 
 		this._variable = ContextBuilder.createExpressionObject(forBegin.statementForVariable[0].children.variable[0], this);
-		this._from = ContextBuilder.createExpression(forBegin.statementForFrom[0].children.value[0], this);
-		this._to = ContextBuilder.createExpression(forTo.value[0], this);
-		this._downto = forTo.downto !== undefined;
-
+		this._from = forFrom ? ContextBuilder.createExpression(forFrom.value[0], this) : new ContextError(this);
+		this._to = forTo ? ContextBuilder.createExpression(forTo.value[0], this) : new ContextError(this);
+		this._downto = !forTo || forTo.downto !== undefined;
+		
 		if (forBegin.statementForStep) {
 			this._step = ContextBuilder.createExpression(forBegin.statementForStep[0].children.value[0], this);
 		}
@@ -61,7 +63,7 @@ export class ContextFor extends Context{
 		this._statements = new ContextStatements(node.children.statements[0], this);
 		
 		const tokBegin = node.children.statementForBegin[0].children.for[0];
-		let tokEnd = node.children.statementForEnd[0].children.end[0];
+		let tokEnd = node.children.statementForEnd[0].children.end?.at(0);
 		
 		this.range = Helpers.rangeFrom(tokBegin, tokEnd, true, false);
 	}

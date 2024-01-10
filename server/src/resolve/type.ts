@@ -111,7 +111,7 @@ export class ResolveType extends Resolved{
 			insertTextFormat: InsertTextFormat.Snippet,
 			textEdit: TextEdit.replace(range, this._name),
 			additionalTextEdits: extraEdits,
-			commitCharacters: ['.', ' ', ')', ':', '/', '\\']};
+			commitCharacters: ['.']};
 	}
 	
 	protected get completionItemTitle(): string {
@@ -138,7 +138,7 @@ export class ResolveType extends Resolved{
 			kind: CompletionItemKind.Keyword,
 			insertTextFormat: InsertTextFormat.PlainText,
 			textEdit: TextEdit.replace(range, 'this'),
-			commitCharacters: ['.', ' ', ')', ':', '/', '\\']};
+			commitCharacters: ['.']};
 	}
 	
 	public createCompletionItemSuper(range: Range): CompletionItem {
@@ -147,7 +147,7 @@ export class ResolveType extends Resolved{
 			kind: CompletionItemKind.Keyword,
 			insertTextFormat: InsertTextFormat.PlainText,
 			textEdit: TextEdit.replace(range, 'super'),
-			commitCharacters: ['.', ' ', ')', ':', '/', '\\']};
+			commitCharacters: ['.']};
 	}
 	
 	

@@ -64,7 +64,7 @@ export class ContextClass extends Context{
 		this._name = new Identifier(cdeclBegin.name[0]);
 		this._typeModifiers = new Context.TypeModifierSet(typemodNode, Context.TypeModifier.Public);
 		
-		let tokEnd = cdecl.classEnd[0].children.end[0];
+		let tokEnd = cdecl.classEnd[0].children.end?.at(0);
 		let tokClass = cdeclBegin.class[0];
 		this.range = Helpers.rangeFrom(tokClass, tokEnd, true, false);
 		this.documentSymbol = DocumentSymbol.create(this._name.name, undefined,

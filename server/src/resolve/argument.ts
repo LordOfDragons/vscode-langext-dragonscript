@@ -93,6 +93,6 @@ export class ResolveArgument extends Resolved{
 			kind: kind,
 			insertTextFormat: InsertTextFormat.Snippet,
 			textEdit: TextEdit.replace(range, text),
-			commitCharacters: ['.', ' ', ')', ':', '/', '\\']};
+			commitCharacters: ['.']};
 	}
 }

@@ -45,7 +45,7 @@ import {
 	DocumentHighlight} from 'vscode-languageserver/node'
 
 import {
-	TextDocument
+	TextDocument, TextEdit
 } from 'vscode-languageserver-textdocument'
 
 import { ContextScript } from "./context/script";
@@ -411,7 +411,10 @@ connection.onCompletion(
 			}
 			*/
 			
-			return context?.completion(document, params.position) || [];
+			const l = context?.completion(document, params.position) || [];
+			console.log(`completion count: ${l.length}`);
+			//for (const each of l.slice(0, 5)){ console.log(`- ${each.label}: ${Helpers.logRange((each.textEdit as TextEdit)?.range)}`)}
+			return l;
 			
 		} catch (error) {
 			logError(error);

@@ -24,11 +24,16 @@
 
 import { Context } from "./context";
 import { StatementCaseCstNode, StatementSelectCstNode } from "../nodeclasses/statementSelect";
-import { DocumentSymbol, Position, RemoteConsole } from "vscode-languageserver";
+import { CompletionItem, DocumentSymbol, Position, Range, RemoteConsole } from "vscode-languageserver";
 import { ContextBuilder } from "./contextBuilder";
 import { ContextStatements } from "./statements";
 import { Helpers } from "../helpers";
 import { ResolveState } from "../resolve/state";
+import { IToken } from "chevrotain";
+import { TextDocument } from "vscode-languageserver-textdocument";
+import { CompletionHelper } from "../completionHelper";
+import { ResolveNamespace } from "../resolve/namespace";
+import { ResolveType } from "../resolve/type";
 
 
 export class ContextSelectCase extends Context {
@@ -42,20 +47,24 @@ export class ContextSelectCase extends Context {
 		this._node = node;
 		this._values = [];
 		
+		var posEnd: Position | undefined;
+		
 		const values = node.children.value;
 		if (values) {
 			for (const each of values) {
-				this._values.push(ContextBuilder.createExpression(each, parent));
+				const cc = ContextBuilder.createExpression(each, parent);
+				this._values.push(cc);
+				posEnd = cc.range?.end ?? posEnd;
 			}
 		}
 		
-		this._statements = new ContextStatements(node.children.statements[0], parent);
+		this._statements = new ContextStatements(node.children.statements?.at(0), parent);
 		
 		const tokBegin = node.children.case[0];
-		let tokEnd = this._statements.range?.end;
+		posEnd = this._statements.range?.end ?? posEnd;
 		
-		if (tokEnd) {
-			this.range = Helpers.rangeFromPosition(Helpers.positionFrom(tokBegin), tokEnd);
+		if (posEnd) {
+			this.range = Helpers.rangeFromPosition(Helpers.positionFrom(tokBegin), posEnd);
 		}
 	}
 	
@@ -111,6 +120,20 @@ export class ContextSelectCase extends Context {
 		this._statements?.collectChildDocSymbols(list);
 	}
 	
+	public completion(document: TextDocument, position: Position): CompletionItem[] {
+		const vt = this.parent?.expectTypes(this);
+		if (!vt) {
+			return [];
+		}
+		
+		const cv = this._values.find(each => Helpers.isPositionInsideRange(each.range, position));
+		return CompletionHelper.createExpression(cv?.range ?? Range.create(position, position), this, vt);
+	}
+	
+	public expectTypes(context: Context): ResolveType[] | undefined {
+		return this.parent?.expectTypes(context);
+	}
+	
 	
 	log(console: RemoteConsole, prefix: string = ""): void {
 		console.log(`${prefix}- Case`);
@@ -148,7 +171,20 @@ export class ContextSelect extends Context {
 		}
 		
 		const tokBegin = node.children.statementSelectBegin[0].children.select[0];
-		let tokEnd = node.children.statementSelectEnd[0].children.end[0];
+		
+		var tokEnd: IToken | undefined;
+		
+		const selEnd = node.children.statementSelectEnd?.at(0)?.children;
+		if (selEnd) {
+			if (selEnd.end) {
+				tokEnd = selEnd.end[0];
+			} else if (selEnd.endOfCommand) {
+				const selEnd2 = selEnd.endOfCommand[0].children;
+				if (selEnd2) {
+					tokEnd = (selEnd2.newline ?? selEnd2.commandSeparator)?.at(0);
+				}
+			}
+		}
 		
 		this.range = Helpers.rangeFrom(tokBegin, tokEnd, true, false);
 	}
@@ -167,7 +203,7 @@ export class ContextSelect extends Context {
 		return this._node;
 	}
 	
-	public get condition(): Context {
+	public get value(): Context {
 		return this._value;
 	}
 	
@@ -217,6 +253,31 @@ export class ContextSelect extends Context {
 			each.collectChildDocSymbols(list);
 		}
 		this._elsestatements?.collectChildDocSymbols(list);
+	}
+	
+	public completion(document: TextDocument, position: Position): CompletionItem[] {
+		const range = Range.create(position, position);
+		let items: CompletionItem[] = [];
+		
+		if (this._value.contextAtPosition(position)) {
+			items.push(...CompletionHelper.createExpression(this._value.range ?? range, this));
+		} else {
+			items.push(CompletionHelper.createSelectCase(range));
+			if (this._cases.length > 0 && !this._elsestatements) {
+				items.push(CompletionHelper.createSelectElse(range));
+			}
+		}
+		
+		return items;
+	}
+	
+	public expectTypes(context: Context): ResolveType[] | undefined {
+		const vt = this._value.expressionType;
+		if (vt) {
+			return vt === ResolveNamespace.classInt ? [ResolveNamespace.classInt] : [ResolveNamespace.classEnumeration];
+		} else {
+			return undefined;
+		}
 	}
 	
 	

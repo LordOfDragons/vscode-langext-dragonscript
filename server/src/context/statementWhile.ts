@@ -30,6 +30,7 @@ import { ContextStatements } from "./statements";
 import { ResolveState } from "../resolve/state";
 import { ResolveNamespace } from "../resolve/namespace";
 import { Helpers } from "../helpers";
+import { ResolveType } from "../resolve/type";
 
 
 export class ContextWhile extends Context{
@@ -100,6 +101,13 @@ export class ContextWhile extends Context{
 		super.collectChildDocSymbols(list);
 		this._condition?.collectChildDocSymbols(list);
 		this._statements.collectChildDocSymbols(list);
+	}
+	
+	public expectTypes(context: Context): ResolveType[] | undefined {
+		if (context == this._condition) {
+			return [ResolveNamespace.classBool];
+		}
+		return undefined;
 	}
 	
 	

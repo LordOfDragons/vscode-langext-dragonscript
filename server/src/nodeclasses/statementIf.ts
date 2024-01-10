@@ -56,5 +56,5 @@ export interface StatementIfEndCstNode extends CstNode {
 }
 
 export type StatementIfEndCstChildren = {
-	end: IToken[];
+	end?: IToken[];
 };
