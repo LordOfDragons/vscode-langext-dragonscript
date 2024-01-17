@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-import { DiagnosticRelatedInformation, Location } from "vscode-languageserver";
+import { DiagnosticRelatedInformation, Location, Range } from "vscode-languageserver";
 import { Context } from "../context/context";
 import { MatchableName } from "../matchableName";
 
@@ -31,6 +31,8 @@ export class ResolveUsage{
 	protected _resolved?: Resolved;
 	protected _context?: Context;
 	protected _target: any;
+	public range?: Range;
+	public write: boolean = false;
 	
 	
 	constructor (resolved: Resolved, context: Context, target?: any) {
@@ -60,9 +62,9 @@ export class ResolveUsage{
 		return this._context;
 	}
 	
-	public get target(): any {
+	/*public get target(): any {
 		return this._target;
-	}
+	}*/
 	
 	public get reference(): Location | undefined {
 		return this.context?.referenceFor(this);

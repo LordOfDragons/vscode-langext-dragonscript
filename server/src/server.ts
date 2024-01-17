@@ -42,7 +42,8 @@ import {
 	SymbolInformation,
 	ReferenceParams,
 	DocumentHighlightParams,
-	DocumentHighlight} from 'vscode-languageserver/node'
+	DocumentHighlight,
+	DocumentHighlightKind} from 'vscode-languageserver/node'
 
 import {
 	TextDocument, TextEdit
@@ -483,16 +484,40 @@ connection.onReferences(
 connection.onDocumentHighlight(
 	(params: DocumentHighlightParams): DocumentHighlight[] => {
 		let hilight: DocumentHighlight[] = [];
-
-		const resolved = scriptDocuments.get(params.textDocument.uri)?.context?.
-			contextAtPosition(params.position)?.resolvedAtPosition(params.position);
-		let references: Location[] = [];
+		const uri = params.textDocument.uri;
+		const document = scriptDocuments.get(uri);
+		const context = document?.context;
 		
-		console.log(`onDocumentHighlight context=${scriptDocuments.get(params.textDocument.uri)?.context?.
-			contextAtPosition(params.position)?.resolveTextShort} resolved=${resolved?.resolveTextShort}`);
-		if (resolved) {
+		if (context) {
+			const resolved = context.contextAtPosition(params.position)?.resolvedAtPosition(params.position);
+			let references: Location[] = [];
+			
+			console.log(`onDocumentHighlight context=${context.contextAtPosition(params.position)?.resolveTextShort}
+				resolved=${resolved?.resolveTextShort} refs=${resolved?.references.length} usages=${resolved?.usage.size}`);
+			if (resolved) {
+				for (const each of resolved.references) {
+					if (each.uri == uri) {
+						hilight.push({
+							range: each.range,
+							kind: DocumentHighlightKind.Text
+						});
+					}
+				}
+				
+				for (const each of resolved.usage) {
+					if (each.context?.documentUri == uri) {
+						const range = each.range;// ?? each.context.range;
+						if (range) {
+							hilight.push({
+								range: range,
+								kind: DocumentHighlightKind.Text
+							});
+						}
+					}
+				}
+			}
 		}
-
+		
 		return hilight;
 	}
 )

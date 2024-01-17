@@ -67,12 +67,13 @@ export class TypeNamePart {
 		return this._resolve;
 	}
 	
-	public setResolve(resolved: Resolved | undefined, context: Context, target?: any): ResolveUsage | undefined {
+	public setResolve(resolved: Resolved | undefined, context: Context): ResolveUsage | undefined {
 		this._resolve?.dispose();
 		this._resolve = undefined;
 		
 		if (resolved) {
-			this._resolve = new ResolveUsage(resolved, context, target);
+			this._resolve = new ResolveUsage(resolved, context);
+			this._resolve.range = this._name.range;
 		}
 		
 		return this._resolve;
@@ -162,7 +163,7 @@ export class TypeName {
 	}
 	
 	
-	public resolveNamespace(state: ResolveState, context: Context, target?: any): ResolveUsage | undefined {
+	public resolveNamespace(state: ResolveState, context: Context): ResolveUsage | undefined {
 		var ns = ResolveNamespace.root;
 		this.resolve = undefined;
 		
@@ -173,13 +174,13 @@ export class TypeName {
 			}
 			
 			ns = ns.namespaceOrAdd(each.name.name);
-			this.resolve = each.setResolve(ns, context, target);
+			this.resolve = each.setResolve(ns, context);
 		}
 		
 		return this.resolve;
 	}
 
-	public resolveType(state: ResolveState, context: Context, target?: any): ResolveUsage | undefined {
+	public resolveType(state: ResolveState, context: Context): ResolveUsage | undefined {
 		if (this._parts.length == 0) {
 			return undefined;
 		}
@@ -191,7 +192,7 @@ export class TypeName {
 		for (const each of this._parts) {
 			// first entry has to resolve to a basic class
 			if (first) {
-				this.resolve = this.resolveBaseType(state, context, target);
+				this.resolve = this.resolveBaseType(state, context);
 				const nextType = this.resolve?.resolved as ResolveType;
 				if (!nextType) {
 					state.reportError(each.name.range, `"${each.name.name}" not found.`);
@@ -205,7 +206,7 @@ export class TypeName {
 			} else {
 				const nextType = type!.findType(each.name.name);
 				if (nextType) {
-					this.resolve = each.setResolve(nextType, context, target);
+					this.resolve = each.setResolve(nextType, context);
 					type = nextType;
 					continue;
 				}
@@ -241,7 +242,7 @@ export class TypeName {
 						// - an inner type of the parent class
 						const t = this.resolveTypeInClassChain(state, pc, name, true, false);
 						if (t) {
-							return part.setResolve(t, context, target);
+							return part.setResolve(t, context);
 						}
 					}
 					break;
@@ -252,7 +253,7 @@ export class TypeName {
 						// - an inner type of the parent interface
 						const t = this.resolveTypeInInterfaceChain(state, pi, name, false);
 						if (t) {
-							return part.setResolve(t, context, target);
+							return part.setResolve(t, context);
 						}
 					}
 					break;
@@ -276,7 +277,7 @@ export class TypeName {
 						// - an inner type of the super class chain
 						const t = this.resolveTypeInClassChain(state, pc, name, false, true);
 						if (t) {
-							return part.setResolve(t, context, target);
+							return part.setResolve(t, context);
 						}
 					}
 					break;
@@ -287,7 +288,7 @@ export class TypeName {
 						// - an inner type of the super interface chain
 						const t = this.resolveTypeInInterfaceChain(state, pi, name, true);
 						if (t) {
-							return part.setResolve(t, context, target);
+							return part.setResolve(t, context);
 						}
 					}
 					break;
@@ -311,7 +312,7 @@ export class TypeName {
 					if (scopeNS) {
 						const t = this.resolveTypeInNamespaceChain(state, scopeNS, name);
 						if (t) {
-							return part.setResolve(t, context, target);
+							return part.setResolve(t, context);
 						}
 					}
 					break;
@@ -321,7 +322,7 @@ export class TypeName {
 		{
 			const t = ResolveNamespace.root.findType(name);
 			if (t) {
-				return part.setResolve(t, context, target);
+				return part.setResolve(t, context);
 			}
 		}
 
@@ -329,7 +330,7 @@ export class TypeName {
 		for (const pin of state.pins) {
 			const t = this.resolveTypeInNamespaceChain(state, pin, name);
 			if (t) {
-				return part.setResolve(t, context, target);
+				return part.setResolve(t, context);
 			}
 		}
 
@@ -341,7 +342,7 @@ export class TypeName {
 				if (ns) {
 					const t = this.resolveNamespaceInNamespaceChain(state, ns, name);
 					if (t) {
-						return part.setResolve(t, context, target);
+						return part.setResolve(t, context);
 					}
 				}
 			}
@@ -351,7 +352,7 @@ export class TypeName {
 		for (const pin of state.pins) {
 			const t = this.resolveNamespaceInNamespaceChain(state, pin, name);
 			if (t) {
-				return part.setResolve(t, context, target);
+				return part.setResolve(t, context);
 			}
 		}
 

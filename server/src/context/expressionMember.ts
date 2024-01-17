@@ -40,6 +40,7 @@ import { ContextTryCatch } from "./statementTry";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { CompletionHelper } from "../completionHelper";
 import { IToken } from "chevrotain";
+import { Resolved, ResolveUsage } from "../resolve/resolved";
 
 
 export class ContextMember extends Context{
@@ -53,6 +54,7 @@ export class ContextMember extends Context{
 	protected _resolveLocalVariable?: ContextVariable;
 	protected _resolveVariable?: ResolveVariable;
 	protected _resolveType?: ResolveType;
+	protected _resolveUsage?: ResolveUsage;
 
 
 	protected constructor(node: ExpressionObjectCstNode | ExpressionMemberCstNode,
@@ -119,6 +121,8 @@ export class ContextMember extends Context{
 		this._resolveLocalVariable = undefined;
 		this._resolveVariable = undefined;
 		this._resolveType = undefined;
+		this._resolveUsage?.dispose();
+		this._resolveUsage = undefined;
 	}
 
 
@@ -157,6 +161,10 @@ export class ContextMember extends Context{
 	
 	public get resolveAny(): ContextFunctionArgument | ContextTryCatch | ContextVariable | ResolveVariable | ResolveType | undefined {
 		return this._resolveArgument ?? this._resolveLocalVariable ?? this._resolveVariable ?? this._resolveType;
+	}
+	
+	public get resolveUsage(): ResolveUsage | undefined {
+		return this._resolveUsage;
 	}
 	
 	public resolveMembers(state: ResolveState): void {
@@ -200,16 +208,23 @@ export class ContextMember extends Context{
 		} else {
 			if (this._matches.arguments.length > 0) {
 				this._resolveArgument = this._matches.arguments[0];
+				if (this._resolveArgument.resolveArgument) {
+					this._resolveUsage = new ResolveUsage(this._resolveArgument.resolveArgument, this);
+				}
 				this.expressionType = this._resolveArgument.typename.resolve?.resolved as ResolveType;
 				this.expressionTypeType = Context.ExpressionType.Object;
 				
 			} else if (this._matches.localVariables.length > 0) {
 				this._resolveLocalVariable = this._matches.localVariables[0];
+				if (this._resolveLocalVariable.resolveVariable) {
+					this._resolveUsage = new ResolveUsage(this._resolveLocalVariable.resolveVariable, this);
+				}
 				this.expressionType = this._resolveLocalVariable.typename.resolve?.resolved as ResolveType;
 				this.expressionTypeType = Context.ExpressionType.Object;
 				
 			} else if (this._matches.variables.length > 0) {
 				this._resolveVariable = this._matches.variables[0];
+				this._resolveUsage = new ResolveUsage(this._resolveVariable, this);
 				this.expressionType = this._resolveVariable.variableType;
 				this.expressionTypeType = Context.ExpressionType.Object;
 				
@@ -227,6 +242,9 @@ export class ContextMember extends Context{
 				
 			} else if (this._matches.types.size > 0) {
 				this._resolveType = this._matches.types.values().next().value;
+				if (this._resolveType) {
+					this._resolveUsage = new ResolveUsage(this._resolveType, this);
+				}
 				this.expressionType = this._resolveType;
 				this.expressionTypeType = Context.ExpressionType.Type;
 			}
@@ -249,6 +267,10 @@ export class ContextMember extends Context{
 				state.reportWarning(this._name.range, content.join('\n'));
 			}
 			*/
+		}
+		
+		if (this._resolveUsage) {
+			this._resolveUsage.range = this._name.range;
 		}
 	}
 
@@ -324,6 +346,16 @@ export class ContextMember extends Context{
 		} else {
 			return CompletionHelper.createStatementOrExpression(range, this);
 		}
+	}
+	
+	public resolvedAtPosition(position: Position): Resolved | undefined {
+		if (this._name?.isPositionInside(position)) {
+			return this._resolveArgument?.resolveArgument
+				?? this._resolveLocalVariable?.resolveVariable
+				?? this._resolveVariable
+				?? this._resolveType;
+		}
+		return super.resolvedAtPosition(position);
 	}
 	
 	public expectTypes(context: Context): ResolveType[] | undefined {
