@@ -72,6 +72,7 @@ export class ContextFunctionCall extends Context{
 	
 	private _matches: ResolveSearch | undefined;
 	private _matchFunction?: ResolveFunction;
+	protected _resolveUsage?: ResolveUsage;
 	
 	
 	protected constructor(node: ExpressionAdditionCstNode | ExpressionBitOperationCstNode
@@ -470,6 +471,8 @@ export class ContextFunctionCall extends Context{
 
 		this._matches = undefined;
 		this._matchFunction = undefined;
+		this._resolveUsage?.dispose();
+		this._resolveUsage = undefined;
 	}
 
 
@@ -504,6 +507,10 @@ export class ContextFunctionCall extends Context{
 
 	public get functionType(): ContextFunctionCall.FunctionType {
 		return this._functionType;
+	}
+	
+	public get resolveUsage(): ResolveUsage | undefined {
+		return this._resolveUsage;
 	}
 
 
@@ -618,6 +625,11 @@ export class ContextFunctionCall extends Context{
 				this.expressionTypeType = this.expressionType !== ResolveNamespace.classVoid
 					? Context.ExpressionType.Object : Context.ExpressionType.Void;
 				break;
+		}
+		
+		if (this._matchFunction) {
+			this._resolveUsage = new ResolveUsage(this._matchFunction, this);
+			this._resolveUsage.range = this._name.range;
 		}
 		
 		// report problems
@@ -1049,12 +1061,15 @@ export class ContextFunctionCall extends Context{
 	public resolvedAtPosition(position: Position): Resolved | undefined {
 		if (this._castType?.isPositionInside(position)) {
 			return this._castType.resolve?.resolved;
+		} else if (this._name?.isPositionInside(position)) {
+			return this._matchFunction;
 		}
 		return super.resolvedAtPosition(position);
 	}
 	
 	public referenceFor(usage: ResolveUsage): Location | undefined {
 		return this._castType?.location(this)
+			?? this._name?.location(this)
 			?? super.referenceFor(usage);
 	}
 	

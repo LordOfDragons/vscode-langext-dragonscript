@@ -365,6 +365,11 @@ export class ContextMember extends Context{
 		return super.expectTypes(context);
 	}
 	
+	public referenceFor(usage: ResolveUsage): Location | undefined {
+		return this._name?.location(this)
+			?? super.referenceFor(usage);
+	}
+	
 	public get referenceSelf(): Location | undefined {
 		return this.resolveLocation(this._name?.range);
 	}

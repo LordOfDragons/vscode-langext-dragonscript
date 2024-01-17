@@ -202,6 +202,7 @@ export class ContextVariable extends Context {
 	
 	public referenceFor(usage: ResolveUsage): Location | undefined {
 		return this._typename?.location(this)
+			?? this._name?.location(this)
 			?? super.referenceFor(usage);
 	}
 	

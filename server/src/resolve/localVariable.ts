@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-import { CompletionItem, CompletionItemKind, DiagnosticRelatedInformation, InsertTextFormat, Range, TextEdit } from 'vscode-languageserver';
+import { CompletionItem, CompletionItemKind, DiagnosticRelatedInformation, InsertTextFormat, Location, Range, TextEdit } from 'vscode-languageserver';
 import { ContextFunctionArgument } from '../context/classFunctionArgument';
 import { ContextTryCatch } from '../context/statementTry';
 import { ContextVariable } from '../context/statementVariable';
@@ -74,6 +74,12 @@ export class ResolveLocalVariable extends Resolved{
 	public get variableType(): ResolveType | undefined {
 		return this._variableType;
 	}
+	
+	public get references(): Location[] {
+		const r = this._context?.referenceSelf;
+		return r ? [r] : [];
+	}
+	
 	
 	public addReportInfo(relatedInformation: DiagnosticRelatedInformation[], message: string) {
 		var info = this._context?.createReportInfo(message);

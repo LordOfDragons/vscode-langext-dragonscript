@@ -492,8 +492,8 @@ connection.onDocumentHighlight(
 			const resolved = context.contextAtPosition(params.position)?.resolvedAtPosition(params.position);
 			let references: Location[] = [];
 			
-			console.log(`onDocumentHighlight context=${context.contextAtPosition(params.position)?.resolveTextShort}
-				resolved=${resolved?.resolveTextShort} refs=${resolved?.references.length} usages=${resolved?.usage.size}`);
+			//console.log(`onDocumentHighlight context=${context.contextAtPosition(params.position)?.resolveTextShort}
+			//	resolved=${resolved?.resolveTextShort} refs=${resolved?.references.length} usages=${resolved?.usage.size}`);
 			if (resolved) {
 				for (const each of resolved.references) {
 					if (each.uri == uri) {
@@ -505,14 +505,11 @@ connection.onDocumentHighlight(
 				}
 				
 				for (const each of resolved.usage) {
-					if (each.context?.documentUri == uri) {
-						const range = each.range;// ?? each.context.range;
-						if (range) {
-							hilight.push({
-								range: range,
-								kind: DocumentHighlightKind.Text
-							});
-						}
+					if (each.context?.documentUri == uri && each.range) {
+						hilight.push({
+							range: each.range,
+							kind: each.write ? DocumentHighlightKind.Write : DocumentHighlightKind.Read
+						});
 					}
 				}
 			}
