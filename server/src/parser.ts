@@ -192,18 +192,22 @@ export class DSParser extends CstParser{
 	public classBegin = this.RULE("classBegin", () => {
 		this.CONSUME(DSLexer.tokenClass)
 		this.CONSUME(DSLexer.tokenIdentifier, {LABEL: "name"})
-		this.OPTION(() => {
-			this.CONSUME(DSLexer.tokenExtends)
-			this.SUBRULE(this.fullyQualifiedClassName, {LABEL: "baseClassName"})
-		})
-		this.OPTION2(() => {
-			this.CONSUME(DSLexer.tokenImplements)
-			this.AT_LEAST_ONE_SEP({
-				SEP: DSLexer.tokenComma,
-				DEF: () => {this.SUBRULE2(this.fullyQualifiedClassName, {LABEL: "interfaceName"})}
-			})
-		})
+		this.OPTION(() => this.SUBRULE(this.classBeginExtends))
+		this.OPTION2(() => this.SUBRULE(this.classBeginImplements))
 		this.SUBRULE(this.endOfCommand)
+	})
+
+	public classBeginExtends = this.RULE("classBeginExtends", () => {
+		this.CONSUME(DSLexer.tokenExtends)
+		this.SUBRULE(this.fullyQualifiedClassName, {LABEL: "baseClassName"})
+	})
+
+	public classBeginImplements = this.RULE("classBeginImplements", () => {
+		this.CONSUME(DSLexer.tokenImplements)
+		this.AT_LEAST_ONE_SEP({
+			SEP: DSLexer.tokenComma,
+			DEF: () => {this.SUBRULE2(this.fullyQualifiedClassName, {LABEL: "interfaceName"})}
+		})
 	})
 
 	// class body
@@ -384,14 +388,16 @@ export class DSParser extends CstParser{
 	public interfaceBegin = this.RULE("interfaceBegin", () => {
 		this.CONSUME(DSLexer.tokenInterface)
 		this.CONSUME(DSLexer.tokenIdentifier, {LABEL: "name"})
-		this.OPTION(() => {
-			this.CONSUME(DSLexer.tokenImplements)
-			this.AT_LEAST_ONE_SEP({
-				SEP: DSLexer.tokenComma,
-				DEF: () => this.SUBRULE(this.fullyQualifiedClassName, {LABEL: "baseInterfaceName"})
-			})
-		})
+		this.OPTION(() => this.SUBRULE(this.interfaceBeginImplements))
 		this.SUBRULE(this.endOfCommand)
+	})
+
+	public interfaceBeginImplements = this.RULE("interfaceBeginImplements", () => {
+		this.CONSUME(DSLexer.tokenImplements)
+		this.AT_LEAST_ONE_SEP({
+			SEP: DSLexer.tokenComma,
+			DEF: () => this.SUBRULE(this.fullyQualifiedClassName, {LABEL: "baseInterfaceName"})
+		})
 	})
 
 	// interface function declaration
@@ -548,8 +554,7 @@ export class DSParser extends CstParser{
 	// select
 	public statementSelect = this.RULE("statementSelect", () => {
 		this.SUBRULE(this.statementSelectBegin)
-		this.MANY(() => this.SUBRULE(this.statementCase))
-		this.OPTION(() => this.SUBRULE(this.statementSelectElse))
+		this.SUBRULE(this.statementSelectBody)
 		this.SUBRULE(this.statementSelectEnd)
 	})
 
@@ -557,6 +562,11 @@ export class DSParser extends CstParser{
 		this.CONSUME(DSLexer.tokenSelect)
 		this.SUBRULE(this.expression, {LABEL: "value"})
 		this.AT_LEAST_ONE(() => this.SUBRULE(this.endOfCommand))
+	})
+
+	public statementSelectBody = this.RULE("statementSelectBody", () => {
+		this.MANY(() => this.SUBRULE(this.statementCase))
+		this.OPTION(() => this.SUBRULE(this.statementSelectElse))
 	})
 
 	public statementCase = this.RULE("statementCase", () => {

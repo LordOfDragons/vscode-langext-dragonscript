@@ -29,7 +29,30 @@ export interface ClassBeginCstNode extends CstNode {
 export type ClassBeginCstChildren = {
 	class: IToken[];
 	name: IToken[];
+	classBeginExtends?: ClassBeginExtendsCstNode[];
+	classBeginImplements?: ClassBeginImplementsCstNode[];
+	endOfCommand: EndOfCommandCstNode[];
+};
+
+
+export interface ClassBeginExtendsCstNode extends CstNode {
+	name: "classBeginExtends";
+	children: ClassBeginExtendsCstChildren;
+}
+
+export type ClassBeginExtendsCstChildren = {
+	extends: IToken[];
 	baseClassName?: FullyQualifiedClassNameCstNode[];
+};
+
+
+export interface ClassBeginImplementsCstNode extends CstNode {
+	name: "classBeginImplements";
+	children: ClassBeginImplementsCstChildren;
+}
+
+export type ClassBeginImplementsCstChildren = {
+	implements: IToken[];
 	interfaceName?: FullyQualifiedClassNameCstNode[];
 };
 

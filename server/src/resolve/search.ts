@@ -30,6 +30,7 @@ import { ContextTryCatch } from "../context/statementTry";
 import { ContextVariable } from "../context/statementVariable";
 import { MatchableName } from "../matchableName";
 import { ResolveFunction } from "./function";
+import { Resolved } from "./resolved";
 import { ResolveSignature } from "./signature";
 import { ResolveType } from "./type";
 import { ResolveVariable } from "./variable";
@@ -67,6 +68,7 @@ export class ResolveSearch {
 			this.stopAfterFirstFullMatch = copy.stopAfterFirstFullMatch;
 			this.onlyCastable = copy.onlyCastable;
 			this.searchSuperClasses = copy.searchSuperClasses;
+			this.restrictTypeType = copy.restrictTypeType;
 		}
 	}
 	
@@ -134,6 +136,8 @@ export class ResolveSearch {
 	/** Ignore constructors. Internal use. */
 	public ignoreConstructors = false;
 	
+	/** Restrict to type types. */
+	public restrictTypeType?: Resolved.Type;
 	
 	
 	/** Clear search result. */
@@ -369,6 +373,9 @@ export class ResolveSearch {
 	/** Accept type using non-name related filters. */
 	public acceptType(type: ResolveType): boolean {
 		if (!this.allMatchingTypes && this._types.size > 0) {
+			return false;
+		}
+		if (this.restrictTypeType && type.type != this.restrictTypeType) {
 			return false;
 		}
 		

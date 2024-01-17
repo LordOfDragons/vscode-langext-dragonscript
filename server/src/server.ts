@@ -485,32 +485,28 @@ connection.onDocumentHighlight(
 	(params: DocumentHighlightParams): DocumentHighlight[] => {
 		let hilight: DocumentHighlight[] = [];
 		const uri = params.textDocument.uri;
-		const document = scriptDocuments.get(uri);
-		const context = document?.context;
 		
-		if (context) {
-			const resolved = context.contextAtPosition(params.position)?.resolvedAtPosition(params.position);
-			let references: Location[] = [];
-			
-			//console.log(`onDocumentHighlight context=${context.contextAtPosition(params.position)?.resolveTextShort}
-			//	resolved=${resolved?.resolveTextShort} refs=${resolved?.references.length} usages=${resolved?.usage.size}`);
-			if (resolved) {
-				for (const each of resolved.references) {
-					if (each.uri == uri) {
-						hilight.push({
-							range: each.range,
-							kind: DocumentHighlightKind.Text
-						});
-					}
+		const resolved = scriptDocuments.get(uri)?.context?.
+			contextAtPosition(params.position)?.resolvedAtPosition(params.position);
+		
+		//console.log(`onDocumentHighlight context=${context.contextAtPosition(params.position)?.resolveTextShort}
+		//	resolved=${resolved?.resolveTextShort} refs=${resolved?.references.length} usages=${resolved?.usage.size}`);
+		if (resolved) {
+			for (const each of resolved.references) {
+				if (each.uri == uri) {
+					hilight.push({
+						range: each.range,
+						kind: DocumentHighlightKind.Text
+					});
 				}
-				
-				for (const each of resolved.usage) {
-					if (each.context?.documentUri == uri && each.range) {
-						hilight.push({
-							range: each.range,
-							kind: each.write ? DocumentHighlightKind.Write : DocumentHighlightKind.Read
-						});
-					}
+			}
+			
+			for (const each of resolved.usage) {
+				if (each.context?.documentUri == uri && each.range) {
+					hilight.push({
+						range: each.range,
+						kind: each.write ? DocumentHighlightKind.Write : DocumentHighlightKind.Read
+					});
 				}
 			}
 		}

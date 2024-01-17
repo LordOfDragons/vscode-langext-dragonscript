@@ -25,7 +25,7 @@
 import { Context } from "./context"
 import { DeclareClassCstNode } from "../nodeclasses/declareClass";
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
-import { Definition, DocumentSymbol, Hover, Location, Position, RemoteConsole, SymbolInformation, SymbolKind } from "vscode-languageserver"
+import { CompletionItem, Definition, DocumentSymbol, Hover, Location, Position, Range, RemoteConsole, SymbolInformation, SymbolKind } from "vscode-languageserver"
 import { TypeName } from "./typename"
 import { ContextInterface } from "./scriptInterface";
 import { ContextEnumeration } from "./scriptEnum";
@@ -41,6 +41,9 @@ import { ResolveType } from "../resolve/type";
 import { Helpers } from "../helpers";
 import { ResolveSearch } from "../resolve/search";
 import { Resolved, ResolveUsage } from "../resolve/resolved";
+import { TextDocument } from "vscode-languageserver-textdocument";
+import { IToken } from "chevrotain";
+import { CompletionHelper } from "../completionHelper";
 
 
 export class ContextClass extends Context{
@@ -52,6 +55,9 @@ export class ContextClass extends Context{
 	protected _declarations: Context[] = [];
 	protected _resolveClass?: ResolveClass;
 	protected _inheritanceResolved: boolean = false;
+	protected _tokenExtends?: Range;
+	protected _tokenImplements?: Range;
+	protected _positionBeginEnd?: Position;
 
 
 	constructor(node: DeclareClassCstNode, typemodNode: TypeModifiersCstNode | undefined, parent: Context) {
@@ -70,19 +76,30 @@ export class ContextClass extends Context{
 		this.documentSymbol = DocumentSymbol.create(this._name.name, undefined,
 			SymbolKind.Class, this.range, Helpers.rangeFrom(cdeclBegin.name[0], tokEnd, true, true));
 		
-		if (cdeclBegin.baseClassName) {
-			this._extends = new TypeName(cdeclBegin.baseClassName[0]);
-
+		const cdeclBeginExt = cdeclBegin.classBeginExtends?.at(0)?.children;
+		const tokExtends = cdeclBeginExt?.extends?.at(0);
+		if (tokExtends) {
+			this._tokenExtends = Helpers.rangeFrom(tokExtends);
+		}
+		if (cdeclBeginExt?.baseClassName) {
+			this._extends = new TypeName(cdeclBeginExt.baseClassName[0]);
 		} else if (this.fullyQualifiedName != 'Object') {
 			this._extends = TypeName.typeObject;
 		}
-
-		if (cdeclBegin.interfaceName) {
-			for (const each of cdeclBegin.interfaceName) {
+		
+		const cdeclBeginImpl = cdeclBegin.classBeginImplements?.at(0)?.children;
+		const tokImplements = cdeclBeginImpl?.implements?.at(0);
+		if (tokImplements) {
+			this._tokenImplements = Helpers.rangeFrom(tokImplements);
+		}
+		if (cdeclBeginImpl?.interfaceName) {
+			for (const each of cdeclBeginImpl.interfaceName) {
 				this._implements.push(new TypeName(each));
 			}
 		}
-
+		
+		this._positionBeginEnd = Helpers.endOfCommandBegin(cdeclBegin.endOfCommand);
+		
 		const decls = cdecl.classBody[0].children.classBodyDeclaration;
 		if (decls) {
 			for (const each of decls) {
@@ -393,6 +410,26 @@ export class ContextClass extends Context{
 	
 	public get referenceSelf(): Location | undefined {
 		return this.resolveLocation(this._name.range);
+	}
+	
+	public completion(document: TextDocument, position: Position): CompletionItem[] {
+		const range = Range.create(position, position);
+		let items: CompletionItem[] = [];
+		
+		if (this._positionBeginEnd && Helpers.isPositionAfter(position, this._positionBeginEnd)) {
+			// TODO: completion for class, interface, enum, func, var
+			
+		} else if (this._tokenImplements && Helpers.isPositionAfter(position, this._tokenImplements.end)) {
+			items.push(...CompletionHelper.createType(
+				this._implements.find(c => c.isPositionInside(position))?.range ?? range,
+				this, undefined, Resolved.Type.Interface));
+			
+		} else if (this._tokenExtends && Helpers.isPositionAfter(position, this._tokenExtends.start)) {
+			items.push(...CompletionHelper.createType(this._extends?.range ?? range,
+				this, undefined, Resolved.Type.Class));
+		}
+		
+		return items;
 	}
 	
 	

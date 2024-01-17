@@ -25,7 +25,7 @@
 import { Context } from "./context"
 import { DeclareInterfaceCstNode } from "../nodeclasses/declareInterface";
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
-import { Definition, DocumentSymbol, Hover, Location, Position, RemoteConsole, SymbolInformation, SymbolKind } from "vscode-languageserver"
+import { CompletionItem, Definition, DocumentSymbol, Hover, Location, Position, Range, RemoteConsole, SymbolInformation, SymbolKind } from "vscode-languageserver"
 import { TypeName } from "./typename"
 import { ContextClass } from "./scriptClass";
 import { ContextEnumeration } from "./scriptEnum";
@@ -40,6 +40,8 @@ import { ResolveType } from "../resolve/type";
 import { Helpers } from "../helpers";
 import { ResolveSearch } from "../resolve/search";
 import { Resolved, ResolveUsage } from "../resolve/resolved";
+import { TextDocument } from "vscode-languageserver-textdocument";
+import { CompletionHelper } from "../completionHelper";
 
 
 export class ContextInterface extends Context{
@@ -50,6 +52,8 @@ export class ContextInterface extends Context{
 	protected _declarations: Context[] = [];
 	protected _resolveInterface?: ResolveInterface;
 	protected _inheritanceResolved: boolean = false;
+	protected _tokenImplements?: Range;
+	protected _positionBeginEnd?: Position;
 
 
 	constructor(node: DeclareInterfaceCstNode, typemodNode: TypeModifiersCstNode | undefined, parent: Context) {
@@ -68,12 +72,20 @@ export class ContextInterface extends Context{
 		this.documentSymbol = DocumentSymbol.create(this._name.name, undefined,
 			SymbolKind.Interface, this.range, Helpers.rangeFrom(ideclBegin.name[0], tokEnd, true, true));
 		
-		if (ideclBegin.baseInterfaceName) {
-			for (const each of ideclBegin.baseInterfaceName) {
+		const ideclBeginExt = ideclBegin.interfaceBeginImplements?.at(0)?.children;
+		const tokImplements = ideclBeginExt?.implements?.at(0);
+		if (tokImplements) {
+			this._tokenImplements = Helpers.rangeFrom(tokImplements);
+		}
+		
+		if (ideclBeginExt?.baseInterfaceName) {
+			for (const each of ideclBeginExt?.baseInterfaceName) {
 				this._implements.push(new TypeName(each));
 			}
 		}
-
+		
+		this._positionBeginEnd = Helpers.endOfCommandBegin(ideclBegin.endOfCommand);
+		
 		const decls = idecl.interfaceBody[0].children.interfaceBodyDeclaration;
 		if (decls) {
 			for (const each of decls) {
@@ -297,6 +309,22 @@ export class ContextInterface extends Context{
 	
 	public get referenceSelf(): Location | undefined {
 		return this.resolveLocation(this._name.range);
+	}
+	
+	public completion(document: TextDocument, position: Position): CompletionItem[] {
+		const range = Range.create(position, position);
+		let items: CompletionItem[] = [];
+		
+		if (this._positionBeginEnd && Helpers.isPositionAfter(position, this._positionBeginEnd)) {
+			// TODO: completion for class, interface, enum, func
+			
+		} else if (this._tokenImplements && Helpers.isPositionAfter(position, this._tokenImplements.end)) {
+			items.push(...CompletionHelper.createType(
+				this._implements.find(c => c.isPositionInside(position))?.range ?? range,
+				this, undefined, Resolved.Type.Interface));
+		}
+		
+		return items;
 	}
 
 

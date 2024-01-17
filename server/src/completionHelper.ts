@@ -32,6 +32,7 @@ import { ContextTryCatch } from "./context/statementTry";
 import { ContextVariable } from "./context/statementVariable";
 import { RefactoringHelper } from "./refactoringHelper";
 import { ResolveNamespace } from "./resolve/namespace";
+import { Resolved } from "./resolve/resolved";
 import { ResolveSearch } from "./resolve/search";
 import { ResolveType } from "./resolve/type";
 import { debugLogMessage } from "./server";
@@ -558,10 +559,12 @@ export class CompletionHelper {
 		return search;
 	}
 	
-	private static searchExpressionType(context: Context, castable?: ResolveType[]): ResolveSearch {
+	private static searchExpressionType(context: Context, castable?: ResolveType[],
+			restrictType?: Resolved.Type): ResolveSearch {
 		let search = new ResolveSearch();
 		search.allMatchingTypes = true;
 		search.onlyTypes = true;
+		search.restrictTypeType = restrictType;
 		if (castable && castable?.length > 0) {
 			//search.onlyCastable = castable;
 		}
@@ -642,8 +645,9 @@ export class CompletionHelper {
 	}
 	
 	/** Create type completions. */
-	public static createType(range: Range, context: Context, castable?: ResolveType[]): CompletionItem[] {
-		let search = CompletionHelper.searchExpressionType(context, castable);
+	public static createType(range: Range, context: Context, castable?: ResolveType[],
+			restrictType?: Resolved.Type): CompletionItem[] {
+		let search = CompletionHelper.searchExpressionType(context, castable, restrictType);
 		const visibleTypes = new Set(search.types);
 		
 		ResolveNamespace.root.searchGlobalTypes(search);

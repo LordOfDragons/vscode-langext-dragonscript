@@ -49,9 +49,13 @@ export class ContextPinNamespace extends Context{
 		let tokName = this._typename.lastToken || tokPin;
 		
 		this.range = Helpers.rangeFrom(tokPin, tokName, true, false);
-		this.documentSymbol = DocumentSymbol.create(this._typename.lastPart.name.name,
-			this._typename.name, SymbolKind.Namespace, this.range,
-			Helpers.rangeFrom(tokPin, tokName, true, true));
+		
+		const name = this._typename.lastPart?.name.name;
+		if (name) {
+			this.documentSymbol = DocumentSymbol.create(name,
+				this._typename.name, SymbolKind.Namespace, this.range,
+				Helpers.rangeFrom(tokPin, tokName, true, true));
+		}
 	}
 
 	dispose(): void {

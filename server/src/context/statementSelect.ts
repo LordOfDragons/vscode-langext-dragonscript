@@ -158,14 +158,15 @@ export class ContextSelect extends Context {
 		let selbegin = node.children.statementSelectBegin[0].children;
 		this._value = ContextBuilder.createExpression(selbegin.value[0], this);
 		
-		if (node.children.statementCase) {
-			for (const each of node.children.statementCase) {
+		const body = node.children.statementSelectBody?.at(0)?.children;
+		if (body?.statementCase) {
+			for (const each of body?.statementCase) {
 				this._cases.push(new ContextSelectCase(each, this));
 			}
 		}
 		
-		if (node.children.statementSelectElse) {
-			this._elsestatements = new ContextStatements(node.children.statementSelectElse[0].children.statements[0], this);
+		if (body?.statementSelectElse) {
+			this._elsestatements = new ContextStatements(body?.statementSelectElse[0].children.statements[0], this);
 		}
 		
 		const tokBegin = node.children.statementSelectBegin[0].children.select[0];

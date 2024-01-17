@@ -91,13 +91,14 @@ export class TypeName {
 	constructor(node?: FullyQualifiedClassNameCstNode) {
 		this._node = node
 		this._parts = []
-
-		if (!node) {
+		
+		const children = node?.children;
+		if (!children?.identifier) {
 			this._name = "";
 			return;
 		}
-
-		for (const each of node.children.identifier) {
+		
+		for (const each of children.identifier) {
 			this._parts.push(new TypeNamePart(each));
 		}
 		
@@ -150,16 +151,16 @@ export class TypeName {
 		return this._parts
 	}
 
-	public get lastPart(): TypeNamePart {
-		return this._parts[this._parts.length - 1];
+	public get lastPart(): TypeNamePart | undefined {
+		return this._parts.at(this._parts.length - 1);
 	}
 
 	public get firstToken(): IToken | undefined {
-		return this._parts[0].name.token;
+		return this._parts.at(0)?.name.token;
 	}
 
 	public get lastToken(): IToken | undefined {
-		return this.lastPart.name.token;
+		return this.lastPart?.name.token;
 	}
 	
 	

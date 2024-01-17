@@ -51,8 +51,12 @@ export class ContextNamespace extends Context{
 		let tokName = this._typename.lastToken || tokNS;
 
 		this.range = Helpers.rangeFrom(tokNS, tokName, true, false);
-		this.documentSymbol = DocumentSymbol.create(this._typename.lastPart.name.name, this._typename.name,
-			SymbolKind.Namespace, this.range, Helpers.rangeFrom(tokName, tokName, true, true));
+		
+		const name = this._typename.lastPart?.name.name;
+		if (name) {
+			this.documentSymbol = DocumentSymbol.create(name, this._typename.name,
+				SymbolKind.Namespace, this.range, Helpers.rangeFrom(tokName, tokName, true, true));
+		}
 	}
 
 	dispose(): void {

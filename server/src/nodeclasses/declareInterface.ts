@@ -2,6 +2,7 @@ import { CstNode, IToken } from "chevrotain";
 import { DeclareClassCstNode } from "./declareClass";
 import { DeclareEnumerationCstNode } from "./declareEnumeration";
 import { FunctionBeginCstNode } from "./declareFunction";
+import { EndOfCommandCstNode } from "./endOfCommand";
 import { FullyQualifiedClassNameCstNode } from "./fullyQualifiedClassName";
 import { TypeModifiersCstNode } from "./typeModifiers";
 
@@ -26,6 +27,18 @@ export interface InterfaceBeginCstNode extends CstNode {
 export type InterfaceBeginCstChildren = {
 	interface: IToken[];
 	name: IToken[];
+	interfaceBeginImplements?: InterfaceBeginImplementsCstNode[];
+	endOfCommand: EndOfCommandCstNode[];
+};
+
+
+export interface InterfaceBeginImplementsCstNode extends CstNode {
+	name: "interfaceBeginImplements";
+	children: InterfaceBeginImplementsCstChildren;
+}
+
+export type InterfaceBeginImplementsCstChildren = {
+	implements?: IToken[];
 	baseInterfaceName?: FullyQualifiedClassNameCstNode[];
 };
 

@@ -11,8 +11,7 @@ export interface StatementSelectCstNode extends CstNode {
 
 export type StatementSelectCstChildren = {
 	statementSelectBegin: StatementSelectBeginCstNode[];
-	statementCase?: StatementCaseCstNode[];
-	statementSelectElse?: StatementSelectElseCstNode[];
+	statementSelectBody: StatementSelectBodyCstNode[];
 	statementSelectEnd?: StatementSelectEndCstNode[];
 };
 
@@ -25,6 +24,17 @@ export interface StatementSelectBeginCstNode extends CstNode {
 export type StatementSelectBeginCstChildren = {
 	select: IToken[];
 	value: ExpressionCstNode[];
+};
+
+
+export interface StatementSelectBodyCstNode extends CstNode {
+	name: "statementSelectBody";
+	children: StatementSelectBodyCstChildren;
+}
+
+export type StatementSelectBodyCstChildren = {
+	statementCase?: StatementCaseCstNode[];
+	statementSelectElse?: StatementSelectElseCstNode[];
 };
 
 
