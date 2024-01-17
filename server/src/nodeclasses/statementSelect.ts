@@ -35,8 +35,19 @@ export interface StatementCaseCstNode extends CstNode {
 
 export type StatementCaseCstChildren = {
 	case: IToken[];
-	value?: ExpressionCstNode[];
+	statementCaseValues?: StatementCaseValuesCstNode[];
+	endOfCommand?: EndOfCommandCstNode[];
 	statements?: StatementsCstNode[];
+};
+
+
+export interface StatementCaseValuesCstNode extends CstNode {
+	name: "statementCaseValues";
+	children: StatementCaseValuesCstChildren;
+}
+
+export type StatementCaseValuesCstChildren = {
+	value?: ExpressionCstNode[];
 };
 
 

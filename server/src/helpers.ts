@@ -24,6 +24,7 @@
 
 import { IToken } from "chevrotain";
 import { Position, Range } from "vscode-languageserver"
+import { EndOfCommandCstNode } from "./nodeclasses/endOfCommand";
 
 
 export class Helpers {
@@ -104,6 +105,15 @@ export class Helpers {
 		} else {
 			return a.character > b.character;
 		}
+	}
+	
+	public static endOfCommandBegin(endOfCommand?: EndOfCommandCstNode[]): Position | undefined {
+		const c = endOfCommand?.at(0)?.children;
+		const tok = (c?.newline ?? c?.commandSeparator)?.at(0);
+		if (tok) {
+			return Helpers.positionFrom(tok);
+		}
+		return undefined;
 	}
 	
 	public static logPosition(position: Position | undefined) {

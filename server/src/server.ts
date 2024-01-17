@@ -60,6 +60,7 @@ import { PackageDSLanguage } from "./package/dslanguage";
 import { ReportConfig } from './reportConfig';
 import { PackageWorkspace } from './package/workspacepackage';
 import { Helpers } from './helpers';
+import { Context } from './context/context';
 
 // Create a connection for the server, using Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -85,6 +86,10 @@ export function debugLogObj(message: string, obj: any) {
 
 export function debugLogMessage(message: string) {
 	connection.console.log(message);
+}
+
+export function debugLogContext(context?: Context) {
+	context?.log(connection.console);
 }
 
 export function assertWarn(message: string) {

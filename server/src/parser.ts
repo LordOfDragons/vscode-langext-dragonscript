@@ -561,12 +561,16 @@ export class DSParser extends CstParser{
 
 	public statementCase = this.RULE("statementCase", () => {
 		this.CONSUME(DSLexer.tokenCase)
+		this.SUBRULE(this.statementCaseValues)
+		this.SUBRULE(this.endOfCommand)
+		this.SUBRULE(this.statements)
+	})
+
+	public statementCaseValues = this.RULE("statementCaseValues", () => {
 		this.AT_LEAST_ONE_SEP({
 			SEP: DSLexer.tokenComma,
 			DEF: () => this.SUBRULE(this.expression, {LABEL: "value"})
 		})
-		this.SUBRULE(this.endOfCommand)
-		this.SUBRULE(this.statements)
 	})
 
 	public statementSelectElse = this.RULE("statementSelectElse", () => {

@@ -49,19 +49,17 @@ export class ContextSelectCase extends Context {
 		
 		var posEnd: Position | undefined;
 		
-		const values = node.children.value;
+		const values = node.children.statementCaseValues?.at(0)?.children.value;
 		if (values) {
 			for (const each of values) {
-				const cc = ContextBuilder.createExpression(each, parent);
-				this._values.push(cc);
-				posEnd = cc.range?.end ?? posEnd;
+				this._values.push(ContextBuilder.createExpression(each, parent));
 			}
 		}
 		
 		this._statements = new ContextStatements(node.children.statements?.at(0), parent);
 		
 		const tokBegin = node.children.case[0];
-		posEnd = this._statements.range?.end ?? posEnd;
+		posEnd = Helpers.endOfCommandBegin(node.children.endOfCommand) ?? this._statements.range?.end ?? posEnd;
 		
 		if (posEnd) {
 			this.range = Helpers.rangeFromPosition(Helpers.positionFrom(tokBegin), posEnd);
