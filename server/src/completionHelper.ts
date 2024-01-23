@@ -39,6 +39,8 @@ import { debugLogMessage } from "./server";
 
 
 export class CompletionHelper {
+	static sortPrefixSnippet = `${String.fromCodePoint(255)}:`;
+	
 	/** Create completion item for 'this' and 'super' keyword. */
 	public static createThisSuper(context: Context, range: Range, castable?: ResolveType[]): CompletionItem[] {
 		let items: CompletionItem[] = [];
@@ -63,6 +65,7 @@ export class CompletionHelper {
 		let items: CompletionItem[] = [];
 		for (const each of ['true', 'false']) {
 			items.push({label: each,
+				sortText: `${CompletionHelper.sortPrefixSnippet}${each}`,
 				kind: CompletionItemKind.Keyword,
 				insertTextFormat: InsertTextFormat.PlainText,
 				textEdit: TextEdit.replace(range, each),
@@ -74,6 +77,7 @@ export class CompletionHelper {
 	/** Create completion item for 'null' keyword. */
 	public static createNull(range: Range): CompletionItem {
 		return {label: 'null',
+			sortText: `${CompletionHelper.sortPrefixSnippet}null`,
 			kind: CompletionItemKind.Keyword,
 			insertTextFormat: InsertTextFormat.PlainText,
 			textEdit: TextEdit.replace(range, 'null')};
@@ -82,6 +86,7 @@ export class CompletionHelper {
 	/** Create completion item for 'cast' keyword. */
 	public static createCast(range: Range): CompletionItem {
 		return {label: 'cast',
+			sortText: `${CompletionHelper.sortPrefixSnippet}cast`,
 			kind: CompletionItemKind.Snippet,
 			insertTextFormat: InsertTextFormat.Snippet,
 			textEdit: TextEdit.replace(range, 'cast ${1:type}')};
@@ -90,6 +95,7 @@ export class CompletionHelper {
 	/** Create completion item for 'castable' keyword. */
 	public static createCastable(range: Range): CompletionItem {
 		return {label: 'castable',
+			sortText: `${CompletionHelper.sortPrefixSnippet}castable`,
 			kind: CompletionItemKind.Snippet,
 			insertTextFormat: InsertTextFormat.Snippet,
 			textEdit: TextEdit.replace(range, 'castable ${1:type}')};
@@ -98,6 +104,7 @@ export class CompletionHelper {
 	/** Create completion item for 'typeof' keyword. */
 	public static createTypeof(range: Range): CompletionItem {
 		return {label: 'typeof',
+			sortText: `${CompletionHelper.sortPrefixSnippet}typeof`,
 			kind: CompletionItemKind.Snippet,
 			insertTextFormat: InsertTextFormat.Snippet,
 			textEdit: TextEdit.replace(range, 'typeof ${1:type}')};
@@ -108,6 +115,7 @@ export class CompletionHelper {
 		let items: CompletionItem[] = [];
 		
 		items.push({label: 'block',
+			sortText: `${CompletionHelper.sortPrefixSnippet}block`,
 			kind: CompletionItemKind.Snippet,
 			insertTextFormat: InsertTextFormat.Snippet,
 			textEdit: TextEdit.replace(range,
@@ -116,7 +124,7 @@ export class CompletionHelper {
 				'end')});
 		
 		items.push({label: 'block: 1 argument',
-			sortText: 'block',
+			sortText: `${CompletionHelper.sortPrefixSnippet}block`,
 			filterText: 'block',
 			kind: CompletionItemKind.Snippet,
 			insertTextFormat: InsertTextFormat.Snippet,
@@ -126,7 +134,7 @@ export class CompletionHelper {
 				'end')});
 		
 		items.push({label: 'block: 2 arguments',
-			sortText: 'block',
+			sortText: `${CompletionHelper.sortPrefixSnippet}block`,
 			filterText: 'block',
 			kind: CompletionItemKind.Snippet,
 			insertTextFormat: InsertTextFormat.Snippet,
@@ -141,7 +149,7 @@ export class CompletionHelper {
 	/** Create completion item for inline if-else keyword. */
 	public static createInlineIfElse(range: Range): CompletionItem {
 		return {label: 'inline if-else',
-			sortText: 'if',
+			sortText: `${CompletionHelper.sortPrefixSnippet}if`,
 			filterText: 'if',
 			kind: CompletionItemKind.Snippet,
 			insertTextFormat: InsertTextFormat.Snippet,
@@ -153,7 +161,7 @@ export class CompletionHelper {
 		let items: CompletionItem[] = [];
 		
 		items.push({label: 'if',
-			sortText: 'if',
+			sortText: `${CompletionHelper.sortPrefixSnippet}if`,
 			filterText: 'if',
 			kind: CompletionItemKind.Snippet,
 			insertTextFormat: InsertTextFormat.Snippet,
@@ -163,7 +171,7 @@ export class CompletionHelper {
 				'end')});
 		
 		items.push({label: 'if else',
-			sortText: 'if',
+			sortText: `${CompletionHelper.sortPrefixSnippet}if`,
 			filterText: 'if',
 			kind: CompletionItemKind.Snippet,
 			insertTextFormat: InsertTextFormat.Snippet,
@@ -182,6 +190,7 @@ export class CompletionHelper {
 		range = Range.create(Position.create(range.start.line, Math.max(range.start.character - 1, 0)), range.end);
 		
 		return {label: 'elif',
+			sortText: `${CompletionHelper.sortPrefixSnippet}elif`,
 			kind: CompletionItemKind.Snippet,
 			insertTextFormat: InsertTextFormat.Snippet,
 			textEdit: TextEdit.replace(range,
@@ -194,6 +203,7 @@ export class CompletionHelper {
 		range = Range.create(Position.create(range.start.line, Math.max(range.start.character - 1, 0)), range.end);
 		
 		return {label: 'case',
+			sortText: `${CompletionHelper.sortPrefixSnippet}case`,
 			kind: CompletionItemKind.Snippet,
 			insertTextFormat: InsertTextFormat.Snippet,
 			textEdit: TextEdit.replace(range,
@@ -206,6 +216,7 @@ export class CompletionHelper {
 		range = Range.create(Position.create(range.start.line, Math.max(range.start.character - 1, 0)), range.end);
 		
 		return {label: 'else',
+			sortText: `${CompletionHelper.sortPrefixSnippet}else`,
 			kind: CompletionItemKind.Snippet,
 			insertTextFormat: InsertTextFormat.Snippet,
 			textEdit: TextEdit.replace(range,
@@ -218,6 +229,7 @@ export class CompletionHelper {
 		let items: CompletionItem[] = [];
 		
 		items.push({label: 'for',
+			sortText: `${CompletionHelper.sortPrefixSnippet}for`,
 			kind: CompletionItemKind.Snippet,
 			insertTextFormat: InsertTextFormat.Snippet,
 			textEdit: TextEdit.replace(range,
@@ -226,7 +238,7 @@ export class CompletionHelper {
 				'end')});
 		
 		items.push({label: 'for step',
-			sortText: 'for',
+			sortText: `${CompletionHelper.sortPrefixSnippet}for`,
 			filterText: 'for',
 			kind: CompletionItemKind.Snippet,
 			insertTextFormat: InsertTextFormat.Snippet,
@@ -236,7 +248,7 @@ export class CompletionHelper {
 				'end')});
 		
 		items.push({label: 'for downto',
-			sortText: 'for',
+			sortText: `${CompletionHelper.sortPrefixSnippet}for`,
 			filterText: 'for',
 			kind: CompletionItemKind.Snippet,
 			insertTextFormat: InsertTextFormat.Snippet,
@@ -246,7 +258,7 @@ export class CompletionHelper {
 				'end')});
 		
 		items.push({label: 'for downto step',
-			sortText: 'for',
+			sortText: `${CompletionHelper.sortPrefixSnippet}for`,
 			filterText: 'for',
 			kind: CompletionItemKind.Snippet,
 			insertTextFormat: InsertTextFormat.Snippet,
@@ -261,6 +273,7 @@ export class CompletionHelper {
 	/** Create completion item for 'select' keyword. */
 	public static createSelect(range: Range): CompletionItem {
 		return {label: 'select',
+			sortText: `${CompletionHelper.sortPrefixSnippet}select`,
 			kind: CompletionItemKind.Snippet,
 			insertTextFormat: InsertTextFormat.Snippet,
 			textEdit: TextEdit.replace(range,
@@ -275,6 +288,7 @@ export class CompletionHelper {
 	/** Create completion item for 'while' keyword. */
 	public static createWhile(range: Range): CompletionItem {
 		return {label: 'while',
+			sortText: `${CompletionHelper.sortPrefixSnippet}while`,
 			kind: CompletionItemKind.Snippet,
 			insertTextFormat: InsertTextFormat.Snippet,
 			textEdit: TextEdit.replace(range,
@@ -286,6 +300,7 @@ export class CompletionHelper {
 	/** Create completion item for 'try' keyword. */
 	public static createTry(range: Range): CompletionItem {
 		return {label: 'try',
+			sortText: `${CompletionHelper.sortPrefixSnippet}try`,
 			kind: CompletionItemKind.Snippet,
 			insertTextFormat: InsertTextFormat.Snippet,
 			textEdit: TextEdit.replace(range,
@@ -299,6 +314,7 @@ export class CompletionHelper {
 	/** Create completion item for 'return' keyword. */
 	public static createReturn(range: Range): CompletionItem {
 		return {label: 'return',
+			sortText: `${CompletionHelper.sortPrefixSnippet}return`,
 			kind: CompletionItemKind.Snippet,
 			insertTextFormat: InsertTextFormat.Snippet,
 			textEdit: TextEdit.replace(range, 'return\n\${0}')};
@@ -307,6 +323,7 @@ export class CompletionHelper {
 	/** Create completion item for 'break' keyword. */
 	public static createBreak(range: Range): CompletionItem {
 		return {label: 'break',
+			sortText: `${CompletionHelper.sortPrefixSnippet}break`,
 			kind: CompletionItemKind.Snippet,
 			insertTextFormat: InsertTextFormat.Snippet,
 			textEdit: TextEdit.replace(range, 'break\n\${0}')};
@@ -315,9 +332,224 @@ export class CompletionHelper {
 	/** Create completion item for 'continue' keyword. */
 	public static createContinue(range: Range): CompletionItem {
 		return {label: 'continue',
+			sortText: `${CompletionHelper.sortPrefixSnippet}continue`,
 			kind: CompletionItemKind.Snippet,
 			insertTextFormat: InsertTextFormat.Snippet,
 			textEdit: TextEdit.replace(range, 'continue\n\${0}')};
+	}
+	
+	/** Create completion items for 'class' keyword. */
+	public static createClass(context: Context, range: Range): CompletionItem[] {
+		let items: CompletionItem[] = [];
+		
+		items.push({label: 'class',
+			sortText: `${CompletionHelper.sortPrefixSnippet}class`,
+			kind: CompletionItemKind.Snippet,
+			insertTextFormat: InsertTextFormat.Snippet,
+			textEdit: TextEdit.replace(range,
+				'/**\n' +
+				' * Class $\{1}.\n' +
+				' */\n' +
+				'class \${1:Name}\n' +
+				'\t/**\n' +
+				'\t * Create new instance of class \${1}.\n' +
+				'\t */\n' +
+				'\tfunc new()\n' +
+				'\tend\n' +
+				'\t\${0}\n' +
+				'end')});
+		
+		items.push({label: 'class extends',
+			sortText: `${CompletionHelper.sortPrefixSnippet}class`,
+			filterText: 'class',
+			kind: CompletionItemKind.Snippet,
+			insertTextFormat: InsertTextFormat.Snippet,
+			textEdit: TextEdit.replace(range,
+				'/**\n' +
+				' * Class $\{1}.\n' +
+				' */\n' +
+				'class \${1:Name} extends \${2:Subclass}\n' +
+				'\t/**\n' +
+				'\t * Create new instance of class \${1}.\n' +
+				'\t */\n' +
+				'\tfunc new()\n' +
+				'\tend\n' +
+				'\t\${0}\n' +
+				'end')});
+		
+		items.push({label: 'class extends implements',
+			sortText: `${CompletionHelper.sortPrefixSnippet}class`,
+			filterText: 'class',
+			kind: CompletionItemKind.Snippet,
+			insertTextFormat: InsertTextFormat.Snippet,
+			textEdit: TextEdit.replace(range,
+				'/**\n' +
+				' * Class $\{1}.\n' +
+				' */\n' +
+				'class \${1:Name} extends \${2:BaseClass} implements \${3:Interface}\n' +
+				'\t/**\n' +
+				'\t * Create new instance of class \${1}.\n' +
+				'\t */\n' +
+				'\tfunc new()\n' +
+				'\tend\n' +
+				'\t\${0}\n' +
+				'end')});
+		
+		return items;
+	}
+	
+	/** Create completion items for 'interface' keyword. */
+	public static createInterface(context: Context, range: Range): CompletionItem[] {
+		let items: CompletionItem[] = [];
+		
+		items.push({label: 'interface',
+			sortText: `${CompletionHelper.sortPrefixSnippet}interface`,
+			kind: CompletionItemKind.Snippet,
+			insertTextFormat: InsertTextFormat.Snippet,
+			textEdit: TextEdit.replace(range,
+				'/**\n' +
+				' * Interface $\{1}.\n' +
+				' */\n' +
+				'interface \${1:Name}\n' +
+				'\t\${0}\n' +
+				'end')});
+		
+		items.push({label: 'interface implements',
+			sortText: `${CompletionHelper.sortPrefixSnippet}interface`,
+			filterText: 'interface',
+			kind: CompletionItemKind.Snippet,
+			insertTextFormat: InsertTextFormat.Snippet,
+			textEdit: TextEdit.replace(range,
+				'/**\n' +
+				' * Interface $\{1}.\n' +
+				' */\n' +
+				'interface \${1:Name} implements \${2:Interface}\n' +
+				'\t\${0}\n' +
+				'end')});
+		
+		return items;
+	}
+	
+	/** Create completion items for 'enum' keyword. */
+	public static createEnum(context: Context, range: Range): CompletionItem[] {
+		let items: CompletionItem[] = [];
+		
+		items.push({label: 'enum',
+			sortText: `${CompletionHelper.sortPrefixSnippet}enum`,
+			kind: CompletionItemKind.Snippet,
+			insertTextFormat: InsertTextFormat.Snippet,
+			textEdit: TextEdit.replace(range,
+				'/**\n' +
+				' * Enumeration $\{1}.\n' +
+				' */\n' +
+				'enum \${1:Name}\n' +
+				'\t\${0}\n' +
+				'end')});
+		
+		return items;
+	}
+	
+	/** Create completion items for 'func' keyword. */
+	public static createFunction(context: Context, range: Range): CompletionItem[] {
+		let items: CompletionItem[] = [];
+		
+		items.push({label: 'func',
+			sortText: `${CompletionHelper.sortPrefixSnippet}func`,
+			kind: CompletionItemKind.Snippet,
+			insertTextFormat: InsertTextFormat.Snippet,
+			textEdit: TextEdit.replace(range,
+				'/**\n' +
+				' * Function $\{2}.\n' +
+				' */\n' +
+				'func \${1:void} \${2:Name}()\n' +
+				'\t\${0}\n' +
+				'end')});
+		
+		items.push({label: 'func(arg)',
+			sortText: `${CompletionHelper.sortPrefixSnippet}func`,
+			kind: CompletionItemKind.Snippet,
+			insertTextFormat: InsertTextFormat.Snippet,
+			textEdit: TextEdit.replace(range,
+				'/**\n' +
+				' * Function $\{2}.\n' +
+				' * \\param $\{4} Argument.\n' +
+				' */\n' +
+				'func \${1:void} \${2:Name}(\${3:int} \${4:arg})\n' +
+				'\t\${0}\n' +
+				'end')});
+		
+		items.push({label: 'func(arg1, arg2)',
+			sortText: `${CompletionHelper.sortPrefixSnippet}func`,
+			kind: CompletionItemKind.Snippet,
+			insertTextFormat: InsertTextFormat.Snippet,
+			textEdit: TextEdit.replace(range,
+				'/**\n' +
+				' * Function $\{2}.\n' +
+				' * \\param $\{4} Argument.\n' +
+				' * \\param $\{6} Argument.\n' +
+				' */\n' +
+				'func \${1:void} \${2:Name}(\${3:int} \${4:arg1}, \${5:int} \${6:arg2})\n' +
+				'\t\${0}\n' +
+				'end')});
+		
+		return items;
+	}
+	
+	/** Create completion items for override 'func' keyword. */
+	public static createFunctionOverrides(context: Context, range: Range): CompletionItem[] {
+		let items: CompletionItem[] = [];
+		
+		const objtype = ContextClass.thisContext(context)?.resolveClass;
+		if (objtype) {
+			let search = new ResolveSearch();
+			search.onlyFunctions = true;
+			search.ignoreShadowedFunctions = true;
+			search.ignoreStatic = true;
+			search.stopAfterFirstFullMatch = false;
+			search.ignoreConstructors = true;
+			objtype.search(search);
+			
+			for (const each of search.functionsAll) {
+				if (each.parent == objtype) {
+					continue;
+				}
+				
+				let item = each.createCompletionOverride(range, 'func:');
+				if (item) {
+					items.push(item);
+				}
+			}
+		}
+		
+		return items;
+	}
+	
+	/** Create completion items for class 'var' keyword. */
+	public static createClassVariable(context: Context, range: Range): CompletionItem[] {
+		let items: CompletionItem[] = [];
+		
+		items.push({label: 'var',
+			sortText: `${CompletionHelper.sortPrefixSnippet}var`,
+			kind: CompletionItemKind.Snippet,
+			insertTextFormat: InsertTextFormat.Snippet,
+			textEdit: TextEdit.replace(range,
+				'/**\n' +
+				' * Variable $\{2}.\n' +
+				' */\n' +
+				'var \${1:void} \${2:Name}\n' +
+				'\${0}')});
+		
+		items.push({label: 'var constant',
+			sortText: `${CompletionHelper.sortPrefixSnippet}var`,
+			kind: CompletionItemKind.Snippet,
+			insertTextFormat: InsertTextFormat.Snippet,
+			textEdit: TextEdit.replace(range,
+				'/**\n' +
+				' * Variable $\{2}.\n' +
+				' */\n' +
+				'static fixed var \${1:int} \${2:Name} = \${0:0}')});
+			
+		return items;
 	}
 	
 	/** Create completion item for '=', '==' and '!=' operators. */

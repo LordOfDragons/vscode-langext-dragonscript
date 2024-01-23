@@ -33,7 +33,7 @@ export class ResolveClass extends ResolveType {
 	
 	
 	constructor (context?: ContextClass, name?: string) {
-		super(context?.name.name || name || "??", ResolveType.Type.Class);
+		super(context?.name?.name || name || "??", ResolveType.Type.Class);
 		this._context = context;
 		this._resolveTextType = 'class';
 	}

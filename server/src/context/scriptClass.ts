@@ -48,7 +48,7 @@ import { CompletionHelper } from "../completionHelper";
 
 export class ContextClass extends Context{
 	protected _node: DeclareClassCstNode;
-	protected _name: Identifier;
+	protected _name?: Identifier;
 	protected _typeModifiers: Context.TypeModifierSet;
 	protected _extends?: TypeName;
 	protected _implements: TypeName[] = [];
@@ -67,14 +67,18 @@ export class ContextClass extends Context{
 		let cdeclBegin = cdecl.classBegin[0].children;
 		
 		this._node = node;
-		this._name = new Identifier(cdeclBegin.name[0]);
+		if (cdeclBegin.name?.at(0)?.image) {
+			this._name = new Identifier(cdeclBegin.name[0]);
+		}
 		this._typeModifiers = new Context.TypeModifierSet(typemodNode, Context.TypeModifier.Public);
 		
 		let tokEnd = cdecl.classEnd[0].children.end?.at(0);
 		let tokClass = cdeclBegin.class[0];
 		this.range = Helpers.rangeFrom(tokClass, tokEnd, true, false);
-		this.documentSymbol = DocumentSymbol.create(this._name.name, undefined,
-			SymbolKind.Class, this.range, Helpers.rangeFrom(cdeclBegin.name[0], tokEnd, true, true));
+		if (this._name?.token) {
+			this.documentSymbol = DocumentSymbol.create(this._name.name, undefined,
+				SymbolKind.Class, this.range, Helpers.rangeFrom(this._name.token, tokEnd, true, true));
+		}
 		
 		const cdeclBeginExt = cdeclBegin.classBeginExtends?.at(0)?.children;
 		const tokExtends = cdeclBeginExt?.extends?.at(0);
@@ -115,7 +119,7 @@ export class ContextClass extends Context{
 					this._declarations.push(new ContextEnumeration(each.children.declareEnumeration[0], typemod, this));
 
 				} else if (each.children.classFunction) {
-					this._declarations.push(new ContextFunction(each.children.classFunction[0], typemod, this._name.name, this));
+					this._declarations.push(new ContextFunction(each.children.classFunction[0], typemod, this._name?.name, this));
 
 				} else if (each.children.classVariables) {
 					let vdecls = each.children.classVariables[0].children;
@@ -165,7 +169,7 @@ export class ContextClass extends Context{
 		return this._node;
 	}
 
-	public get name(): Identifier {
+	public get name(): Identifier | undefined {
 		return this._name;
 	}
 
@@ -210,11 +214,11 @@ export class ContextClass extends Context{
 
 	public get fullyQualifiedName(): string {
 		let n = this.parent?.fullyQualifiedName || "";
-		return n ? `${n}.${this._name}` : this._name.name;
+		return n ? `${n}.${this.simpleName}` : this.simpleName;
 	}
 
 	public get simpleName(): string {
-		return this._name.name;
+		return this._name?.name ?? "??";
 	}
 
 	public resolveClasses(state: ResolveState): void {
@@ -223,7 +227,7 @@ export class ContextClass extends Context{
 		
 		this._resolveClass = new ResolveClass(this);
 		
-		switch (this._name.name) {
+		switch (this._name?.name) {
 			case "byte":
 				this._resolveClass.primitiveType = ResolveClass.PrimitiveType.Byte;
 				this._resolveClass.autoCast = Context.AutoCast.ValueByte;
@@ -258,7 +262,7 @@ export class ContextClass extends Context{
 				container = ResolveNamespace.root;
 			}
 
-			if (container) {
+			if (container && this._name) {
 				if (container.findType(this._name.name)) {
 					state.reportError(this._name.range, `Duplicate class ${this._name}`);
 				} else {
@@ -321,7 +325,7 @@ export class ContextClass extends Context{
 	}
 
 	protected updateHover(position: Position): Hover | null {
-		if (this._name.isPositionInside(position)) {
+		if (this._name?.isPositionInside(position)) {
 			let content = [];
 			//content.push("```dragonscript");
 			content.push(`${this._typeModifiers.typestring} **class** `);
@@ -354,7 +358,7 @@ export class ContextClass extends Context{
 	}
 	
 	public definition(position: Position): Definition {
-		if (this._name.isPositionInside(position)) {
+		if (this._name?.isPositionInside(position)) {
 			return this.definitionSelf();
 		} else if (this._extends?.isPositionInside(position)) {
 			return this._extends.definition(position);
@@ -380,7 +384,7 @@ export class ContextClass extends Context{
 	}
 	
 	public resolvedAtPosition(position: Position): Resolved | undefined {
-		if (this._name.isPositionInside(position)) {
+		if (this._name?.isPositionInside(position)) {
 			return this._resolveClass;
 		} else if (this._extends?.isPositionInside(position)) {
 			return this._extends.resolve?.resolved;
@@ -409,7 +413,7 @@ export class ContextClass extends Context{
 	}
 	
 	public get referenceSelf(): Location | undefined {
-		return this.resolveLocation(this._name.range);
+		return this.resolveLocation(this._name?.range);
 	}
 	
 	public completion(document: TextDocument, position: Position): CompletionItem[] {
@@ -417,7 +421,13 @@ export class ContextClass extends Context{
 		let items: CompletionItem[] = [];
 		
 		if (this._positionBeginEnd && Helpers.isPositionAfter(position, this._positionBeginEnd)) {
-			// TODO: completion for class, interface, enum, func, var
+			// TODO: completion for func overrides
+			items.push(...CompletionHelper.createClass(this, range));
+			items.push(...CompletionHelper.createInterface(this, range));
+			items.push(...CompletionHelper.createEnum(this, range));
+			items.push(...CompletionHelper.createClassVariable(this, range));
+			items.push(...CompletionHelper.createFunction(this, range));
+			items.push(...CompletionHelper.createFunctionOverrides(this, range));
 			
 		} else if (this._tokenImplements && Helpers.isPositionAfter(position, this._tokenImplements.end)) {
 			items.push(...CompletionHelper.createType(

@@ -24,6 +24,7 @@
 
 import { join } from "path";
 import { RemoteConsole } from "vscode-languageserver";
+import { ResolveNamespace } from "../resolve/namespace";
 import { Package } from "./package";
 
 export class PackageDSLanguage extends Package {
@@ -31,19 +32,29 @@ export class PackageDSLanguage extends Package {
 		super(console, PackageDSLanguage.PACKAGE_ID);
 		this._console.log(`Package '${this._id}': Created`);
 	}
-
-
+	
+	
 	public static readonly PACKAGE_ID: string = "DragonScript";
-
-
+	
+	
 	protected async loadPackage(): Promise<void> {
 		this._console.log(`Package '${this._id}': Scan package`);
 		let startTime = Date.now();
 		await this.scanPackage(this._files, join(__dirname, "..", "data", "dslanguage"));
 		let elapsedTime = Date.now() - startTime;
 		this._console.log(`Package '${this._id}': Package scanned in ${elapsedTime / 1000}s found ${this._files.length} files`);
-
+		
 		await this.loadFiles();
+		
+		// fetch primitive classes to ensure they are properly initialized
+		ResolveNamespace.classBool;
+		ResolveNamespace.classByte;
+		ResolveNamespace.classInt;
+		ResolveNamespace.classFloat;
+		ResolveNamespace.classString;
+		ResolveNamespace.classBlock;
+		ResolveNamespace.classException;
+		
 		this.loadingFinished();
 	}
 }

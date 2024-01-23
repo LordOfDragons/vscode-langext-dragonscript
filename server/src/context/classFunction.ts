@@ -51,7 +51,7 @@ export class ContextFunction extends Context{
 	protected _node: InterfaceFunctionCstNode | ClassFunctionCstNode;
 	protected _typeModifiers: Context.TypeModifierSet;
 	protected _functionType: ContextFunction.Type;
-	protected _name: Identifier;
+	protected _name?: Identifier;
 	protected _returnType?: TypeName;
 	protected _arguments: ContextFunctionArgument[] = [];
 	protected _superToken?: IToken;
@@ -62,7 +62,7 @@ export class ContextFunction extends Context{
 
 	constructor(node: InterfaceFunctionCstNode | ClassFunctionCstNode,
 				typemodNode: TypeModifiersCstNode | undefined,
-				ownerTypeName: string, parent: Context) {
+				ownerTypeName: string | undefined, parent: Context) {
 		super(Context.ContextType.Function, parent);
 		this._node = node;
 		this._typeModifiers = new Context.TypeModifierSet(typemodNode, Context.TypeModifier.Public);
@@ -102,7 +102,6 @@ export class ContextFunction extends Context{
 
 		if (!fdecl) {
 			this._functionType = ContextFunction.Type.Regular;
-			this._name = new Identifier(undefined, "??");
 			this._returnType = TypeName.typeVoid;
 			return;
 		}
@@ -111,7 +110,7 @@ export class ContextFunction extends Context{
 			let fdecl2 = fdecl.children.classConstructor[0].children;
 			this._functionType = ContextFunction.Type.Constructor;
 			this._name = new Identifier(fdecl2.identifier[0]); // is always "new"
-			this._returnType = TypeName.typeNamed(ownerTypeName);
+			this._returnType = ownerTypeName ? TypeName.typeNamed(ownerTypeName) : TypeName.typeObject;
 			this._typeModifiers.add(Context.TypeModifier.Static);
 
 			if (fdecl2.functionArguments) {
@@ -152,7 +151,7 @@ export class ContextFunction extends Context{
 		} else if (fdecl.children.regularFunction) {
 			let fdecl2 = fdecl.children.regularFunction[0].children;
 			
-			if (fdecl2.name) {
+			if (fdecl2.name?.at(0)?.image) {
 				this._functionType = ContextFunction.Type.Regular;
 				this._returnType = new TypeName(fdecl2.returnType[0]);
 				this._name = new Identifier(fdecl2.name[0]);
@@ -223,7 +222,6 @@ export class ContextFunction extends Context{
 
 			} else {
 				this._functionType = ContextFunction.Type.Regular;
-				this._name = new Identifier(undefined, "??");
 				this._returnType = TypeName.typeVoid;
 			}
 
@@ -241,7 +239,6 @@ export class ContextFunction extends Context{
 
 		} else {
 			this._functionType = ContextFunction.Type.Regular;
-			this._name = new Identifier(undefined, "??");
 			this._returnType = TypeName.typeVoid;
 		}
 
@@ -261,7 +258,7 @@ export class ContextFunction extends Context{
 			}
 		}
 
-		if (tokBegin && tokEnd && this._name.token) {
+		if (tokBegin && tokEnd && this._name?.token) {
 			let args = this._arguments.map(each => `${each.typename.name} ${each.name.name}`);
 			let argText = args.length > 0 ? args.reduce((a,b) => `${a}, ${b}`) : "";
 			let retText = this._returnType?.name || "void";
@@ -310,7 +307,7 @@ export class ContextFunction extends Context{
 		return this._functionType;
 	}
 
-	public get name(): Identifier {
+	public get name(): Identifier | undefined {
 		return this._name;
 	}
 
@@ -336,11 +333,11 @@ export class ContextFunction extends Context{
 
 	public get fullyQualifiedName(): string {
 		let n = this.parent?.fullyQualifiedName || "";
-		return n ? `${n}.${this._name}` : this._name.name;
+		return n ? `${n}.${this._name}` : this.simpleName;
 	}
 
 	public get simpleName(): string {
-		return this._name.name;
+		return this._name?.name ?? "??";
 	}
 	
 	public get resolveFunction(): ResolveFunction | undefined {
@@ -372,7 +369,7 @@ export class ContextFunction extends Context{
 
 			if (container) {
 				if (!container.addFunction(this._resolveFunction)) {
-					if (this._name.range) {
+					if (this._name?.range) {
 						state.reportError(this._name.range, `Duplicate function ${this._name}`);
 					}
 				}
@@ -403,7 +400,7 @@ export class ContextFunction extends Context{
 	}
 
 	protected updateHover(position: Position): Hover | null {
-		if (this._name.isPositionInside(position)) {
+		if (this._name?.isPositionInside(position)) {
 			return new HoverInfo(this.resolveTextLong, this._name.range);
 		}
 		if (this._returnType?.isPositionInside(position)) {
@@ -449,7 +446,7 @@ export class ContextFunction extends Context{
 		}
 		parts.push(`*${this.parent!.fullyQualifiedName}*.`);
 		
-		if (this._name.name.startsWith('*') || this._name.name.endsWith('*')) {
+		if (this._name?.name.startsWith('*') || this._name?.name.endsWith('*')) {
 			parts.push(`__${this._name}__`);
 		} else {
 			parts.push(`**${this._name}**`);
@@ -523,7 +520,7 @@ export class ContextFunction extends Context{
 	}
 	
 	public definition(position: Position): Definition {
-		if (this._name.isPositionInside(position)) {
+		if (this._name?.isPositionInside(position)) {
 			return this.definitionSelf();
 		}
 		if (this._returnType?.isPositionInside(position)) {
@@ -533,7 +530,7 @@ export class ContextFunction extends Context{
 	}
 	
 	public resolvedAtPosition(position: Position): Resolved | undefined {
-		if (this._name.isPositionInside(position)) {
+		if (this._name?.isPositionInside(position)) {
 			return this._resolveFunction;
 		} else if (this._returnType?.isPositionInside(position)) {
 			return this._returnType.resolve?.resolved;
@@ -547,7 +544,7 @@ export class ContextFunction extends Context{
 	}
 	
 	public get referenceSelf(): Location | undefined {
-		return this.resolveLocation(this._name.range);
+		return this._name ? this.resolveLocation(this._name.range) : undefined;
 	}
 	
 	public completion(_document: TextDocument, position: Position): CompletionItem[] {

@@ -213,6 +213,12 @@ export class ResolveFunction extends Resolved{
 			commitCharacters.push('.');
 		}
 		
+		// idea:
+		// use '★ ' as prefix for 'label' to mark best matches
+		// use 'a:', 'b:' and so forth as prefix for 'sortText'
+		// to enfore a sorting. sorting seems to be ignored once
+		// filtering is used but at last it helps a bit
+		// note ' ' filters first
 		return {label: this._name,
 			sortText: this._name,
 			filterText: this._name,
@@ -236,5 +242,89 @@ export class ResolveFunction extends Resolved{
 		}
 		snippet.push(')');
 		return snippet.join('');
+	}
+	
+	public createCompletionOverride(range: Range, sortPrefix: string): CompletionItem | undefined {
+		if (!this._context || this._context.type != Context.ContextType.Function ) {
+			return undefined;
+		}
+		
+		const parent = this.context?.resolveFunction?.parent as ResolveType;
+		if (!parent) {
+			return undefined;
+		}
+		
+		const implement = parent.type == Resolved.Type.Interface;
+		const hasReturn = this._returnType != ResolveNamespace.classVoid;
+		
+		var parts: string[] = [];
+		var argIndex: number = 0;
+		var title: string;
+		
+		const ct = this._context as ContextFunction;
+		switch (ct.functionType) {
+		case ContextFunction.Type.Operator:
+			title = 'operator';
+			break;
+			
+		default:
+			title = 'function';
+			break;
+		}
+		
+		parts.push('/**\n');
+		if (implement) {
+			parts.push(` * Implement ${parent.fullyQualifiedName}.${this.name}().\n`);
+		} else {
+			parts.push(` * Override ${parent.fullyQualifiedName}.${this.name}().\n`);
+		}
+		parts.push(' */\n');
+		
+		// TODO: type modifiers
+		
+		parts.push(`func ${this._returnType?.name ?? 'void'} ${this.name}(`);
+		for (const each of this._signature.arguments) {
+			if (argIndex > 0) {
+				parts.push(', ');
+			}
+			parts.push(`${each.type?.name} ${each.name}`);
+			argIndex++;
+		}
+		parts.push(')\n');
+		
+		parts.push('\t');
+		if (hasReturn) {
+			parts.push('return ');
+		}
+		
+		if (!hasReturn && !implement) {
+			parts.push(`super.${this._name}(`);
+			argIndex = 0;
+			for (const each of this._signature.arguments) {
+				if (argIndex > 0) {
+					parts.push(', ');
+				}
+				parts.push(`${each.name}`);
+				argIndex++;
+			}
+			parts.push(')\n');
+			parts.push('\t\${0}\n');
+		} else if (hasReturn) {
+			let defval = this._returnType?.completeValue ?? 'null';
+			defval.replace(':', '\:');
+			parts.push(`\${0:${defval}}\n`);
+		} else {
+			parts.push('\${0}\n');
+		}
+		
+		parts.push('end\n');
+		
+		return {label: `${implement ? 'implement' : 'override'} ${this._name}`,
+			sortText: `${sortPrefix}${this._name}`,
+			filterText: this._name,
+			detail: `${title}: ${this.context?.resolveTextShort}`,
+			kind: CompletionItemKind.Function,
+			insertTextFormat: InsertTextFormat.Snippet,
+			textEdit: TextEdit.replace(range, parts.join(''))};
 	}
 }

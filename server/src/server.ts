@@ -420,6 +420,13 @@ connection.onCompletion(
 			const l = context?.completion(document, params.position) || [];
 			console.log(`completion count: ${l.length}`);
 			//for (const each of l.slice(0, 5)){ console.log(`- ${each.label}: ${Helpers.logRange((each.textEdit as TextEdit)?.range)}`)}
+			
+			/*
+			var e: number;
+			for (e=0; e<l.length; e++) {
+				l[e].sortText = `${String.fromCodePoint(0x20+e)}:${l[e].filterText ?? l[e].label}`;
+			}
+			*/
 			return l;
 			
 		} catch (error) {

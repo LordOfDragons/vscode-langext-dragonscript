@@ -28,7 +28,7 @@ export interface ClassBeginCstNode extends CstNode {
 
 export type ClassBeginCstChildren = {
 	class: IToken[];
-	name: IToken[];
+	name?: IToken[];
 	classBeginExtends?: ClassBeginExtendsCstNode[];
 	classBeginImplements?: ClassBeginImplementsCstNode[];
 	endOfCommand: EndOfCommandCstNode[];

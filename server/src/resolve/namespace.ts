@@ -147,6 +147,8 @@ export class ResolveNamespace extends ResolveType {
 	public static get classBool(): ResolveClass {
 		let c = rootNamespace.class('bool')!;
 		c.isPrimitive = true;
+		c.initialValue = 'false';
+		c.completeValue = 'false';
 		return c;
 	}
 	
@@ -154,6 +156,8 @@ export class ResolveNamespace extends ResolveType {
 		let c = rootNamespace.class('byte')!;
 		c.autoCast = Context.AutoCast.ValueByte;
 		c.isPrimitive = true;
+		c.initialValue = '0';
+		c.completeValue = "' '";
 		return c;
 	}
 	
@@ -161,21 +165,29 @@ export class ResolveNamespace extends ResolveType {
 		let c = rootNamespace.class('int')!;
 		c.autoCast = Context.AutoCast.ValueInt;
 		c.isPrimitive = true;
+		c.initialValue = '0';
+		c.completeValue = '0';
 		return c;
 	}
 	
 	public static get classFloat(): ResolveClass {
 		let c = rootNamespace.class('float')!;
 		c.isPrimitive = true;
+		c.initialValue = '0.0';
+		c.completeValue = '0.0';
 		return c;
 	}
 	
 	public static get classString(): ResolveClass {
-		return rootNamespace.class('String')!;
+		let c = rootNamespace.class('String')!;
+		c.completeValue = '""';
+		return c;
 	}
 	
 	public static get classBlock(): ResolveClass {
-		return rootNamespace.class('Block')!;
+		let c = rootNamespace.class('Block')!;
+		c.completeValue = 'block:end';
+		return c;
 	}
 	
 	public static get classEnumeration(): ResolveClass {
@@ -187,7 +199,9 @@ export class ResolveNamespace extends ResolveType {
 	}
 	
 	public static get classException(): ResolveClass {
-		return rootNamespace.class('Exception')!;
+		let c = rootNamespace.class('Exception')!;
+		c.completeValue = 'Exception.new("message")';
+		return c;
 	}
 	
 	public static get classVoid(): ResolveClass {

@@ -49,6 +49,8 @@ export class ResolveType extends Resolved{
 	protected _resolveTextType = 'type ';
 	public autoCast: Context.AutoCast = Context.AutoCast.No;
 	public isPrimitive = false;
+	public initialValue: string = 'null';
+	public completeValue: string = 'null';
 	
 	
 	constructor (name: string, type: Resolved.Type) {
@@ -75,6 +77,10 @@ export class ResolveType extends Resolved{
 		super.dispose();
 	}
 	
+	
+	public get resolveTextType(): string {
+		return this._resolveTextType;
+	}
 	
 	protected updateResolveTextShort(): string {
 		return `${this._resolveTextType} ${this._name}`;

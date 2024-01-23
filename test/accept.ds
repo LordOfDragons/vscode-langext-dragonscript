@@ -61,6 +61,13 @@ class ClassExtendImplement extends ClassExtend implements ActionListener, Collid
 		return 80
 	end
 	
+	func Block extendedBlock(int argument)
+		return null
+	end
+	
+	func void voidFunction()
+	end
+	
 	public var int blistering
 end
 
@@ -100,6 +107,8 @@ public class OuterClass extends ClassExtendImplement
 	private var OuterClass pMember2
 	public static fixed var int CONSTANT = 8 + 0h2a + 0b1001 + 'a'
 	var SimpleEnum pMember3
+	
+	
 	
 	static public func int isATest( int value1, int value2 )
 		return value1 + value2
