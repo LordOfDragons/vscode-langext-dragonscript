@@ -45,7 +45,8 @@ end
 class ClassExtend extends EmptyClass
 end
 
-class ClassImplement implements ActionListener
+class ClassImplement implements ActionListener, Commands.BindingManagerListener
+	
 end
 
 class ClassExtendImplement extends ClassExtend implements ActionListener, ColliderListener
@@ -87,6 +88,7 @@ public class OuterClass extends ClassExtendImplement
 	end
 	
 	public interface InnerInterface implements InterfaceExtend
+		
 	end
 	
 	private enum SimpleEnum

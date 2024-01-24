@@ -24,7 +24,7 @@
 
 import { Context } from "./context";
 import { OpenNamespaceCstNode } from "../nodeclasses/openNamespace";
-import { Definition, DocumentSymbol, Hover, Location, Position, RemoteConsole, SymbolInformation, SymbolKind } from "vscode-languageserver";
+import { CompletionItem, Definition, DocumentSymbol, Hover, Location, Position, Range, RemoteConsole, SymbolInformation, SymbolKind } from "vscode-languageserver";
 import { TypeName } from "./typename";
 import { HoverInfo } from "../hoverinfo";
 import { ResolveNamespace } from "../resolve/namespace";
@@ -32,6 +32,8 @@ import { ResolveState } from "../resolve/state";
 import { Helpers } from "../helpers";
 import { ResolveSearch } from "../resolve/search";
 import { Resolved, ResolveUsage } from "../resolve/resolved";
+import { TextDocument } from "vscode-languageserver-textdocument";
+import { CompletionHelper } from "../completionHelper";
 
 
 export class ContextNamespace extends Context{
@@ -249,6 +251,20 @@ export class ContextNamespace extends Context{
 	
 	public get referenceSelf(): Location | undefined {
 		return this.resolveLocation(this._typename.range);
+	}
+	
+	public completion(document: TextDocument, position: Position): CompletionItem[] {
+		const range = Range.create(position, position);
+		let items: CompletionItem[] = [];
+		
+		items.push(...CompletionHelper.createNamespace(this, range));
+		items.push(...CompletionHelper.createClass(this, range));
+		items.push(...CompletionHelper.createInterface(this, range));
+		items.push(...CompletionHelper.createEnum(this, range));
+		items.push(...CompletionHelper.createPin(this, range));
+		items.push(...CompletionHelper.createRequires(this, range));
+		
+		return items;
 	}
 
 

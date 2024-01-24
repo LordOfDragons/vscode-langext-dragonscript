@@ -189,6 +189,18 @@ export class ContextClass extends Context{
 		return this._declarations;
 	}
 	
+	public declarationBefore(position: Position): Context | undefined {
+		var found: Context | undefined;
+		for (const each of this._declarations) {
+			if (each.range && Helpers.isPositionBefore(position, each.range?.start)) {
+				found = each;
+			} else {
+				break;
+			}
+		}
+		return found;
+	}
+	
 	public get resolveClass(): ResolveClass | undefined {
 		return this._resolveClass;
 	}
@@ -421,7 +433,6 @@ export class ContextClass extends Context{
 		let items: CompletionItem[] = [];
 		
 		if (this._positionBeginEnd && Helpers.isPositionAfter(position, this._positionBeginEnd)) {
-			// TODO: completion for func overrides
 			items.push(...CompletionHelper.createClass(this, range));
 			items.push(...CompletionHelper.createInterface(this, range));
 			items.push(...CompletionHelper.createEnum(this, range));

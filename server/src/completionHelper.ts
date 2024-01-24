@@ -40,6 +40,7 @@ import { debugLogMessage } from "./server";
 
 export class CompletionHelper {
 	static sortPrefixSnippet = `${String.fromCodePoint(255)}:`;
+	static sortPrefixPrefer = ` :`;
 	
 	/** Create completion item for 'this' and 'super' keyword. */
 	public static createThisSuper(context: Context, range: Range, castable?: ResolveType[]): CompletionItem[] {
@@ -114,7 +115,7 @@ export class CompletionHelper {
 	public static createBlock(context: Context, range: Range): CompletionItem[] {
 		let items: CompletionItem[] = [];
 		
-		items.push({label: 'block',
+		items.push({label: '🅱 block',
 			sortText: `${CompletionHelper.sortPrefixSnippet}block`,
 			kind: CompletionItemKind.Snippet,
 			insertTextFormat: InsertTextFormat.Snippet,
@@ -123,7 +124,7 @@ export class CompletionHelper {
 				'\t\${0}\n' +
 				'end')});
 		
-		items.push({label: 'block: 1 argument',
+		items.push({label: '🅱 block: 1 argument',
 			sortText: `${CompletionHelper.sortPrefixSnippet}block`,
 			filterText: 'block',
 			kind: CompletionItemKind.Snippet,
@@ -133,7 +134,7 @@ export class CompletionHelper {
 				'\t\${0}\n' +
 				'end')});
 		
-		items.push({label: 'block: 2 arguments',
+		items.push({label: '🅱 block: 2 arguments',
 			sortText: `${CompletionHelper.sortPrefixSnippet}block`,
 			filterText: 'block',
 			kind: CompletionItemKind.Snippet,
@@ -496,12 +497,15 @@ export class CompletionHelper {
 	}
 	
 	/** Create completion items for override 'func' keyword. */
-	public static createFunctionOverrides(context: Context, range: Range): CompletionItem[] {
+	public static createFunctionOverrides(context: ContextClass, range: Range): CompletionItem[] {
 		let items: CompletionItem[] = [];
 		
 		const objtype = ContextClass.thisContext(context)?.resolveClass;
 		if (objtype) {
-			let search = new ResolveSearch();
+			var search = CompletionHelper.searchExpressionType(context);
+			const visibleTypes = new Set(search.types);
+			
+			search = new ResolveSearch();
 			search.onlyFunctions = true;
 			search.ignoreShadowedFunctions = true;
 			search.ignoreStatic = true;
@@ -509,12 +513,14 @@ export class CompletionHelper {
 			search.ignoreConstructors = true;
 			objtype.search(search);
 			
+			const beforeContext = context.declarationBefore(range.start) ?? context;
 			for (const each of search.functionsAll) {
 				if (each.parent == objtype) {
 					continue;
 				}
 				
-				let item = each.createCompletionOverride(range, 'func:');
+				let item = each.createCompletionOverride(range,
+					`${CompletionHelper.sortPrefixPrefer}func:`, visibleTypes, beforeContext);
 				if (item) {
 					items.push(item);
 				}
@@ -549,6 +555,88 @@ export class CompletionHelper {
 				' */\n' +
 				'static fixed var \${1:int} \${2:Name} = \${0:0}')});
 			
+		return items;
+	}
+	
+	/** Create completion items for 'func' keyword in interfaces. */
+	public static createFunctionInterface(context: Context, range: Range): CompletionItem[] {
+		let items: CompletionItem[] = [];
+		
+		items.push({label: 'func',
+			sortText: `${CompletionHelper.sortPrefixSnippet}func`,
+			kind: CompletionItemKind.Snippet,
+			insertTextFormat: InsertTextFormat.Snippet,
+			textEdit: TextEdit.replace(range,
+				'/**\n' +
+				' * Function $\{2}.\n' +
+				' */\n' +
+				'func \${1:void} \${2:Name}()\n' +
+				'\${0}')});
+		
+		items.push({label: 'func(arg)',
+			sortText: `${CompletionHelper.sortPrefixSnippet}func`,
+			kind: CompletionItemKind.Snippet,
+			insertTextFormat: InsertTextFormat.Snippet,
+			textEdit: TextEdit.replace(range,
+				'/**\n' +
+				' * Function $\{2}.\n' +
+				' * \\param $\{4} Argument.\n' +
+				' */\n' +
+				'func \${1:void} \${2:Name}(\${3:int} \${4:arg})\n' +
+				'\${0}')});
+		
+		items.push({label: 'func(arg1, arg2)',
+			sortText: `${CompletionHelper.sortPrefixSnippet}func`,
+			kind: CompletionItemKind.Snippet,
+			insertTextFormat: InsertTextFormat.Snippet,
+			textEdit: TextEdit.replace(range,
+				'/**\n' +
+				' * Function $\{2}.\n' +
+				' * \\param $\{4} Argument.\n' +
+				' * \\param $\{6} Argument.\n' +
+				' */\n' +
+				'func \${1:void} \${2:Name}(\${3:int} \${4:arg1}, \${5:int} \${6:arg2})\n' +
+				'\${0}')});
+		
+		return items;
+	}
+	
+	/** Create completion items for 'namespace' keyword. */
+	public static createNamespace(context: Context, range: Range): CompletionItem[] {
+		let items: CompletionItem[] = [];
+		
+		items.push({label: '📂 namespace',
+			sortText: `${CompletionHelper.sortPrefixSnippet}namespace`,
+			kind: CompletionItemKind.Snippet,
+			insertTextFormat: InsertTextFormat.Snippet,
+			textEdit: TextEdit.replace(range, 'namespace \${0:Name}')});
+		
+		return items;
+	}
+	
+	/** Create completion items for 'pin' keyword. */
+	public static createPin(context: Context, range: Range): CompletionItem[] {
+		let items: CompletionItem[] = [];
+		
+		items.push({label: '📌 pin',
+			sortText: `${CompletionHelper.sortPrefixSnippet}pin`,
+			kind: CompletionItemKind.Snippet,
+			insertTextFormat: InsertTextFormat.Snippet,
+			textEdit: TextEdit.replace(range, 'pin \${0:Namespace}')});
+		
+		return items;
+	}
+	
+	/** Create completion items for 'requires' keyword. */
+	public static createRequires(context: Context, range: Range): CompletionItem[] {
+		let items: CompletionItem[] = [];
+		
+		items.push({label: '📦 requires',
+			sortText: `${CompletionHelper.sortPrefixSnippet}requires`,
+			kind: CompletionItemKind.Snippet,
+			insertTextFormat: InsertTextFormat.Snippet,
+			textEdit: TextEdit.replace(range, 'requires "\${0:Package Name}"')});
+		
 		return items;
 	}
 	

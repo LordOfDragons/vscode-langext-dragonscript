@@ -316,7 +316,10 @@ export class ContextInterface extends Context{
 		let items: CompletionItem[] = [];
 		
 		if (this._positionBeginEnd && Helpers.isPositionAfter(position, this._positionBeginEnd)) {
-			// TODO: completion for class, interface, enum, func
+			items.push(...CompletionHelper.createClass(this, range));
+			items.push(...CompletionHelper.createInterface(this, range));
+			items.push(...CompletionHelper.createEnum(this, range));
+			items.push(...CompletionHelper.createFunctionInterface(this, range));
 			
 		} else if (this._tokenImplements && Helpers.isPositionAfter(position, this._tokenImplements.end)) {
 			items.push(...CompletionHelper.createType(

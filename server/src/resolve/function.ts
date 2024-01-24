@@ -22,10 +22,11 @@
  * SOFTWARE.
  */
 
-import { CompletionItem, CompletionItemKind, DiagnosticRelatedInformation, InsertTextFormat, Location, Range, TextEdit } from 'vscode-languageserver';
+import { CompletionItem, CompletionItemKind, DiagnosticRelatedInformation, InsertTextFormat, Location, Position, Range, TextEdit } from 'vscode-languageserver';
 import { ContextFunction } from '../context/classFunction';
 import { Context } from '../context/context';
 import { ContextBlock } from '../context/expressionBlock';
+import { RefactoringHelper } from '../refactoringHelper';
 import { ResolveClass } from './class';
 import { ResolveFunctionGroup } from './functionGroup';
 import { ResolveNamespace } from './namespace';
@@ -248,7 +249,8 @@ export class ResolveFunction extends Resolved{
 		Context.TypeModifier.Protected, Context.TypeModifier.Private
 	]);
 	
-	public createCompletionOverride(range: Range, sortPrefix: string): CompletionItem | undefined {
+	public createCompletionOverride(range: Range, sortPrefix: string,
+			visibleTypes: Set<ResolveType> | undefined, beforeContext: Context): CompletionItem | undefined {
 		if (!this._context || this._context.type != Context.ContextType.Function ) {
 			return undefined;
 		}
@@ -326,12 +328,39 @@ export class ResolveFunction extends Resolved{
 		
 		parts.push('end\n');
 		
-		return {label: `${implement ? 'implement' : 'override'} ${this._name}`,
+		// required pins
+		var pinTypes: Set<ResolveType> = new Set();
+		for (const each of this._signature.arguments) {
+			if (each.type && !visibleTypes?.has(each.type)) {
+				pinTypes.add(each.type);
+			}
+		}
+		
+		let documentation: string[] = [];
+		let extraEdits: TextEdit[] = [];
+		
+		if (pinTypes.size > 0) {
+			let parts: string[] = [];
+			
+			documentation.push('Requires:');
+			for (const each of pinTypes) {
+				if (each.pinNamespace) {
+					documentation.push('```dragonscript\n' + `pin ${each.pinNamespace}\n` + '```');
+					parts.push(`\npin ${each.pinNamespace}`);
+				}
+			}
+			
+			extraEdits.push(TextEdit.insert(RefactoringHelper.insertPinPosition(beforeContext), parts.join('\n')));
+		}
+		
+		// ↶ ⎇ ⏎ ✎ ✏ 🔀 ➥ ⌥ ⏎ ↪️
+		return {label: `${implement ? '📝 implement' : '↪️ override'} ${this._name}`,
 			sortText: `${sortPrefix}${this._name}`,
 			filterText: this._name,
 			detail: `${title}: ${this.context?.resolveTextShort}`,
 			kind: CompletionItemKind.Function,
 			insertTextFormat: InsertTextFormat.Snippet,
-			textEdit: TextEdit.replace(range, parts.join(''))};
+			textEdit: TextEdit.replace(range, parts.join('')),
+			additionalTextEdits: extraEdits};
 	}
 }

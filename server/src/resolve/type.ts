@@ -128,7 +128,7 @@ export class ResolveType extends Resolved{
 		return CompletionItemKind.Module;
 	}
 	
-	protected get pinNamespace(): string | undefined {
+	public get pinNamespace(): string | undefined {
 		if (this.type === ResolveType.Type.Namespace) {
 			return undefined;
 		}

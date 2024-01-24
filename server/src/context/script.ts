@@ -24,7 +24,7 @@
 
 import { Context } from "./context";
 import { ScriptCstNode } from "../nodeclasses/script";
-import { DocumentSymbol, Position, RemoteConsole, SymbolInformation, URI } from "vscode-languageserver";
+import { CompletionItem, DocumentSymbol, Position, Range, RemoteConsole, SymbolInformation, URI } from "vscode-languageserver";
 import { ContextPinNamespace } from "./pinNamespace";
 import { ContextNamespace } from "./namespace";
 import { ContextClass } from "./scriptClass";
@@ -33,6 +33,7 @@ import { ContextEnumeration } from "./scriptEnum";
 import { ContextRequiresPackage } from "./requiresPackage";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { ResolveState } from "../resolve/state";
+import { CompletionHelper } from "../completionHelper";
 
 
 /** Top level script context. */
@@ -161,7 +162,7 @@ export class ContextScript extends Context{
 	}
 	
 	public contextAtPosition(position: Position): Context | undefined {
-		return this.contextAtPositionList(this._statements, position);
+		return this.contextAtPositionList(this._statements, position) ?? this;
 	}
 
 
@@ -187,6 +188,20 @@ export class ContextScript extends Context{
 		for (const each of this._statements) {
 			each.resolveStatements(state);
 		}
+	}
+	
+	public completion(document: TextDocument, position: Position): CompletionItem[] {
+		const range = Range.create(position, position);
+		let items: CompletionItem[] = [];
+		
+		items.push(...CompletionHelper.createNamespace(this, range));
+		items.push(...CompletionHelper.createClass(this, range));
+		items.push(...CompletionHelper.createInterface(this, range));
+		items.push(...CompletionHelper.createEnum(this, range));
+		items.push(...CompletionHelper.createPin(this, range));
+		items.push(...CompletionHelper.createRequires(this, range));
+		
+		return items;
 	}
 
 
