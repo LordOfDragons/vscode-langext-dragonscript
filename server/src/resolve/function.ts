@@ -169,7 +169,8 @@ export class ResolveFunction extends Resolved{
 	
 	public createCompletionItem(range: Range): CompletionItem {
 		let commitCharacters: string[] = [];
-		var text: string = this._name;
+		var label = this._name;
+		var text = this._name;
 		var title: string;
 		
 		if (this._context) {
@@ -180,6 +181,7 @@ export class ResolveFunction extends Resolved{
 				case ContextFunction.Type.Constructor:
 					title = 'constructor';
 					text = text + this.createSnippetSignature();
+					label = `🚀 ${label}`;
 					break;
 					
 				case ContextFunction.Type.Destructor:
@@ -220,7 +222,7 @@ export class ResolveFunction extends Resolved{
 		// to enfore a sorting. sorting seems to be ignored once
 		// filtering is used but at last it helps a bit
 		// note ' ' filters first
-		return {label: this._name,
+		return {label: label,
 			sortText: this._name,
 			filterText: this._name,
 			detail: `${title}: ${this.context?.resolveTextShort}`,
