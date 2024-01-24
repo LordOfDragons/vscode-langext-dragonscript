@@ -244,6 +244,10 @@ export class ResolveFunction extends Resolved{
 		return snippet.join('');
 	}
 	
+	public static filterTypemodOverride: Set<Context.TypeModifier> = new Set<Context.TypeModifier>([
+		Context.TypeModifier.Protected, Context.TypeModifier.Private
+	]);
+	
 	public createCompletionOverride(range: Range, sortPrefix: string): CompletionItem | undefined {
 		if (!this._context || this._context.type != Context.ContextType.Function ) {
 			return undefined;
@@ -254,7 +258,7 @@ export class ResolveFunction extends Resolved{
 			return undefined;
 		}
 		
-		const implement = parent.type == Resolved.Type.Interface;
+		const implement = parent.type == Resolved.Type.Interface || this.typeModifiers?.has(Context.TypeModifier.Abstract);
 		const hasReturn = this._returnType != ResolveNamespace.classVoid;
 		
 		var parts: string[] = [];
@@ -280,7 +284,10 @@ export class ResolveFunction extends Resolved{
 		}
 		parts.push(' */\n');
 		
-		// TODO: type modifiers
+		const tms = this.typeModifiers?.filter(ResolveFunction.filterTypemodOverride).typestring;
+		if (tms) {
+			parts.push(`${tms} `);
+		}
 		
 		parts.push(`func ${this._returnType?.name ?? 'void'} ${this.name}(`);
 		for (const each of this._signature.arguments) {

@@ -434,11 +434,13 @@ export namespace Context {
 		protected _fixed: boolean = false;
 		protected _static: boolean = false;
 
-		constructor(node: TypeModifiersCstNode | undefined, defaultModifier: Context.TypeModifier) {
+		constructor(node: TypeModifiersCstNode | undefined, defaultModifier: Context.TypeModifier | undefined) {
 			super();
 			
 			if (!node || !node.children.typeModifier) {
-				this.add(defaultModifier);
+				if (defaultModifier) {
+					this.add(defaultModifier);
+				}
 				
 			} else {
 				for (const each of node.children.typeModifier) {
@@ -529,8 +531,8 @@ export namespace Context {
 		public get isStatic(): boolean {
 			return this._static;
 		}
-
-
+		
+		
 		public get canonical(): Context.TypeModifier[] {
 			if (!this._canonical) {
 				this._canonical = [];
@@ -558,7 +560,17 @@ export namespace Context {
 			}
 			return this._canonical;
 		}
-
+		
+		public filter(modifiers: Set<Context.TypeModifier>): Context.TypeModifierSet {
+			let tm = new Context.TypeModifierSet(undefined, undefined);
+			for (const each of this) {
+				if (modifiers.has(each)) {
+					tm.add(each);
+				}
+			}
+			return tm;
+		}
+		
 		public get typestring(): string {
 			if (!this._typestring) {
 				let parts = [];
