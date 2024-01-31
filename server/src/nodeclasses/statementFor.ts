@@ -1,4 +1,5 @@
 import { CstNode, IToken } from "chevrotain";
+import { EndOfCommandCstNode } from "./endOfCommand";
 import { ExpressionCstNode } from "./expression";
 import { ExpressionObjectCstNode } from "./expressionObject";
 import { StatementsCstNode } from "./statement";
@@ -27,6 +28,7 @@ export type StatementForBeginCstChildren = {
 	statementForFrom?: StatementForFromCstNode[];
 	statementForTo?: StatementForToCstNode[];
 	statementForStep?: StatementForStepCstNode[];
+	endOfCommand?: EndOfCommandCstNode[];
 };
 
 
@@ -46,6 +48,7 @@ export interface StatementForFromCstNode extends CstNode {
 }
 
 export type StatementForFromCstChildren = {
+	assign: IToken[];
 	value: ExpressionCstNode[];
 };
 

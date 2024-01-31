@@ -264,6 +264,7 @@ export class ContextSelect extends Context {
 			items.push(CompletionHelper.createSelectCase(range));
 			if (this._cases.length > 0 && !this._elsestatements) {
 				items.push(CompletionHelper.createSelectElse(range));
+				items.push(...CompletionHelper.createExpression(range, this));
 			}
 		}
 		

@@ -23,7 +23,7 @@
  */
 
 import { Context } from "./context";
-import { DocumentSymbol, Position, RemoteConsole } from "vscode-languageserver";
+import { CompletionItem, DocumentSymbol, Position, Range, RemoteConsole } from "vscode-languageserver";
 import { ContextBuilder } from "./contextBuilder";
 import { ContextStatements } from "./statements";
 import { StatementForCstNode } from "../nodeclasses/statementFor";
@@ -31,6 +31,9 @@ import { Helpers } from "../helpers";
 import { ResolveState } from "../resolve/state";
 import { ResolveNamespace } from "../resolve/namespace";
 import { ContextError } from "./error";
+import { IToken } from "chevrotain";
+import { TextDocument } from "vscode-languageserver-textdocument";
+import { CompletionHelper } from "../completionHelper";
 
 
 export class ContextFor extends Context{
@@ -41,16 +44,20 @@ export class ContextFor extends Context{
 	protected _downto: boolean;
 	protected _step?: Context | undefined;
 	protected _statements: ContextStatements;
+	protected _posFrom?: Position;
+	protected _posTo?: Position;
+	protected _posStep?: Position;
+	protected _posEnd?: Position;
 	
 
 	constructor(node: StatementForCstNode, parent: Context) {
 		super(Context.ContextType.For, parent);
 		this._node = node;
-
+		
 		let forBegin = node.children.statementForBegin[0].children;
 		let forTo = forBegin.statementForTo?.at(0)?.children;
 		let forFrom = forBegin.statementForFrom?.at(0)?.children;
-
+		
 		this._variable = ContextBuilder.createExpressionObject(forBegin.statementForVariable[0].children.variable[0], this);
 		this._from = forFrom ? ContextBuilder.createExpression(forFrom.value[0], this) : new ContextError(this);
 		this._to = forTo ? ContextBuilder.createExpression(forTo.value[0], this) : new ContextError(this);
@@ -59,11 +66,23 @@ export class ContextFor extends Context{
 		if (forBegin.statementForStep) {
 			this._step = ContextBuilder.createExpression(forBegin.statementForStep[0].children.value[0], this);
 		}
-
+		
 		this._statements = new ContextStatements(node.children.statements[0], this);
 		
 		const tokBegin = node.children.statementForBegin[0].children.for[0];
 		let tokEnd = node.children.statementForEnd[0].children.end?.at(0);
+		
+		const tokAssign = forBegin.statementForFrom?.at(0)?.children.assign?.at(0);
+		if (tokAssign) {
+			this._posFrom = Helpers.positionFrom(tokAssign);
+		}
+		
+		const tokTo = forTo?.to?.at(0) ?? forTo?.downto?.at(0);
+		if (tokTo) {
+			this._posTo = Helpers.positionFrom(tokTo);
+		}
+		
+		this._posEnd = Helpers.endOfCommandBegin(forBegin.endOfCommand);
 		
 		this.range = Helpers.rangeFrom(tokBegin, tokEnd, true, false);
 	}
@@ -153,6 +172,19 @@ export class ContextFor extends Context{
 		this._to?.collectChildDocSymbols(list);
 		this._step?.collectChildDocSymbols(list);
 		this._statements.collectChildDocSymbols(list);
+	}
+	
+	public completion(document: TextDocument, position: Position): CompletionItem[] {
+		const range = Range.create(position, position);
+		let items: CompletionItem[] = [];
+		
+		if (this._posEnd && Helpers.isPositionBefore(position, this._posEnd)) {
+			items.push(...CompletionHelper.createExpression(range, this));
+		} else {
+			items.push(...CompletionHelper.createStatement(range, this));
+		}
+		
+		return items;
 	}
 	
 	
