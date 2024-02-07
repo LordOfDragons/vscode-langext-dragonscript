@@ -423,6 +423,7 @@ export namespace Context {
 		TryCatch,
 		Group,
 		Error,
+		Documentation,
 		Generic
 	}
 

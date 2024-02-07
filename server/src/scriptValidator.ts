@@ -26,6 +26,7 @@ import { ILexingResult } from "chevrotain";
 import { Diagnostic, DiagnosticSeverity } from "vscode-languageserver";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { DSCapabilities } from "./capabilities";
+import { ContextDocumentation } from "./context/documentation";
 import { DSLexer } from "./lexer";
 import { ScriptCstNode } from "./nodeclasses/script";
 import { PackageDEModule } from "./package/dragenginemodule";
@@ -64,14 +65,18 @@ export class ScriptValidator {
 		await this.doRequires(scriptDocument, scriptDocument.diagnosticsLexer);
 		const lexed = this.doLex(textDocument, scriptDocument.settings, scriptDocument.diagnosticsLexer);
 		scriptDocument.node = this.doParse(textDocument, scriptDocument.settings, lexed, scriptDocument.diagnosticsLexer);
-		scriptDocument.tokensDocumentation.push(...lexed.groups['documentation']);
+		for (const each of lexed.groups['documentation']) {
+			scriptDocument.documentations.push(new ContextDocumentation(each));
+		}
 	}
 
 	public async parseLog(scriptDocument: ScriptDocument, text: string, logs: string[]): Promise<void> {
 		await this.doRequiresLog(scriptDocument, logs);
 		const lexed = this.doLexLog(scriptDocument, text, scriptDocument.settings, logs);
 		scriptDocument.node = this.doParseLog(scriptDocument, scriptDocument.settings, lexed, logs);
-		scriptDocument.tokensDocumentation.push(...lexed.groups['documentation']);
+		for (const each of lexed.groups['documentation']) {
+			scriptDocument.documentations.push(new ContextDocumentation(each));
+		}
 	}
 
 

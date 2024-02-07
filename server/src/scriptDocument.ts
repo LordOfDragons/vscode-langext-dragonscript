@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-import { IToken } from "chevrotain";
 import { Diagnostic, RemoteConsole } from "vscode-languageserver";
+import { ContextDocumentation } from "./context/documentation";
 import { ContextScript } from "./context/script";
 import { ScriptCstNode } from "./nodeclasses/script";
 import { ReportConfig } from "./reportConfig";
@@ -37,8 +37,8 @@ export class ScriptDocument {
 	protected _settings: DSSettings;
 	protected _node?: ScriptCstNode;
 	protected _context?: ContextScript;
-	public tokensDocumentation: IToken[] = [];
-
+	public documentations: ContextDocumentation[] = [];
+	
 	public requiresAnotherTurn: boolean = false;
 	public revision: number = 1;
 	public diagnosticsLexer: Diagnostic[] = [];
