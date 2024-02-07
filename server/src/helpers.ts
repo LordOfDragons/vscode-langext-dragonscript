@@ -79,6 +79,30 @@ export class Helpers {
 		return true;
 	}
 
+	public static isRangeInsideRange(range: Range | undefined, rangeCheck: Range): boolean {
+		if (!range) {
+			return false;
+		}
+		
+		if (rangeCheck.end.line < range.start.line) {
+			return false;
+		} else if (rangeCheck.end.line == range.start.line) {
+			if (rangeCheck.end.character < range.start.character) {
+				return false;
+			}
+		}
+		
+		if (rangeCheck.start.line > range.end.line) {
+			return false;
+		} else if (rangeCheck.start.line == range.end.line) {
+			if (rangeCheck.start.character > range.end.character) {
+				return false;
+			}
+		}
+		
+		return true;
+	}
+
 	public static isPositionInsideToken(token: IToken, position: Position): boolean {
 		return Helpers.isPositionInsideRange(Helpers.rangeFrom(token), position);
 	}

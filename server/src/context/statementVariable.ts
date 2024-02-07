@@ -23,7 +23,7 @@
  */
 
 import { Context } from "./context";
-import { Definition, DocumentSymbol, Hover, Location, Position, RemoteConsole } from "vscode-languageserver";
+import { Definition, DocumentSymbol, Hover, Location, Position, Range, RemoteConsole } from "vscode-languageserver";
 import { StatementVariableCstNode } from "../nodeclasses/statementVariables";
 import { TypeName } from "./typename";
 import { Identifier } from "./identifier";
@@ -139,6 +139,14 @@ export class ContextVariable extends Context {
 			return undefined;
 		}
 		return this._value?.contextAtPosition(position)
+			?? this;
+	}
+	
+	public contextAtRange(range: Range): Context | undefined {
+		if (!Helpers.isRangeInsideRange(this.range, range)) {
+			return undefined;
+		}
+		return this._value?.contextAtRange(range)
 			?? this;
 	}
 

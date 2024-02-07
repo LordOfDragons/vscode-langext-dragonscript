@@ -164,6 +164,10 @@ export class ContextScript extends Context{
 	public contextAtPosition(position: Position): Context | undefined {
 		return this.contextAtPositionList(this._statements, position) ?? this;
 	}
+	
+	public contextAtRange(range: Range): Context | undefined {
+		return this.contextAtRangeList(this._statements, range) ?? this;
+	}
 
 
 	public resolveClasses(state: ResolveState): void {

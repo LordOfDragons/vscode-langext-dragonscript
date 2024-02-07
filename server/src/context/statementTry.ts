@@ -23,7 +23,7 @@
  */
 
 import { Context } from "./context";
-import { DiagnosticRelatedInformation, DocumentSymbol, Hover, Location, Position, RemoteConsole } from "vscode-languageserver";
+import { DiagnosticRelatedInformation, DocumentSymbol, Hover, Location, Position, Range, RemoteConsole } from "vscode-languageserver";
 import { ContextStatements } from "./statements";
 import { StatementCatchCstNode, StatementTryCstNode } from "../nodeclasses/statementTry";
 import { TypeName } from "./typename";
@@ -119,6 +119,14 @@ export class ContextTryCatch extends Context {
 			return undefined;
 		}
 		return this._statements.contextAtPosition(position)
+			?? this;
+	}
+	
+	public contextAtRange(range: Range): Context | undefined {
+		if (!Helpers.isRangeInsideRange(this.range, range)) {
+			return undefined;
+		}
+		return this._statements.contextAtRange(range)
 			?? this;
 	}
 	
@@ -264,6 +272,15 @@ export class ContextTry extends Context {
 		}
 		return this._statements.contextAtPosition(position)
 			?? this.contextAtPositionList(this._catches, position)
+			?? this;
+	}
+	
+	public contextAtRange(range: Range): Context | undefined {
+		if (!Helpers.isRangeInsideRange(this.range, range)) {
+			return undefined;
+		}
+		return this._statements.contextAtRange(range)
+			?? this.contextAtRangeList(this._catches, range)
 			?? this;
 	}
 	

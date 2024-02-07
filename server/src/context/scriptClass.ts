@@ -223,6 +223,14 @@ export class ContextClass extends Context{
 		return this.contextAtPositionList(this._declarations, position)
 			?? this;
 	}
+	
+	public contextAtRange(range: Range): Context | undefined {
+		if (!Helpers.isRangeInsideRange(this.range, range)) {
+			return undefined;
+		}
+		return this.contextAtRangeList(this._declarations, range)
+			?? this;
+	}
 
 	public get fullyQualifiedName(): string {
 		let n = this.parent?.fullyQualifiedName || "";

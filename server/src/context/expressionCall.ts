@@ -870,6 +870,15 @@ export class ContextFunctionCall extends Context{
 			?? this;
 	}
 	
+	public contextAtRange(range: Range): Context | undefined {
+		if (!Helpers.isRangeInsideRange(this.range, range)) {
+			return undefined;
+		}
+		return this._object?.contextAtRange(range)
+			?? this.contextAtRangeList(this._arguments, range)
+			?? this;
+	}
+	
 	protected updateHover(position: Position): Hover | null {
 		if (this._name?.isPositionInside(position)) {
 			let content = [];

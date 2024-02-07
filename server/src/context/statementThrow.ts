@@ -89,6 +89,14 @@ export class ContextThrow extends Context{
 			?? this;
 	}
 	
+	public contextAtRange(range: Range): Context | undefined {
+		if (!Helpers.isRangeInsideRange(this.range, range)) {
+			return undefined;
+		}
+		return this._exception?.contextAtRange(range)
+			?? this;
+	}
+	
 	
 	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
 		if (this._exception) {

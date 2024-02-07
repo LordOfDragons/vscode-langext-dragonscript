@@ -188,6 +188,15 @@ export class ContextBlock extends Context{
 			?? this;
 	}
 	
+	public contextAtRange(range: Range): Context | undefined {
+		if (!Helpers.isRangeInsideRange(this.range, range)) {
+			return undefined;
+		}
+		return this.contextAtRangeList(this._arguments, range)
+			?? this._statements?.contextAtRange(range)
+			?? this;
+	}
+	
 	protected updateHover(position: Position): Hover | null {
 		if (Helpers.isPositionInsideToken(this._tokenBlock, position)) {
 			return new HoverInfo(this.resolveTextLong, Helpers.rangeFrom(this._tokenBlock));

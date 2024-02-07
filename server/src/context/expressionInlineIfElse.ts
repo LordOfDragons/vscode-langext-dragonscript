@@ -119,6 +119,16 @@ export class ContextInlineIfElse extends Context{
 			?? this;
 	}
 	
+	public contextAtRange(range: Range): Context | undefined {
+		if (!Helpers.isRangeInsideRange(this.range, range)) {
+			return undefined;
+		}
+		return this._condition.contextAtRange(range)
+			?? this._ifvalue.contextAtRange(range)
+			?? this._elsevalue.contextAtRange(range)
+			?? this;
+	}
+	
 	public completion(document: TextDocument, position: Position): CompletionItem[] {
 		const nc = this._node.children.more?.at(0)?.children;
 		const range = Range.create(position, position);

@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-import { CompletionItem, Definition, Diagnostic, DiagnosticRelatedInformation, DiagnosticSeverity, DocumentSymbol, Hover, Location, Position, Range, RemoteConsole, SignatureHelp, SymbolInformation, URI } from "vscode-languageserver";
+import { CodeAction, CompletionItem, Definition, Diagnostic, DiagnosticRelatedInformation, DiagnosticSeverity, DocumentSymbol, Hover, Location, Position, Range, RemoteConsole, SignatureHelp, SymbolInformation, URI } from "vscode-languageserver";
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
 import { capabilities, logError } from "../server";
 import { ResolveState } from "../resolve/state";
@@ -217,6 +217,20 @@ export class Context {
 		}
 		return undefined;
 	}
+
+	public contextAtRange(range: Range): Context | undefined {
+		return undefined;
+	}
+
+	protected contextAtRangeList(list: Context[], range: Range): Context | undefined {
+		for (const each of list) {
+			const context = each.contextAtRange(range);
+			if (context) {
+				return context;
+			}
+		}
+		return undefined;
+	}
 	
 	public resolvedAtPosition(position: Position): Resolved | undefined {
 		return undefined;
@@ -224,6 +238,10 @@ export class Context {
 	
 	public signatureHelpAtPosition(position: Position): SignatureHelp | undefined {
 		return undefined;
+	}
+	
+	public codeAction(range: Range): CodeAction[] {
+		return [];
 	}
 	
 	public referenceFor(usage: ResolveUsage): Location | undefined {

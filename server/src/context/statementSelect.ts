@@ -110,6 +110,15 @@ export class ContextSelectCase extends Context {
 			?? this;
 	}
 	
+	public contextAtRange(range: Range): Context | undefined {
+		if (!Helpers.isRangeInsideRange(this.range, range)) {
+			return undefined;
+		}
+		return this.contextAtRangeList(this._values, range)
+			?? this._statements.contextAtRange(range)
+			?? this;
+	}
+	
 	public collectChildDocSymbols(list: DocumentSymbol[]) {
 		super.collectChildDocSymbols(list);
 		for (const each of this._values) {
@@ -242,6 +251,16 @@ export class ContextSelect extends Context {
 		return this._value.contextAtPosition(position)
 			?? this.contextAtPositionList(this._cases, position)
 			?? this._elsestatements?.contextAtPosition(position)
+			?? this;
+	}
+	
+	public contextAtRange(range: Range): Context | undefined {
+		if (!Helpers.isRangeInsideRange(this.range, range)) {
+			return undefined;
+		}
+		return this._value.contextAtRange(range)
+			?? this.contextAtRangeList(this._cases, range)
+			?? this._elsestatements?.contextAtRange(range)
 			?? this;
 	}
 	

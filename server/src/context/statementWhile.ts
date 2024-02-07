@@ -24,7 +24,7 @@
 
 import { Context } from "./context";
 import { StatementWhileCstNode } from "../nodeclasses/statementWhile";
-import { DocumentSymbol, Position, RemoteConsole } from "vscode-languageserver";
+import { DocumentSymbol, Position, Range, RemoteConsole } from "vscode-languageserver";
 import { ContextBuilder } from "./contextBuilder";
 import { ContextStatements } from "./statements";
 import { ResolveState } from "../resolve/state";
@@ -94,6 +94,15 @@ export class ContextWhile extends Context{
 		}
 		return this._condition.contextAtPosition(position)
 			?? this._statements.contextAtPosition(position)
+			?? this;
+	}
+	
+	public contextAtRange(range: Range): Context | undefined {
+		if (!Helpers.isRangeInsideRange(this.range, range)) {
+			return undefined;
+		}
+		return this._condition.contextAtRange(range)
+			?? this._statements.contextAtRange(range)
 			?? this;
 	}
 	

@@ -121,6 +121,14 @@ export class ContextStatements extends Context{
 			?? this;
 	}
 	
+	public contextAtRange(range: Range): Context | undefined {
+		if (!Helpers.isRangeInsideRange(this.range, range)) {
+			return undefined;
+		}
+		return this.contextAtRangeList(this._statements, range)
+			?? this;
+	}
+	
 	public completion(_document: TextDocument, position: Position): CompletionItem[] {
 		return CompletionHelper.createStatement(Range.create(position, position), this);
 	}

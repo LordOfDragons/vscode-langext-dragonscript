@@ -165,6 +165,18 @@ export class ContextFor extends Context{
 			?? this;
 	}
 	
+	public contextAtRange(range: Range): Context | undefined {
+		if (!Helpers.isRangeInsideRange(this.range, range)) {
+			return undefined;
+		}
+		return this._variable.contextAtRange(range)
+			?? this._from.contextAtRange(range)
+			?? this._to.contextAtRange(range)
+			?? this._step?.contextAtRange(range)
+			?? this._statements.contextAtRange(range)
+			?? this;
+	}
+	
 	public collectChildDocSymbols(list: DocumentSymbol[]) {
 		super.collectChildDocSymbols(list);
 		this._variable?.collectChildDocSymbols(list);

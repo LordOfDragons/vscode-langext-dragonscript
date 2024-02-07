@@ -104,6 +104,13 @@ export class ContextFunctionArgument extends Context{
 		return this;
 	}
 	
+	public contextAtRange(range: Range): Context | undefined {
+		if (!Helpers.isRangeInsideRange(this.range, range)) {
+			return undefined;
+		}
+		return this;
+	}
+	
 	protected updateHover(position: Position): Hover | null {
 		if (this._name.isPositionInside(position)) {
 			return new HoverInfo(this.resolveTextLong, this._name.range);

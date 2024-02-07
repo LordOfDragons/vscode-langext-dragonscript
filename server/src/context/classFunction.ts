@@ -398,6 +398,16 @@ export class ContextFunction extends Context{
 			?? this._statements?.contextAtPosition(position)
 			?? this;
 	}
+	
+	public contextAtRange(range: Range): Context | undefined {
+		if (!Helpers.isRangeInsideRange(this.range, range)) {
+			return undefined;
+		}
+		return this.contextAtRangeList(this._arguments, range)
+			?? this._superCall?.contextAtRange(range)
+			?? this._statements?.contextAtRange(range)
+			?? this;
+	}
 
 	protected updateHover(position: Position): Hover | null {
 		if (this._name?.isPositionInside(position)) {

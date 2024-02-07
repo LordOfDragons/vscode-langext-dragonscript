@@ -24,7 +24,7 @@
 
 import { Context } from "./context";
 import { StatementElifCstNode, StatementIfCstNode } from "../nodeclasses/statementIf";
-import { DocumentSymbol, Position, RemoteConsole } from "vscode-languageserver";
+import { DocumentSymbol, Position, Range, RemoteConsole } from "vscode-languageserver";
 import { ContextBuilder } from "./contextBuilder";
 import { ContextStatements } from "./statements";
 import { Helpers } from "../helpers";
@@ -90,6 +90,15 @@ export class ContextIfElif extends Context {
 		}
 		return this._condition.contextAtPosition(position)
 			?? this._statements.contextAtPosition(position)
+			?? this;
+	}
+	
+	public contextAtRange(range: Range): Context | undefined {
+		if (!Helpers.isRangeInsideRange(this.range, range)) {
+			return undefined;
+		}
+		return this._condition.contextAtRange(range)
+			?? this._statements.contextAtRange(range)
 			?? this;
 	}
 	
@@ -205,6 +214,17 @@ export class ContextIf extends Context {
 			?? this._ifstatements.contextAtPosition(position)
 			?? this.contextAtPositionList(this._elif, position)
 			?? this._elsestatements?.contextAtPosition(position)
+			?? this;
+	}
+	
+	public contextAtRange(range: Range): Context | undefined {
+		if (!Helpers.isRangeInsideRange(this.range, range)) {
+			return undefined;
+		}
+		return this._condition.contextAtRange(range)
+			?? this._ifstatements.contextAtRange(range)
+			?? this.contextAtRangeList(this._elif, range)
+			?? this._elsestatements?.contextAtRange(range)
 			?? this;
 	}
 	

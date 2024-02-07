@@ -125,6 +125,14 @@ export class ContextReturn extends Context{
 			?? this;
 	}
 	
+	public contextAtRange(range: Range): Context | undefined {
+		if (!Helpers.isRangeInsideRange(this.range, range)) {
+			return undefined;
+		}
+		return this._value?.contextAtRange(range)
+			?? this;
+	}
+	
 	protected updateHover(position: Position): Hover | null {
 		return null;
 	}

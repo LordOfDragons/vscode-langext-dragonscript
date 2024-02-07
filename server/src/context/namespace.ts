@@ -108,6 +108,14 @@ export class ContextNamespace extends Context{
 		return this.contextAtPositionList(this._statements, position)
 			?? this;
 	}
+	
+	public contextAtRange(range: Range): Context | undefined {
+		if (!Helpers.isRangeInsideRange(this.range, range)) {
+			return undefined;
+		}
+		return this.contextAtRangeList(this._statements, range)
+			?? this;
+	}
 
 
 	public nextNamespace(namespace: ContextNamespace): void {
