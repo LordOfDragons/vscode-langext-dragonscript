@@ -34,12 +34,17 @@ import { ContextRequiresPackage } from "./requiresPackage";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { ResolveState } from "../resolve/state";
 import { CompletionHelper } from "../completionHelper";
+import { ContextDocumentation } from "./documentation";
+import { ScriptDocument } from "../scriptDocument";
+import { ContextComment } from "./comment";
 
 
 /** Top level script context. */
 export class ContextScript extends Context{
 	protected _node: ScriptCstNode;
 	protected _statements: Context[] = [];
+	protected _documentations: ContextDocumentation[] = [];
+	protected _comments: ContextComment[] = [];
 	protected _requires: ContextRequiresPackage[] = [];
 	protected _namespaces: ContextNamespace[] = [];
 	public documentSymbols: DocumentSymbol[] = [];
@@ -47,9 +52,9 @@ export class ContextScript extends Context{
 	public uri?: URI;
 
 
-	constructor(node: ScriptCstNode, textDocument?: TextDocument, lineCount?: number) {
+	constructor(document: ScriptDocument, textDocument?: TextDocument, lineCount?: number) {
 		super(Context.ContextType.Script);
-		this._node = node;
+		this._node = document.node!;
 		
 		let lastPosition = textDocument
 			? textDocument.positionAt(textDocument.getText().length)
@@ -59,8 +64,8 @@ export class ContextScript extends Context{
 		var statements = this._statements;
 		var parentContext: Context = this;
 
-		if (node.children.scriptStatement) {
-			for (const each of node.children.scriptStatement) {
+		if (this._node.children.scriptStatement) {
+			for (const each of this._node.children.scriptStatement) {
 				this.ignoreException(() => {
 					let c = each.children;
 
@@ -105,6 +110,14 @@ export class ContextScript extends Context{
 			}
 		}
 		
+		for (const each of document.documentationTokens) {
+			this._documentations.push(new ContextDocumentation(each));
+		}
+		
+		for (const each of document.commentTokens) {
+			this._comments.push(new ContextComment(each));
+		}
+		
 		for (const each of this._namespaces) {
 			each.addChildDocumentSymbols(each.statements);
 		}
@@ -119,6 +132,12 @@ export class ContextScript extends Context{
 	public dispose(): void {
 		super.dispose();
 		for (const each of this._statements) {
+			each.dispose();
+		}
+		for (const each of this._documentations) {
+			each.dispose();
+		}
+		for (const each of this._comments) {
 			each.dispose();
 		}
 	}
@@ -154,6 +173,14 @@ export class ContextScript extends Context{
 		return found;
 	}
 	
+	public get documentations(): ContextDocumentation[] {
+		return this._documentations;
+	}
+	
+	public get comments(): ContextComment[] {
+		return this._comments;
+	}
+	
 	public collectWorkspaceSymbols(list: SymbolInformation[]): void {
 		super.collectWorkspaceSymbols(list);
 		for (const each of this._statements) {
@@ -162,11 +189,17 @@ export class ContextScript extends Context{
 	}
 	
 	public contextAtPosition(position: Position): Context | undefined {
-		return this.contextAtPositionList(this._statements, position) ?? this;
+		return this.contextAtPositionList(this._documentations, position)
+			?? this.contextAtPositionList(this._comments, position)
+			?? this.contextAtPositionList(this._statements, position)
+			?? this;
 	}
 	
 	public contextAtRange(range: Range): Context | undefined {
-		return this.contextAtRangeList(this._statements, range) ?? this;
+		return this.contextAtRangeList(this._documentations, range)
+			?? this.contextAtRangeList(this._comments, range)
+			?? this.contextAtRangeList(this._statements, range)
+			?? this;
 	}
 
 

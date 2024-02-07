@@ -424,6 +424,7 @@ export namespace Context {
 		Group,
 		Error,
 		Documentation,
+		Comment,
 		Generic
 	}
 

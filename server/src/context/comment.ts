@@ -28,12 +28,12 @@ import { Helpers } from "../helpers";
 import { Context } from "./context";
 
 
-export class ContextDocumentation extends Context{
+export class ContextComment extends Context{
 	protected _token: IToken;
 	
 	
 	constructor(token: IToken) {
-		super(Context.ContextType.Documentation);
+		super(Context.ContextType.Comment);
 		this._token = token;
 		this.range = Helpers.rangeFrom(token);
 	}
@@ -60,6 +60,6 @@ export class ContextDocumentation extends Context{
 	
 	
 	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
-		console.log(`${prefix}Documentation`);
+		console.log(`${prefix}Comment`);
 	}
 }

@@ -65,18 +65,16 @@ export class ScriptValidator {
 		await this.doRequires(scriptDocument, scriptDocument.diagnosticsLexer);
 		const lexed = this.doLex(textDocument, scriptDocument.settings, scriptDocument.diagnosticsLexer);
 		scriptDocument.node = this.doParse(textDocument, scriptDocument.settings, lexed, scriptDocument.diagnosticsLexer);
-		for (const each of lexed.groups['documentation']) {
-			scriptDocument.documentations.push(new ContextDocumentation(each));
-		}
+		scriptDocument.documentationTokens.push(...lexed.groups['documentation']);
+		scriptDocument.commentTokens.push(...lexed.groups['comments']);
 	}
 
 	public async parseLog(scriptDocument: ScriptDocument, text: string, logs: string[]): Promise<void> {
 		await this.doRequiresLog(scriptDocument, logs);
 		const lexed = this.doLexLog(scriptDocument, text, scriptDocument.settings, logs);
 		scriptDocument.node = this.doParseLog(scriptDocument, scriptDocument.settings, lexed, logs);
-		for (const each of lexed.groups['documentation']) {
-			scriptDocument.documentations.push(new ContextDocumentation(each));
-		}
+		scriptDocument.documentationTokens.push(...lexed.groups['documentation']);
+		scriptDocument.commentTokens.push(...lexed.groups['comments']);
 	}
 
 

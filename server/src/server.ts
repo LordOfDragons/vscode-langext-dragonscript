@@ -316,7 +316,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	
 	if (scriptDocument.node) {
 		try {
-			scriptDocument.context = new ContextScript(scriptDocument.node, textDocument);
+			scriptDocument.context = new ContextScript(scriptDocument, textDocument);
 			scriptDocument.context.uri = textDocument.uri;
 		} catch (error) {
 			logError(error);

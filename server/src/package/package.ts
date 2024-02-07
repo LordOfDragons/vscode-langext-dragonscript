@@ -191,7 +191,7 @@ export class Package {
 		if (scriptDocument.node) {
 			let lineCount = (text.match(/\n/g) || '').length + 1;
 			try {
-				scriptDocument.context = new ContextScript(scriptDocument.node, undefined, lineCount);
+				scriptDocument.context = new ContextScript(scriptDocument, undefined, lineCount);
 				scriptDocument.context.uri = uri;
 			} catch (error) {
 				this._console.error(`Package '${this._id}': Failed syntax '${path}'`);
