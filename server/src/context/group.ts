@@ -23,7 +23,7 @@
  */
 
 import { Context } from "./context";
-import { CompletionItem, DocumentSymbol, Position, Range, RemoteConsole } from "vscode-languageserver";
+import { CompletionItem, DocumentSymbol, Position, Range, RemoteConsole, SignatureHelp } from "vscode-languageserver";
 import { ContextBuilder } from "./contextBuilder";
 import { ResolveState } from "../resolve/state";
 import { Helpers } from "../helpers";
@@ -97,6 +97,10 @@ export class ContextGroup extends Context{
 	
 	public expectTypes(_context: Context): ResolveType[] | undefined {
 		return this._expression.expectTypes(this);
+	}
+	
+	public signatureHelpAtPosition(position: Position): SignatureHelp | undefined {
+		return this.parent?.signatureHelpAtPosition(position);
 	}
 	
 	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {

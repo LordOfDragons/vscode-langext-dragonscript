@@ -23,7 +23,7 @@
  */
 
 import { Context } from "./context";
-import { CompletionItem, DocumentSymbol, Position, Range, RemoteConsole } from "vscode-languageserver";
+import { CompletionItem, DocumentSymbol, Position, Range, RemoteConsole, SignatureHelp } from "vscode-languageserver";
 import { ContextBuilder } from "./contextBuilder";
 import { ExpressionInlineIfElseCstNode } from "../nodeclasses/expressionInlineIfElse";
 import { ResolveState } from "../resolve/state";
@@ -153,6 +153,10 @@ export class ContextInlineIfElse extends Context{
 			}
 		}
 		return super.expectTypes(context);
+	}
+	
+	public signatureHelpAtPosition(position: Position): SignatureHelp | undefined {
+		return this.parent?.signatureHelpAtPosition(position);
 	}
 	
 	

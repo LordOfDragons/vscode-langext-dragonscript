@@ -59,7 +59,7 @@ export class ContextSelectCase extends Context {
 		this._statements = new ContextStatements(node.children.statements?.at(0), parent);
 		
 		const tokBegin = node.children.case[0];
-		posEnd = Helpers.endOfCommandBegin(node.children.endOfCommand) ?? this._statements.range?.end ?? posEnd;
+		posEnd = this._statements.range?.end ?? Helpers.endOfCommandBegin(node.children.endOfCommand);
 		
 		if (posEnd) {
 			this.range = Helpers.rangeFromPosition(Helpers.positionFrom(tokBegin), posEnd);

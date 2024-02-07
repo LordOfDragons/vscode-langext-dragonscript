@@ -973,7 +973,7 @@ export class DSParser extends CstParser{
 		this.CONSUME(DSLexer.tokenIdentifier, {LABEL: "name"})
 		this.OPTION(() => this.SUBRULE(this.functionCall))
 	})
-
+	
 	public functionCall = this.RULE("functionCall", () => {
 		this.CONSUME(DSLexer.tokenLParan)
 		this.MANY_SEP({

@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-import { CompletionItem, Definition, Diagnostic, DiagnosticRelatedInformation, DiagnosticSeverity, DocumentSymbol, Hover, Location, Position, Range, RemoteConsole, SymbolInformation, URI } from "vscode-languageserver";
+import { CompletionItem, Definition, Diagnostic, DiagnosticRelatedInformation, DiagnosticSeverity, DocumentSymbol, Hover, Location, Position, Range, RemoteConsole, SignatureHelp, SymbolInformation, URI } from "vscode-languageserver";
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
 import { capabilities, logError } from "../server";
 import { ResolveState } from "../resolve/state";
@@ -219,6 +219,10 @@ export class Context {
 	}
 	
 	public resolvedAtPosition(position: Position): Resolved | undefined {
+		return undefined;
+	}
+	
+	public signatureHelpAtPosition(position: Position): SignatureHelp | undefined {
 		return undefined;
 	}
 	

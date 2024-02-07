@@ -23,7 +23,7 @@
  */
 
 import { Context } from "./context";
-import { CompletionItem, Definition, DocumentSymbol, Hover, Location, Position, Range, RemoteConsole, SymbolKind } from "vscode-languageserver";
+import { CompletionItem, Definition, DocumentSymbol, Hover, Location, Position, Range, RemoteConsole, SignatureHelp, SymbolKind } from "vscode-languageserver";
 import { ExpressionBlockCstNode } from "../nodeclasses/expressionBlock";
 import { ContextFunctionArgument } from "./classFunctionArgument";
 import { ContextStatements } from "./statements";
@@ -259,6 +259,10 @@ export class ContextBlock extends Context{
 	
 	public completion(_document: TextDocument, position: Position): CompletionItem[] {
 		return CompletionHelper.createType(Range.create(position, position), this);
+	}
+	
+	public signatureHelpAtPosition(position: Position): SignatureHelp | undefined {
+		return this.parent?.signatureHelpAtPosition(position);
 	}
 	
 	

@@ -23,7 +23,7 @@
  */
 
 import { Context } from "./context";
-import { CompletionItem, Definition, DiagnosticRelatedInformation, DocumentSymbol, Hover, integer, Location, Position, Range, RemoteConsole } from "vscode-languageserver";
+import { CompletionItem, Definition, DiagnosticRelatedInformation, DocumentSymbol, Hover, integer, Location, Position, Range, RemoteConsole, SignatureHelp, SignatureInformation } from "vscode-languageserver";
 import { ContextBuilder } from "./contextBuilder";
 import { Identifier } from "./identifier";
 import { ExpressionAdditionCstNode } from "../nodeclasses/expressionAddition";
@@ -69,10 +69,12 @@ export class ContextFunctionCall extends Context{
 	protected _arguments: Context[];
 	protected _castType?: TypeName;
 	protected _functionType: ContextFunctionCall.FunctionType = ContextFunctionCall.FunctionType.function;
+	protected _argCommaPos: Position[];
 	
 	private _matches: ResolveSearch | undefined;
 	private _matchFunction?: ResolveFunction;
 	protected _resolveUsage?: ResolveUsage;
+	protected _resolveSignature?: ResolveSignature;
 	
 	
 	protected constructor(node: ExpressionAdditionCstNode | ExpressionBitOperationCstNode
@@ -87,6 +89,7 @@ export class ContextFunctionCall extends Context{
 		this._moreIndex = moreIndex;
 		this._operator = false;
 		this._arguments = [];
+		this._argCommaPos = [];
 	}
 
 	public static newAddition(node: ExpressionAdditionCstNode, parent: Context): ContextFunctionCall {
@@ -318,6 +321,7 @@ export class ContextFunctionCall extends Context{
 				if (fc.rightParanthesis) {
 					endPosition = Helpers.positionFrom(fc.rightParanthesis[0], false);
 				}
+				cfc.findArgCommaPos(member.functionCall[0]);
 			}
 		}
 		
@@ -349,6 +353,7 @@ export class ContextFunctionCall extends Context{
 			if (fc.rightParanthesis) {
 				endPosition = Helpers.positionFrom(fc.rightParanthesis[0], false);
 			}
+			cfc.findArgCommaPos(node.children.functionCall[0]);
 		}
 		
 		cfc.updateRange(endPosition);
@@ -450,6 +455,7 @@ export class ContextFunctionCall extends Context{
 				if (ac.range) {
 					endPosition = ac.range.end;
 				}
+				cfc.findArgCommaPos(node);
 			}
 		}
 		
@@ -562,10 +568,11 @@ export class ContextFunctionCall extends Context{
 				break;
 		}
 		
-		this._matches.signature = new ResolveSignature();
+		this._resolveSignature = new ResolveSignature();
 		for (const each of this._arguments) {
-			this._matches.signature.addArgument(each.expressionType, undefined, each.expressionAutoCast);
+			this._resolveSignature.addArgument(each.expressionType, undefined, each.expressionAutoCast);
 		}
+		this._matches.signature = this._resolveSignature;
 		
 		if (this._matches.name) {
 			if (objtype) {
@@ -1058,6 +1065,14 @@ export class ContextFunctionCall extends Context{
 		}
 	}
 	
+	protected findArgCommaPos(node: FunctionCallCstNode): void {
+		if (node.children.comma) {
+			for (const each of node.children.comma) {
+				this._argCommaPos.push(Helpers.positionFrom(each));
+			}
+		}
+	}
+	
 	public resolvedAtPosition(position: Position): Resolved | undefined {
 		if (this._castType?.isPositionInside(position)) {
 			return this._castType.resolve?.resolved;
@@ -1075,6 +1090,125 @@ export class ContextFunctionCall extends Context{
 	
 	public get referenceSelf(): Location | undefined {
 		return this.resolveLocation(this._name?.range);
+	}
+	
+	public signatureHelpAtPosition(position: Position): SignatureHelp | undefined {
+		if (!this._name?.range) {
+			return this.parent?.signatureHelpAtPosition(position);
+		}
+		
+		let objtype: ResolveType | undefined;
+		if (this._object) {
+			objtype = this._object.expressionType
+			if (!objtype) {
+				return this.parent?.signatureHelpAtPosition(position);
+			}
+		}
+		
+		if (!Helpers.isPositionAfter(position, this._name.range?.end)) {
+			return this.parent?.signatureHelpAtPosition(position);
+		}
+		
+		let matches = new ResolveSearch();
+		if (this._functionType === ContextFunctionCall.FunctionType.functionSuper) {
+			matches.name = 'new';
+		} else {
+			matches.name = this._name.name;
+		}
+		matches.onlyFunctions = true;
+		matches.ignoreShadowedFunctions = true;
+		matches.stopAfterFirstFullMatch = false;
+		
+		switch (this._functionType) {
+			case ContextFunctionCall.FunctionType.function:
+				matches.searchSuperClasses = this._name.name != 'new';
+				break;
+				
+			case ContextFunctionCall.FunctionType.functionSuper:
+				matches.searchSuperClasses = false;
+				break;
+		}
+		
+		if (objtype) {
+			objtype.search(matches);
+		} else if (this._functionType === ContextFunctionCall.FunctionType.functionSuper) {
+			let pc = ContextClass.thisContext(this);
+			if (this._name.name == 'this') {
+				pc?.resolveClass?.search(matches);
+			} else {
+				(pc?.extends?.resolve?.resolved as ResolveType)?.search(matches);
+			}
+		} else {
+			ContextClass.thisContext(this)?.search(matches, this);
+		}
+		
+		let siginfo: SignatureInformation[] = [];
+		var activeSignature: number | null = null;
+		var activeParameter: number | null = null;
+		
+		for (const each of matches.functionsAll) {
+			siginfo.push(each.createSignatureInformation());
+		}
+		
+		if (siginfo.length > 0) {
+			const argLen = this._resolveSignature?.arguments.length ?? 0;
+			var bestFullMatch: ResolveFunction | undefined;
+			var bestPartialMatch: ResolveFunction | undefined;
+			var bestWildcardMatch: ResolveFunction | undefined;
+			var bestNoMatch: ResolveFunction | undefined;
+			
+			for (const each of matches.functionsAll) {
+				var matchResult = ResolveSignature.Match.No;
+				if (this._resolveSignature) {
+					matchResult = this._resolveSignature.matches(each.signature);
+				}
+				
+				switch (matchResult) {
+				case ResolveSignature.Match.Full:
+					if (!bestFullMatch || (
+							bestFullMatch.signature.arguments.length != argLen
+							&& each.signature.arguments.length == argLen)) {
+						bestFullMatch = each;
+					}
+					break;
+					
+				case ResolveSignature.Match.Partial:
+					if (!bestPartialMatch || (
+						bestPartialMatch.signature.arguments.length != argLen
+						&& each.signature.arguments.length == argLen)) {
+						bestPartialMatch = each;
+					}
+					break;
+					
+				case ResolveSignature.Match.Wildcard:
+					if (!bestWildcardMatch || (
+						bestWildcardMatch.signature.arguments.length != argLen
+						&& each.signature.arguments.length == argLen)) {
+						bestWildcardMatch = each;
+					}
+					break;
+					
+				case ResolveSignature.Match.No:
+					if (!bestNoMatch || (
+						bestNoMatch.signature.arguments.length != argLen
+						&& each.signature.arguments.length == argLen)) {
+						bestNoMatch = each;
+					}
+					break;
+				}
+			}
+			
+			const bestAll = bestFullMatch ?? bestPartialMatch ?? bestWildcardMatch ?? bestNoMatch;
+			if (bestAll) {
+				activeSignature = matches.functionsAll.indexOf(bestAll);
+			}
+			
+			if (activeSignature !== null) {
+				activeParameter = this._argCommaPos.findIndex(c => Helpers.isPositionAfter(position, c)) + 1;
+			}
+		}
+		
+		return {signatures: siginfo, activeSignature: activeSignature, activeParameter: activeParameter};
 	}
 	
 	

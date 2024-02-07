@@ -23,7 +23,7 @@
  */
 
 import { Context } from "./context";
-import { CompletionItem, Hover, Position, Range, RemoteConsole } from "vscode-languageserver";
+import { CompletionItem, Hover, Position, Range, RemoteConsole, SignatureHelp } from "vscode-languageserver";
 import { ExpressionConstantCstNode } from "../nodeclasses/expressionObject";
 import { Identifier } from "./identifier";
 import { ResolveState } from "../resolve/state";
@@ -257,6 +257,10 @@ export class ContextConstant extends Context{
 	public completion(_document: TextDocument, position: Position): CompletionItem[] {
 		const range = this._name?.range ?? Range.create(position, position);
 		return CompletionHelper.createStatementOrExpression(range, this);
+	}
+	
+	public signatureHelpAtPosition(position: Position): SignatureHelp | undefined {
+		return this.parent?.signatureHelpAtPosition(position);
 	}
 	
 	

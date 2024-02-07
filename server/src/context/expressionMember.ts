@@ -23,7 +23,7 @@
  */
 
 import { Context } from "./context";
-import { CompletionItem, Definition, DiagnosticRelatedInformation, Hover, integer, Location, Position, Range, RemoteConsole } from "vscode-languageserver";
+import { CompletionItem, Definition, DiagnosticRelatedInformation, Hover, integer, Location, Position, Range, RemoteConsole, SignatureHelp } from "vscode-languageserver";
 import { ContextBuilder } from "./contextBuilder";
 import { Identifier } from "./identifier";
 import { ExpressionMemberCstNode, ExpressionObjectCstNode } from "../nodeclasses/expressionObject";
@@ -372,6 +372,10 @@ export class ContextMember extends Context{
 	
 	public get referenceSelf(): Location | undefined {
 		return this.resolveLocation(this._name?.range);
+	}
+	
+	public signatureHelpAtPosition(position: Position): SignatureHelp | undefined {
+		return this.parent?.signatureHelpAtPosition(position);
 	}
 	
 	

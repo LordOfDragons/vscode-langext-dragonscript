@@ -43,7 +43,9 @@ import {
 	ReferenceParams,
 	DocumentHighlightParams,
 	DocumentHighlight,
-	DocumentHighlightKind} from 'vscode-languageserver/node'
+	DocumentHighlightKind,
+	SignatureHelpParams,
+	SignatureHelp} from 'vscode-languageserver/node'
 
 import {
 	TextDocument, TextEdit
@@ -140,7 +142,11 @@ connection.onInitialize((params: InitializeParams) => {
 			definitionProvider: true,
 			workspaceSymbolProvider: true,
 			referencesProvider: true,
-			documentHighlightProvider: true
+			documentHighlightProvider: true,
+			signatureHelpProvider: {
+				triggerCharacters: ['('],
+				retriggerCharacters: [',']
+			}
 		}
 	};
 	
@@ -519,6 +525,14 @@ connection.onDocumentHighlight(
 		}
 		
 		return hilight;
+	}
+)
+
+connection.onSignatureHelp(
+	(params: SignatureHelpParams): SignatureHelp | undefined => {
+		return scriptDocuments.get(params.textDocument.uri)?.context?.
+			contextAtPosition(params.position)?.
+			signatureHelpAtPosition(params.position);
 	}
 )
 

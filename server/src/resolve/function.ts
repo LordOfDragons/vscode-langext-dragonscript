@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-import { CompletionItem, CompletionItemKind, DiagnosticRelatedInformation, InsertTextFormat, Location, Position, Range, TextEdit } from 'vscode-languageserver';
+import { CompletionItem, CompletionItemKind, DiagnosticRelatedInformation, InsertTextFormat, integer, Location, ParameterInformation, Position, Range, SignatureInformation, TextEdit } from 'vscode-languageserver';
 import { ContextFunction } from '../context/classFunction';
 import { Context } from '../context/context';
 import { ContextBlock } from '../context/expressionBlock';
@@ -187,6 +187,7 @@ export class ResolveFunction extends Resolved{
 				case ContextFunction.Type.Destructor:
 					title = 'destructor';
 					text = text + '()';
+					label = `💣 ${label}`;
 					break;
 					
 				case ContextFunction.Type.Operator:
@@ -205,6 +206,7 @@ export class ResolveFunction extends Resolved{
 			case Context.ContextType.Block:
 				title = 'block';
 				text = text + this.createSnippetSignature();
+				label = `📦 ${label}`;
 				break;
 				
 			default:
@@ -245,6 +247,74 @@ export class ResolveFunction extends Resolved{
 		}
 		snippet.push(')');
 		return snippet.join('');
+	}
+	
+	public createSignatureInformation(): SignatureInformation {
+		var paraminfo: ParameterInformation[] = [];
+		var text = this._name;
+		
+		if (this._context) {
+			switch (this._context.type) {
+			case Context.ContextType.Function:{
+				const ct = this._context as ContextFunction;
+				switch (ct.functionType) {
+				case ContextFunction.Type.Constructor:
+					text = `constructor ${text}(`;
+					text = text + this.createSignatureInformationParameters(text, paraminfo);
+					text = text + ')';
+					break;
+					
+				case ContextFunction.Type.Destructor:
+					text = `destructor ${text}()`;
+					break;
+					
+				case ContextFunction.Type.Operator:
+					text = `operator ${text} `;
+					text = text + this.createSignatureInformationParameters(text, paraminfo);
+					break;
+					
+				default:
+					text = text + '(';
+					text = text + this.createSignatureInformationParameters(text, paraminfo);
+					text = text + ')';
+					break;
+				}
+				}break;
+				
+			case Context.ContextType.Block:
+				text = `block ${text}(`;
+				text = text + this.createSignatureInformationParameters(text, paraminfo);
+				text = text + ')';
+			break;
+			}
+		} else {
+			text = this._name;
+		}
+		
+		let siginfo = SignatureInformation.create(text);
+		siginfo.parameters = paraminfo;
+		return siginfo;
+	}
+	
+	public createSignatureInformationParameters(text: string, paraminfo: ParameterInformation[]): string {
+		const offset = text.length;
+		var first = true;
+		var added = '';
+		
+		for (const each of this._signature.arguments) {
+			if (first) {
+				first = false;
+			} else {
+				added = added + ', ';
+			}
+			
+			var offsetBegin = offset + added.length;
+			added = `${added}${each.type?.name} ${each.name}`;
+			var offsetEnd = offset + added.length;
+			
+			paraminfo.push(ParameterInformation.create([offsetBegin, offsetEnd]));
+		}
+		return added;
 	}
 	
 	public static filterTypemodOverride: Set<Context.TypeModifier> = new Set<Context.TypeModifier>([
