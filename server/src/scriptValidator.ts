@@ -64,12 +64,14 @@ export class ScriptValidator {
 		await this.doRequires(scriptDocument, scriptDocument.diagnosticsLexer);
 		const lexed = this.doLex(textDocument, scriptDocument.settings, scriptDocument.diagnosticsLexer);
 		scriptDocument.node = this.doParse(textDocument, scriptDocument.settings, lexed, scriptDocument.diagnosticsLexer);
+		scriptDocument.tokensDocumentation.push(...lexed.groups['documentation']);
 	}
 
 	public async parseLog(scriptDocument: ScriptDocument, text: string, logs: string[]): Promise<void> {
 		await this.doRequiresLog(scriptDocument, logs);
 		const lexed = this.doLexLog(scriptDocument, text, scriptDocument.settings, logs);
 		scriptDocument.node = this.doParseLog(scriptDocument, scriptDocument.settings, lexed, logs);
+		scriptDocument.tokensDocumentation.push(...lexed.groups['documentation']);
 	}
 
 
@@ -171,7 +173,7 @@ export class ScriptValidator {
 			lexed: ILexingResult, logs: string[]): ScriptCstNode {
 		this._parser.input = lexed.tokens;
 		const node = this._parser.script() as ScriptCstNode;
-
+		
 		for (const error of this._parser.errors.slice(0, settings.maxNumberOfProblems)) {
 			logs.push(`[EE] ${document.uri}:? : ${error.message}`);
 		}

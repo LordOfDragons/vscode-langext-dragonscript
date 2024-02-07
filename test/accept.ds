@@ -83,6 +83,11 @@ interface InterfaceExtend implements ActionListener, ColliderListener
 	func int extendedFunction(int argument)
 end
 
+/**
+ * \brief Documentation of OuterClass.
+ * 
+ * Details of OuterClass documentation.
+ */
 public class OuterClass extends ClassExtendImplement
 	protected class InnerClass
 	end
@@ -116,6 +121,11 @@ public class OuterClass extends ClassExtendImplement
 		return value1 + value2
 	end
 	
+	/**
+	 * \brief Documentation of OuterClass constructor.
+	 * 
+	 * Details about constructor function.
+	 */
 	public func new( String arg1, bool arg2 ) super( arg1, arg2 )
 		this.pMember1 = ( arg1 + SimpleEnum.entry1.order() * ( arg2 cast int )++ ).toInt()
 		pMember2 = null
