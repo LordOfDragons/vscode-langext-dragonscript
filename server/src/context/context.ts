@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-import { CodeAction, CompletionItem, Definition, Diagnostic, DiagnosticRelatedInformation, DiagnosticSeverity, DocumentSymbol, Hover, Location, Position, Range, RemoteConsole, SignatureHelp, SymbolInformation, URI } from "vscode-languageserver";
+import { CodeAction, CompletionItem, Definition, Diagnostic, DiagnosticRelatedInformation, DiagnosticSeverity, DocumentSymbol, Hover, integer, Location, Position, Range, RemoteConsole, SignatureHelp, SymbolInformation, URI } from "vscode-languageserver";
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
 import { capabilities, logError } from "../server";
 import { ResolveState } from "../resolve/state";
@@ -32,6 +32,7 @@ import { ResolveSearch } from "../resolve/search";
 import { ResolveSignature, ResolveSignatureArgument } from "../resolve/signature";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { Resolved, ResolveUsage } from "../resolve/resolved";
+import { ContextDocumentation, ContextDocumentationIterator } from "./documentation";
 
 
 /** Base context. */
@@ -49,6 +50,7 @@ export class Context {
 	protected _resolveTextLong?: string[];
 	protected _reportInfoText?: string;
 	private static _defaultTypeModifiers?: Context.TypeModifierSet;
+	public documentation?: ContextDocumentation;
 	
 
 	constructor(type: Context.ContextType, parent?: Context) {
@@ -61,6 +63,7 @@ export class Context {
 		this.parent = undefined;
 		this.expressionType = undefined;
 		this.expressionAutoCast = Context.AutoCast.No;
+		this.documentation = undefined;
 	}
 
 
@@ -316,7 +319,33 @@ export class Context {
 	public expectTypes(context: Context): ResolveType[] | undefined {
 		return undefined;
 	}
-
+	
+	public consumeDocumentation(iterator: ContextDocumentationIterator): void {
+		if (!this.range) {
+			return;
+		}
+		
+		this.documentation = iterator.lastBefore(this.range.start);
+		iterator.firstAfter(this.range.end);
+	}
+	
+	protected consumeDocumentationDescent(iterator: ContextDocumentationIterator): void {
+		if (!this.range) {
+			return;
+		}
+		
+		this.documentation = iterator.lastBefore(this.range.start);
+		if (this.documentation) {
+			iterator.next;
+		}
+	}
+	
+	protected consumeDocumentationList(iterator: ContextDocumentationIterator, list: Context[]): void {
+		for (const each of list) {
+			each.consumeDocumentation(iterator);
+		}
+	}
+	
 	protected reportError(diagnostics: Diagnostic[], uri: string, range: Range, message: string) {
 		this.reportDiagnostic(diagnostics, uri, DiagnosticSeverity.Error, range, message);
 	}

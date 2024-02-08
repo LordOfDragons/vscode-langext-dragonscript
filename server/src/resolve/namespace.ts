@@ -24,6 +24,7 @@
 
 import { CompletionItemKind, Location } from 'vscode-languageserver';
 import { Context } from '../context/context';
+import { ContextDocumentation } from '../context/documentation';
 import { ContextNamespace } from '../context/namespace';
 import { ResolveClass } from './class';
 import { ResolveSearch } from './search';
@@ -237,6 +238,10 @@ export class ResolveNamespace extends ResolveType {
 	
 	protected get completionItemKind(): CompletionItemKind {
 		return CompletionItemKind.Module;
+	}
+	
+	public get documentation(): ContextDocumentation | undefined {
+		return this._contexts.find(c => c.documentation !== undefined)?.documentation;
 	}
 	
 	

@@ -23,6 +23,12 @@
 namespace \
     Dragengine: namespace Testing
 namespace Dragengine.Elements.  Front.Back  /* ccc */.  Both   .Last
+
+/**
+ * \brief Namespace documentation.
+ * 
+ * Details of namespace documentation
+ */
   namespace Dragengine.Elements  /* aaa */  // end of line
 
 /* empty line comment */

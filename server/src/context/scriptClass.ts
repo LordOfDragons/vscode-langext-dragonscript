@@ -44,6 +44,7 @@ import { Resolved, ResolveUsage } from "../resolve/resolved";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { IToken } from "chevrotain";
 import { CompletionHelper } from "../completionHelper";
+import { ContextDocumentationIterator } from "./documentation";
 
 
 export class ContextClass extends Context{
@@ -353,6 +354,10 @@ export class ContextClass extends Context{
 				content.push(`*${this.parent.fullyQualifiedName}*.`);
 			}
 			content.push(`**${this.name}**`);
+			if (this.documentation) {
+				content.push('___');
+				content.push(...this.documentation.resolveTextLong);
+			}
 			//content.push("```");
 			/*content.push(...[
 				"___",
@@ -459,6 +464,16 @@ export class ContextClass extends Context{
 		}
 		
 		return items;
+	}
+	
+	public consumeDocumentation(iterator: ContextDocumentationIterator): void {
+		if (!this.range) {
+			return;
+		}
+		
+		this.consumeDocumentationDescent(iterator);
+		this.consumeDocumentationList(iterator, this._declarations);
+		iterator.firstAfter(this.range.end);
 	}
 	
 	

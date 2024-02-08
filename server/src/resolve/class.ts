@@ -23,6 +23,7 @@
  */
 
 import { CompletionItemKind, DiagnosticRelatedInformation, Location } from 'vscode-languageserver';
+import { ContextDocumentation } from '../context/documentation';
 import { ContextClass } from '../context/scriptClass';
 import { ResolveSearch } from './search';
 import { ResolveType } from './type'
@@ -130,6 +131,10 @@ export class ResolveClass extends ResolveType {
 	
 	protected get completionItemKind(): CompletionItemKind {
 		return CompletionItemKind.Class;
+	}
+	
+	public get documentation(): ContextDocumentation | undefined {
+		return this._context?.documentation;
 	}
 	
 	protected onValidate(): void {

@@ -25,6 +25,7 @@
 import { CompletionItem, CompletionItemKind, DiagnosticRelatedInformation, InsertTextFormat, integer, Location, ParameterInformation, Position, Range, SignatureInformation, TextEdit } from 'vscode-languageserver';
 import { ContextFunction } from '../context/classFunction';
 import { Context } from '../context/context';
+import { ContextDocumentation } from '../context/documentation';
 import { ContextBlock } from '../context/expressionBlock';
 import { RefactoringHelper } from '../refactoringHelper';
 import { ResolveClass } from './class';
@@ -434,5 +435,9 @@ export class ResolveFunction extends Resolved{
 			insertTextFormat: InsertTextFormat.Snippet,
 			textEdit: TextEdit.replace(range, parts.join('')),
 			additionalTextEdits: extraEdits};
+	}
+	
+	public get documentation(): ContextDocumentation | undefined {
+		return this._context?.documentation;
 	}
 }

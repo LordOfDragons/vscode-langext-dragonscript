@@ -23,6 +23,7 @@
  */
 
 import { CompletionItemKind, DiagnosticRelatedInformation, Location } from 'vscode-languageserver';
+import { ContextDocumentation } from '../context/documentation';
 import { ContextInterface } from '../context/scriptInterface';
 import { ResolveNamespace } from './namespace';
 import { ResolveSearch } from './search';
@@ -118,5 +119,9 @@ export class ResolveInterface extends ResolveType {
 	
 	protected get completionItemKind(): CompletionItemKind {
 		return CompletionItemKind.Interface;
+	}
+	
+	public get documentation(): ContextDocumentation | undefined {
+		return this._context?.documentation;
 	}
 }

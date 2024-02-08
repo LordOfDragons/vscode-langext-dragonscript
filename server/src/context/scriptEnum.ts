@@ -41,6 +41,7 @@ import { ResolveVariable } from "../resolve/variable";
 import { TypeName } from "./typename";
 import { ResolveFunction } from "../resolve/function";
 import { Resolved } from "../resolve/resolved";
+import { ContextDocumentationIterator } from "./documentation";
 
 
 export class ContextEnumEntry extends Context{
@@ -135,6 +136,10 @@ export class ContextEnumEntry extends Context{
 
 		let content = [];
 		content.push(`static fixed public **variable** *${this.parent!.fullyQualifiedName}*.**${this.name}**`);
+		if (this.documentation) {
+			content.push('___');
+			content.push(...this.documentation.resolveTextLong);
+		}
 		return new HoverInfo(content, this._name.range);
 	}
 	
@@ -321,6 +326,10 @@ export class ContextEnumeration extends Context{
 
 		let content = [];
 		content.push(`${this._typeModifiers.typestring} **enumeration** ${this.parent!.fullyQualifiedName}.**${this.name}**`);
+		if (this.documentation) {
+			content.push('___');
+			content.push(...this.documentation.resolveTextLong);
+		}
 		return new HoverInfo(content, this._name.range);
 	}
 
@@ -345,8 +354,18 @@ export class ContextEnumeration extends Context{
 	public get referenceSelf(): Location | undefined {
 		return this.resolveLocation(this._name.range);
 	}
-
-
+	
+	public consumeDocumentation(iterator: ContextDocumentationIterator): void {
+		if (!this.range) {
+			return;
+		}
+		
+		this.consumeDocumentationDescent(iterator);
+		this.consumeDocumentationList(iterator, this._entries);
+		iterator.firstAfter(this.range.end);
+	}
+	
+	
 	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
 		console.log(`${prefix}Enumeration: ${this._name} ${this._typeModifiers} ${this.logRange}`);
 		this.logChildren(this._entries, console, prefixLines);

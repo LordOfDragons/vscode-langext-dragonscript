@@ -23,6 +23,7 @@
  */
 
 import { CompletionItemKind, DiagnosticRelatedInformation, Location } from 'vscode-languageserver';
+import { ContextDocumentation } from '../context/documentation';
 import { ContextEnumeration } from '../context/scriptEnum';
 import { ResolveNamespace } from './namespace';
 import { ResolveType } from './type';
@@ -100,5 +101,9 @@ export class ResolveEnumeration extends ResolveType {
 	public get references(): Location[] {
 		const r = this._context?.referenceSelf;
 		return r ? [r] : [];
+	}
+	
+	public get documentation(): ContextDocumentation | undefined {
+		return this._context?.documentation;
 	}
 }

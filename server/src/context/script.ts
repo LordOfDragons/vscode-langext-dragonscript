@@ -24,7 +24,7 @@
 
 import { Context } from "./context";
 import { ScriptCstNode } from "../nodeclasses/script";
-import { CompletionItem, DocumentSymbol, Position, Range, RemoteConsole, SymbolInformation, URI } from "vscode-languageserver";
+import { CompletionItem, DocumentSymbol, integer, Position, Range, RemoteConsole, SymbolInformation, URI } from "vscode-languageserver";
 import { ContextPinNamespace } from "./pinNamespace";
 import { ContextNamespace } from "./namespace";
 import { ContextClass } from "./scriptClass";
@@ -34,7 +34,7 @@ import { ContextRequiresPackage } from "./requiresPackage";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { ResolveState } from "../resolve/state";
 import { CompletionHelper } from "../completionHelper";
-import { ContextDocumentation } from "./documentation";
+import { ContextDocumentation, ContextDocumentationIterator } from "./documentation";
 import { ScriptDocument } from "../scriptDocument";
 import { ContextComment } from "./comment";
 
@@ -116,6 +116,11 @@ export class ContextScript extends Context{
 		
 		for (const each of document.commentTokens) {
 			this._comments.push(new ContextComment(each));
+		}
+		
+		var dociter = new ContextDocumentationIterator(this._documentations);
+		for (const each of this._statements) {
+			each.consumeDocumentation(dociter);
 		}
 		
 		for (const each of this._namespaces) {

@@ -23,13 +23,14 @@
  */
 
 import { IToken } from "chevrotain";
-import { Position, Range, RemoteConsole } from "vscode-languageserver";
+import { DocumentColorOptions, integer, Position, Range, RemoteConsole } from "vscode-languageserver";
 import { Helpers } from "../helpers";
 import { Context } from "./context";
 
 
 export class ContextDocumentation extends Context{
 	protected _token: IToken;
+	public targetContexts: Set<Context> = new Set<Context>();
 	
 	
 	constructor(token: IToken) {
@@ -38,9 +39,43 @@ export class ContextDocumentation extends Context{
 		this.range = Helpers.rangeFrom(token);
 	}
 	
+	dispose(): void {
+		super.dispose();
+		this.targetContexts.clear();
+	}
+	
 	
 	public get token(): IToken {
 		return this._token;
+	}
+	
+	
+	protected updateResolveTextLong(): string[] {
+		let content: string[] = [];
+		for (let each of this._token.image.split('\n')) {
+			each = each.trim();
+			if (each == '*') {
+				continue;
+			} else if (each.startsWith('/**')) {
+				each = each.substring(3);
+			} else if (each.startsWith('*/')) {
+				continue;
+			} else if (each.startsWith('* ')) {
+				each = each.substring(3);
+			}
+			if (each.endsWith('*/')) {
+				each = each.substring(0, each.length - 2);
+			}
+			if (each.trim().length == 0) {
+				continue;
+			}
+			content.push(each);
+		}
+		return content;
+	}
+	
+	protected updateResolveTextShort(): string {
+		return this.resolveTextLong.join('  \n');
 	}
 	
 	
@@ -61,5 +96,84 @@ export class ContextDocumentation extends Context{
 	
 	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
 		console.log(`${prefix}Documentation`);
+	}
+}
+
+
+export class ContextDocumentationIterator{
+	protected _list: ContextDocumentation[];
+	protected _nextIndex: integer;
+	protected _count: integer;
+	protected _last: integer;
+	
+	constructor(list: ContextDocumentation[]) {
+		this._list = list;
+		this._nextIndex = 0;
+		this._count = list.length;
+		this._last = this._count - 1;
+	}
+	
+	public get current(): ContextDocumentation | undefined {
+		return this._list.at(this._nextIndex);
+	}
+	
+	public currentIfBefore(position: Position | undefined): ContextDocumentation | undefined {
+		if (!position) {
+			return undefined;
+		}
+		const doc = this.current;
+		const docpos = doc?.range?.start;
+		return docpos && Helpers.isPositionBefore(docpos, position) ? doc : undefined;
+	}
+	
+	public get next(): ContextDocumentation | undefined {
+		if (this._nextIndex < this._count) {
+			this._nextIndex++;
+		}
+		return this.current;
+	}
+	
+	public lastBefore(position: Position): ContextDocumentation | undefined {
+		if (this._nextIndex == this._count) {
+			return undefined;
+		}
+		
+		var doc = this._list[this._nextIndex];
+		var docpos = doc?.range?.start;
+		if (!(docpos && Helpers.isPositionBefore(docpos, position))) {
+			return undefined;
+		}
+		
+		while (this._nextIndex < this._last) {
+			const next = this._list[this._nextIndex + 1];
+			docpos = next?.range?.start;
+			if (docpos && Helpers.isPositionBefore(docpos, position)) {
+				this._nextIndex++;
+				doc = next;
+			} else {
+				break;
+			}
+		}
+		return doc;
+	}
+	
+	public firstAfter(position: Position): ContextDocumentation | undefined {
+		var doc = this.current;
+		var docpos = doc?.range?.start;
+		if (docpos && Helpers.isPositionAfter(docpos, position)) {
+			return doc;
+		}
+		
+		while (true) {
+			doc = this.next;
+			if (!doc) {
+				return undefined;
+			}
+			
+			docpos = doc.range?.start;
+			if (docpos && Helpers.isPositionAfter(docpos, position)) {
+				return doc;
+			}
+		}
 	}
 }

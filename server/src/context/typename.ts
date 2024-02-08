@@ -503,27 +503,33 @@ export class TypeName {
 						const c = pr as ResolveClass;
 						content.push(`**class ${c.name}**`);
 						this.hoverAddParent(content, c.parent as ResolveType);
-
+						
 					} else if (pr.type === ResolveType.Type.Interface) {
 						const i = pr as ResolveInterface;
 						content.push(`**interface ${i.name}**`);
 						this.hoverAddParent(content, i.parent as ResolveType);
-
+						
 					} else if (pr.type === ResolveType.Type.Enumeration) {
 						const e = pr as ResolveEnumeration;
 						content.push(`**enumeration ${e.name}**`);
 						this.hoverAddParent(content, e.parent as ResolveType);
-
+						
 					} else if (pr.type === ResolveType.Type.Namespace) {
 						const ns = pr as ResolveNamespace;
 						content.push(`**namespace ${ns.name}**`);
 						this.hoverAddParent(content, ns);
 					}
-
+					
+					const doc = pr.documentation;
+					if (doc) {
+						content.push('___');
+						content.push(...doc.resolveTextLong);
+					}
+					
 				} else {
 					content.push(`**type** **${part.name}**`);
 				}
-
+				
 				return new HoverInfo(content, part.name.range);
 			}
 		};

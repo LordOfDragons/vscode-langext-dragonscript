@@ -24,6 +24,7 @@
 
 import { CompletionItem, CompletionItemKind, DiagnosticRelatedInformation, InsertTextFormat, Location, Range, TextEdit } from 'vscode-languageserver';
 import { ContextFunctionArgument } from '../context/classFunctionArgument';
+import { ContextDocumentation } from '../context/documentation';
 import { ContextTryCatch } from '../context/statementTry';
 import { ContextVariable } from '../context/statementVariable';
 import { Resolved } from './resolved';
@@ -78,6 +79,10 @@ export class ResolveLocalVariable extends Resolved{
 	public get references(): Location[] {
 		const r = this._context?.referenceSelf;
 		return r ? [r] : [];
+	}
+	
+	public get documentation(): ContextDocumentation | undefined {
+		return this._context?.documentation;
 	}
 	
 	

@@ -34,6 +34,7 @@ import { ResolveSearch } from "../resolve/search";
 import { Resolved, ResolveUsage } from "../resolve/resolved";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { CompletionHelper } from "../completionHelper";
+import { ContextDocumentationIterator } from "./documentation";
 
 
 export class ContextNamespace extends Context{
@@ -116,8 +117,8 @@ export class ContextNamespace extends Context{
 		return this.contextAtRangeList(this._statements, range)
 			?? this;
 	}
-
-
+	
+	
 	public nextNamespace(namespace: ContextNamespace): void {
 		let s = namespace.range?.start;
 		if (s) {
@@ -207,13 +208,21 @@ export class ContextNamespace extends Context{
 			}
 
 			let pn = parts.slice(0, plen).map(x => x.name.name).reduce((a, b) => `${a}.${b}`);
-			content.push(`**namespace** *${pn}*.**${parts[plen].name}**`);	
+			content.push(`**namespace** *${pn}*.**${parts[plen].name}**`);
+			if (plen == parts.length - 1 && this.documentation) {
+				content.push('___');
+				content.push(...this.documentation.resolveTextLong);
+			}
 			return new HoverInfo(content, Helpers.rangeFrom(tok));
 		}
-
+		
 		let tok = parts[0].name.token;
 		if (tok && Helpers.isPositionInsideToken(tok, position)) {
 			content.push(`**namespace** **${parts[0].name}**`);
+			if (parts.length == 1 && this.documentation) {
+				content.push('___');
+				content.push(...this.documentation.resolveTextLong);
+			}
 			return new HoverInfo(content, Helpers.rangeFrom(tok));
 		}
 
@@ -274,8 +283,17 @@ export class ContextNamespace extends Context{
 		
 		return items;
 	}
-
-
+	
+	public consumeDocumentation(iterator: ContextDocumentationIterator): void {
+		if (!this.range) {
+			return;
+		}
+		
+		this.consumeDocumentationDescent(iterator);
+		this.consumeDocumentationList(iterator, this._statements);
+	}
+	
+	
 	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
 		console.log(`${prefix}Namespace: ${this._typename.name}`);
 		this.logChildren(this._statements, console, prefixLines);

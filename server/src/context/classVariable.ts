@@ -190,13 +190,19 @@ export class ContextClassVariable extends Context{
 
 	protected updateHover(position: Position): Hover | null {
 		if (this._name.isPositionInside(position)) {
-			return new HoverInfo(this.resolveTextLong, this._name.range);
+			let content: string[] = [];
+			content.push(...this.resolveTextLong);
+			if (this.documentation) {
+				content.push('___');
+				content.push(...this.documentation.resolveTextLong);
+			}
+			return new HoverInfo(content, this._name.range);
 		}
-
+		
 		if (!this._firstVariable && this._typename.isPositionInside(position)) {
 			return this._typename.hover(position);
 		}
-
+		
 		return null;
 	}
 

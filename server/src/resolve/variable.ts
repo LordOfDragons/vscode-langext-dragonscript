@@ -25,6 +25,7 @@
 import { CompletionItem, CompletionItemKind, DiagnosticRelatedInformation, InsertTextFormat, Location, Range, TextEdit } from 'vscode-languageserver';
 import { ContextClassVariable } from '../context/classVariable';
 import { Context } from '../context/context';
+import { ContextDocumentation } from '../context/documentation';
 import { ContextEnumEntry, ContextEnumeration } from '../context/scriptEnum';
 import { ResolveClass } from './class';
 import { Resolved } from './resolved';
@@ -131,6 +132,10 @@ export class ResolveVariable extends Resolved{
 		} else {
 			return true;
 		}
+	}
+	
+	public get documentation(): ContextDocumentation | undefined {
+		return this._context?.documentation;
 	}
 	
 	public addReportInfo(relatedInformation: DiagnosticRelatedInformation[], message: string) {

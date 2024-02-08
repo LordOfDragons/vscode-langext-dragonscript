@@ -311,7 +311,13 @@ export class ContextMember extends Context{
 		} else if (this._resolveType) {
 			content.push(...this._resolveType.resolveTextLong);
 		}
-
+		
+		const doc = this.resolveAny?.documentation;
+		if (doc) {
+			content.push('___');
+			content.push(...doc.resolveTextLong);
+		}
+		
 		/*
 		if (this._matches) {
 			content.push(`\n`);

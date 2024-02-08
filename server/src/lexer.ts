@@ -553,7 +553,7 @@ export class DSLexer extends Lexer{
 
 	public static readonly tokenCommentMultiline = createToken({
 		name: "commentMultiline",
-		pattern: new RegExp("/\\*"
+		pattern: new RegExp("/\\*[^*]"
 				+ "("
 				+ "\\*(?!/)"    // lone star
 				+ "|"

@@ -42,6 +42,7 @@ import { ResolveSearch } from "../resolve/search";
 import { Resolved, ResolveUsage } from "../resolve/resolved";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { CompletionHelper } from "../completionHelper";
+import { ContextDocumentationIterator } from "./documentation";
 
 
 export class ContextInterface extends Context{
@@ -262,6 +263,10 @@ export class ContextInterface extends Context{
 				content.push(`*${this.parent.fullyQualifiedName}*.`);
 			}
 			content.push(`**${this.name}**`);
+			if (this.documentation) {
+				content.push('___');
+				content.push(...this.documentation.resolveTextLong);
+			}
 			return new HoverInfo(content, this._name.range);
 
 		} else {
@@ -337,8 +342,18 @@ export class ContextInterface extends Context{
 		
 		return items;
 	}
-
-
+	
+	public consumeDocumentation(iterator: ContextDocumentationIterator): void {
+		if (!this.range) {
+			return;
+		}
+		
+		this.consumeDocumentationDescent(iterator);
+		this.consumeDocumentationList(iterator, this._declarations);
+		iterator.firstAfter(this.range.end);
+	}
+	
+	
 	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
 		console.log(`${prefix}Interface: ${this._typeModifiers} ${this._name} ${this.logRange}`);
 		for (const each of this._implements) {

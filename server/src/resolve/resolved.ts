@@ -24,6 +24,7 @@
 
 import { DiagnosticRelatedInformation, Location, Range } from "vscode-languageserver";
 import { Context } from "../context/context";
+import { ContextDocumentation } from "../context/documentation";
 import { MatchableName } from "../matchableName";
 
 /** Resolved usage. */
@@ -194,6 +195,10 @@ export class Resolved{
 	
 	public get references(): Location[] {
 		return [];
+	}
+	
+	public get documentation(): ContextDocumentation | undefined {
+		return undefined;
 	}
 	
 	

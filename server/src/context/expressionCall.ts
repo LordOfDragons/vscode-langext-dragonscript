@@ -948,7 +948,11 @@ export class ContextFunctionCall extends Context{
 						
 						if (f?.context) {
 							content.push(...f.context.resolveTextLong);
-							
+							const doc = f.context.documentation;
+							if (doc) {
+								content.push('___');
+								content.push(...doc.resolveTextLong);
+							}
 						}
 						
 					} else {

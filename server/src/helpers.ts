@@ -79,6 +79,7 @@ export class Helpers {
 		return true;
 	}
 
+	/** Returns true if rangeCheck is fully inside range. */
 	public static isRangeInsideRange(range: Range | undefined, rangeCheck: Range): boolean {
 		if (!range) {
 			return false;
@@ -111,6 +112,7 @@ export class Helpers {
 		return Helpers.isPositionInsideRange(Helpers.rangeFrom(start, end), position);
 	}
 	
+	/** Returns true if a is before b. */
 	public static isPositionBefore(a: Position, b: Position): boolean {
 		if (a.line < b.line) {
 			return true;
@@ -121,6 +123,7 @@ export class Helpers {
 		}
 	}
 	
+	/** Returns true if a is after b. */
 	public static isPositionAfter(a: Position, b: Position): boolean {
 		if (a.line > b.line) {
 			return true;

@@ -411,7 +411,13 @@ export class ContextFunction extends Context{
 
 	protected updateHover(position: Position): Hover | null {
 		if (this._name?.isPositionInside(position)) {
-			return new HoverInfo(this.resolveTextLong, this._name.range);
+			let content: string[] = [];
+			content.push(...this.resolveTextLong);
+			if (this.documentation) {
+				content.push('___');
+				content.push(...this.documentation.resolveTextLong);
+			}
+			return new HoverInfo(content, this._name.range);
 		}
 		if (this._returnType?.isPositionInside(position)) {
 			return this._returnType.hover(position);
@@ -560,8 +566,8 @@ export class ContextFunction extends Context{
 	public completion(_document: TextDocument, position: Position): CompletionItem[] {
 		return CompletionHelper.createType(Range.create(position, position), this);
 	}
-
-
+	
+	
 	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
 		var s = `${prefix}Function ${ContextFunction.Type[this._functionType]}: ${this._typeModifiers}`;
 		if (this._returnType) {
