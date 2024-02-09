@@ -172,6 +172,11 @@ export class DocumentationValidator {
 		if (this._parser.errors.length > 0) {
 			const docOffset = documentation.token.startLine ?? 0;
 			
+			debugLogMessage(`text: "${documentation.token.image}"`);
+			for (const t of lexed.tokens) {
+				debugLogMessage(`lexed: ${tokenName(t.tokenType)} => "${t.image}"`);
+			};
+			
 			for (const error of this._parser.errors.slice(0, settings.maxNumberOfProblems)) {
 				logs.push(`[EE] ${document.uri}:${docOffset + (error.token.startLine ?? 1)} : ${error.message}`);
 			}

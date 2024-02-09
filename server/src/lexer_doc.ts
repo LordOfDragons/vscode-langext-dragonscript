@@ -100,7 +100,10 @@ export class DSDocLexer extends Lexer{
 	
 	public static readonly tokenCode = createToken({
 		name: "code",
-		pattern: /\\code(\.[A-Za-z0-9_]+)?/,
+		pattern: new RegExp("/\\\\code(\\{[^}]+\\})?"
+			+ "(.(?!\\\\endcode))*"
+			+ "\\endcode"
+			),
 		longer_alt: DSDocLexer.tokenWord
 	})
 	
@@ -208,7 +211,6 @@ export class DSDocLexer extends Lexer{
 		DSDocLexer.tokenDetails,
 		DSDocLexer.tokenParam,
 		DSDocLexer.tokenCode,
-		DSDocLexer.tokenEndCode,
 		DSDocLexer.tokenCopyDoc,
 		DSDocLexer.tokenEmboss,
 		DSDocLexer.tokenReference,
