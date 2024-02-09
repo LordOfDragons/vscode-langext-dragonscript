@@ -90,8 +90,16 @@ export class ScriptDocument {
 		return this._documentationTokens;
 	}
 	
+	public set documentationTokens(value: IToken[]) {
+		this._documentationTokens = value;
+	}
+	
 	public get commentTokens(): IToken[] {
 		return this._commentTokens;
+	}
+	
+	public set commentTokens(value: IToken[]) {
+		this._commentTokens = value;
 	}
 
 	public get context(): ContextScript | undefined {

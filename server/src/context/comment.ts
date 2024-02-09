@@ -32,8 +32,8 @@ export class ContextComment extends Context{
 	protected _token: IToken;
 	
 	
-	constructor(token: IToken) {
-		super(Context.ContextType.Comment);
+	constructor(token: IToken, parent: Context) {
+		super(Context.ContextType.Comment, parent);
 		this._token = token;
 		this.range = Helpers.rangeFrom(token);
 	}

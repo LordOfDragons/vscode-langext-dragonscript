@@ -26,115 +26,97 @@ import { ILexingResult } from "chevrotain";
 import { Diagnostic, DiagnosticSeverity } from "vscode-languageserver";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { DSCapabilities } from "./capabilities";
-import { DSLexer } from "./lexer";
-import { ScriptCstNode } from "./nodeclasses/script";
-import { PackageDEModule } from "./package/dragenginemodule";
-import { PackageDSLanguage } from "./package/dslanguage";
-import { Package } from "./package/package";
-import { DSParser } from "./parser";
+import { ContextDocumentation } from "./context/documentation";
+import { Helpers } from "./helpers";
+import { DSDocLexer } from "./lexer_doc";
 import { ScriptDocument } from "./scriptDocument";
-import { packages } from "./server";
 import { DSSettings } from "./settings";
 
-export class ScriptValidator {
+export class DocumentationValidator {
 	protected _capabilities: DSCapabilities;
-	protected _lexer: DSLexer = new DSLexer();
-	protected _parser: DSParser = new DSParser();
-
-
+	protected _lexer: DSDocLexer = new DSDocLexer();
+	//protected _parser: DSParser = new DSParser();
+	
+	
 	constructor(capabilities: DSCapabilities) {
 		this._capabilities = capabilities;
 	}
-
+	
 	public dispose(): void {
 	}
-
-
-	public get lexer(): DSLexer {
+	
+	
+	public get lexer(): DSDocLexer {
 		return this._lexer;
 	}
-
-	public get parser(): DSParser {
+	
+	/*public get parser(): DSParser {
 		return this._parser;
+	}*/
+	
+	
+	public parse(scriptDocument: ScriptDocument, documentation: ContextDocumentation, textDocument: TextDocument): void {
+		let diagnostics: Diagnostic[] = [];
+		const lexed = this.doLex(textDocument, documentation, scriptDocument.settings, diagnostics);
+		//documentation.docNode = this.doParse(textDocument, scriptDocument.settings, lexed, diagnostics);
 	}
-
-
-	public async parse(scriptDocument: ScriptDocument, textDocument: TextDocument): Promise<void> {
-		scriptDocument.diagnosticsLexer = [];
-		await this.doRequires(scriptDocument, scriptDocument.diagnosticsLexer);
-		const lexed = this.doLex(textDocument, scriptDocument.settings, scriptDocument.diagnosticsLexer);
-		scriptDocument.node = this.doParse(textDocument, scriptDocument.settings, lexed, scriptDocument.diagnosticsLexer);
-		scriptDocument.documentationTokens = lexed.groups['documentation'];
-		scriptDocument.commentTokens = lexed.groups['comments'];
+	
+	public parseLog(scriptDocument: ScriptDocument, documentation: ContextDocumentation, logs: string[]): void {
+		const lexed = this.doLexLog(scriptDocument, documentation, scriptDocument.settings, logs);
+		//documentation.docNode = this.doParseLog(scriptDocument, scriptDocument.settings, lexed, logs);
 	}
-
-	public async parseLog(scriptDocument: ScriptDocument, text: string, logs: string[]): Promise<void> {
-		await this.doRequiresLog(scriptDocument, logs);
-		const lexed = this.doLexLog(scriptDocument, text, scriptDocument.settings, logs);
-		scriptDocument.node = this.doParseLog(scriptDocument, scriptDocument.settings, lexed, logs);
-		scriptDocument.documentationTokens = lexed.groups['documentation'];
-		scriptDocument.commentTokens = lexed.groups['comments'];
-	}
-
-
-	protected async doRequires(scriptDocument: ScriptDocument, diagnostics: Diagnostic[]): Promise<void> {
-		let pkg: Package = packages.get(PackageDSLanguage.PACKAGE_ID)!;
-		await pkg.load();
+	
+	
+	protected doLex(textDocument: TextDocument, documentation: ContextDocumentation,
+			settings: DSSettings, diagnostics: Diagnostic[]): ILexingResult {
+				
+		const lexed = this._lexer.tokenize(documentation.token.image);
 		
-		if (scriptDocument.settings.requiresPackageDragengine) {
-			let pkg: Package = packages.get(PackageDEModule.PACKAGE_ID)!;
-			await pkg.load();
-		}
-	}
-
-	protected async doRequiresLog(scriptDocument: ScriptDocument, logs: string[]): Promise<void> {
-		//let pkg: Package = packages.get(PackageDSLanguage.PACKAGE_ID)!;
-		//pkg.load();
-	}
-
-	protected doLex(textDocument: TextDocument, settings: DSSettings, diagnostics: Diagnostic[]): ILexingResult {
-		const lexed = this._lexer.tokenize(textDocument.getText());
-
-		for (const error of lexed.errors.slice(0, settings.maxNumberOfProblems)) {
-			const diagnostic: Diagnostic = {
-				severity: DiagnosticSeverity.Error,
-				range: {
-					start: textDocument.positionAt(error.offset),
-					end: textDocument.positionAt(error.offset + error.length)
-				},
-				message: error.message,
-				source: 'Lexing'
-			};
-
-			if (this._capabilities.hasDiagnosticRelatedInformation) {
-				diagnostic.relatedInformation = [
-					{
-						location: {
-							uri: textDocument.uri,
-							range: Object.assign({}, diagnostic.range)
-						},
-						message: 'Lexing Errors'
-					}
-				];
+		if (lexed.errors.length > 0) {
+			const docOffset = textDocument.offsetAt(Helpers.positionFrom(documentation.token, true));
+			
+			for (const error of lexed.errors.slice(0, settings.maxNumberOfProblems)) {
+				const diagnostic: Diagnostic = {
+					severity: DiagnosticSeverity.Error,
+					range: {
+						start: textDocument.positionAt(docOffset + error.offset),
+						end: textDocument.positionAt(docOffset + error.offset + error.length)
+					},
+					message: error.message,
+					source: 'Lexing'
+				};
+					
+				if (this._capabilities.hasDiagnosticRelatedInformation) {
+					diagnostic.relatedInformation = [
+						{
+							location: {
+								uri: textDocument.uri,
+								range: Object.assign({}, diagnostic.range)
+							},
+							message: 'Lexing Errors'
+						}
+					];
+				}
+				
+				diagnostics.push(diagnostic);
 			}
-
-			diagnostics.push(diagnostic);
 		}
-
+		
 		return lexed;
 	}
-
-	protected doLexLog(document: ScriptDocument, text: string,
+	
+	protected doLexLog(document: ScriptDocument, documentation: ContextDocumentation,
 			settings: DSSettings, logs: string[]): ILexingResult {
-		const lexed = this._lexer.tokenize(text);
-
+		const lexed = this._lexer.tokenize(documentation.token.image);
+		
 		for (const error of lexed.errors.slice(0, settings.maxNumberOfProblems)) {
 			logs.push(`[EE] ${document.uri}:? : ${error.message}`);
 		};
-
+		
 		return lexed;
 	}
-
+	
+	/*
 	protected doParse(textDocument: TextDocument, settings: DSSettings,
 			lexed: ILexingResult, diagnostics: Diagnostic[]): ScriptCstNode {
 		this._parser.input = lexed.tokens;
@@ -181,4 +163,5 @@ export class ScriptValidator {
 		}
 		return node;
 	}
+	*/
 }

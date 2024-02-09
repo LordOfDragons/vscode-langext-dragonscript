@@ -164,6 +164,12 @@ public class OuterClass extends ClassExtendImplement
 	
 	func destructor(): end
 	
+	/**
+	 * A function returning a value without arguments.
+	 *
+	 * Longer description of the function.
+	 * \return Instance of OuterClass.
+	 */
 	private func OuterClass callThat()
 		while pMember1 > 0
 			pMember1--
@@ -177,7 +183,7 @@ public class OuterClass extends ClassExtendImplement
 	 * Some more stuff to fill some lines.
 	 * 
 	 * \param value A value parameter.
-	 * \param ablock A block with some parameters.
+	 * \param[in] ablock A block with some parameters.
 	 */
 	public func void callMe( int value, Block ablock )
 		select value

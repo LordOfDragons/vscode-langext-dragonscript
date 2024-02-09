@@ -23,24 +23,29 @@
  */
 
 import { IToken } from "chevrotain";
-import { DocumentColorOptions, integer, Position, Range, RemoteConsole } from "vscode-languageserver";
+import { integer, Position, Range, RemoteConsole } from "vscode-languageserver";
 import { Helpers } from "../helpers";
+import { debugErrorMessage, debugLogMessage, documentationValidator, documents, scriptDocuments } from "../server";
 import { Context } from "./context";
 
 
 export class ContextDocumentation extends Context{
 	protected _token: IToken;
 	public targetContexts: Set<Context> = new Set<Context>();
+	public docNode: Context | undefined;
+	private _docText?: string[];
 	
 	
-	constructor(token: IToken) {
-		super(Context.ContextType.Documentation);
+	constructor(token: IToken, parent: Context) {
+		super(Context.ContextType.Documentation, parent);
 		this._token = token;
 		this.range = Helpers.rangeFrom(token);
 	}
 	
 	dispose(): void {
 		super.dispose();
+		this.docNode?.dispose();
+		this.docNode = undefined;
 		this.targetContexts.clear();
 	}
 	
@@ -50,32 +55,63 @@ export class ContextDocumentation extends Context{
 	}
 	
 	
-	protected updateResolveTextLong(): string[] {
-		let content: string[] = [];
-		for (let each of this._token.image.split('\n')) {
-			each = each.trim();
-			if (each == '*') {
-				continue;
-			} else if (each.startsWith('/**')) {
-				each = each.substring(3);
-			} else if (each.startsWith('*/')) {
-				continue;
-			} else if (each.startsWith('* ')) {
-				each = each.substring(3);
-			}
-			if (each.endsWith('*/')) {
-				each = each.substring(0, each.length - 2);
-			}
-			if (each.trim().length == 0) {
-				continue;
-			}
-			content.push(each);
+	public get docText(): string[] {
+		if (!this._docText) {
+			this._docText = this.buildDocText();
 		}
-		return content;
+		return this._docText;
+	}
+	
+	
+	public parseDocumentation(): void {
+		this.docNode?.dispose();
+		this.docNode = undefined;
+		
+		const uri = this.documentUri;
+		if (!uri) {
+			return;
+		}
+		
+		const scriptDocument = scriptDocuments.get(uri);
+		if (!scriptDocument) {
+			return;
+		}
+		
+		const textDocument = documents.get(uri);
+		if (textDocument) {
+			documentationValidator.parse(scriptDocument, this, textDocument);
+			
+		} else {
+			let logs: string[] = [];
+			try {
+				documentationValidator.parseLog(scriptDocument, this, logs);
+			} catch (error) {
+				debugErrorMessage('Documentation Failed parsing');
+				if (error instanceof Error) {
+					let err = error as Error;
+					debugErrorMessage(error.name);
+					if (error.stack) {
+						debugErrorMessage(error.stack);
+					}
+				} else {
+					debugErrorMessage(`${error}`);
+				}
+				return;
+			}
+			
+			for (const each of logs) {
+				debugLogMessage(each);
+			}
+		}
+	}
+	
+	protected updateResolveTextLong(): string[] {
+		this.parseDocumentation();
+		return this.docText;
 	}
 	
 	protected updateResolveTextShort(): string {
-		return this.resolveTextLong.join('  \n');
+		return this.docText.join('  \n');
 	}
 	
 	
@@ -91,6 +127,31 @@ export class ContextDocumentation extends Context{
 			return undefined;
 		}
 		return this;
+	}
+	
+	
+	protected buildDocText(): string[] {
+		let content: string[] = [];
+		for (let each of this._token.image.split('\n')) {
+			each = each.trim();
+			if (each == '*') {
+				continue;
+			} else if (each.startsWith('/**')) {
+				each = each.substring(3);
+			} else if (each.startsWith('*/')) {
+				continue;
+			} else if (each.startsWith('* ')) {
+				each = each.substring(2);
+			}
+			if (each.endsWith('*/')) {
+				each = each.substring(0, each.length - 2);
+			}
+			if (each.trim().length == 0) {
+				continue;
+			}
+			content.push(each);
+		}
+		return content;
 	}
 	
 	

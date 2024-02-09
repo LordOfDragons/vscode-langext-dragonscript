@@ -111,11 +111,11 @@ export class ContextScript extends Context{
 		}
 		
 		for (const each of document.documentationTokens) {
-			this._documentations.push(new ContextDocumentation(each));
+			this._documentations.push(new ContextDocumentation(each, this));
 		}
 		
 		for (const each of document.commentTokens) {
-			this._comments.push(new ContextComment(each));
+			this._comments.push(new ContextComment(each, this));
 		}
 		
 		var dociter = new ContextDocumentationIterator(this._documentations);

@@ -66,6 +66,7 @@ import { ReportConfig } from './reportConfig';
 import { PackageWorkspace } from './package/workspacepackage';
 import { Helpers } from './helpers';
 import { Context } from './context/context';
+import { DocumentationValidator } from './documentationValidator';
 
 // Create a connection for the server, using Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -93,6 +94,10 @@ export function debugLogMessage(message: string) {
 	connection.console.log(message);
 }
 
+export function debugErrorMessage(message: string) {
+	connection.console.error(message);
+}
+
 export function debugLogContext(context?: Context) {
 	context?.log(connection.console);
 }
@@ -110,10 +115,11 @@ export function reportDiagnostics(uri: string, diagnostics: Diagnostic[]) {
 }
 
 // Create a simple text document manager.
-const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
+export const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
 export const capabilities: DSCapabilities = new DSCapabilities;
 export const validator = new ScriptValidator(capabilities);
 export const scriptDocuments: ScriptDocuments = new ScriptDocuments(connection.console);
+export const documentationValidator = new DocumentationValidator(capabilities);
 
 const workspacePackages: PackageWorkspace[] = [];
 
