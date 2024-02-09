@@ -25,6 +25,7 @@
 import { IToken } from "chevrotain";
 import { integer, Position, Range, RemoteConsole } from "vscode-languageserver";
 import { Helpers } from "../helpers";
+import { DocumentationCstNode } from "../nodeclasses/doc/documentation";
 import { debugErrorMessage, debugLogMessage, documentationValidator, documents, scriptDocuments } from "../server";
 import { Context } from "./context";
 
@@ -32,7 +33,8 @@ import { Context } from "./context";
 export class ContextDocumentation extends Context{
 	protected _token: IToken;
 	public targetContexts: Set<Context> = new Set<Context>();
-	public docNode: Context | undefined;
+	public docNode: DocumentationCstNode | undefined;
+	public docContext: Context | undefined;
 	private _docText?: string[];
 	
 	
@@ -44,7 +46,8 @@ export class ContextDocumentation extends Context{
 	
 	dispose(): void {
 		super.dispose();
-		this.docNode?.dispose();
+		this.docContext?.dispose();
+		this.docContext = undefined;
 		this.docNode = undefined;
 		this.targetContexts.clear();
 	}
@@ -64,7 +67,8 @@ export class ContextDocumentation extends Context{
 	
 	
 	public parseDocumentation(): void {
-		this.docNode?.dispose();
+		this.docContext?.dispose();
+		this.docContext = undefined;
 		this.docNode = undefined;
 		
 		const uri = this.documentUri;

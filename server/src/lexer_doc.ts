@@ -26,24 +26,24 @@ import { createToken, Lexer } from "chevrotain"
 
 
 export class DSDocLexer extends Lexer{
-	public static readonly tokenCommentBegin = createToken({
-		name: "commentBegin",
-		pattern: /\/\\*\\*/
+	public static readonly tokenDocBegin = createToken({
+		name: "docBegin",
+		pattern: /\/\*\*/
 	})
 	
-	public static readonly tokenCommentLine = createToken({
-		name: "commentLine",
-		pattern: / \\*/
-	})
-	
-	public static readonly tokenCommentEnd = createToken({
-		name: "commentEnd",
-		pattern: /\\*\//
-	})
-	
-	public static readonly tokenCommentBegin2 = createToken({
-		name: "commentBegin2",
+	public static readonly tokenDocBegin2 = createToken({
+		name: "docBegin2",
 		pattern: /\/\/<!/
+	})
+	
+	public static readonly tokenDocEnd = createToken({
+		name: "docEnd",
+		pattern: /\*\//
+	})
+	
+	public static readonly tokenDocLine = createToken({
+		name: "docLine",
+		pattern: /\*/
 	})
 	
 	public static readonly tokenSpace = createToken({
@@ -196,10 +196,10 @@ export class DSDocLexer extends Lexer{
 	
 	
 	public static readonly allTokens = [
-		DSDocLexer.tokenCommentBegin,
-		DSDocLexer.tokenCommentLine,
-		DSDocLexer.tokenCommentEnd,
-		DSDocLexer.tokenCommentBegin2,
+		DSDocLexer.tokenDocBegin,
+		DSDocLexer.tokenDocBegin2,
+		DSDocLexer.tokenDocEnd,
+		DSDocLexer.tokenDocLine,
 		
 		DSDocLexer.tokenSpace,
 		DSDocLexer.tokenNewline,
