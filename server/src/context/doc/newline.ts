@@ -25,11 +25,18 @@
 import { RemoteConsole } from "vscode-languageserver";
 import { DocumentationNewlineCstNode } from "../../nodeclasses/doc/newline";
 import { Context } from "../context";
+import { ContextDocBase } from "./contextDoc";
+import { ContextDocumentationDocState } from "./docState";
 
 
-export class ContextDocumentationNewline extends Context{
-	constructor(node: DocumentationNewlineCstNode, parent: Context) {
+export class ContextDocumentationNewline extends ContextDocBase{
+	constructor(_node: DocumentationNewlineCstNode, parent: Context) {
 		super(Context.ContextType.DocumentationNewline, parent);
+	}
+	
+	
+	public buildDoc(state: ContextDocumentationDocState): void {
+		state.addNewline();
 	}
 	
 	

@@ -22,50 +22,16 @@
  * SOFTWARE.
  */
 
-import { Position, Range, RemoteConsole } from "vscode-languageserver";
-import { Helpers } from "../../helpers";
-import { DocumentationBriefCstNode } from "../../nodeclasses/doc/brief";
 import { Context } from "../context";
-import { ContextDocBase } from "./contextDoc";
-import { ContextDocumentationDoc } from "./doc";
 import { ContextDocumentationDocState } from "./docState";
 
 
-export class ContextDocumentationBrief extends ContextDocBase{
-	protected _node: DocumentationBriefCstNode;
-	
-	
-	constructor(node: DocumentationBriefCstNode, parent: Context) {
-		super(Context.ContextType.DocumentationBrief, parent);
-		this._node = node;
-	}
-	
-	
-	public get node(): DocumentationBriefCstNode {
-		return this._node;
-	}
-	
-	public contextAtPosition(position: Position): Context | undefined {
-		if (!Helpers.isPositionInsideRange(this.range, position)) {
-			return undefined;
-		}
-		return this;
-	}
-	
-	public contextAtRange(range: Range): Context | undefined {
-		if (!Helpers.isRangeInsideRange(this.range, range)) {
-			return undefined;
-		}
-		return this;
+export class ContextDocBase extends Context{
+	constructor(type: Context.ContextType, parent: Context) {
+		super(type, parent);
 	}
 	
 	
 	public buildDoc(state: ContextDocumentationDocState): void {
-		state.curBlockType = Context.ContextType.DocumentationBrief;
-	}
-	
-	
-	log(console: RemoteConsole, prefix: string = "", _prefixLines: string = "") {
-		console.log(`${prefix}Brief`);
 	}
 }

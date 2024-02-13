@@ -29,9 +29,11 @@ import { Context } from "../context";
 import { ContextDocumentationBlockText } from "./blockText";
 import { ContextDocumentationBrief } from "./brief";
 import { ContextDocumentationCode } from "./code";
+import { ContextDocBase } from "./contextDoc";
 import { ContextDocumentationCopyDoc } from "./copyDoc";
 import { ContextDocumentationDeprecated } from "./deprecated";
 import { ContextDocumentationDetails } from "./details";
+import { ContextDocumentationDocState } from "./docState";
 import { ContextDocumentationNote } from "./note";
 import { ContextDocumentationParagraph } from "./paragraph";
 import { ContextDocumentationParam } from "./param";
@@ -46,7 +48,11 @@ import { ContextDocumentationWarning } from "./warning";
 
 export class ContextDocumentationDoc extends Context{
 	protected _node: DocumentationDocCstNode;
-	protected _blocks: Context[] = [];
+	protected _blocks: ContextDocBase[] = [];
+	
+	public brief: string[] = [];
+	public details: string[] = [];
+	public since: string = '';
 	
 	
 	constructor(node: DocumentationDocCstNode, parent: Context) {
@@ -95,7 +101,7 @@ export class ContextDocumentationDoc extends Context{
 	
 	dispose(): void {
 		this._blocks.forEach(each => each.dispose());
-		this._blocks.slice(0);
+		this._blocks.splice(0);
 		
 		super.dispose();
 	}
@@ -107,6 +113,15 @@ export class ContextDocumentationDoc extends Context{
 	
 	public get blocks(): Context[] {
 		return this._blocks;
+	}
+	
+	
+	public buildDoc(): void {
+		let state = new ContextDocumentationDocState(this);
+		for (const each of this._blocks) {
+			each.buildDoc(state);
+		}
+		state.endParagraph();
 	}
 	
 	

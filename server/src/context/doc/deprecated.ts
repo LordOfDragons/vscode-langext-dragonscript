@@ -26,9 +26,10 @@ import { Position, Range, RemoteConsole } from "vscode-languageserver";
 import { Helpers } from "../../helpers";
 import { DocumentationDeprecatedCstNode } from "../../nodeclasses/doc/deprecated";
 import { Context } from "../context";
+import { ContextDocBase } from "./contextDoc";
 
 
-export class ContextDocumentationDeprecated extends Context{
+export class ContextDocumentationDeprecated extends ContextDocBase{
 	protected _node: DocumentationDeprecatedCstNode;
 	
 	

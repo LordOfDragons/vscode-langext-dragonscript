@@ -25,9 +25,11 @@
 import { IToken } from "chevrotain";
 import { RemoteConsole } from "vscode-languageserver";
 import { Context } from "../context";
+import { ContextDocBase } from "./contextDoc";
+import { ContextDocumentationDocState } from "./docState";
 
 
-export class ContextDocumentationWord extends Context{
+export class ContextDocumentationWord extends ContextDocBase{
 	protected _token: IToken;
 	
 	
@@ -43,6 +45,11 @@ export class ContextDocumentationWord extends Context{
 	
 	public get text(): string {
 		return this._token.image;
+	}
+	
+	
+	public buildDoc(state: ContextDocumentationDocState): void {
+		state.addWord(this._token.image);
 	}
 	
 	

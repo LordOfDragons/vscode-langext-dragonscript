@@ -74,7 +74,7 @@ export class DocumentationValidator {
 			};*/
 		documentation.docNode = this.doParseLog(scriptDocument, documentation, scriptDocument.settings, lexed, logs);
 		documentation.docContext = new ContextDocumentationDoc(documentation.docNode, documentation);
-			documentation.docContext?.log(remoteConsole(), "", "");
+			//documentation.docContext?.log(remoteConsole(), "", "");
 	}
 	
 	

@@ -112,7 +112,20 @@ export class ContextDocumentation extends Context{
 	
 	protected updateResolveTextLong(): string[] {
 		this.parseDocumentation();
-		return this.docText;
+		
+		let lines: string[] = [];
+		if (this.docContext) {
+			this.docContext.buildDoc();
+			if (this.docContext.brief) {
+				lines.push(...this.docContext.brief);
+				lines.push('___');
+			}
+			lines.push(...this.docContext.details);
+		}
+		
+		lines.push('___');
+		lines.push(...this.docText);
+		return lines;
 	}
 	
 	protected updateResolveTextShort(): string {

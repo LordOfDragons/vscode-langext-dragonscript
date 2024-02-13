@@ -26,9 +26,10 @@ import { Position, Range, RemoteConsole } from "vscode-languageserver";
 import { Helpers } from "../../helpers";
 import { DocumentationReferenceCstNode } from "../../nodeclasses/doc/reference";
 import { Context } from "../context";
+import { ContextDocBase } from "./contextDoc";
 
 
-export class ContextDocumentationReference extends Context{
+export class ContextDocumentationReference extends ContextDocBase{
 	protected _node: DocumentationReferenceCstNode;
 	
 	

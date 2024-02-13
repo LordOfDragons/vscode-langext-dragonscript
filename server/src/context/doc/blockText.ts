@@ -25,8 +25,9 @@
 import { Position, Range, RemoteConsole } from "vscode-languageserver";
 import { Helpers } from "../../helpers";
 import { DocumentationBlockTextCstNode } from "../../nodeclasses/doc/blockText";
-import { debugLogMessage } from "../../server";
 import { Context } from "../context";
+import { ContextDocBase } from "./contextDoc";
+import { ContextDocumentationDocState } from "./docState";
 import { ContextDocumentationEmboss } from "./emboss";
 import { ContextDocumentationNewline } from "./newline";
 import { ContextDocumentationReference } from "./reference";
@@ -34,9 +35,9 @@ import { ContextDocumentationSee } from "./see";
 import { ContextDocumentationWord } from "./word";
 
 
-export class ContextDocumentationBlockText extends Context{
+export class ContextDocumentationBlockText extends ContextDocBase{
 	protected _node: DocumentationBlockTextCstNode;
-	protected _words: Context[] = [];
+	protected _words: ContextDocBase[] = [];
 	
 	
 	constructor(node: DocumentationBlockTextCstNode, parent: Context) {
@@ -67,7 +68,7 @@ export class ContextDocumentationBlockText extends Context{
 	
 	dispose(): void {
 		this._words.forEach(each => each.dispose());
-		this._words.slice(0);
+		this._words.splice(0);
 		
 		super.dispose();
 	}
@@ -79,6 +80,14 @@ export class ContextDocumentationBlockText extends Context{
 	
 	public get words(): Context[] {
 		return this._words;
+	}
+	
+	
+	public buildDoc(state: ContextDocumentationDocState): void {
+		state.newParagraph();
+		for (const each of this._words) {
+			each.buildDoc(state);
+		}
 	}
 	
 	

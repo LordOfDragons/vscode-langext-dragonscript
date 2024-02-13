@@ -26,9 +26,10 @@ import { Position, Range, RemoteConsole } from "vscode-languageserver";
 import { Helpers } from "../../helpers";
 import { DocumentationEmbossCstNode } from "../../nodeclasses/doc/emboss";
 import { Context } from "../context";
+import { ContextDocBase } from "./contextDoc";
 
 
-export class ContextDocumentationEmboss extends Context{
+export class ContextDocumentationEmboss extends ContextDocBase{
 	protected _node: DocumentationEmbossCstNode;
 	
 	
