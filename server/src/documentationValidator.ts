@@ -26,13 +26,14 @@ import { ILexingResult, tokenName } from "chevrotain";
 import { Diagnostic, DiagnosticSeverity } from "vscode-languageserver";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { DSCapabilities } from "./capabilities";
+import { ContextDocumentationDoc } from "./context/doc/doc";
 import { ContextDocumentation } from "./context/documentation";
 import { Helpers } from "./helpers";
 import { DSDocLexer } from "./lexer_doc";
-import { DocumentationCstNode } from "./nodeclasses/doc/documentation";
+import { DocumentationDocCstNode } from "./nodeclasses/doc/documentation";
 import { DSDocParser } from "./parser_doc";
 import { ScriptDocument } from "./scriptDocument";
-import { debugLogMessage } from "./server";
+import { debugLogMessage, remoteConsole } from "./server";
 import { DSSettings } from "./settings";
 
 export class DocumentationValidator {
@@ -62,15 +63,18 @@ export class DocumentationValidator {
 		let diagnostics: Diagnostic[] = [];
 		const lexed = this.doLex(textDocument, documentation, scriptDocument.settings, diagnostics);
 		documentation.docNode = this.doParse(textDocument, documentation, scriptDocument.settings, lexed, diagnostics);
+		documentation.docContext = new ContextDocumentationDoc(documentation.docNode, documentation);
 	}
 	
 	public parseLog(scriptDocument: ScriptDocument, documentation: ContextDocumentation, logs: string[]): void {
-		//debugLogMessage(`text: "${documentation.token.image}"`);
+			//debugLogMessage(`text: "${documentation.token.image}"`);
 		const lexed = this.doLexLog(scriptDocument, documentation, scriptDocument.settings, logs);
-		/*for (const t of lexed.tokens) {
-			debugLogMessage(`lexed: ${tokenName(t.tokenType)} => "${t.image}"`);
-		};*/
+			/*for (const t of lexed.tokens) {
+				debugLogMessage(`lexed: ${tokenName(t.tokenType)} => "${t.image}"`);
+			};*/
 		documentation.docNode = this.doParseLog(scriptDocument, documentation, scriptDocument.settings, lexed, logs);
+		documentation.docContext = new ContextDocumentationDoc(documentation.docNode, documentation);
+			documentation.docContext?.log(remoteConsole(), "", "");
 	}
 	
 	
@@ -124,9 +128,9 @@ export class DocumentationValidator {
 	}
 	
 	protected doParse(textDocument: TextDocument, documentation: ContextDocumentation,
-			settings: DSSettings, lexed: ILexingResult, diagnostics: Diagnostic[]): DocumentationCstNode {
+			settings: DSSettings, lexed: ILexingResult, diagnostics: Diagnostic[]): DocumentationDocCstNode {
 		this._parser.input = lexed.tokens;
-		const node = this._parser.documentation() as DocumentationCstNode;
+		const node = this._parser.documentation() as DocumentationDocCstNode;
 		
 		if (this._parser.errors.length > 0) {
 			const docOffset = textDocument.offsetAt(Helpers.positionFrom(documentation.token, true));
@@ -165,9 +169,9 @@ export class DocumentationValidator {
 	}
 
 	protected doParseLog(document: ScriptDocument, documentation: ContextDocumentation, settings: DSSettings,
-			lexed: ILexingResult, logs: string[]): DocumentationCstNode {
+			lexed: ILexingResult, logs: string[]): DocumentationDocCstNode {
 		this._parser.input = lexed.tokens;
-		const node = this._parser.documentation() as DocumentationCstNode;
+		const node = this._parser.documentation() as DocumentationDocCstNode;
 		
 		if (this._parser.errors.length > 0) {
 			const docOffset = documentation.token.startLine ?? 0;

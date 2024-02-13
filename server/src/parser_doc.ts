@@ -64,39 +64,38 @@ export class DSDocParser extends CstParser{
 	})
 	
 	public docBlock = this.RULE("docBlock", () => {
-		this.OR([
-			{ALT: () => this.SUBRULE(this.brief)},
-			{ALT: () => this.SUBRULE(this.details)},
-			{ALT: () => this.SUBRULE(this.param)},
-			{ALT: () => this.SUBRULE(this.code)},
-			{ALT: () => this.SUBRULE(this.copyDoc)},
-			{ALT: () => this.SUBRULE(this.note)},
-			{ALT: () => this.SUBRULE(this.deprecated)},
-			{ALT: () => this.SUBRULE(this.paragraph)},
-			{ALT: () => this.SUBRULE(this.return)},
-			{ALT: () => this.SUBRULE(this.returnValue)},
-			{ALT: () => this.SUBRULE(this.since)},
-			{ALT: () => this.SUBRULE(this.version)},
-			{ALT: () => this.SUBRULE(this.throw)},
-			{ALT: () => this.SUBRULE(this.todo)},
-			{ALT: () => this.SUBRULE(this.warning)},
-			{ALT: () => this.SUBRULE(this.docBlockText)}
-		]);
+		this.OPTION(() => {
+			this.OR([
+				{ALT: () => this.SUBRULE(this.brief)},
+				{ALT: () => this.SUBRULE(this.details)},
+				{ALT: () => this.SUBRULE(this.param)},
+				{ALT: () => this.SUBRULE(this.code)},
+				{ALT: () => this.SUBRULE(this.copyDoc)},
+				{ALT: () => this.SUBRULE(this.note)},
+				{ALT: () => this.SUBRULE(this.deprecated)},
+				{ALT: () => this.SUBRULE(this.paragraph)},
+				{ALT: () => this.SUBRULE(this.return)},
+				{ALT: () => this.SUBRULE(this.returnValue)},
+				{ALT: () => this.SUBRULE(this.since)},
+				{ALT: () => this.SUBRULE(this.version)},
+				{ALT: () => this.SUBRULE(this.throw)},
+				{ALT: () => this.SUBRULE(this.todo)},
+				{ALT: () => this.SUBRULE(this.warning)}
+			])
+		});
+		this.SUBRULE(this.docBlockText);
 	})
 	
 	public brief = this.RULE("ruleBrief", () => {
 		this.CONSUME(DSDocLexer.tokenBrief);
-		this.SUBRULE(this.docBlockText);
 	})
 	
 	public details = this.RULE("ruleDetails", () => {
 		this.CONSUME(DSDocLexer.tokenDetails);
-		this.SUBRULE(this.docBlockText);
 	})
 	
 	public param = this.RULE("ruleParam", () => {
 		this.CONSUME(DSDocLexer.tokenParam);
-		this.SUBRULE(this.docBlockText);
 	})
 	
 	public code = this.RULE("ruleCode", () => {
@@ -105,61 +104,54 @@ export class DSDocParser extends CstParser{
 	
 	public copyDoc = this.RULE("ruleCopyDoc", () => {
 		this.CONSUME(DSDocLexer.tokenCopyDoc);
-		this.SUBRULE(this.docBlockText);
 	})
 	
 	public note = this.RULE("ruleNote", () => {
 		this.CONSUME(DSDocLexer.tokenNote);
-		this.SUBRULE(this.docBlockText);
 	})
 	
 	public deprecated = this.RULE("ruleDeprecated", () => {
 		this.CONSUME(DSDocLexer.tokenDeprecated);
-		this.SUBRULE(this.docBlockText);
 	})
 	
 	public paragraph = this.RULE("ruleParagraph", () => {
 		this.CONSUME(DSDocLexer.tokenParagraph);
-		this.SUBRULE(this.docBlockText);
 	})
 	
 	public return = this.RULE("ruleReturn", () => {
 		this.CONSUME(DSDocLexer.tokenReturn);
-		this.SUBRULE(this.docBlockText);
 	})
 	
 	public returnValue = this.RULE("ruleReturnValue", () => {
 		this.CONSUME(DSDocLexer.tokenReturnValue);
-		this.SUBRULE(this.docBlockText);
 	})
 	
 	public since = this.RULE("ruleSince", () => {
 		this.CONSUME(DSDocLexer.tokenSince);
-		this.SUBRULE(this.docBlockText);
 	})
 	
 	public version = this.RULE("ruleVersion", () => {
 		this.CONSUME(DSDocLexer.tokenVersion);
-		this.SUBRULE(this.docBlockText);
 	})
 	
 	public throw = this.RULE("ruleThrow", () => {
 		this.CONSUME(DSDocLexer.tokenThrow);
-		this.SUBRULE(this.docBlockText);
 	})
 	
 	public todo = this.RULE("ruleTodo", () => {
 		this.CONSUME(DSDocLexer.tokenTodo);
-		this.SUBRULE(this.docBlockText);
 	})
 	
 	public warning = this.RULE("ruleWarning", () => {
 		this.CONSUME(DSDocLexer.tokenWarning);
-		this.SUBRULE(this.docBlockText);
 	})
 	
 	
 	public docBlockText = this.RULE("docBlockText", () => {
+		this.MANY(() => this.SUBRULE(this.docBlockTextWord));
+	})
+	
+	public docBlockTextWord = this.RULE("docBlockTextWord", () => {
 		this.OR([
 			{ALT: () => this.SUBRULE(this.docWord)},
 			{ALT: () => this.SUBRULE(this.newline)}

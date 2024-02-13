@@ -50,7 +50,7 @@ import {
 	CodeAction} from 'vscode-languageserver/node'
 
 import {
-	TextDocument, TextEdit
+	TextDocument
 } from 'vscode-languageserver-textdocument'
 
 import { ContextScript } from "./context/script";
@@ -113,6 +113,11 @@ export function assertWarn(message: string) {
 export function reportDiagnostics(uri: string, diagnostics: Diagnostic[]) {
 	connection.sendDiagnostics({uri: uri, diagnostics});
 }
+
+export function remoteConsole() {
+	return connection.console;
+}
+
 
 // Create a simple text document manager.
 export const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);

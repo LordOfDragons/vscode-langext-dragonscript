@@ -82,20 +82,17 @@ export class DSDocLexer extends Lexer{
 	
 	public static readonly tokenBrief = createToken({
 		name: "brief",
-		pattern: /\\brief/,
-		longer_alt: DSDocLexer.tokenWord
+		pattern: /\\brief/
 	})
 	
 	public static readonly tokenDetails = createToken({
 		name: "details",
-		pattern: /\\details/,
-		longer_alt: DSDocLexer.tokenWord
+		pattern: /\\details/
 	})
 	
 	public static readonly tokenParam = createToken({
 		name: "param",
-		pattern: /\\param(\[(in|out|inout)\])?/,
-		longer_alt: DSDocLexer.tokenWord
+		pattern: /\\param(\[(in|out|inout)\])?/
 	})
 	
 	public static readonly tokenCode = createToken({
@@ -103,98 +100,82 @@ export class DSDocLexer extends Lexer{
 		pattern: new RegExp("/\\\\code(\\{[^}]+\\})?"
 			+ "(.(?!\\\\endcode))*"
 			+ "\\endcode"
-			),
-		longer_alt: DSDocLexer.tokenWord
+			)
 	})
 	
 	public static readonly tokenEndCode = createToken({
 		name: "endcode",
-		pattern: /\\endcode/,
-		longer_alt: DSDocLexer.tokenWord
+		pattern: /\\endcode/
 	})
 	
 	public static readonly tokenCopyDoc = createToken({
 		name: "copydoc",
-		pattern: /\\copydoc/,
-		longer_alt: DSDocLexer.tokenWord
+		pattern: /\\copydoc/
 	})
 	
 	public static readonly tokenEmboss = createToken({
 		name: "emboss",
-		pattern: /\\em/,
-		longer_alt: DSDocLexer.tokenWord
+		pattern: /\\em/
 	})
 	
 	public static readonly tokenReference = createToken({
 		name: "ref",
-		pattern: /\\ref/,
-		longer_alt: DSDocLexer.tokenWord
+		pattern: /\\ref/
 	})
 	
 	public static readonly tokenNote = createToken({
 		name: "note",
-		pattern: /\\note/,
-		longer_alt: DSDocLexer.tokenWord
+		pattern: /\\note/
 	})
 	
 	public static readonly tokenDeprecated = createToken({
 		name: "deprecated",
-		pattern: /\\deprecated/,
-		longer_alt: DSDocLexer.tokenWord
+		pattern: /\\deprecated/
 	})
 	
 	public static readonly tokenParagraph = createToken({
 		name: "paragraph",
-		pattern: /\\par/,
-		longer_alt: DSDocLexer.tokenWord
+		pattern: /\\par/
 	})
 	
 	public static readonly tokenReturn = createToken({
 		name: "return",
-		pattern: /\\(return|returns)/,
-		longer_alt: DSDocLexer.tokenWord
+		pattern: /\\(return|returns)/
 	})
 	
 	public static readonly tokenReturnValue = createToken({
 		name: "returnValue",
-		pattern: /\\retval/,
-		longer_alt: DSDocLexer.tokenWord
+		pattern: /\\retval/
 	})
 	
 	public static readonly tokenSee = createToken({
 		name: "see",
-		pattern: /\\(sa|see)/,
-		longer_alt: DSDocLexer.tokenWord
+		pattern: /\\(sa|see)/
 	})
 	
 	public static readonly tokenSince = createToken({
 		name: "since",
-		pattern: /\\since/,
-		longer_alt: DSDocLexer.tokenWord
+		pattern: /\\since/
 	})
 	
 	public static readonly tokenVersion = createToken({
 		name: "version",
-		pattern: /\\version/,
-		longer_alt: DSDocLexer.tokenWord
+		pattern: /\\version/
 	})
 	
 	public static readonly tokenThrow = createToken({
 		name: "throw",
-		pattern: /\\(throw|throws)/,
-		longer_alt: DSDocLexer.tokenWord
+		pattern: /\\(throw|throws)/
 	})
 	
 	public static readonly tokenTodo = createToken({
 		name: "todo",
-		pattern: /\\todo/,
-		longer_alt: DSDocLexer.tokenWord
+		pattern: /\\todo/
 	})
 	
 	public static readonly tokenWarning = createToken({
 		name: "warning",
-		pattern: /\\warning/,
-		longer_alt: DSDocLexer.tokenWord
+		pattern: /\\warning/
 	})
 	
 	

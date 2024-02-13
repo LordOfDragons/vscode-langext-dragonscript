@@ -454,6 +454,30 @@ export namespace Context {
 		Error,
 		Documentation,
 		Comment,
+		
+		DocumentationDoc,
+		DocumentationBlockText,
+		DocumentationBrief,
+		DocumentationDetails,
+		DocumentationParam,
+		DocumentationCode,
+		DocumentationCopyDoc,
+		DocumentationNote,
+		DocumentationDeprecated,
+		DocumentationParagraph,
+		DocumentationReturn,
+		DocumentationReturnValue,
+		DocumentationSince,
+		DocumentationVersion,
+		DocumentationThrow,
+		DocumentationTodo,
+		DocumentationWarning,
+		DocumentationEmboss,
+		DocumentationReference,
+		DocumentationSee,
+		DocumentationWord,
+		DocumentationNewline,
+		
 		Generic
 	}
 

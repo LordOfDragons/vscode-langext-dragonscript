@@ -25,16 +25,17 @@
 import { IToken } from "chevrotain";
 import { integer, Position, Range, RemoteConsole } from "vscode-languageserver";
 import { Helpers } from "../helpers";
-import { DocumentationCstNode } from "../nodeclasses/doc/documentation";
+import { DocumentationDocCstNode } from "../nodeclasses/doc/documentation";
 import { debugErrorMessage, debugLogMessage, documentationValidator, documents, scriptDocuments } from "../server";
 import { Context } from "./context";
+import { ContextDocumentationDoc } from "./doc/doc";
 
 
 export class ContextDocumentation extends Context{
 	protected _token: IToken;
 	public targetContexts: Set<Context> = new Set<Context>();
-	public docNode: DocumentationCstNode | undefined;
-	public docContext: Context | undefined;
+	public docNode?: DocumentationDocCstNode;
+	public docContext?: ContextDocumentationDoc;
 	private _docText?: string[];
 	
 	
