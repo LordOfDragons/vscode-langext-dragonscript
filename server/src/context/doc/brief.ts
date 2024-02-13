@@ -61,7 +61,7 @@ export class ContextDocumentationBrief extends ContextDocBase{
 	
 	
 	public buildDoc(state: ContextDocumentationDocState): void {
-		state.curBlockType = Context.ContextType.DocumentationBrief;
+		state.newParagraph(Context.ContextType.DocumentationBrief);
 	}
 	
 	

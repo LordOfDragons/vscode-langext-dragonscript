@@ -116,6 +116,12 @@ export class ContextDocumentation extends Context{
 		let lines: string[] = [];
 		if (this.docContext) {
 			this.docContext.buildDoc();
+			
+			if (this.docContext.since != '') {
+				lines.push(`_Since Version: ${this.docContext.since}_`);
+				lines.push('___');
+			}
+			
 			if (this.docContext.brief) {
 				lines.push(...this.docContext.brief);
 				lines.push('___');

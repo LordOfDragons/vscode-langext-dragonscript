@@ -27,6 +27,7 @@ import { Helpers } from "../../helpers";
 import { DocumentationSinceCstNode } from "../../nodeclasses/doc/since";
 import { Context } from "../context";
 import { ContextDocBase } from "./contextDoc";
+import { ContextDocumentationDocState } from "./docState";
 
 
 export class ContextDocumentationSince extends ContextDocBase{
@@ -55,6 +56,11 @@ export class ContextDocumentationSince extends ContextDocBase{
 			return undefined;
 		}
 		return this;
+	}
+	
+	
+	public buildDoc(state: ContextDocumentationDocState): void {
+		state.newParagraph(Context.ContextType.DocumentationSince);
 	}
 	
 	

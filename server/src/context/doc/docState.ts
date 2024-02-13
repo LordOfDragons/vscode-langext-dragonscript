@@ -72,6 +72,12 @@ export class ContextDocumentationDocState {
 				this.lines = [];
 				this.curBlockType = Context.ContextType.DocumentationDetails;
 				break;
+			
+			case Context.ContextType.DocumentationSince:
+			case Context.ContextType.DocumentationVersion:
+				this._doc.since = this.lines.join(' ');
+				this.curBlockType = Context.ContextType.DocumentationDetails;
+				break;
 				
 			case Context.ContextType.DocumentationDetails:
 				if (this._doc.details) {
@@ -91,7 +97,8 @@ export class ContextDocumentationDocState {
 		}
 	}
 	
-	public newParagraph(): void {
+	public newParagraph(type?: Context.ContextType): void {
 		this.endParagraph();
+		this.curBlockType = type ?? this.curBlockType;
 	}
 }

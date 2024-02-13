@@ -27,6 +27,7 @@ import { Helpers } from "../../helpers";
 import { DocumentationVersionCstNode } from "../../nodeclasses/doc/version";
 import { Context } from "../context";
 import { ContextDocBase } from "./contextDoc";
+import { ContextDocumentationDocState } from "./docState";
 
 
 export class ContextDocumentationVersion extends ContextDocBase{
@@ -55,6 +56,11 @@ export class ContextDocumentationVersion extends ContextDocBase{
 			return undefined;
 		}
 		return this;
+	}
+	
+	
+	public buildDoc(state: ContextDocumentationDocState): void {
+		state.newParagraph(Context.ContextType.DocumentationVersion);
 	}
 	
 	
