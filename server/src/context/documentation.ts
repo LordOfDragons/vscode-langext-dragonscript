@@ -137,15 +137,15 @@ export class ContextDocumentation extends Context{
 				lines.push('Parameters:');
 				
 				let parts: string[] = [];
-				parts.push('||||');
-				parts.push('|-|-|-|');
+				parts.push('| | | |');
+				parts.push('| :--- | :--- | :--- |');
 				for (const each of dc.params) {
 					const c = each[1];
 					var text = '';
 					if (c.direction) {
 						text = c.direction;
 					}
-					parts.push(`|${text} |\`\`\`${c.name}\`\`\` |${c.description.join(' ')} |`);
+					parts.push(`| ${text} | \`\`\`${c.name}\`\`\` | ${c.description.join(' ')} |`);
 				}
 				lines.push(parts.join('\n'));
 			}
@@ -163,10 +163,10 @@ export class ContextDocumentation extends Context{
 					}
 					
 					let parts: string[] = [];
-					parts.push('|||');
-					parts.push('|-|-|');
+					parts.push('| | |');
+					parts.push('| :--- | :--- |');
 					for (const each of dc.retvals) {
-						parts.push(`|\`\`\`${each.value}\`\`\` |${each.description.join(' ')} |`);
+						parts.push(`| \`\`\`${each.value}\`\`\` | ${each.description.join(' ')} |`);
 					}
 					lines.push(parts.join('\n'));
 				}
