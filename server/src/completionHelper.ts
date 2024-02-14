@@ -35,7 +35,6 @@ import { ResolveNamespace } from "./resolve/namespace";
 import { Resolved } from "./resolve/resolved";
 import { ResolveSearch } from "./resolve/search";
 import { ResolveType } from "./resolve/type";
-import { debugLogMessage } from "./server";
 
 
 export class CompletionHelper {
@@ -835,7 +834,6 @@ export class CompletionHelper {
 	public static createExpression(range: Range, context: Context, castable?: ResolveType[]): CompletionItem[] {
 		if (!castable) {
 			castable = context.parent?.expectTypes(context);
-			debugLogMessage(`createExpression castable ${castable?.at(0)?.resolveTextShort}`);
 		}
 		
 		let search = CompletionHelper.searchExpression(context, castable);
