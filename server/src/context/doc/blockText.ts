@@ -25,6 +25,7 @@
 import { Position, Range, RemoteConsole } from "vscode-languageserver";
 import { Helpers } from "../../helpers";
 import { DocumentationBlockTextCstNode } from "../../nodeclasses/doc/blockText";
+import { ResolveState } from "../../resolve/state";
 import { Context } from "../context";
 import { ContextDocumentationBold } from "./bold";
 import { ContextDocBuilder } from "./builder";
@@ -77,6 +78,13 @@ export class ContextDocumentationBlockText extends ContextDocBase{
 	
 	public get words(): Context[] {
 		return this._words;
+	}
+	
+	
+	public resolveMembers(state: ResolveState): void {
+		for (const each of this._words) {
+			each.resolveMembers(state);
+		}
 	}
 	
 	

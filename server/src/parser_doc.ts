@@ -117,6 +117,7 @@ export class DSDocParser extends CstParser{
 	
 	public paragraph = this.RULE("ruleParagraph", () => {
 		this.CONSUME(DSDocLexer.tokenParagraph);
+		this.MANY(() => this.SUBRULE(this.docWord));
 	})
 	
 	public return = this.RULE("ruleReturn", () => {

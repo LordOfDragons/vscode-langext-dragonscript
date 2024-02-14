@@ -44,6 +44,12 @@ export class ContextDocumentationReturn extends ContextDocBase{
 		return this._node;
 	}
 	
+	
+	public buildDoc(state: ContextDocumentationDocState): void {
+		state.newParagraph(Context.ContextType.DocumentationReturn);
+	}
+	
+	
 	public contextAtPosition(position: Position): Context | undefined {
 		if (!Helpers.isPositionInsideRange(this.range, position)) {
 			return undefined;
@@ -56,11 +62,6 @@ export class ContextDocumentationReturn extends ContextDocBase{
 			return undefined;
 		}
 		return this;
-	}
-	
-	
-	public buildDoc(state: ContextDocumentationDocState): void {
-		state.newParagraph(Context.ContextType.DocumentationReturn);
 	}
 	
 	

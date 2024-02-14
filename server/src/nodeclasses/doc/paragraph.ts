@@ -1,4 +1,5 @@
 import { CstNode, IToken } from "chevrotain";
+import { DocumentationWordCstNode } from "./word";
 
 
 export interface DocumentationParagraphCstNode extends CstNode {
@@ -8,4 +9,5 @@ export interface DocumentationParagraphCstNode extends CstNode {
 
 export type DocumentationParagraphCstChildren = {
 	paragraph: IToken[];
+	docWord?: DocumentationWordCstNode[];
 };

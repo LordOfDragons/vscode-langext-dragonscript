@@ -67,6 +67,8 @@ class ClassExtendImplement extends ClassExtend implements ActionListener, Collid
 		DefaultBindingHelper.new().mouseBindMove(null, null)
 		ECBehaviorAttachSlot.Instance.new(null, null).canAttach(null)
 		BaseGameApp.getApp().getBindingManager().findAxisBinding(0, 0)
+		ConsoleInputField
+		GamepadController
 	end
 	
 	public func void callMe( int value, Block ablock )

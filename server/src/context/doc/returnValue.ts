@@ -52,6 +52,14 @@ export class ContextDocumentationReturnValue extends ContextDocBase{
 	}
 	
 	
+	public buildDoc(state: ContextDocumentationDocState): void {
+		this.description.splice(0);
+		state.doc.retvals.push(this);
+		state.newParagraph(Context.ContextType.DocumentationReturnValue);
+		state.curRetVal = this;
+	}
+	
+	
 	public contextAtPosition(position: Position): Context | undefined {
 		if (!Helpers.isPositionInsideRange(this.range, position)) {
 			return undefined;
@@ -64,14 +72,6 @@ export class ContextDocumentationReturnValue extends ContextDocBase{
 			return undefined;
 		}
 		return this;
-	}
-	
-	
-	public buildDoc(state: ContextDocumentationDocState): void {
-		this.description.splice(0);
-		state.doc.retvals.push(this);
-		state.newParagraph(Context.ContextType.DocumentationReturnValue);
-		state.curRetVal = this;
 	}
 	
 	

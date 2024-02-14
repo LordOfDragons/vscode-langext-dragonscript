@@ -25,6 +25,7 @@
 import { Position, Range, RemoteConsole } from "vscode-languageserver";
 import { Helpers } from "../../helpers";
 import { DocumentationParamCstNode } from "../../nodeclasses/doc/param";
+import { ResolveState } from "../../resolve/state";
 import { Context } from "../context";
 import { ContextDocBase } from "./contextDoc";
 import { ContextDocumentationDocState } from "./docState";
@@ -58,6 +59,14 @@ export class ContextDocumentationParam extends ContextDocBase{
 	}
 	
 	
+	public buildDoc(state: ContextDocumentationDocState): void {
+		this.description.splice(0);
+		state.doc.params.set(this._name, this);
+		state.newParagraph(Context.ContextType.DocumentationParam);
+		state.curParam = this;
+	}
+	
+	
 	public contextAtPosition(position: Position): Context | undefined {
 		if (!Helpers.isPositionInsideRange(this.range, position)) {
 			return undefined;
@@ -70,14 +79,6 @@ export class ContextDocumentationParam extends ContextDocBase{
 			return undefined;
 		}
 		return this;
-	}
-	
-	
-	public buildDoc(state: ContextDocumentationDocState): void {
-		this.description.splice(0);
-		state.doc.params.set(this._name, this);
-		state.newParagraph(Context.ContextType.DocumentationParam);
-		state.curParam = this;
 	}
 	
 	

@@ -25,6 +25,7 @@
 import { Position, Range, RemoteConsole } from "vscode-languageserver";
 import { Helpers } from "../../helpers";
 import { DocumentationBoldCstNode } from "../../nodeclasses/doc/bold";
+import { ResolveState } from "../../resolve/state";
 import { Context } from "../context";
 import { ContextDocBuilder } from "./builder";
 import { ContextDocBase } from "./contextDoc";
@@ -52,6 +53,18 @@ export class ContextDocumentationBold extends ContextDocBase{
 	}
 	
 	
+	public resolveMembers(state: ResolveState): void {
+		this._word?.resolveMembers(state);
+	}
+	
+	
+	public buildDoc(state: ContextDocumentationDocState): void {
+		if (this._word) {
+			state.wrap('**', '**', () => this._word?.buildDoc(state));
+		}
+	}
+	
+	
 	public contextAtPosition(position: Position): Context | undefined {
 		if (!Helpers.isPositionInsideRange(this.range, position)) {
 			return undefined;
@@ -64,13 +77,6 @@ export class ContextDocumentationBold extends ContextDocBase{
 			return undefined;
 		}
 		return this;
-	}
-	
-	
-	public buildDoc(state: ContextDocumentationDocState): void {
-		if (this._word) {
-			state.wrap('**', '**', () => this._word?.buildDoc(state));
-		}
 	}
 	
 	

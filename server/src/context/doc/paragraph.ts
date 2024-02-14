@@ -25,23 +25,61 @@
 import { Position, Range, RemoteConsole } from "vscode-languageserver";
 import { Helpers } from "../../helpers";
 import { DocumentationParagraphCstNode } from "../../nodeclasses/doc/paragraph";
+import { ResolveState } from "../../resolve/state";
 import { Context } from "../context";
+import { ContextDocBuilder } from "./builder";
 import { ContextDocBase } from "./contextDoc";
+import { ContextDocumentationDocState } from "./docState";
 
 
 export class ContextDocumentationParagraph extends ContextDocBase{
 	protected _node: DocumentationParagraphCstNode;
+	protected _title: ContextDocBase[] = [];
 	
 	
 	constructor(node: DocumentationParagraphCstNode, parent: Context) {
 		super(Context.ContextType.DocumentationParagraph, parent);
 		this._node = node;
+		
+		const list = node.children.docWord;
+		if (list) {
+			for (const each of list) {
+				const c = ContextDocBuilder.createWord(each, this);
+				if (c) {
+					this._title.push(c);
+				}
+			}
+		}
+	}
+	
+	dispose(): void {
+		this._title.forEach(c => c.dispose());
+		this._title.splice(0);
+		super.dispose();
 	}
 	
 	
 	public get node(): DocumentationParagraphCstNode {
 		return this._node;
 	}
+	
+	
+	public resolveMembers(state: ResolveState): void {
+		for (const each of this._title) {
+			each.resolveMembers(state);
+		}
+	}
+	
+	
+	public buildDoc(state: ContextDocumentationDocState): void {
+		state.newParagraph(Context.ContextType.DocumentationDetails);
+		state.wrap('### ', '\n', () => {
+			for (const each of this._title) {
+				each.buildDoc(state);
+			}
+		});
+	}
+	
 	
 	public contextAtPosition(position: Position): Context | undefined {
 		if (!Helpers.isPositionInsideRange(this.range, position)) {

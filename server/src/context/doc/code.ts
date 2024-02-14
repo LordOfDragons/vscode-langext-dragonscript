@@ -25,6 +25,7 @@
 import { Position, Range, RemoteConsole } from "vscode-languageserver";
 import { Helpers } from "../../helpers";
 import { DocumentationCodeCstNode } from "../../nodeclasses/doc/code";
+import { ResolveState } from "../../resolve/state";
 import { Context } from "../context";
 import { ContextDocBase } from "./contextDoc";
 import { ContextDocumentationDocState } from "./docState";
@@ -91,18 +92,7 @@ export class ContextDocumentationCode extends ContextDocBase{
 	}
 	
 	
-	public contextAtPosition(position: Position): Context | undefined {
-		if (!Helpers.isPositionInsideRange(this.range, position)) {
-			return undefined;
-		}
-		return this;
-	}
-	
-	public contextAtRange(range: Range): Context | undefined {
-		if (!Helpers.isRangeInsideRange(this.range, range)) {
-			return undefined;
-		}
-		return this;
+	public resolveMembers(state: ResolveState): void {
 	}
 	
 	
@@ -115,6 +105,21 @@ export class ContextDocumentationCode extends ContextDocBase{
 		}
 		state.addWord('\n');
 		state.addWord('```');
+	}
+	
+	
+	public contextAtPosition(position: Position): Context | undefined {
+		if (!Helpers.isPositionInsideRange(this.range, position)) {
+			return undefined;
+		}
+		return this;
+	}
+	
+	public contextAtRange(range: Range): Context | undefined {
+		if (!Helpers.isRangeInsideRange(this.range, range)) {
+			return undefined;
+		}
+		return this;
 	}
 	
 	

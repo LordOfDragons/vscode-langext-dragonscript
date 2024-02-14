@@ -27,6 +27,7 @@ import { Helpers } from "../../helpers";
 import { DocumentationDetailsCstNode } from "../../nodeclasses/doc/details";
 import { Context } from "../context";
 import { ContextDocBase } from "./contextDoc";
+import { ContextDocumentationDocState } from "./docState";
 
 
 export class ContextDocumentationDetails extends ContextDocBase{
@@ -42,6 +43,12 @@ export class ContextDocumentationDetails extends ContextDocBase{
 	public get node(): DocumentationDetailsCstNode {
 		return this._node;
 	}
+	
+	
+	public buildDoc(state: ContextDocumentationDocState): void {
+		state.newParagraph(Context.ContextType.DocumentationDetails);
+	}
+	
 	
 	public contextAtPosition(position: Position): Context | undefined {
 		if (!Helpers.isPositionInsideRange(this.range, position)) {

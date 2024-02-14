@@ -138,6 +138,12 @@ export class ContextDocumentationDocState {
 				this.curBlockType = Context.ContextType.DocumentationDetails;
 				break;
 				
+			case Context.ContextType.DocumentationTodo:
+				this._doc.todo.push(...this.lines);
+				this.lines = [];
+				this.curBlockType = Context.ContextType.DocumentationDetails;
+				break;
+				
 			case Context.ContextType.DocumentationDetails:
 			default:
 				if (this._doc.details.length > 0) {

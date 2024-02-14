@@ -25,6 +25,7 @@
 import { Position, Range, RemoteConsole } from "vscode-languageserver";
 import { Helpers } from "../../helpers";
 import { DocumentationDocCstNode } from "../../nodeclasses/doc/documentation";
+import { ResolveState } from "../../resolve/state";
 import { Context } from "../context";
 import { ContextDocumentationBlockText } from "./blockText";
 import { ContextDocumentationBrief } from "./brief";
@@ -57,6 +58,7 @@ export class ContextDocumentationDoc extends Context{
 	public return: string[] = [];
 	protected _retvals: ContextDocumentationReturnValue[] = [];
 	public deprecated: string[] = [];
+	public todo: string[] = [];
 	
 	
 	constructor(node: DocumentationDocCstNode, parent: Context) {
@@ -127,6 +129,13 @@ export class ContextDocumentationDoc extends Context{
 	
 	public get retvals(): ContextDocumentationReturnValue[] {
 		return this._retvals;
+	}
+	
+	
+	public resolveMembers(state: ResolveState): void {
+		for (const each of this._blocks) {
+			each.resolveMembers(state);
+		}
 	}
 	
 	

@@ -136,8 +136,8 @@ export class ContextDocumentation extends Context{
 				if (lines.length > 0 && lines[lines.length - 1] != '___') {
 					lines.push('___');
 				}
-				lines.push('**Deprecated:**');
-				lines.push(...dc.deprecated.map(l => `*${l}*`));
+				lines.push('### Deprecated');
+				lines.push(...dc.deprecated);
 			}
 			
 			if (dc.brief) {
@@ -155,10 +155,7 @@ export class ContextDocumentation extends Context{
 			}
 			
 			if (dc.params.size > 0) {
-				if (lines.length > 0 && lines[lines.length - 1] != '___') {
-					lines.push('___');
-				}
-				lines.push('Parameters:');
+				lines.push('### Parameters');
 				
 				let parts: string[] = [];
 				parts.push('| | | |');
@@ -175,10 +172,7 @@ export class ContextDocumentation extends Context{
 			}
 			
 			if (dc.return.length > 0 || dc.retvals.length > 0) {
-				if (lines.length > 0 && lines[lines.length - 1] != '___') {
-					lines.push('___');
-				}
-				lines.push('Returns:');
+				lines.push('### Returns');
 				lines.push(...dc.return);
 				
 				if (dc.retvals.length > 0) {
@@ -195,10 +189,13 @@ export class ContextDocumentation extends Context{
 					lines.push(parts.join('\n'));
 				}
 			}
+			
+			if (dc.todo.length > 0) {
+				lines.push('### Todo');
+				lines.push(...dc.todo);
+			}
 		}
 		
-		//lines.push('___');
-		//lines.push(...this.docText);
 		return lines;
 	}
 	
@@ -218,6 +215,7 @@ export class ContextDocumentation extends Context{
 	
 	
 	public resolveStatements(state: ResolveState): void {
+		this.docContext?.resolveMembers(state);
 		this.resolveTextLong; // prepares documentation
 	}
 	
