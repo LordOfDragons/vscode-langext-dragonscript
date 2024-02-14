@@ -29,6 +29,7 @@ import { DocumentationDocCstNode } from "../nodeclasses/doc/documentation";
 import { debugErrorMessage, debugLogMessage, documentationValidator, documents, scriptDocuments } from "../server";
 import { Context } from "./context";
 import { ContextDocumentationDoc } from "./doc/doc";
+import { ContextDocumentationParam } from "./doc/param";
 
 
 export class ContextDocumentation extends Context{
@@ -114,19 +115,62 @@ export class ContextDocumentation extends Context{
 		this.parseDocumentation();
 		
 		let lines: string[] = [];
-		if (this.docContext) {
-			this.docContext.buildDoc();
+		const dc = this.docContext;
+		if (dc) {
+			dc.buildDoc();
 			
-			if (this.docContext.since != '') {
-				lines.push(`_Since Version: ${this.docContext.since}_`);
+			if (dc.since != '') {
+				lines.push(`_Since Version: ${dc.since}_`);
 				lines.push('___');
 			}
 			
-			if (this.docContext.brief) {
-				lines.push(...this.docContext.brief);
+			if (dc.brief) {
+				lines.push(...dc.brief);
 				lines.push('___');
 			}
-			lines.push(...this.docContext.details);
+			lines.push(...dc.details);
+			
+			if (dc.params.size > 0) {
+				if (lines.length > 0 && lines[lines.length - 1] != '___') {
+					lines.push('___');
+				}
+				lines.push('Parameters:');
+				
+				let parts: string[] = [];
+				parts.push('||||');
+				parts.push('|-|-|-|');
+				for (const each of dc.params) {
+					const c = each[1];
+					var text = '';
+					if (c.direction) {
+						text = c.direction;
+					}
+					parts.push(`|${text} |\`\`\`${c.name}\`\`\` |${c.description.join(' ')} |`);
+				}
+				lines.push(parts.join('\n'));
+			}
+			
+			if (dc.return.length > 0 || dc.retvals.length > 0) {
+				if (lines.length > 0 && lines[lines.length - 1] != '___') {
+					lines.push('___');
+				}
+				lines.push('Returns:');
+				lines.push(...dc.return);
+				
+				if (dc.retvals.length > 0) {
+					if (dc.return.length > 0) {
+						lines.push('');
+					}
+					
+					let parts: string[] = [];
+					parts.push('|||');
+					parts.push('|-|-|');
+					for (const each of dc.retvals) {
+						parts.push(`|\`\`\`${each.value}\`\`\` |${each.description.join(' ')} |`);
+					}
+					lines.push(parts.join('\n'));
+				}
+			}
 		}
 		
 		lines.push('___');

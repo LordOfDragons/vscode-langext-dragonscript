@@ -27,21 +27,36 @@ import { Helpers } from "../../helpers";
 import { DocumentationParamCstNode } from "../../nodeclasses/doc/param";
 import { Context } from "../context";
 import { ContextDocBase } from "./contextDoc";
+import { ContextDocumentationDocState } from "./docState";
 
 
 export class ContextDocumentationParam extends ContextDocBase{
 	protected _node: DocumentationParamCstNode;
+	protected _name: string;
+	public description: string[] = [];
+	public direction?: string;
 	
 	
 	constructor(node: DocumentationParamCstNode, parent: Context) {
 		super(Context.ContextType.DocumentationParam, parent);
 		this._node = node;
+		this._name = node.children.name[0].image;
+		
+		const p = node.children.param[0].image;
+		if (p.endsWith(']')) {
+			this.direction = p.substring(7, p.length - 1);
+		}
 	}
 	
 	
 	public get node(): DocumentationParamCstNode {
 		return this._node;
 	}
+	
+	public get name(): string {
+		return this._name;
+	}
+	
 	
 	public contextAtPosition(position: Position): Context | undefined {
 		if (!Helpers.isPositionInsideRange(this.range, position)) {
@@ -55,6 +70,14 @@ export class ContextDocumentationParam extends ContextDocBase{
 			return undefined;
 		}
 		return this;
+	}
+	
+	
+	public buildDoc(state: ContextDocumentationDocState): void {
+		this.description.splice(0);
+		state.doc.params.set(this._name, this);
+		state.newParagraph(Context.ContextType.DocumentationParam);
+		state.curParam = this;
 	}
 	
 	

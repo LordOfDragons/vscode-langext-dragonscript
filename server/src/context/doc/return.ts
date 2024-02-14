@@ -27,6 +27,7 @@ import { Helpers } from "../../helpers";
 import { DocumentationReturnCstNode } from "../../nodeclasses/doc/return";
 import { Context } from "../context";
 import { ContextDocBase } from "./contextDoc";
+import { ContextDocumentationDocState } from "./docState";
 
 
 export class ContextDocumentationReturn extends ContextDocBase{
@@ -55,6 +56,11 @@ export class ContextDocumentationReturn extends ContextDocBase{
 			return undefined;
 		}
 		return this;
+	}
+	
+	
+	public buildDoc(state: ContextDocumentationDocState): void {
+		state.newParagraph(Context.ContextType.DocumentationReturn);
 	}
 	
 	

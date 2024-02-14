@@ -27,21 +27,30 @@ import { Helpers } from "../../helpers";
 import { DocumentationReturnValueCstNode } from "../../nodeclasses/doc/returnValue";
 import { Context } from "../context";
 import { ContextDocBase } from "./contextDoc";
+import { ContextDocumentationDocState } from "./docState";
 
 
 export class ContextDocumentationReturnValue extends ContextDocBase{
 	protected _node: DocumentationReturnValueCstNode;
+	protected _value: string;
+	public description: string[] = [];
 	
 	
 	constructor(node: DocumentationReturnValueCstNode, parent: Context) {
 		super(Context.ContextType.DocumentationReturnValue, parent);
 		this._node = node;
+		this._value = node.children.value[0].image;
 	}
 	
 	
 	public get node(): DocumentationReturnValueCstNode {
 		return this._node;
 	}
+	
+	public get value(): string {
+		return this._value;
+	}
+	
 	
 	public contextAtPosition(position: Position): Context | undefined {
 		if (!Helpers.isPositionInsideRange(this.range, position)) {
@@ -55,6 +64,14 @@ export class ContextDocumentationReturnValue extends ContextDocBase{
 			return undefined;
 		}
 		return this;
+	}
+	
+	
+	public buildDoc(state: ContextDocumentationDocState): void {
+		this.description.splice(0);
+		state.doc.retvals.push(this);
+		state.newParagraph(Context.ContextType.DocumentationReturnValue);
+		state.curRetVal = this;
 	}
 	
 	

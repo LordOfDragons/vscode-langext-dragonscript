@@ -24,6 +24,8 @@
 
 import { Context } from "../context";
 import { ContextDocumentationDoc } from "./doc";
+import { ContextDocumentationParam } from "./param";
+import { ContextDocumentationReturnValue } from "./returnValue";
 
 
 export class ContextDocumentationDocState {
@@ -33,6 +35,8 @@ export class ContextDocumentationDocState {
 	public words: string[] = [];
 	public hasNewline = false;
 	protected _wordWrap?: string;
+	public curParam?: ContextDocumentationParam;
+	public curRetVal?: ContextDocumentationReturnValue;
 	
 	
 	constructor(doc: ContextDocumentationDoc) {
@@ -90,7 +94,7 @@ export class ContextDocumentationDocState {
 		if (this.lines.length > 0) {
 			switch (this.curBlockType) {
 			case Context.ContextType.DocumentationBrief:
-				this._doc.brief = this.lines;
+				this._doc.brief.push(...this.lines);
 				this.lines = [];
 				this.curBlockType = Context.ContextType.DocumentationDetails;
 				break;
@@ -102,20 +106,39 @@ export class ContextDocumentationDocState {
 				this.curBlockType = Context.ContextType.DocumentationDetails;
 				break;
 				
-			case Context.ContextType.DocumentationDetails:
-				if (this._doc.details) {
-					this._doc.details.push('');
+			case Context.ContextType.DocumentationParam:
+				if (!this.curParam) {
+					break;
 				}
-				this._doc.details.push(...this.lines);
+				this.curParam.description.push(...this.lines);
+				this.curParam = undefined;
 				this.lines = [];
-				
-			default:
-				if (this._doc.details) {
-					this._doc.details.push('');
-				}
-				this._doc.details.push(...this.lines);
-				this.lines = [];
+				this.curBlockType = Context.ContextType.DocumentationDetails;
 				break;
+			
+			case Context.ContextType.DocumentationReturnValue:
+				if (!this.curRetVal) {
+					break;
+				}
+				this.curRetVal.description.push(...this.lines);
+				this.curRetVal = undefined;
+				this.lines = [];
+				this.curBlockType = Context.ContextType.DocumentationDetails;
+				break;
+				
+			case Context.ContextType.DocumentationReturn:
+				this._doc.return.push(...this.lines);
+				this.lines = [];
+				this.curBlockType = Context.ContextType.DocumentationDetails;
+				break;
+				
+			case Context.ContextType.DocumentationDetails:
+			default:
+				if (this._doc.details.length > 0) {
+					this._doc.details.push('');
+				}
+				this._doc.details.push(...this.lines);
+				this.lines = [];
 			}
 		}
 	}

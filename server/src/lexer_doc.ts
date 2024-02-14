@@ -145,7 +145,7 @@ export class DSDocLexer extends Lexer{
 	
 	public static readonly tokenReturn = createToken({
 		name: "return",
-		pattern: /\\(return|returns)/
+		pattern: /\\(returns|return)/
 	})
 	
 	public static readonly tokenReturnValue = createToken({
@@ -155,7 +155,7 @@ export class DSDocLexer extends Lexer{
 	
 	public static readonly tokenSee = createToken({
 		name: "see",
-		pattern: /\\(sa|see)/
+		pattern: /\\(see|sa)/
 	})
 	
 	public static readonly tokenSince = createToken({

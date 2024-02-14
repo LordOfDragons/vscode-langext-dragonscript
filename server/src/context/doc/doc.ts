@@ -53,6 +53,9 @@ export class ContextDocumentationDoc extends Context{
 	public brief: string[] = [];
 	public details: string[] = [];
 	public since: string = '';
+	protected _params: Map<string, ContextDocumentationParam> = new Map();
+	public return: string[] = [];
+	protected _retvals: ContextDocumentationReturnValue[] = [];
 	
 	
 	constructor(node: DocumentationDocCstNode, parent: Context) {
@@ -102,6 +105,8 @@ export class ContextDocumentationDoc extends Context{
 	dispose(): void {
 		this._blocks.forEach(each => each.dispose());
 		this._blocks.splice(0);
+		this._params.clear();
+		this._retvals.splice(0);
 		
 		super.dispose();
 	}
@@ -115,8 +120,22 @@ export class ContextDocumentationDoc extends Context{
 		return this._blocks;
 	}
 	
+	public get params(): Map<string, ContextDocumentationParam> {
+		return this._params;
+	}
+	
+	public get retvals(): ContextDocumentationReturnValue[] {
+		return this._retvals;
+	}
+	
 	
 	public buildDoc(): void {
+		this.brief.splice(0);
+		this.details.splice(0);
+		this.since = '';
+		this._params.clear();
+		this._retvals.splice(0);
+		
 		let state = new ContextDocumentationDocState(this);
 		for (const each of this._blocks) {
 			each.buildDoc(state);

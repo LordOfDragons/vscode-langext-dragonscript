@@ -8,4 +8,5 @@ export interface DocumentationReturnValueCstNode extends CstNode {
 
 export type DocumentationReturnValueCstChildren = {
 	returnValue: IToken[];
+	value: IToken[];
 };

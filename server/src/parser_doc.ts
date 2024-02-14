@@ -96,6 +96,7 @@ export class DSDocParser extends CstParser{
 	
 	public param = this.RULE("ruleParam", () => {
 		this.CONSUME(DSDocLexer.tokenParam);
+		this.CONSUME(DSDocLexer.tokenWord, {LABEL: "name"});
 	})
 	
 	public code = this.RULE("ruleCode", () => {
@@ -124,6 +125,7 @@ export class DSDocParser extends CstParser{
 	
 	public returnValue = this.RULE("ruleReturnValue", () => {
 		this.CONSUME(DSDocLexer.tokenReturnValue);
+		this.CONSUME(DSDocLexer.tokenWord, {LABEL: "value"});
 	})
 	
 	public since = this.RULE("ruleSince", () => {
