@@ -237,6 +237,8 @@ export class ContextInterface extends Context{
 				each.resolveStatements(state);
 			}
 		});
+		
+		this.documentation?.resolveStatements(state);
 	}
 
 	public contextAtPosition(position: Position): Context | undefined {

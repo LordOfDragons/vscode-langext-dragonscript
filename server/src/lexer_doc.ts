@@ -41,11 +41,6 @@ export class DSDocLexer extends Lexer{
 		pattern: /\*\//
 	})
 	
-	public static readonly tokenDocLine = createToken({
-		name: "docLine",
-		pattern: /\*/
-	})
-	
 	public static readonly tokenSpace = createToken({
 		name: "space",
 		pattern: /[ \t\f]+/,
@@ -181,6 +176,12 @@ export class DSDocLexer extends Lexer{
 	public static readonly tokenWarning = createToken({
 		name: "warning",
 		pattern: /\\warning/
+	})
+	
+	public static readonly tokenDocLine = createToken({
+		name: "docLine",
+		pattern: /\*/,
+		longer_alt: DSDocLexer.tokenWord
 	})
 	
 	

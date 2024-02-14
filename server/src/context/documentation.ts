@@ -23,13 +23,13 @@
  */
 
 import { IToken } from "chevrotain";
-import { integer, Position, Range, RemoteConsole } from "vscode-languageserver";
+import { integer, MarkupContent, MarkupKind, Position, Range, RemoteConsole } from "vscode-languageserver";
 import { Helpers } from "../helpers";
 import { DocumentationDocCstNode } from "../nodeclasses/doc/documentation";
+import { ResolveState } from "../resolve/state";
 import { debugErrorMessage, debugLogMessage, documentationValidator, documents, scriptDocuments } from "../server";
 import { Context } from "./context";
 import { ContextDocumentationDoc } from "./doc/doc";
-import { ContextDocumentationParam } from "./doc/param";
 
 
 export class ContextDocumentation extends Context{
@@ -37,7 +37,9 @@ export class ContextDocumentation extends Context{
 	public targetContexts: Set<Context> = new Set<Context>();
 	public docNode?: DocumentationDocCstNode;
 	public docContext?: ContextDocumentationDoc;
-	private _docText?: string[];
+	protected _docText?: string[];
+	protected _isDeprecated = false;
+	protected _markup: MarkupContent | undefined;
 	
 	
 	constructor(token: IToken, parent: Context) {
@@ -67,11 +69,16 @@ export class ContextDocumentation extends Context{
 		return this._docText;
 	}
 	
+	public get isDeprecated(): boolean {
+		return this._isDeprecated;
+	}
+	
 	
 	public parseDocumentation(): void {
 		this.docContext?.dispose();
 		this.docContext = undefined;
 		this.docNode = undefined;
+		this._isDeprecated = false;
 		
 		const uri = this.documentUri;
 		if (!uri) {
@@ -120,15 +127,32 @@ export class ContextDocumentation extends Context{
 			dc.buildDoc();
 			
 			if (dc.since != '') {
-				lines.push(`_Since Version: ${dc.since}_`);
-				lines.push('___');
+				lines.push(`Since Version: \`\`\`${dc.since}\`\`\``);
+			}
+			
+			if (dc.deprecated.length > 0) {
+				this._isDeprecated = true;
+				
+				if (lines.length > 0 && lines[lines.length - 1] != '___') {
+					lines.push('___');
+				}
+				lines.push('**Deprecated:**');
+				lines.push(...dc.deprecated.map(l => `*${l}*`));
 			}
 			
 			if (dc.brief) {
+				if (lines.length > 0 && lines[lines.length - 1] != '___') {
+					lines.push('___');
+				}
 				lines.push(...dc.brief);
-				lines.push('___');
 			}
-			lines.push(...dc.details);
+			
+			if (dc.details.length > 0) {
+				if (lines.length > 0 && lines[lines.length - 1] != '___') {
+					lines.push('___');
+				}
+				lines.push(...dc.details);
+			}
 			
 			if (dc.params.size > 0) {
 				if (lines.length > 0 && lines[lines.length - 1] != '___') {
@@ -173,13 +197,28 @@ export class ContextDocumentation extends Context{
 			}
 		}
 		
-		lines.push('___');
-		lines.push(...this.docText);
+		//lines.push('___');
+		//lines.push(...this.docText);
 		return lines;
 	}
 	
 	protected updateResolveTextShort(): string {
 		return this.docText.join('  \n');
+	}
+	
+	public get markup(): MarkupContent {
+		if (!this._markup) {
+			this._markup = {
+				kind: MarkupKind.Markdown,
+				value: this.resolveTextLong.join('  \n')
+			}
+		}
+		return this._markup;
+	}
+	
+	
+	public resolveStatements(state: ResolveState): void {
+		this.resolveTextLong; // prepares documentation
 	}
 	
 	

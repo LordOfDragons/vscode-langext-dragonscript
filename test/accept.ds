@@ -66,6 +66,7 @@ class ClassExtendImplement extends ClassExtend implements ActionListener, Collid
 		LoadImpactMaterialSound.new(BaseGameApp.getApp().getConsole()).loadFromFiles(null, null, false)
 		DefaultBindingHelper.new().mouseBindMove(null, null)
 		ECBehaviorAttachSlot.Instance.new(null, null).canAttach(null)
+		BaseGameApp.getApp().getBindingManager().findAxisBinding(0, 0)
 	end
 	
 	public func void callMe( int value, Block ablock )

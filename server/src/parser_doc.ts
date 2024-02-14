@@ -150,6 +150,7 @@ export class DSDocParser extends CstParser{
 	
 	
 	public docBlockText = this.RULE("docBlockText", () => {
+		this.OPTION(() => this.CONSUME(DSDocLexer.tokenDocLine));
 		this.MANY(() => this.SUBRULE(this.docBlockTextWord));
 	})
 	

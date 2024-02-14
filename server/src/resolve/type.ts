@@ -29,7 +29,7 @@ import { ResolveFunctionGroup } from './functionGroup';
 import { ResolveFunction } from './function';
 import { ResolveVariable } from './variable';
 import { ResolveSearch } from './search';
-import { CompletionItem, CompletionItemKind, InsertTextFormat, MarkupKind, Position, Range, TextEdit } from 'vscode-languageserver';
+import { CompletionItem, CompletionItemKind, InsertTextFormat, MarkupContent, MarkupKind, Position, Range, TextEdit } from 'vscode-languageserver';
 import { Context } from '../context/context';
 import { Resolved } from './resolved';
 
@@ -112,8 +112,8 @@ export class ResolveType extends Resolved{
 			sortText: this._name,
 			filterText: this._name,
 			detail: `${this.completionItemTitle}: ${this.fullyQualifiedName}`,
+			documentation: this.completionItemMarkup,
 			kind: this.completionItemKind,
-			documentation: {kind: MarkupKind.Markdown, value: documentation.join('  \n')},
 			insertTextFormat: InsertTextFormat.Snippet,
 			textEdit: TextEdit.replace(range, this._name),
 			additionalTextEdits: extraEdits,
@@ -126,6 +126,10 @@ export class ResolveType extends Resolved{
 	
 	protected get completionItemKind(): CompletionItemKind {
 		return CompletionItemKind.Module;
+	}
+	
+	protected get completionItemMarkup(): MarkupContent | undefined {
+		return undefined;
 	}
 	
 	public get pinNamespace(): string | undefined {
@@ -141,6 +145,7 @@ export class ResolveType extends Resolved{
 	public createCompletionItemThis(range: Range): CompletionItem {
 		return {label: 'this',
 			detail: `${this.completionItemTitle} ${this.fullyQualifiedName}`,
+			documentation: this.completionItemMarkup,
 			kind: CompletionItemKind.Keyword,
 			insertTextFormat: InsertTextFormat.PlainText,
 			textEdit: TextEdit.replace(range, 'this'),
@@ -150,6 +155,7 @@ export class ResolveType extends Resolved{
 	public createCompletionItemSuper(range: Range): CompletionItem {
 		return {label: 'super',
 			detail: `${this.completionItemTitle} ${this.fullyQualifiedName}`,
+			documentation: this.completionItemMarkup,
 			kind: CompletionItemKind.Keyword,
 			insertTextFormat: InsertTextFormat.PlainText,
 			textEdit: TextEdit.replace(range, 'super'),

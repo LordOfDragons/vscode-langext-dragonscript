@@ -22,12 +22,13 @@
  * SOFTWARE.
  */
 
-import { CompletionItem, CompletionItemKind, DiagnosticRelatedInformation, InsertTextFormat, integer, Location, ParameterInformation, Position, Range, SignatureInformation, TextEdit } from 'vscode-languageserver';
+import { CompletionItem, CompletionItemKind, CompletionItemTag, DiagnosticRelatedInformation, InsertTextFormat, integer, Location, MarkupContent, MarkupKind, ParameterInformation, Position, Range, SignatureInformation, TextEdit } from 'vscode-languageserver';
 import { ContextFunction } from '../context/classFunction';
 import { Context } from '../context/context';
 import { ContextDocumentation } from '../context/documentation';
 import { ContextBlock } from '../context/expressionBlock';
 import { RefactoringHelper } from '../refactoringHelper';
+import { debugLogMessage } from '../server';
 import { ResolveClass } from './class';
 import { ResolveFunctionGroup } from './functionGroup';
 import { ResolveNamespace } from './namespace';
@@ -173,6 +174,7 @@ export class ResolveFunction extends Resolved{
 		var label = this._name;
 		var text = this._name;
 		var title: string;
+		var tags: CompletionItemTag[] = [];
 		
 		if (this._context) {
 			switch (this._context.type) {
@@ -214,6 +216,10 @@ export class ResolveFunction extends Resolved{
 				title = 'function';
 				commitCharacters.push('.');
 			}
+			
+			if (this._context.documentation?.isDeprecated) {
+				tags.push(CompletionItemTag.Deprecated);
+			}
 		} else {
 			title = 'function';
 			commitCharacters.push('.');
@@ -229,10 +235,12 @@ export class ResolveFunction extends Resolved{
 			sortText: this._name,
 			filterText: this._name,
 			detail: `${title}: ${this.context?.resolveTextShort}`,
+			documentation: this.context?.documentation?.markup,
 			kind: CompletionItemKind.Function,
 			insertTextFormat: InsertTextFormat.Snippet,
 			textEdit: TextEdit.replace(range, text),
-			commitCharacters: commitCharacters};
+			commitCharacters: commitCharacters,
+			tags: tags};
 	}
 	
 	public createSnippetSignature(): string {
@@ -339,6 +347,11 @@ export class ResolveFunction extends Resolved{
 		var parts: string[] = [];
 		var argIndex: number = 0;
 		var title: string;
+		var tags: CompletionItemTag[] = [];
+		
+		if (this._context.documentation?.isDeprecated) {
+			tags.push(CompletionItemTag.Deprecated);
+		}
 		
 		const ct = this._context as ContextFunction;
 		switch (ct.functionType) {
@@ -431,10 +444,12 @@ export class ResolveFunction extends Resolved{
 			sortText: `${sortPrefix}${this._name}`,
 			filterText: this._name,
 			detail: `${title}: ${this.context?.resolveTextShort}`,
+			documentation: this.context?.documentation?.markup,
 			kind: CompletionItemKind.Function,
 			insertTextFormat: InsertTextFormat.Snippet,
 			textEdit: TextEdit.replace(range, parts.join('')),
-			additionalTextEdits: extraEdits};
+			additionalTextEdits: extraEdits,
+			tags: tags};
 	}
 	
 	public get documentation(): ContextDocumentation | undefined {

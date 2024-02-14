@@ -170,6 +170,8 @@ export class ContextClassVariable extends Context{
 		}
 
 		this._value?.resolveStatements(state);
+		
+		this.documentation?.resolveStatements(state);
 	}
 
 	public contextAtPosition(position: Position): Context | undefined {

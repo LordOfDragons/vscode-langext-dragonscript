@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-import { CompletionItemKind, DiagnosticRelatedInformation, Location } from 'vscode-languageserver';
+import { CompletionItemKind, DiagnosticRelatedInformation, Location, MarkupContent } from 'vscode-languageserver';
 import { ContextDocumentation } from '../context/documentation';
 import { ContextEnumeration } from '../context/scriptEnum';
 import { ResolveNamespace } from './namespace';
@@ -70,6 +70,10 @@ export class ResolveEnumeration extends ResolveType {
 	
 	protected get completionItemKind(): CompletionItemKind {
 		return CompletionItemKind.Enum;
+	}
+	
+	protected get completionItemMarkup(): MarkupContent | undefined {
+		return this.context?.documentation?.markup;
 	}
 	
 	

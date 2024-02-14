@@ -56,6 +56,7 @@ export class ContextDocumentationDoc extends Context{
 	protected _params: Map<string, ContextDocumentationParam> = new Map();
 	public return: string[] = [];
 	protected _retvals: ContextDocumentationReturnValue[] = [];
+	public deprecated: string[] = [];
 	
 	
 	constructor(node: DocumentationDocCstNode, parent: Context) {
@@ -135,6 +136,7 @@ export class ContextDocumentationDoc extends Context{
 		this.since = '';
 		this._params.clear();
 		this._retvals.splice(0);
+		this.deprecated.splice(0);
 		
 		let state = new ContextDocumentationDocState(this);
 		for (const each of this._blocks) {

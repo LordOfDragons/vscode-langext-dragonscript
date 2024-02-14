@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-import { CompletionItemKind, DiagnosticRelatedInformation, Location } from 'vscode-languageserver';
+import { CompletionItemKind, DiagnosticRelatedInformation, Location, MarkupContent } from 'vscode-languageserver';
 import { ContextDocumentation } from '../context/documentation';
 import { ContextInterface } from '../context/scriptInterface';
 import { ResolveNamespace } from './namespace';
@@ -119,6 +119,10 @@ export class ResolveInterface extends ResolveType {
 	
 	protected get completionItemKind(): CompletionItemKind {
 		return CompletionItemKind.Interface;
+	}
+	
+	protected get completionItemMarkup(): MarkupContent | undefined {
+		return this.context?.documentation?.markup;
 	}
 	
 	public get documentation(): ContextDocumentation | undefined {

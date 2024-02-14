@@ -132,6 +132,12 @@ export class ContextDocumentationDocState {
 				this.curBlockType = Context.ContextType.DocumentationDetails;
 				break;
 				
+			case Context.ContextType.DocumentationDeprecated:
+				this._doc.deprecated.push(...this.lines);
+				this.lines = [];
+				this.curBlockType = Context.ContextType.DocumentationDetails;
+				break;
+				
 			case Context.ContextType.DocumentationDetails:
 			default:
 				if (this._doc.details.length > 0) {

@@ -113,6 +113,8 @@ export class ContextEnumEntry extends Context{
 				container.addVariable(this._resolveVariable);
 			}
 		}
+		
+		this.documentation?.resolveStatements(state);
 	}
 
 	public contextAtPosition(position: Position): Context | undefined {
@@ -287,6 +289,8 @@ export class ContextEnumeration extends Context{
 				});
 			});
 		}
+		
+		this.documentation?.resolveStatements(state);
 		
 		state.withScopeContext(this, () => {
 			for (const each of this._entries) {

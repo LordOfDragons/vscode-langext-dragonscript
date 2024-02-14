@@ -387,6 +387,8 @@ export class ContextFunction extends Context{
 			this._superCall?.resolveStatements(state);
 			this._statements?.resolveStatements(state);
 		});
+		
+		this.documentation?.resolveStatements(state);
 	}
 
 	public contextAtPosition(position: Position): Context | undefined {

@@ -343,6 +343,8 @@ export class ContextClass extends Context{
 				each.resolveStatements(state);
 			}
 		});
+		
+		this.documentation?.resolveStatements(state);
 	}
 
 	protected updateHover(position: Position): Hover | null {
