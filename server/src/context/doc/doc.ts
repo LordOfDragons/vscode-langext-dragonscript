@@ -59,6 +59,8 @@ export class ContextDocumentationDoc extends Context{
 	protected _retvals: ContextDocumentationReturnValue[] = [];
 	public deprecated: string[] = [];
 	public todo: string[] = [];
+	public note: string[] = [];
+	public warning: string[] = [];
 	
 	
 	constructor(node: DocumentationDocCstNode, parent: Context) {
@@ -140,13 +142,6 @@ export class ContextDocumentationDoc extends Context{
 	
 	
 	public buildDoc(): void {
-		this.brief.splice(0);
-		this.details.splice(0);
-		this.since = '';
-		this._params.clear();
-		this._retvals.splice(0);
-		this.deprecated.splice(0);
-		
 		let state = new ContextDocumentationDocState(this);
 		for (const each of this._blocks) {
 			each.buildDoc(state);

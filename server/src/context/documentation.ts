@@ -46,6 +46,8 @@ export class ContextDocumentation extends Context{
 	protected _sectionParams: string[] = [];
 	protected _sectionReturn: string[] = [];
 	protected _sectionTodo: string[] = [];
+	protected _sectionNote: string[] = [];
+	protected _sectionWarning: string[] = [];
 	
 	
 	constructor(token: IToken, parent: Context) {
@@ -81,16 +83,9 @@ export class ContextDocumentation extends Context{
 	
 	
 	public parseDocumentation(): void {
-		this.docContext?.dispose();
-		this.docContext = undefined;
-		this.docNode = undefined;
-		this._isDeprecated = false;
-		this._sectionDeprecated.splice(0);
-		this._sectionBrief.splice(0);
-		this._sectionDetails.splice(0);
-		this._sectionParams.splice(0);
-		this._sectionReturn.splice(0);
-		this._sectionTodo.splice(0);
+		if (this.docContext) {
+			return;
+		}
 		
 		const uri = this.documentUri;
 		if (!uri) {
@@ -145,26 +140,41 @@ export class ContextDocumentation extends Context{
 		
 		const dc = this.docContext;
 		if (dc) {
-			if (dc.since != '') {
-				lines.push(`Since Version: \`\`\`${dc.since}\`\`\``);
-			}
-			
 			this.buildSectionDeprecated(dc);
 			this.buildSectionBrief(dc);
 			this.buildSectionDetails(dc);
 			this.buildSectionParams(dc);
 			this.buildSectionReturn(dc);
 			this.buildSectionTodo(dc);
+			this.buildSectionNote(dc);
+			this.buildSectionWarning(dc);
+			
+			if (dc.since != '') {
+				lines.push(`Since Version: \`\`\`${dc.since}\`\`\``);
+			}
 			
 			lines.push(...this._sectionDeprecated);
+			
+			this.addParaSepIfRequired(lines);
 			lines.push(...this._sectionBrief);
+			
+			this.addParaSepIfRequired(lines);
 			lines.push(...this._sectionDetails);
+			
 			lines.push(...this._sectionParams);
 			lines.push(...this._sectionReturn);
+			lines.push(...this._sectionWarning);
+			lines.push(...this._sectionNote);
 			lines.push(...this._sectionTodo);
 		}
 		
 		return lines;
+	}
+	
+	protected addParaSepIfRequired(lines: string[]) {
+		if (lines.length > 0 && lines[lines.length - 1] != '___') {
+			lines.push('___');
+		}
 	}
 	
 	protected buildSectionDeprecated(context: ContextDocumentationDoc): void {
@@ -172,29 +182,15 @@ export class ContextDocumentation extends Context{
 			return;
 		}
 		
-		this._sectionDeprecated.push('### Deprecated');
+		this._sectionDeprecated.push('### 🪦 Deprecated');
 		this._sectionDeprecated.push(...context.deprecated);
 	}
 	
 	protected buildSectionBrief(context: ContextDocumentationDoc): void {
-		if (!context.brief) {
-			return;
-		}
-		
-		if (this._sectionBrief.length > 0 && this._sectionBrief[this._sectionBrief.length - 1] != '___') {
-			this._sectionBrief.push('___');
-		}
 		this._sectionBrief.push(...context.brief);
 	}
 	
 	protected buildSectionDetails(context: ContextDocumentationDoc): void {
-		if (context.details.length == 0) {
-			return;
-		}
-		
-		if (this._sectionDetails.length > 0 && this._sectionDetails[this._sectionDetails.length - 1] != '___') {
-			this._sectionDetails.push('___');
-		}
 		this._sectionDetails.push(...context.details);
 	}
 	
@@ -203,7 +199,7 @@ export class ContextDocumentation extends Context{
 			return;
 		}
 		
-		this._sectionParams.push('### Parameters');
+		this._sectionParams.push('### 🔀 Parameters');
 		
 		let parts: string[] = [];
 		parts.push('| | | |');
@@ -224,7 +220,7 @@ export class ContextDocumentation extends Context{
 			return;
 		}
 		
-		this._sectionReturn.push('### Returns');
+		this._sectionReturn.push('### ↪️ Returns');
 		this._sectionReturn.push(...context.return);
 		
 		if (context.retvals.length == 0) {
@@ -249,8 +245,26 @@ export class ContextDocumentation extends Context{
 			return;
 		}
 		
-		this._sectionTodo.push('### Todo');
+		this._sectionTodo.push('### 📝 Todo');
 		this._sectionTodo.push(...context.todo);
+	}
+	
+	protected buildSectionNote(context: ContextDocumentationDoc): void {
+		if (context.note.length == 0) {
+			return;
+		}
+		
+		this._sectionNote.push('### 📌 Note');
+		this._sectionNote.push(...context.note);
+	}
+	
+	protected buildSectionWarning(context: ContextDocumentationDoc): void {
+		if (context.warning.length == 0) {
+			return;
+		}
+		
+		this._sectionWarning.push('### ⚠️ Warning');
+		this._sectionWarning.push(...context.warning);
 	}
 	
 	protected updateResolveTextShort(): string {

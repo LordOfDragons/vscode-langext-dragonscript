@@ -27,6 +27,7 @@ import { Helpers } from "../../helpers";
 import { DocumentationWarningCstNode } from "../../nodeclasses/doc/warning";
 import { Context } from "../context";
 import { ContextDocBase } from "./contextDoc";
+import { ContextDocumentationDocState } from "./docState";
 
 
 export class ContextDocumentationWarning extends ContextDocBase{
@@ -41,6 +42,11 @@ export class ContextDocumentationWarning extends ContextDocBase{
 	
 	public get node(): DocumentationWarningCstNode {
 		return this._node;
+	}
+	
+	
+	public buildDoc(state: ContextDocumentationDocState): void {
+		state.newParagraph(Context.ContextType.DocumentationWarning);
 	}
 	
 	

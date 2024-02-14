@@ -61,6 +61,7 @@ class ClassExtendImplement extends ClassExtend implements ActionListener, Collid
 	public func new( String arg1, bool arg2 )
 		BaseGameApp.defaultPathGuiTheme
 		BaseGameApp.eventDeviceParamsChanged
+		BaseGameApp.settingInputInvertLookVertical
 		BaseGameApp.getApp().getWindowConsole()
 		ImpactMaterialSound.new("id").playSound(GameWorld.new(), null cast CollisionInfo, null)
 		LoadImpactMaterialSound.new(BaseGameApp.getApp().getConsole()).loadFromFiles(null, null, false)
@@ -69,6 +70,7 @@ class ClassExtendImplement extends ClassExtend implements ActionListener, Collid
 		BaseGameApp.getApp().getBindingManager().findAxisBinding(0, 0)
 		ConsoleInputField
 		GamepadController
+		Element.new(null).enterFrame()
 	end
 	
 	public func void callMe( int value, Block ablock )

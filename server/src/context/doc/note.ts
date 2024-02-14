@@ -27,6 +27,7 @@ import { Helpers } from "../../helpers";
 import { DocumentationNoteCstNode } from "../../nodeclasses/doc/note";
 import { Context } from "../context";
 import { ContextDocBase } from "./contextDoc";
+import { ContextDocumentationDocState } from "./docState";
 
 
 export class ContextDocumentationNote extends ContextDocBase{
@@ -41,6 +42,11 @@ export class ContextDocumentationNote extends ContextDocBase{
 	
 	public get node(): DocumentationNoteCstNode {
 		return this._node;
+	}
+	
+	
+	public buildDoc(state: ContextDocumentationDocState): void {
+		state.newParagraph(Context.ContextType.DocumentationNote);
 	}
 	
 	

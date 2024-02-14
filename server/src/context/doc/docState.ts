@@ -144,6 +144,18 @@ export class ContextDocumentationDocState {
 				this.curBlockType = Context.ContextType.DocumentationDetails;
 				break;
 				
+			case Context.ContextType.DocumentationNote:
+				this._doc.note.push(...this.lines);
+				this.lines = [];
+				this.curBlockType = Context.ContextType.DocumentationDetails;
+				break;
+				
+			case Context.ContextType.DocumentationWarning:
+				this._doc.warning.push(...this.lines);
+				this.lines = [];
+				this.curBlockType = Context.ContextType.DocumentationDetails;
+				break;
+				
 			case Context.ContextType.DocumentationDetails:
 			default:
 				if (this._doc.details.length > 0) {
