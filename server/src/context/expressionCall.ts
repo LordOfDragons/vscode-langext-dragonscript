@@ -1217,7 +1217,13 @@ export class ContextFunctionCall extends Context{
 			}
 			
 			if (activeSignature !== null) {
-				activeParameter = this._argCommaPos.findIndex(c => Helpers.isPositionAfter(position, c)) + 1;
+				var i;
+				for (i=this._argCommaPos.length-1; i>=0; i--) {
+					if (Helpers.isPositionAfter(position, this._argCommaPos[i])) {
+						break;
+					}
+				}
+				activeParameter = i + 1;
 			}
 		}
 		

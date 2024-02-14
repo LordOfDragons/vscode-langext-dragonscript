@@ -259,6 +259,7 @@ export class ResolveFunction extends Resolved{
 	}
 	
 	public createSignatureInformation(): SignatureInformation {
+		var documentation: MarkupContent | undefined;
 		var paraminfo: ParameterInformation[] = [];
 		var text = this._name;
 		
@@ -294,18 +295,29 @@ export class ResolveFunction extends Resolved{
 				text = `block ${text}(`;
 				text = text + this.createSignatureInformationParameters(text, paraminfo);
 				text = text + ')';
-			break;
+				break;
 			}
+			
+			documentation = this.context?.documentation?.markup;
+			if (documentation) {
+				documentation = {
+					kind: MarkupKind.Markdown,
+					value: '___\n' + documentation.value
+				}
+			}
+			
 		} else {
 			text = this._name;
 		}
 		
 		let siginfo = SignatureInformation.create(text);
 		siginfo.parameters = paraminfo;
+		siginfo.documentation = documentation;
 		return siginfo;
 	}
 	
 	public createSignatureInformationParameters(text: string, paraminfo: ParameterInformation[]): string {
+		const docparams = this.context?.documentation?.docContext?.params;
 		const offset = text.length;
 		var first = true;
 		var added = '';
@@ -321,7 +333,25 @@ export class ResolveFunction extends Resolved{
 			added = `${added}${each.type?.name} ${each.name}`;
 			var offsetEnd = offset + added.length;
 			
-			paraminfo.push(ParameterInformation.create([offsetBegin, offsetEnd]));
+			let pi = ParameterInformation.create([offsetBegin, offsetEnd]);
+			if (docparams && each.name) {
+				const paramdoc = docparams?.get(each.name);
+				if (paramdoc) {
+					let lines: string[] = [];
+					lines.push(...paramdoc.description);
+					if (lines.length > 0) {
+						const line = lines[0];
+						lines[0] = '| | |\n'
+							+ '| :--- | --- |\n'
+							+ `| \`\`\`${each.name}\`\`\` | ${line} |`;
+						pi.documentation = {
+							kind: MarkupKind.Markdown,
+							value: lines.join('  \n')
+						};
+					}
+				}
+			}
+			paraminfo.push(pi);
 		}
 		return added;
 	}
