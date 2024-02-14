@@ -40,6 +40,12 @@ export class ContextDocumentation extends Context{
 	protected _docText?: string[];
 	protected _isDeprecated = false;
 	protected _markup: MarkupContent | undefined;
+	protected _sectionDeprecated: string[] = [];
+	protected _sectionBrief: string[] = [];
+	protected _sectionDetails: string[] = [];
+	protected _sectionParams: string[] = [];
+	protected _sectionReturn: string[] = [];
+	protected _sectionTodo: string[] = [];
 	
 	
 	constructor(token: IToken, parent: Context) {
@@ -79,6 +85,12 @@ export class ContextDocumentation extends Context{
 		this.docContext = undefined;
 		this.docNode = undefined;
 		this._isDeprecated = false;
+		this._sectionDeprecated.splice(0);
+		this._sectionBrief.splice(0);
+		this._sectionDetails.splice(0);
+		this._sectionParams.splice(0);
+		this._sectionReturn.splice(0);
+		this._sectionTodo.splice(0);
 		
 		const uri = this.documentUri;
 		if (!uri) {
@@ -118,85 +130,127 @@ export class ContextDocumentation extends Context{
 		}
 	}
 	
-	protected updateResolveTextLong(): string[] {
+	protected updateDocumentation(): void {
 		this.parseDocumentation();
 		
-		let lines: string[] = [];
 		const dc = this.docContext;
 		if (dc) {
 			dc.buildDoc();
-			
+			this._isDeprecated = dc.deprecated.length > 0;
+		}
+	}
+	
+	protected updateResolveTextLong(): string[] {
+		let lines: string[] = [];
+		
+		const dc = this.docContext;
+		if (dc) {
 			if (dc.since != '') {
 				lines.push(`Since Version: \`\`\`${dc.since}\`\`\``);
 			}
 			
-			if (dc.deprecated.length > 0) {
-				this._isDeprecated = true;
-				
-				if (lines.length > 0 && lines[lines.length - 1] != '___') {
-					lines.push('___');
-				}
-				lines.push('### Deprecated');
-				lines.push(...dc.deprecated);
-			}
+			this.buildSectionDeprecated(dc);
+			this.buildSectionBrief(dc);
+			this.buildSectionDetails(dc);
+			this.buildSectionParams(dc);
+			this.buildSectionReturn(dc);
+			this.buildSectionTodo(dc);
 			
-			if (dc.brief) {
-				if (lines.length > 0 && lines[lines.length - 1] != '___') {
-					lines.push('___');
-				}
-				lines.push(...dc.brief);
-			}
-			
-			if (dc.details.length > 0) {
-				if (lines.length > 0 && lines[lines.length - 1] != '___') {
-					lines.push('___');
-				}
-				lines.push(...dc.details);
-			}
-			
-			if (dc.params.size > 0) {
-				lines.push('### Parameters');
-				
-				let parts: string[] = [];
-				parts.push('| | | |');
-				parts.push('| :--- | :--- | :--- |');
-				for (const each of dc.params) {
-					const c = each[1];
-					var text = '';
-					if (c.direction) {
-						text = c.direction;
-					}
-					parts.push(`| ${text} | \`\`\`${c.name}\`\`\` | ${c.description.join(' ')} |`);
-				}
-				lines.push(parts.join('\n'));
-			}
-			
-			if (dc.return.length > 0 || dc.retvals.length > 0) {
-				lines.push('### Returns');
-				lines.push(...dc.return);
-				
-				if (dc.retvals.length > 0) {
-					if (dc.return.length > 0) {
-						lines.push('');
-					}
-					
-					let parts: string[] = [];
-					parts.push('| | |');
-					parts.push('| :--- | :--- |');
-					for (const each of dc.retvals) {
-						parts.push(`| \`\`\`${each.value}\`\`\` | ${each.description.join(' ')} |`);
-					}
-					lines.push(parts.join('\n'));
-				}
-			}
-			
-			if (dc.todo.length > 0) {
-				lines.push('### Todo');
-				lines.push(...dc.todo);
-			}
+			lines.push(...this._sectionDeprecated);
+			lines.push(...this._sectionBrief);
+			lines.push(...this._sectionDetails);
+			lines.push(...this._sectionParams);
+			lines.push(...this._sectionReturn);
+			lines.push(...this._sectionTodo);
 		}
 		
 		return lines;
+	}
+	
+	protected buildSectionDeprecated(context: ContextDocumentationDoc): void {
+		if (context.deprecated.length == 0) {
+			return;
+		}
+		
+		this._sectionDeprecated.push('### Deprecated');
+		this._sectionDeprecated.push(...context.deprecated);
+	}
+	
+	protected buildSectionBrief(context: ContextDocumentationDoc): void {
+		if (!context.brief) {
+			return;
+		}
+		
+		if (this._sectionBrief.length > 0 && this._sectionBrief[this._sectionBrief.length - 1] != '___') {
+			this._sectionBrief.push('___');
+		}
+		this._sectionBrief.push(...context.brief);
+	}
+	
+	protected buildSectionDetails(context: ContextDocumentationDoc): void {
+		if (context.details.length == 0) {
+			return;
+		}
+		
+		if (this._sectionDetails.length > 0 && this._sectionDetails[this._sectionDetails.length - 1] != '___') {
+			this._sectionDetails.push('___');
+		}
+		this._sectionDetails.push(...context.details);
+	}
+	
+	protected buildSectionParams(context: ContextDocumentationDoc): void {
+		if (context.params.size == 0) {
+			return;
+		}
+		
+		this._sectionParams.push('### Parameters');
+		
+		let parts: string[] = [];
+		parts.push('| | | |');
+		parts.push('| :--- | :--- | :--- |');
+		for (const each of context.params) {
+			const c = each[1];
+			var text = '';
+			if (c.direction) {
+				text = c.direction;
+			}
+			parts.push(`| ${text} | \`\`\`${c.name}\`\`\` | ${c.description.join(' ')} |`);
+		}
+		this._sectionParams.push(parts.join('\n'));
+	}
+	
+	protected buildSectionReturn(context: ContextDocumentationDoc): void {
+		if (context.return.length == 0 && context.retvals.length == 0) {
+			return;
+		}
+		
+		this._sectionReturn.push('### Returns');
+		this._sectionReturn.push(...context.return);
+		
+		if (context.retvals.length == 0) {
+			return;
+		}
+		
+		if (context.return.length > 0) {
+			this._sectionReturn.push('');
+		}
+		
+		let parts: string[] = [];
+		parts.push('| | |');
+		parts.push('| :--- | :--- |');
+		for (const each of context.retvals) {
+			parts.push(`| \`\`\`${each.value}\`\`\` | ${each.description.join(' ')} |`);
+		}
+		this._sectionReturn.push(parts.join('\n'));
+	}
+	
+	protected buildSectionTodo(context: ContextDocumentationDoc): void {
+		if (context.todo.length == 0) {
+			return;
+		}
+		
+		this._sectionTodo.push('### Todo');
+		this._sectionTodo.push(...context.todo);
 	}
 	
 	protected updateResolveTextShort(): string {
@@ -216,7 +270,7 @@ export class ContextDocumentation extends Context{
 	
 	public resolveStatements(state: ResolveState): void {
 		this.docContext?.resolveMembers(state);
-		this.resolveTextLong; // prepares documentation
+		this.updateDocumentation();
 	}
 	
 	
