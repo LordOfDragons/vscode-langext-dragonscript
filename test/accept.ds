@@ -39,6 +39,7 @@ namespace Dragengine.Elements.  Front.Back  /* ccc */.  Both   .Last
 pin Dragengine.Elements  /* allowed */  // allowed
 pin Dragengine.Gui.Events
 pin Dragengine.Scenery
+pin Dragengine.Audio.MaterialSounds
 
 requires "Math"  /* allowed */  // allowed
 
@@ -57,6 +58,11 @@ end
 
 class ClassExtendImplement extends ClassExtend implements ActionListener, ColliderListener
 	public func new( String arg1, bool arg2 )
+		BaseGameApp.defaultPathGuiTheme
+		BaseGameApp.eventDeviceParamsChanged
+		BaseGameApp.getApp().getWindowConsole()
+		ImpactMaterialSound.new("id").playSound(GameWorld.new(), null cast CollisionInfo, null)
+		LoadImpactMaterialSound.new(BaseGameApp.getApp().getConsole()).loadFromFiles(null, null, false)
 	end
 	
 	public func void callMe( int value, Block ablock )

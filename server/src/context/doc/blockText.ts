@@ -26,12 +26,15 @@ import { Position, Range, RemoteConsole } from "vscode-languageserver";
 import { Helpers } from "../../helpers";
 import { DocumentationBlockTextCstNode } from "../../nodeclasses/doc/blockText";
 import { Context } from "../context";
+import { ContextDocumentationBold } from "./bold";
+import { ContextDocBuilder } from "./builder";
 import { ContextDocBase } from "./contextDoc";
 import { ContextDocumentationDocState } from "./docState";
 import { ContextDocumentationEmboss } from "./emboss";
 import { ContextDocumentationNewline } from "./newline";
 import { ContextDocumentationReference } from "./reference";
 import { ContextDocumentationSee } from "./see";
+import { ContextDocumentationString } from "./string";
 import { ContextDocumentationWord } from "./word";
 
 
@@ -49,15 +52,9 @@ export class ContextDocumentationBlockText extends ContextDocBase{
 			for (const each of list) {
 				const ec = each.children;
 				if (ec.docWord) {
-					const ec2 = ec.docWord[0].children;
-					if (ec2.ruleEmboss) {
-						this._words.push(new ContextDocumentationEmboss(ec2.ruleEmboss[0], this));
-					} else if (ec2.ruleReference) {
-						this._words.push(new ContextDocumentationReference(ec2.ruleReference[0], this));
-					} else if (ec2.ruleSee) {
-						this._words.push(new ContextDocumentationSee(ec2.ruleSee[0], this));
-					} else if (ec2.word) {
-						this._words.push(new ContextDocumentationWord(ec2.word[0], this));
+					const c = ContextDocBuilder.createWord(ec.docWord[0], this);
+					if (c) {
+						this._words.push(c);
 					}
 				} else if (ec.ruleNewline) {
 					this._words.push(new ContextDocumentationNewline(ec.ruleNewline[0], this));

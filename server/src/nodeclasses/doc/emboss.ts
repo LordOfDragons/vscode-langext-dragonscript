@@ -1,4 +1,5 @@
 import { CstNode, IToken } from "chevrotain";
+import { DocumentationWordCstNode } from "./word";
 
 
 export interface DocumentationEmbossCstNode extends CstNode {
@@ -8,4 +9,5 @@ export interface DocumentationEmbossCstNode extends CstNode {
 
 export type DocumentationEmbossCstChildren = {
 	emboss: IToken[];
+	docWord: DocumentationWordCstNode[];
 };

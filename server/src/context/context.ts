@@ -475,6 +475,8 @@ export namespace Context {
 		DocumentationEmboss,
 		DocumentationReference,
 		DocumentationSee,
+		DocumentationBold,
+		DocumentationString,
 		DocumentationWord,
 		DocumentationNewline,
 		

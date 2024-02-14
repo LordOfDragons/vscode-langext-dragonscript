@@ -24,26 +24,26 @@
 
 import { Position, Range, RemoteConsole } from "vscode-languageserver";
 import { Helpers } from "../../helpers";
-import { DocumentationEmbossCstNode } from "../../nodeclasses/doc/emboss";
+import { DocumentationBoldCstNode } from "../../nodeclasses/doc/bold";
 import { Context } from "../context";
 import { ContextDocBuilder } from "./builder";
 import { ContextDocBase } from "./contextDoc";
 import { ContextDocumentationDocState } from "./docState";
 
 
-export class ContextDocumentationEmboss extends ContextDocBase{
-	protected _node: DocumentationEmbossCstNode;
+export class ContextDocumentationBold extends ContextDocBase{
+	protected _node: DocumentationBoldCstNode;
 	protected _word?: ContextDocBase;
 	
 	
-	constructor(node: DocumentationEmbossCstNode, parent: Context) {
-		super(Context.ContextType.DocumentationEmboss, parent);
+	constructor(node: DocumentationBoldCstNode, parent: Context) {
+		super(Context.ContextType.DocumentationBold, parent);
 		this._node = node;
 		this._word = ContextDocBuilder.createWord(node.children.docWord[0], this);
 	}
 	
 	
-	public get node(): DocumentationEmbossCstNode {
+	public get node(): DocumentationBoldCstNode {
 		return this._node;
 	}
 	
@@ -69,12 +69,12 @@ export class ContextDocumentationEmboss extends ContextDocBase{
 	
 	public buildDoc(state: ContextDocumentationDocState): void {
 		if (this._word) {
-			state.wrap('*', '*', () => this._word?.buildDoc(state));
+			state.wrap('**', '**', () => this._word?.buildDoc(state));
 		}
 	}
 	
 	
 	log(console: RemoteConsole, prefix: string = "", _prefixLines: string = "") {
-		console.log(`${prefix}Emboss`);
+		console.log(`${prefix}Bold`);
 	}
 }

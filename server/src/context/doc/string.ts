@@ -22,59 +22,38 @@
  * SOFTWARE.
  */
 
-import { Position, Range, RemoteConsole } from "vscode-languageserver";
-import { Helpers } from "../../helpers";
-import { DocumentationEmbossCstNode } from "../../nodeclasses/doc/emboss";
+import { IToken } from "chevrotain";
+import { RemoteConsole } from "vscode-languageserver";
 import { Context } from "../context";
-import { ContextDocBuilder } from "./builder";
 import { ContextDocBase } from "./contextDoc";
 import { ContextDocumentationDocState } from "./docState";
 
 
-export class ContextDocumentationEmboss extends ContextDocBase{
-	protected _node: DocumentationEmbossCstNode;
-	protected _word?: ContextDocBase;
+export class ContextDocumentationString extends ContextDocBase{
+	protected _token: IToken;
 	
 	
-	constructor(node: DocumentationEmbossCstNode, parent: Context) {
-		super(Context.ContextType.DocumentationEmboss, parent);
-		this._node = node;
-		this._word = ContextDocBuilder.createWord(node.children.docWord[0], this);
+	constructor(token: IToken, parent: Context) {
+		super(Context.ContextType.DocumentationString, parent);
+		this._token = token;
 	}
 	
 	
-	public get node(): DocumentationEmbossCstNode {
-		return this._node;
+	public get token(): IToken {
+		return this._token;
 	}
 	
-	public get word(): ContextDocBase | undefined {
-		return this._word;
-	}
-	
-	
-	public contextAtPosition(position: Position): Context | undefined {
-		if (!Helpers.isPositionInsideRange(this.range, position)) {
-			return undefined;
-		}
-		return this;
-	}
-	
-	public contextAtRange(range: Range): Context | undefined {
-		if (!Helpers.isRangeInsideRange(this.range, range)) {
-			return undefined;
-		}
-		return this;
+	public get text(): string {
+		return this._token.image;
 	}
 	
 	
 	public buildDoc(state: ContextDocumentationDocState): void {
-		if (this._word) {
-			state.wrap('*', '*', () => this._word?.buildDoc(state));
-		}
+		state.addWord(this._token.image);
 	}
 	
 	
 	log(console: RemoteConsole, prefix: string = "", _prefixLines: string = "") {
-		console.log(`${prefix}Emboss`);
+		console.log(`${prefix}String: ${this._token.image}`);
 	}
 }

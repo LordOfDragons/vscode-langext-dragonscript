@@ -163,12 +163,20 @@ export class DSDocParser extends CstParser{
 			{ALT: () => this.SUBRULE(this.emboss)},
 			{ALT: () => this.SUBRULE(this.reference)},
 			{ALT: () => this.SUBRULE(this.see)},
+			{ALT: () => this.SUBRULE(this.bold)},
+			{ALT: () => this.CONSUME(DSDocLexer.tokenString)},
 			{ALT: () => this.CONSUME(DSDocLexer.tokenWord)}
 		]);
 	})
 	
 	public emboss = this.RULE("ruleEmboss", () => {
 		this.CONSUME(DSDocLexer.tokenEmboss);
+		this.SUBRULE(this.docWord);
+	})
+	
+	public bold = this.RULE("ruleBold", () => {
+		this.CONSUME(DSDocLexer.tokenBold);
+		this.SUBRULE(this.docWord);
 	})
 	
 	public reference = this.RULE("ruleReference", () => {

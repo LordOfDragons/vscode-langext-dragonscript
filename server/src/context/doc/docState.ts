@@ -32,6 +32,7 @@ export class ContextDocumentationDocState {
 	public lines: string[] = [];
 	public words: string[] = [];
 	public hasNewline = false;
+	protected _wordWrap?: string;
 	
 	
 	constructor(doc: ContextDocumentationDoc) {
@@ -54,8 +55,29 @@ export class ContextDocumentationDocState {
 	
 	public addWord(word: string): void {
 		this.hasNewline = false;
-		this.words.push(word);
+		if (this._wordWrap) {
+			this.words.push(this._wordWrap + word);
+			this._wordWrap = undefined;
+		} else {
+			this.words.push(word);
+		}
 	}
+	
+	public wrap(wrapBegin: string, wrapEnd: string, block: Function): void {
+		this._wordWrap = wrapBegin;
+		try {
+			block();
+		} finally {
+			if (this._wordWrap) {
+				this._wordWrap = undefined;
+			} else if (this.words.length > 0) {
+				const index = this.words.length - 1;
+				const word = this.words.at(index);
+				this.words[index] = word + wrapEnd;
+			}
+		}
+	}
+	
 	
 	public endParagraph(): void {
 		this.hasNewline = false;
@@ -76,6 +98,7 @@ export class ContextDocumentationDocState {
 			case Context.ContextType.DocumentationSince:
 			case Context.ContextType.DocumentationVersion:
 				this._doc.since = this.lines.join(' ');
+				this.lines = [];
 				this.curBlockType = Context.ContextType.DocumentationDetails;
 				break;
 				
@@ -84,14 +107,14 @@ export class ContextDocumentationDocState {
 					this._doc.details.push('');
 				}
 				this._doc.details.push(...this.lines);
-				this.lines.splice(0);
+				this.lines = [];
 				
 			default:
 				if (this._doc.details) {
 					this._doc.details.push('');
 				}
 				this._doc.details.push(...this.lines);
-				this.lines.splice(0);
+				this.lines = [];
 				break;
 			}
 		}

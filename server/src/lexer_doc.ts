@@ -59,7 +59,7 @@ export class DSDocLexer extends Lexer{
 	
 	public static readonly tokenWord = createToken({
 		name: "word",
-		pattern: /[^ \t\f\n|\r]+/
+		pattern: /[^ \t\f\n\r]+/
 	})
 	
 	public static readonly tokenString = createToken({
@@ -97,9 +97,9 @@ export class DSDocLexer extends Lexer{
 	
 	public static readonly tokenCode = createToken({
 		name: "code",
-		pattern: new RegExp("/\\\\code(\\{[^}]+\\})?"
-			+ "(.(?!\\\\endcode))*"
-			+ "\\endcode"
+		pattern: new RegExp("\\\\code(\\{[^}]+\\})?"
+			+ "(.|[\n\r])*"
+			+ "\\\\endcode"
 			)
 	})
 	
@@ -116,6 +116,11 @@ export class DSDocLexer extends Lexer{
 	public static readonly tokenEmboss = createToken({
 		name: "emboss",
 		pattern: /\\em/
+	})
+	
+	public static readonly tokenBold = createToken({
+		name: "bold",
+		pattern: /\\b/
 	})
 	
 	public static readonly tokenReference = createToken({
@@ -206,6 +211,7 @@ export class DSDocLexer extends Lexer{
 		DSDocLexer.tokenThrow,
 		DSDocLexer.tokenTodo,
 		DSDocLexer.tokenWarning,
+		DSDocLexer.tokenBold,
 		
 		DSDocLexer.tokenWord
 	]

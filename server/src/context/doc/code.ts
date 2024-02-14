@@ -27,21 +27,69 @@ import { Helpers } from "../../helpers";
 import { DocumentationCodeCstNode } from "../../nodeclasses/doc/code";
 import { Context } from "../context";
 import { ContextDocBase } from "./contextDoc";
+import { ContextDocumentationDocState } from "./docState";
 
 
 export class ContextDocumentationCode extends ContextDocBase{
 	protected _node: DocumentationCodeCstNode;
+	protected _language: string;
+	protected _codeSuffix: string;
+	protected _codeLines: string[];
 	
 	
 	constructor(node: DocumentationCodeCstNode, parent: Context) {
 		super(Context.ContextType.DocumentationCode, parent);
 		this._node = node;
+		
+		const token = node.children.code[0];
+		var text = token.image;
+		
+		text = text.substring(5, text.length - 8);
+		if (text.startsWith('{')) {
+			const index = text.indexOf('}');
+			this._codeSuffix = text.substring(1, index);
+			text = text.substring(index + 1);
+		} else {
+			this._codeSuffix = '.ds';
+		}
+		
+		switch (this._codeSuffix) {
+		case '.ds':
+			this._language = 'dragonscript';
+			break;
+			
+		default:
+			this._language = 'text';
+		}
+		
+		this._codeLines = text.split('\n').map(l => {
+			l = l.trim();
+			if (l.startsWith('* ')) {
+				l = l.substring(2);
+			} else if (l.startsWith('*')) {
+				l = l.substring(1);
+			}
+			return l;
+		});
 	}
 	
 	
 	public get node(): DocumentationCodeCstNode {
 		return this._node;
 	}
+	
+	public get language(): string {
+		return this._language;
+	}
+	
+	public get codeSuffix(): string {
+		return this._codeSuffix;
+	}
+	
+	public get codeLines(): string[] {
+		return this._codeLines;
+	}
+	
 	
 	public contextAtPosition(position: Position): Context | undefined {
 		if (!Helpers.isPositionInsideRange(this.range, position)) {
@@ -55,6 +103,18 @@ export class ContextDocumentationCode extends ContextDocBase{
 			return undefined;
 		}
 		return this;
+	}
+	
+	
+	public buildDoc(state: ContextDocumentationDocState): void {
+		state.newParagraph();
+		state.addWord(`\`\`\`${this._language}`);
+		for (const each of this._codeLines) {
+			state.addWord('\n');
+			state.addWord(each);
+		}
+		state.addWord('\n');
+		state.addWord('```');
 	}
 	
 	

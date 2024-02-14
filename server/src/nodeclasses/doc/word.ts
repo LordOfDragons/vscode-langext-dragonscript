@@ -1,4 +1,5 @@
 import { CstNode, IToken } from "chevrotain";
+import { DocumentationBoldCstNode } from "./bold";
 import { DocumentationEmbossCstNode } from "./emboss";
 import { DocumentationReferenceCstNode } from "./reference";
 import { DocumentationSeeCstNode } from "./see";
@@ -13,5 +14,7 @@ export type DocumentationWordCstChildren = {
 	ruleEmboss: DocumentationEmbossCstNode[];
 	ruleReference: DocumentationReferenceCstNode[];
 	ruleSee: DocumentationSeeCstNode[];
+	ruleBold: DocumentationBoldCstNode[];
+	string: IToken[];
 	word: IToken[];
 };
