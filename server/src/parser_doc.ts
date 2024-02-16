@@ -139,6 +139,7 @@ export class DSDocParser extends CstParser{
 	
 	public throw = this.RULE("ruleThrow", () => {
 		this.CONSUME(DSDocLexer.tokenThrow);
+		this.CONSUME(DSDocLexer.tokenWord, {LABEL: "type"});
 	})
 	
 	public todo = this.RULE("ruleTodo", () => {
@@ -185,9 +186,11 @@ export class DSDocParser extends CstParser{
 	
 	public reference = this.RULE("ruleReference", () => {
 		this.CONSUME(DSDocLexer.tokenReference);
+		this.CONSUME(DSDocLexer.tokenWord, {LABEL: "target"});
 	})
 	
 	public see = this.RULE("ruleSee", () => {
 		this.CONSUME(DSDocLexer.tokenSee);
+		this.CONSUME(DSDocLexer.tokenWord, {LABEL: "target"});
 	})
 }

@@ -8,4 +8,5 @@ export interface DocumentationThrowCstNode extends CstNode {
 
 export type DocumentationThrowCstChildren = {
 	throw: IToken[];
+	type: IToken[];
 };

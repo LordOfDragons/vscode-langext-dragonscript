@@ -41,6 +41,8 @@ pin Dragengine.Gui.Events
 pin Dragengine.Scenery
 pin Dragengine.Audio.MaterialSounds
 pin Dragengine.Commands
+pin Dragengine.BehaviorTreeSystem
+pin Dragengine.Gui.Layouts
 
 requires "Math"  /* allowed */  // allowed
 
@@ -71,6 +73,8 @@ class ClassExtendImplement extends ClassExtend implements ActionListener, Collid
 		ConsoleInputField
 		GamepadController
 		Element.new(null).enterFrame()
+		BehaviorTree.new().registerRule(null)
+		ScrollPanelLayout.new().addWidget(null, null)
 	end
 	
 	public func void callMe( int value, Block ablock )

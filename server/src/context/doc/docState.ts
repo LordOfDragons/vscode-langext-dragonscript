@@ -26,6 +26,7 @@ import { Context } from "../context";
 import { ContextDocumentationDoc } from "./doc";
 import { ContextDocumentationParam } from "./param";
 import { ContextDocumentationReturnValue } from "./returnValue";
+import { ContextDocumentationThrow } from "./throw";
 
 
 export class ContextDocumentationDocState {
@@ -37,6 +38,7 @@ export class ContextDocumentationDocState {
 	protected _wordWrap?: string;
 	public curParam?: ContextDocumentationParam;
 	public curRetVal?: ContextDocumentationReturnValue;
+	public curThrow?: ContextDocumentationThrow;
 	
 	
 	constructor(doc: ContextDocumentationDoc) {
@@ -152,6 +154,16 @@ export class ContextDocumentationDocState {
 				
 			case Context.ContextType.DocumentationWarning:
 				this._doc.warning.push(...this.lines);
+				this.lines = [];
+				this.curBlockType = Context.ContextType.DocumentationDetails;
+				break;
+			
+			case Context.ContextType.DocumentationThrow:
+				if (!this.curThrow) {
+					break;
+				}
+				this.curThrow.description.push(...this.lines);
+				this.curThrow = undefined;
 				this.lines = [];
 				this.curBlockType = Context.ContextType.DocumentationDetails;
 				break;

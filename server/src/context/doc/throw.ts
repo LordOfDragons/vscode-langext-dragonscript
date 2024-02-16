@@ -27,20 +27,36 @@ import { Helpers } from "../../helpers";
 import { DocumentationThrowCstNode } from "../../nodeclasses/doc/throw";
 import { Context } from "../context";
 import { ContextDocBase } from "./contextDoc";
+import { ContextDocumentationDocState } from "./docState";
 
 
 export class ContextDocumentationThrow extends ContextDocBase{
 	protected _node: DocumentationThrowCstNode;
+	protected _throwType: string;
+	public description: string[] = [];
 	
 	
 	constructor(node: DocumentationThrowCstNode, parent: Context) {
 		super(Context.ContextType.DocumentationThrow, parent);
 		this._node = node;
+		this._throwType = node.children.type[0].image;
 	}
 	
 	
 	public get node(): DocumentationThrowCstNode {
 		return this._node;
+	}
+	
+	public get throwType(): string {
+		return this._throwType;
+	}
+	
+	
+	public buildDoc(state: ContextDocumentationDocState): void {
+		this.description.splice(0);
+		state.doc.throws.push(this);
+		state.newParagraph(Context.ContextType.DocumentationThrow);
+		state.curThrow = this;
 	}
 	
 	

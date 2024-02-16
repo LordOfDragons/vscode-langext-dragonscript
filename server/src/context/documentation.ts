@@ -48,6 +48,7 @@ export class ContextDocumentation extends Context{
 	protected _sectionTodo: string[] = [];
 	protected _sectionNote: string[] = [];
 	protected _sectionWarning: string[] = [];
+	protected _sectionThrows: string[] = [];
 	
 	
 	constructor(token: IToken, parent: Context) {
@@ -145,6 +146,7 @@ export class ContextDocumentation extends Context{
 			this.buildSectionDetails(dc);
 			this.buildSectionParams(dc);
 			this.buildSectionReturn(dc);
+			this.buildSectionThrows(dc);
 			this.buildSectionTodo(dc);
 			this.buildSectionNote(dc);
 			this.buildSectionWarning(dc);
@@ -163,6 +165,7 @@ export class ContextDocumentation extends Context{
 			
 			lines.push(...this._sectionParams);
 			lines.push(...this._sectionReturn);
+			lines.push(...this._sectionThrows);
 			lines.push(...this._sectionWarning);
 			lines.push(...this._sectionNote);
 			lines.push(...this._sectionTodo);
@@ -265,6 +268,22 @@ export class ContextDocumentation extends Context{
 		
 		this._sectionWarning.push('### ⚠️ Warning');
 		this._sectionWarning.push(...context.warning);
+	}
+	
+	protected buildSectionThrows(context: ContextDocumentationDoc): void {
+		if (context.throws.length == 0) {
+			return;
+		}
+		
+		this._sectionThrows.push('### ⚡️ Throws');
+		
+		let parts: string[] = [];
+		parts.push('| | |');
+		parts.push('| :--- | :--- |');
+		for (const each of context.throws) {
+			parts.push(`| \`\`\`${each.throwType}\`\`\` | ${each.description.join(' ')} |`);
+		}
+		this._sectionThrows.push(parts.join('\n'));
 	}
 	
 	protected updateResolveTextShort(): string {

@@ -165,7 +165,7 @@ export class DSDocLexer extends Lexer{
 	
 	public static readonly tokenThrow = createToken({
 		name: "throw",
-		pattern: /\\(throw|throws)/
+		pattern: /\\(throws|throw)/
 	})
 	
 	public static readonly tokenTodo = createToken({

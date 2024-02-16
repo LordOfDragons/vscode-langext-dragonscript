@@ -61,6 +61,7 @@ export class ContextDocumentationDoc extends Context{
 	public todo: string[] = [];
 	public note: string[] = [];
 	public warning: string[] = [];
+	protected _throws: ContextDocumentationThrow[] = [];
 	
 	
 	constructor(node: DocumentationDocCstNode, parent: Context) {
@@ -112,6 +113,7 @@ export class ContextDocumentationDoc extends Context{
 		this._blocks.splice(0);
 		this._params.clear();
 		this._retvals.splice(0);
+		this._throws.splice(0);
 		
 		super.dispose();
 	}
@@ -131,6 +133,10 @@ export class ContextDocumentationDoc extends Context{
 	
 	public get retvals(): ContextDocumentationReturnValue[] {
 		return this._retvals;
+	}
+	
+	public get throws(): ContextDocumentationThrow[] {
+		return this._throws;
 	}
 	
 	

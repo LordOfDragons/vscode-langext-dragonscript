@@ -27,20 +27,32 @@ import { Helpers } from "../../helpers";
 import { DocumentationSeeCstNode } from "../../nodeclasses/doc/see";
 import { Context } from "../context";
 import { ContextDocBase } from "./contextDoc";
+import { ContextDocumentationDocState } from "./docState";
 
 
 export class ContextDocumentationSee extends ContextDocBase{
 	protected _node: DocumentationSeeCstNode;
+	protected _target: string;
 	
 	
 	constructor(node: DocumentationSeeCstNode, parent: Context) {
 		super(Context.ContextType.DocumentationSee, parent);
 		this._node = node;
+		this._target = node.children.target[0].image;
 	}
 	
 	
 	public get node(): DocumentationSeeCstNode {
 		return this._node;
+	}
+	
+	public get target(): string {
+		return this._target;
+	}
+	
+	
+	public buildDoc(state: ContextDocumentationDocState): void {
+		state.addWord(`🔗 *${this._target}*`);
 	}
 	
 	
