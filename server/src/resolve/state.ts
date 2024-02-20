@@ -160,32 +160,39 @@ export class ResolveState {
 	}
 
 
-	public reportError(range: Range | undefined, message: string, relatedInformation: DiagnosticRelatedInformation[] = []) {
-		this.reportDiagnostic(DiagnosticSeverity.Error, range, message, relatedInformation);
+	public reportError(range: Range | undefined, message: string,
+			relatedInformation: DiagnosticRelatedInformation[] = []): Diagnostic | undefined {
+		return this.reportDiagnostic(DiagnosticSeverity.Error, range, message, relatedInformation);
 	}
 
-	public reportWarning(range: Range | undefined, message: string, relatedInformation: DiagnosticRelatedInformation[] = []) {
+	public reportWarning(range: Range | undefined, message: string,
+			relatedInformation: DiagnosticRelatedInformation[] = []): Diagnostic | undefined {
 		if (this.reportConfig.enableReportWarning) {
-			this.reportDiagnostic(DiagnosticSeverity.Warning, range, message, relatedInformation);
+			return this.reportDiagnostic(DiagnosticSeverity.Warning, range, message, relatedInformation);
 		}
+		return undefined;
 	}
 
-	public reportInfo(range: Range | undefined, message: string, relatedInformation: DiagnosticRelatedInformation[] = []) {
+	public reportInfo(range: Range | undefined, message: string,
+			relatedInformation: DiagnosticRelatedInformation[] = []): Diagnostic | undefined {
 		if (this.reportConfig.enableReportInfo) {
-			this.reportDiagnostic(DiagnosticSeverity.Information, range, message, relatedInformation);
+			return this.reportDiagnostic(DiagnosticSeverity.Information, range, message, relatedInformation);
 		}
+		return undefined;
 	}
 
-	public reportHint(range: Range | undefined, message: string, relatedInformation: DiagnosticRelatedInformation[] = []) {
+	public reportHint(range: Range | undefined, message: string,
+			relatedInformation: DiagnosticRelatedInformation[] = []): Diagnostic | undefined {
 		if (this.reportConfig.enableReportHint) {
-			this.reportDiagnostic(DiagnosticSeverity.Hint, range, message, relatedInformation);
+			return this.reportDiagnostic(DiagnosticSeverity.Hint, range, message, relatedInformation);
 		}
+		return undefined;
 	}
 
 	public reportDiagnostic(severity: DiagnosticSeverity, range: Range | undefined, message: string,
-			relatedInformation: DiagnosticRelatedInformation[] = []) {
+			relatedInformation: DiagnosticRelatedInformation[] = []): Diagnostic | undefined {
 		if (!range) {
-			return;
+			return undefined;
 		}
 		
 		const diagnostic: Diagnostic = {
@@ -209,5 +216,6 @@ export class ResolveState {
 		}
 
 		this._diagnostics.push(diagnostic);
+		return diagnostic;
 	}
 }

@@ -346,23 +346,24 @@ export class Context {
 		}
 	}
 	
-	protected reportError(diagnostics: Diagnostic[], uri: string, range: Range, message: string) {
-		this.reportDiagnostic(diagnostics, uri, DiagnosticSeverity.Error, range, message);
+	protected reportError(diagnostics: Diagnostic[], uri: string, range: Range, message: string): Diagnostic {
+		return this.reportDiagnostic(diagnostics, uri, DiagnosticSeverity.Error, range, message);
 	}
 
-	protected reportWarning(diagnostics: Diagnostic[], uri: string, range: Range, message: string) {
-		this.reportDiagnostic(diagnostics, uri, DiagnosticSeverity.Warning, range, message);
+	protected reportWarning(diagnostics: Diagnostic[], uri: string, range: Range, message: string): Diagnostic {
+		return this.reportDiagnostic(diagnostics, uri, DiagnosticSeverity.Warning, range, message);
 	}
 
-	protected reportInfo(diagnostics: Diagnostic[], uri: string, range: Range, message: string) {
-		this.reportDiagnostic(diagnostics, uri, DiagnosticSeverity.Information, range, message);
+	protected reportInfo(diagnostics: Diagnostic[], uri: string, range: Range, message: string): Diagnostic {
+		return this.reportDiagnostic(diagnostics, uri, DiagnosticSeverity.Information, range, message);
 	}
 
-	protected reportHint(diagnostics: Diagnostic[], uri: string, range: Range, message: string) {
-		this.reportDiagnostic(diagnostics, uri, DiagnosticSeverity.Hint, range, message);
+	protected reportHint(diagnostics: Diagnostic[], uri: string, range: Range, message: string): Diagnostic {
+		return this.reportDiagnostic(diagnostics, uri, DiagnosticSeverity.Hint, range, message);
 	}
 
-	protected reportDiagnostic(diagnostics: Diagnostic[], uri: string, severity: DiagnosticSeverity, range: Range, message: string) {
+	protected reportDiagnostic(diagnostics: Diagnostic[], uri: string, severity: DiagnosticSeverity,
+			range: Range, message: string): Diagnostic {
 		const diagnostic: Diagnostic = {
 			severity: severity,
 			range: range,
@@ -383,6 +384,7 @@ export class Context {
 		}
 
 		diagnostics.push(diagnostic);
+		return diagnostic;
 	}
 	
 	

@@ -23,7 +23,7 @@
  */
 
 import { Context } from "./context";
-import { CompletionItem, Definition, DiagnosticRelatedInformation, DocumentSymbol, Hover, integer, Location, Position, Range, RemoteConsole, SignatureHelp, SignatureInformation } from "vscode-languageserver";
+import { CodeAction, CompletionItem, Definition, Diagnostic, DiagnosticRelatedInformation, DocumentSymbol, Hover, integer, Location, Position, Range, RemoteConsole, SignatureHelp, SignatureInformation } from "vscode-languageserver";
 import { ContextBuilder } from "./contextBuilder";
 import { Identifier } from "./identifier";
 import { ExpressionAdditionCstNode } from "../nodeclasses/expressionAddition";
@@ -52,7 +52,7 @@ import { ContextClass } from "./scriptClass";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { CompletionHelper } from "../completionHelper";
 import { Resolved, ResolveUsage } from "../resolve/resolved";
-import { debugLogMessage } from "../server";
+import { CodeActionInsertCast } from "../codeactions/insertCast";
 
 
 export class ContextFunctionCall extends Context{
@@ -75,6 +75,8 @@ export class ContextFunctionCall extends Context{
 	private _matchFunction?: ResolveFunction;
 	protected _resolveUsage?: ResolveUsage;
 	protected _resolveSignature?: ResolveSignature;
+	
+	protected _codeActionInsertCast?: CodeActionInsertCast;
 	
 	
 	protected constructor(node: ExpressionAdditionCstNode | ExpressionBitOperationCstNode
@@ -479,6 +481,7 @@ export class ContextFunctionCall extends Context{
 		this._matchFunction = undefined;
 		this._resolveUsage?.dispose();
 		this._resolveUsage = undefined;
+		this._codeActionInsertCast = undefined;
 	}
 
 
@@ -658,7 +661,10 @@ export class ContextFunctionCall extends Context{
 					let ri: DiagnosticRelatedInformation[] = [];
 					at2?.addReportInfo(ri, `Source Type: ${at1?.reportInfoText}`);
 					at1?.addReportInfo(ri, `Target Type: ${at2?.reportInfoText}`);
-					state.reportError(this._name.range, `Invalid cast from ${at1?.name} to ${at2?.name}`, ri);
+					const di = state.reportError(this._name.range, `Invalid cast from ${at1?.name} to ${at2?.name}`, ri);
+					if (di && at1 && at2) {
+						this._codeActionInsertCast = new CodeActionInsertCast(di, at1, at2, o1, o1.expressionAutoCast);
+					}
 				}
 				}break;
 				
@@ -672,7 +678,10 @@ export class ContextFunctionCall extends Context{
 						let ri: DiagnosticRelatedInformation[] = [];
 						this.expressionType?.addReportInfo(ri, `Source Type: ${this.expressionType?.reportInfoText}`);
 						at1?.addReportInfo(ri, `Target Type: ${at1?.reportInfoText}`);
-						state.reportError(this._name.range, `Invalid cast from ${this.expressionType?.name} to ${at1?.name}`, ri);
+						const di = state.reportError(this._name.range, `Invalid cast from ${this.expressionType?.name} to ${at1?.name}`, ri);
+						if (di && this.expressionType && at1) {
+							this._codeActionInsertCast = new CodeActionInsertCast(di, this.expressionType, at1, this, this.expressionAutoCast);
+						}
 					}
 				}
 				}break;
@@ -1230,6 +1239,13 @@ export class ContextFunctionCall extends Context{
 		return {signatures: siginfo, activeSignature: activeSignature, activeParameter: activeParameter};
 	}
 	
+	public codeAction(range: Range): CodeAction[] {
+		const actions: CodeAction[] = [];
+		if (this._codeActionInsertCast) {
+			actions.push(...this._codeActionInsertCast?.createCodeActions(range));
+		}
+		return actions;
+	}
 	
 	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
 		console.log(`${prefix}Call ${this._name ?? '-'} ${this.logRange}`);
