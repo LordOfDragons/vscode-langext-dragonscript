@@ -53,6 +53,7 @@ import { TextDocument } from "vscode-languageserver-textdocument";
 import { CompletionHelper } from "../completionHelper";
 import { Resolved, ResolveUsage } from "../resolve/resolved";
 import { CodeActionInsertCast } from "../codeactions/insertCast";
+import { debugLogContext, debugLogMessage } from "../server";
 
 
 export class ContextFunctionCall extends Context{
@@ -669,8 +670,8 @@ export class ContextFunctionCall extends Context{
 				}break;
 				
 			case ContextFunctionCall.FunctionType.logicalAnd:
-			case ContextFunctionCall.FunctionType.logicalOr:
-			case ContextFunctionCall.FunctionType.not:{
+			case ContextFunctionCall.FunctionType.logicalOr:{
+				// WRONG! with "and"/"or" both the left and right side have to be castable to "bool"
 				const o1 = this._object;
 				if (o1) {
 					const at1 = o1.expressionType;
@@ -681,6 +682,24 @@ export class ContextFunctionCall extends Context{
 						const di = state.reportError(this._name.range, `Invalid cast from ${this.expressionType?.name} to ${at1?.name}`, ri);
 						if (di && this.expressionType && at1) {
 							this._codeActionInsertCast = new CodeActionInsertCast(di, this.expressionType, at1, this, this.expressionAutoCast);
+						}
+					}
+				}
+				}break;
+				
+			case ContextFunctionCall.FunctionType.not:{
+				//        with "not" only the left side has to be castable to "bool"
+				const o1 = this._object;
+				if (o1) {
+					const at1 = o1.expressionType;
+					if (at1 && ResolveSignatureArgument.typeMatches(at1, ResolveNamespace.classBool, o1.expressionAutoCast) === ResolveSignature.Match.No) {
+						let ri: DiagnosticRelatedInformation[] = [];
+						this.expressionType?.addReportInfo(ri, `Source Type: ${at1.reportInfoText}`);
+						at1.addReportInfo(ri, `Target Type: bool`);
+						const di = state.reportError(this._name.range, `Invalid cast from ${at1.name} to bool`, ri);
+						if (di && at1) {
+							this._codeActionInsertCast = new CodeActionInsertCast(di, at1, ResolveNamespace.classBool,o1, o1.expressionAutoCast);
+							this._codeActionInsertCast.wrapAll = true;
 						}
 					}
 				}
@@ -1070,7 +1089,13 @@ export class ContextFunctionCall extends Context{
 	
 	
 	protected updateRange(endPosition?: Position): void {
-		var rangeBegin = this._object?.range?.start ?? this._name?.range?.start;
+		var rangeBegin = this._object?.range?.start;
+		
+		const nameRangeBegin = this._name?.range?.start;
+		if (!rangeBegin || (nameRangeBegin && Helpers.isPositionBefore(nameRangeBegin, rangeBegin))) {
+			rangeBegin = nameRangeBegin;
+		}
+		
 		var rangeEnd = endPosition;
 		
 		if (!rangeEnd) {
@@ -1080,6 +1105,11 @@ export class ContextFunctionCall extends Context{
 			if (!rangeEnd) {
 				rangeEnd = this._castType?.range?.end ?? this._name?.range?.end;
 			}
+		}
+		
+		const objRangeEnd = this._object?.range?.end;
+		if (!rangeEnd || (objRangeEnd && Helpers.isPositionAfter(objRangeEnd, rangeEnd))) {
+			rangeEnd = objRangeEnd;
 		}
 		
 		if (rangeBegin && rangeEnd) {
@@ -1241,8 +1271,9 @@ export class ContextFunctionCall extends Context{
 	
 	public codeAction(range: Range): CodeAction[] {
 		const actions: CodeAction[] = [];
+		debugLogContext(this);
 		if (this._codeActionInsertCast) {
-			actions.push(...this._codeActionInsertCast?.createCodeActions(range));
+			actions.push(...this._codeActionInsertCast.createCodeActions(range));
 		}
 		return actions;
 	}

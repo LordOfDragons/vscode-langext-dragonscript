@@ -2,8 +2,10 @@ import { CodeAction, CodeActionKind, Diagnostic, Range, TextEdit, WorkspaceEdit 
 import { Context } from "../context/context";
 import { ContextFunctionCall } from "../context/expressionCall";
 import { Helpers } from "../helpers";
+import { ResolveNamespace } from "../resolve/namespace";
 import { ResolveSignature, ResolveSignatureArgument } from "../resolve/signature";
 import { ResolveType } from "../resolve/type";
+import { debugLogMessage } from "../server";
 
 export class CodeActionInsertCast {
 	protected _diagnostic: Diagnostic;
@@ -11,6 +13,7 @@ export class CodeActionInsertCast {
 	protected _targetType: ResolveType;
 	protected _sourceContext: Context;
 	protected _sourceAutoCast: Context.AutoCast;
+	public wrapAll = false;
 	
 	
 	constructor(diagnostic: Diagnostic, sourceType: ResolveType, targetType: ResolveType,
@@ -49,13 +52,19 @@ export class CodeActionInsertCast {
 			return [];
 		}
 		
+		var autoNotNull = false;
+		
 		switch (ResolveSignatureArgument.typeMatches(this._targetType, this._sourceType, this._sourceAutoCast)) {
 		case ResolveSignature.Match.Full:
 		case ResolveSignature.Match.Partial:
 			break;
 			
 		default:
-			return [];
+			if (!this._sourceType.isPrimitive && this._targetType === ResolveNamespace.classBool) {
+				autoNotNull = true;
+			} else {
+				return [];
+			}
 		}
 		
 		const uri = this._sourceContext.documentUri;
@@ -94,18 +103,50 @@ export class CodeActionInsertCast {
 			break;
 		}
 		
-		if (needsWrap) {
-			changes[uri].push(TextEdit.insert(crange.start, '('));
-			changes[uri].push(TextEdit.insert(crange.end, `) cast ${this._targetType.name}`));
+		var label: string;
+		
+		if (autoNotNull) {
+			label = `Insert != null`
 			
 		} else {
-			changes[uri].push(TextEdit.insert(crange.end, ` cast ${this._targetType.name}`));
+			label = `Insert cast ${this._sourceType.name}`
 		}
+		
+		var textBegin = '';
+		var textEnd: string;
+		
+		if (needsWrap) {
+			textBegin = '(';
+			if (autoNotNull) {
+				textEnd = ') != null';
+				
+			} else {
+				textEnd = `) cast ${this._targetType.name}`;
+			}
+			
+		} else {
+			if (autoNotNull) {
+				textEnd = ' != null';
+				
+			} else {
+				textEnd = ` cast ${this._targetType.name}`;
+			}
+		}
+		
+		if (this.wrapAll) {
+			textBegin = '(' + textBegin;
+			textEnd = textEnd + ')';
+		}
+		
+		if (textBegin.length > 0) {
+			changes[uri].push(TextEdit.insert(crange.start, textBegin));
+		}
+		changes[uri].push(TextEdit.insert(crange.end, textEnd));
 		
 		let actions: CodeAction[] = [];
 		
 		actions.push({
-			title: `Insert Cast ${this._sourceType.resolveTextShort}`,
+			title: label,
 			kind: CodeActionKind.QuickFix,
 			diagnostics: [this._diagnostic],
 			isPreferred: true,
@@ -115,7 +156,7 @@ export class CodeActionInsertCast {
 		});
 		
 		actions.push({
-			title: `Insert Cast ${this._sourceType.resolveTextShort}`,
+			title: label,
 			kind: CodeActionKind.SourceFixAll,
 			diagnostics: [this._diagnostic],
 			isPreferred: true,

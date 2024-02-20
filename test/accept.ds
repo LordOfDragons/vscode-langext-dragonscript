@@ -161,8 +161,12 @@ public class OuterClass extends ClassExtendImplement
 		pMember3 = SimpleEnum.withOrder(0   )
 		pMember3
 		AnotherTest
+		
 		pMember2 = ClassExtendImplement.new("8", true)
 		pMember1 = 8.5 + 12
+		ClassExtendImplement.new("8", arg2 and not pMember3)
+		
+		//isATest(8, 8.2)
 		
 		
 		for 6 = 0 to 17
