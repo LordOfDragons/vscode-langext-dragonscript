@@ -83,7 +83,7 @@ export class ContextDocumentation extends Context{
 	}
 	
 	
-	public parseDocumentation(): void {
+	protected parseDocumentation(): void {
 		if (this.docContext) {
 			return;
 		}
@@ -124,6 +124,23 @@ export class ContextDocumentation extends Context{
 				debugLogMessage(each);
 			}
 		}
+	}
+	
+	protected dropDocumentation(): void {
+		this._docText = undefined;
+		this._isDeprecated = false;
+		this._markup = undefined;
+		this._sectionDeprecated = [];
+		this._sectionBrief = [];
+		this._sectionDetails = [];
+		this._sectionParams = [];
+		this._sectionReturn = [];
+		this._sectionTodo = [];
+		this._sectionNote = [];
+		this._sectionWarning = [];
+		this._sectionThrows = [];
+		this._resolveTextLong = undefined;
+		this._resolveTextShort = undefined;
 	}
 	
 	protected updateDocumentation(): void {
@@ -287,7 +304,8 @@ export class ContextDocumentation extends Context{
 	}
 	
 	protected updateResolveTextShort(): string {
-		return this.docText.join('  \n');
+		//return this.docText.join('  \n');
+		return this.resolveTextLong.join('  \n');
 	}
 	
 	public get markup(): MarkupContent {
@@ -302,6 +320,7 @@ export class ContextDocumentation extends Context{
 	
 	
 	public resolveStatements(state: ResolveState): void {
+		this.dropDocumentation();
 		this.docContext?.resolveMembers(state);
 		this.updateDocumentation();
 	}

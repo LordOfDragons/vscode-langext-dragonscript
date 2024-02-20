@@ -67,14 +67,9 @@ export class DocumentationValidator {
 	}
 	
 	public parseLog(scriptDocument: ScriptDocument, documentation: ContextDocumentation, logs: string[]): void {
-			//debugLogMessage(`text: "${documentation.token.image}"`);
 		const lexed = this.doLexLog(scriptDocument, documentation, scriptDocument.settings, logs);
-			/*for (const t of lexed.tokens) {
-				debugLogMessage(`lexed: ${tokenName(t.tokenType)} => "${t.image}"`);
-			};*/
 		documentation.docNode = this.doParseLog(scriptDocument, documentation, scriptDocument.settings, lexed, logs);
 		documentation.docContext = new ContextDocumentationDoc(documentation.docNode, documentation);
-			//documentation.docContext?.log(remoteConsole(), "", "");
 	}
 	
 	

@@ -148,7 +148,7 @@ connection.onInitialize((params: InitializeParams) => {
 		capabilities: {
 			textDocumentSync: TextDocumentSyncKind.Incremental,
 			completionProvider: {
-				resolveProvider: true,
+				//resolveProvider: true,
 				triggerCharacters: ['.']
 			},
 			documentSymbolProvider: {
@@ -290,15 +290,6 @@ documents.onDidChangeContent(change => {
 	validateTextDocumentAndReresolve(change.document);
 });
 
-/*
-function test(n: ResolveNamespace, i: string) {
-	connection.console.log(`${i}Namespace '${n.name}'`);
-	for (const each of n.namespaces.values()) {
-		test(each, `${i}  `);
-	}
-}
-*/
-
 async function validateTextDocumentAndReresolve(textDocument: TextDocument): Promise<void> {
 	let scriptDocument = scriptDocuments.get(textDocument.uri);
 	if (scriptDocument && textDocument.version == scriptDocument.revision) {
@@ -375,15 +366,18 @@ connection.onDidChangeWatchedFiles(change => {
 
 connection.onDocumentSymbol(
 	(params: DocumentSymbolParams): DocumentSymbol[] => {
-		return scriptDocuments.get(params.textDocument.uri)?.context?.documentSymbols || [];
+		return scriptDocuments.get(params.textDocument.uri)?.context?.documentSymbols ?? [];
 	}
 );
 
 connection.onWorkspaceSymbol(
 	(params: WorkspaceSymbolParams): SymbolInformation[] => {
-		//console.log(`onWorkspaceSymbols: ${params.query}`);
 		let symbols: SymbolInformation[] = [];
-		workspacePackages.forEach (p => p.scriptDocuments.forEach (s => s.context?.collectWorkspaceSymbols(symbols)));
+		for (const pkg of workspacePackages) {
+			for (const scrdoc of pkg.scriptDocuments) {
+				scrdoc.context?.collectWorkspaceSymbols(symbols);
+			}
+		}
 		return symbols;
 	}
 )
@@ -392,7 +386,8 @@ connection.onHover(
 	(params: TextDocumentPositionParams): Hover | null => {
 		try {
 			return scriptDocuments.get(params.textDocument.uri)?.context?.
-				contextAtPosition(params.position)?.hover(params.position) || null;
+				contextAtPosition(params.position)?.
+				hover(params.position) ?? null;
 		} catch (error) {
 			logError(error);
 			return null;
@@ -403,55 +398,13 @@ connection.onHover(
 connection.onCompletion(
 	(params: TextDocumentPositionParams): CompletionItem[] => {
 		try {
-			const document: TextDocument | undefined = documents.get(params.textDocument.uri);
-			var scriptContext: ContextScript | undefined = scriptDocuments.get(params.textDocument.uri)?.context;
+			const document = documents.get(params.textDocument.uri);
+			const scriptContext = scriptDocuments.get(params.textDocument.uri)?.context;
 			if (!document || !scriptContext) {
 				return [];
 			}
-			
-			console.log(`onCompletion ${Helpers.logPosition(params.position)}`);
-			/*
-			var offset: number = document.offsetAt(params.position);
-			var context: Context | undefined;
-			
-			while (offset >= 0) {
-				var position: Position = document.positionAt(offset);
-				context = scriptContext.contextAtPosition(position);
-				if (context) {
-					break;
-				}
-				offset = offset - 1;
-			}
-			
-			console.log(`found ${Helpers.logPosition(document.positionAt(offset))}`
-				+ ` ${context?.constructor.name} ${context?.resolveTextLong} ${context?.expressionType?.resolveTextShort} ${Helpers.logRange(context?.range)}`);
-			*/
-			
-			var context = scriptContext.contextAtPosition(params.position);
-			console.log(`found ${context?.constructor.name} ${context?.resolveTextLong} ${context?.expressionType?.resolveTextShort} ${Helpers.logRange(context?.range)}`);
-			
-			/*
-			if (context) {
-				var context2: Context | undefined = context;
-				while (context2 && context2.type !== Context.ContextType.Function) {
-					console.log(`check ${Helpers.logRange(context2.range)} ${context2.constructor.name} ${context2.resolveTextShort}`);
-					context2 = context2.parent;
-				}
-				context2?.log(connection.console);
-			}
-			*/
-			
-			const l = context?.completion(document, params.position) || [];
-			console.log(`completion count: ${l.length}`);
-			//for (const each of l.slice(0, 5)){ console.log(`- ${each.label}: ${Helpers.logRange((each.textEdit as TextEdit)?.range)}`)}
-			
-			/*
-			var e: number;
-			for (e=0; e<l.length; e++) {
-				l[e].sortText = `${String.fromCodePoint(0x20+e)}:${l[e].filterText ?? l[e].label}`;
-			}
-			*/
-			return l;
+			return scriptContext.contextAtPosition(params.position)?.
+				completion(document, params.position) ?? [];
 			
 		} catch (error) {
 			logError(error);
@@ -460,9 +413,9 @@ connection.onCompletion(
 	}
 );
 
+/*
 connection.onCompletionResolve(
 	(item: CompletionItem): CompletionItem => {
-		/*
 		if (item.data === 1) {
 			item.detail = 'TypeScript details';
 			item.documentation = 'TypeScript documentation';
@@ -470,16 +423,17 @@ connection.onCompletionResolve(
 			item.detail = 'JavaScript details';
 			item.documentation = 'JavaScript documentation';
 		}
-		*/
 		return item;
 	}
 );
+*/
 
 connection.onDefinition(
 	(params: TextDocumentPositionParams): Definition => {
 		try {
 			return scriptDocuments.get(params.textDocument.uri)?.context?.
-				contextAtPosition(params.position)?.definition(params.position) || [];
+				contextAtPosition(params.position)?.
+				definition(params.position) ?? [];
 		} catch (error) {
 			logError(error);
 			return [];
@@ -490,21 +444,23 @@ connection.onDefinition(
 connection.onReferences(
 	(params: ReferenceParams): Location[] => {
 		const resolved = scriptDocuments.get(params.textDocument.uri)?.context?.
-			contextAtPosition(params.position)?.resolvedAtPosition(params.position);
+			contextAtPosition(params.position)?.
+			resolvedAtPosition(params.position);
+		
+		if (!resolved) {
+			return [];
+		}
+		
 		let references: Location[] = [];
 		
-		//console.log(`onReference context=${scriptDocuments.get(params.textDocument.uri)?.context?.
-		//	contextAtPosition(params.position)?.resolveTextShort} resolved=${resolved?.resolveTextShort}`);
-		if (resolved) {
-			if (params.context.includeDeclaration) {
-				references.push(...resolved.references);
-			}
-			
-			for (const each of resolved.usage) {
-				const r = each.reference;
-				if (r) {
-					references.push(r);
-				}
+		if (params.context.includeDeclaration) {
+			references.push(...resolved.references);
+		}
+		
+		for (const each of resolved.usage) {
+			const r = each.reference;
+			if (r) {
+				references.push(r);
 			}
 		}
 		
@@ -514,31 +470,33 @@ connection.onReferences(
 
 connection.onDocumentHighlight(
 	(params: DocumentHighlightParams): DocumentHighlight[] => {
-		let hilight: DocumentHighlight[] = [];
 		const uri = params.textDocument.uri;
 		
 		const resolved = scriptDocuments.get(uri)?.context?.
-			contextAtPosition(params.position)?.resolvedAtPosition(params.position);
+			contextAtPosition(params.position)?.
+			resolvedAtPosition(params.position);
 		
-		//console.log(`onDocumentHighlight context=${context.contextAtPosition(params.position)?.resolveTextShort}
-		//	resolved=${resolved?.resolveTextShort} refs=${resolved?.references.length} usages=${resolved?.usage.size}`);
-		if (resolved) {
-			for (const each of resolved.references) {
-				if (each.uri == uri) {
-					hilight.push({
-						range: each.range,
-						kind: DocumentHighlightKind.Text
-					});
-				}
+		if (!resolved) {
+			return [];
+		}
+		
+		let hilight: DocumentHighlight[] = [];
+		
+		for (const each of resolved.references) {
+			if (each.uri == uri) {
+				hilight.push({
+					range: each.range,
+					kind: DocumentHighlightKind.Text
+				});
 			}
-			
-			for (const each of resolved.usage) {
-				if (each.context?.documentUri == uri && each.range) {
-					hilight.push({
-						range: each.range,
-						kind: each.write ? DocumentHighlightKind.Write : DocumentHighlightKind.Read
-					});
-				}
+		}
+		
+		for (const each of resolved.usage) {
+			if (each.context?.documentUri == uri && each.range) {
+				hilight.push({
+					range: each.range,
+					kind: each.write ? DocumentHighlightKind.Write : DocumentHighlightKind.Read
+				});
 			}
 		}
 		
@@ -565,17 +523,20 @@ connection.onCodeAction(
 connection.onRenameRequest(
 	(params: RenameParams): WorkspaceEdit | undefined => {
 		const resolved = scriptDocuments.get(params.textDocument.uri)?.context?.
-			contextAtPosition(params.position)?.resolvedAtPosition(params.position);
-		let references: Location[] = [];
+			contextAtPosition(params.position)?.
+			resolvedAtPosition(params.position);
 		
-		if (resolved) {
-			references.push(...resolved.references);
-			
-			for (const each of resolved.usage) {
-				const r = each.reference;
-				if (r) {
-					references.push(r);
-				}
+		if (!resolved) {
+			return undefined;
+		}
+		
+		let references: Location[] = [];
+		references.push(...resolved.references);
+		
+		for (const each of resolved.usage) {
+			const r = each.reference;
+			if (r) {
+				references.push(r);
 			}
 		}
 		

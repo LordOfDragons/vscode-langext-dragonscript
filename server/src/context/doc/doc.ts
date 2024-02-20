@@ -147,7 +147,22 @@ export class ContextDocumentationDoc extends Context{
 	}
 	
 	
+	public clearDoc(): void {
+		this.brief.splice(0);
+		this.details.splice(0);
+		this.since = '';
+		this._params.clear();
+		this.return.splice(0);
+		this._retvals.splice(0);
+		this.deprecated.splice(0);
+		this.todo.splice(0);
+		this.note.splice(0);
+		this.warning.splice(0);
+		this._throws.splice(0);
+	}
+	
 	public buildDoc(): void {
+		this.clearDoc();
 		let state = new ContextDocumentationDocState(this);
 		for (const each of this._blocks) {
 			each.buildDoc(state);
