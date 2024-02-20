@@ -47,7 +47,10 @@ import {
 	SignatureHelpParams,
 	SignatureHelp,
 	CodeActionParams,
-	CodeAction} from 'vscode-languageserver/node'
+	CodeAction,
+	RenameParams,
+	WorkspaceEdit,
+	TextEdit} from 'vscode-languageserver/node'
 
 import {
 	TextDocument
@@ -160,7 +163,8 @@ connection.onInitialize((params: InitializeParams) => {
 				triggerCharacters: ['('],
 				retriggerCharacters: [',']
 			},
-			codeActionProvider: true
+			codeActionProvider: true,
+			renameProvider: true
 		}
 	};
 	
@@ -555,6 +559,40 @@ connection.onCodeAction(
 		return scriptDocuments.get(params.textDocument.uri)?.context?.
 			contextAtRange(params.range)?.
 			codeAction(params.range) ?? [];
+	}
+)
+
+connection.onRenameRequest(
+	(params: RenameParams): WorkspaceEdit | undefined => {
+		const resolved = scriptDocuments.get(params.textDocument.uri)?.context?.
+			contextAtPosition(params.position)?.resolvedAtPosition(params.position);
+		let references: Location[] = [];
+		
+		if (resolved) {
+			references.push(...resolved.references);
+			
+			for (const each of resolved.usage) {
+				const r = each.reference;
+				if (r) {
+					references.push(r);
+				}
+			}
+		}
+		
+		if (references.length == 0) {
+			return undefined;
+		}
+		
+		let changes: {[uri: string]: TextEdit[]} = {};
+		
+		for (const each of references) {
+			if (!changes[each.uri]) {
+				changes[each.uri] = [];
+			}
+			changes[each.uri].push(TextEdit.replace(each.range, params.newName));
+		}
+		
+		return {changes: changes};
 	}
 )
 
