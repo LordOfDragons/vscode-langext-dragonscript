@@ -164,7 +164,11 @@ public class OuterClass extends ClassExtendImplement
 		
 		pMember2 = ClassExtendImplement.new("8", true)
 		pMember1 = 8.5 + 12
-		ClassExtendImplement.new("8", arg2 and not pMember3)
+		ClassExtendImplement.new("8", pMember2 and pMember3)
+		ClassExtendImplement.new("8", not pMember3)
+		ClassExtendImplement.new("8", pMember3)
+		arg2 = pMember3
+		arg2 = not pMember3
 		
 		//isATest(8, 8.2)
 		

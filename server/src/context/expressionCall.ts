@@ -77,7 +77,7 @@ export class ContextFunctionCall extends Context{
 	protected _resolveUsage?: ResolveUsage;
 	protected _resolveSignature?: ResolveSignature;
 	
-	protected _codeActionInsertCast?: CodeActionInsertCast;
+	protected _codeActionInsertCast: CodeActionInsertCast[] = [];
 	
 	
 	protected constructor(node: ExpressionAdditionCstNode | ExpressionBitOperationCstNode
@@ -482,7 +482,7 @@ export class ContextFunctionCall extends Context{
 		this._matchFunction = undefined;
 		this._resolveUsage?.dispose();
 		this._resolveUsage = undefined;
-		this._codeActionInsertCast = undefined;
+		this._codeActionInsertCast.splice(0);
 	}
 
 
@@ -533,6 +533,8 @@ export class ContextFunctionCall extends Context{
 	}
 	
 	public resolveStatements(state: ResolveState): void {
+		this._codeActionInsertCast.splice(0);
+		
 		this._object?.resolveStatements(state);
 		for (const each of this._arguments) {
 			each.resolveStatements(state);
@@ -664,31 +666,14 @@ export class ContextFunctionCall extends Context{
 					at1?.addReportInfo(ri, `Target Type: ${at2?.reportInfoText}`);
 					const di = state.reportError(this._name.range, `Invalid cast from ${at1?.name} to ${at2?.name}`, ri);
 					if (di && at1 && at2) {
-						this._codeActionInsertCast = new CodeActionInsertCast(di, at1, at2, o1, o1.expressionAutoCast);
+						this._codeActionInsertCast.push(new CodeActionInsertCast(
+							di, at1, at2, o1, o1.expressionAutoCast));
 					}
 				}
 				}break;
 				
 			case ContextFunctionCall.FunctionType.logicalAnd:
 			case ContextFunctionCall.FunctionType.logicalOr:{
-				// WRONG! with "and"/"or" both the left and right side have to be castable to "bool"
-				const o1 = this._object;
-				if (o1) {
-					const at1 = o1.expressionType;
-					if (at1 && ResolveSignatureArgument.typeMatches(at1, this.expressionType, o1.expressionAutoCast) === ResolveSignature.Match.No) {
-						let ri: DiagnosticRelatedInformation[] = [];
-						this.expressionType?.addReportInfo(ri, `Source Type: ${this.expressionType?.reportInfoText}`);
-						at1?.addReportInfo(ri, `Target Type: ${at1?.reportInfoText}`);
-						const di = state.reportError(this._name.range, `Invalid cast from ${this.expressionType?.name} to ${at1?.name}`, ri);
-						if (di && this.expressionType && at1) {
-							this._codeActionInsertCast = new CodeActionInsertCast(di, this.expressionType, at1, this, this.expressionAutoCast);
-						}
-					}
-				}
-				}break;
-				
-			case ContextFunctionCall.FunctionType.not:{
-				//        with "not" only the left side has to be castable to "bool"
 				const o1 = this._object;
 				if (o1) {
 					const at1 = o1.expressionType;
@@ -698,8 +683,41 @@ export class ContextFunctionCall extends Context{
 						at1.addReportInfo(ri, `Target Type: bool`);
 						const di = state.reportError(this._name.range, `Invalid cast from ${at1.name} to bool`, ri);
 						if (di && at1) {
-							this._codeActionInsertCast = new CodeActionInsertCast(di, at1, ResolveNamespace.classBool,o1, o1.expressionAutoCast);
-							this._codeActionInsertCast.wrapAll = true;
+							this._codeActionInsertCast.push(new CodeActionInsertCast(
+								di, at1, ResolveNamespace.classBool, o1, o1.expressionAutoCast));
+						}
+					}
+				}
+				
+				const o2 = this._arguments.at(0);
+				if (o2) {
+					const at2 = o2.expressionType;
+					if (at2 && ResolveSignatureArgument.typeMatches(at2, ResolveNamespace.classBool, o2.expressionAutoCast) === ResolveSignature.Match.No) {
+						let ri: DiagnosticRelatedInformation[] = [];
+						this.expressionType?.addReportInfo(ri, `Source Type: ${at2.reportInfoText}`);
+						at2.addReportInfo(ri, `Target Type: bool`);
+						const di = state.reportError(this._name.range, `Invalid cast from ${at2.name} to bool`, ri);
+						if (di && at2) {
+							this._codeActionInsertCast.push(new CodeActionInsertCast(
+								di, at2, ResolveNamespace.classBool, o2, o2.expressionAutoCast));
+						}
+					}
+				}
+				}break;
+				
+			case ContextFunctionCall.FunctionType.not:{
+				const o1 = this._object;
+				if (o1) {
+					const at1 = o1.expressionType;
+					if (at1 && ResolveSignatureArgument.typeMatches(at1, ResolveNamespace.classBool, o1.expressionAutoCast) === ResolveSignature.Match.No) {
+						let ri: DiagnosticRelatedInformation[] = [];
+						this.expressionType?.addReportInfo(ri, `Source Type: ${at1.reportInfoText}`);
+						at1.addReportInfo(ri, `Target Type: bool`);
+						const di = state.reportError(this._name.range, `Invalid cast from ${at1.name} to bool`, ri);
+						if (di && at1) {
+							const ca = new CodeActionInsertCast(di, at1, ResolveNamespace.classBool,o1, o1.expressionAutoCast);
+							ca.wrapAll = true;
+							this._codeActionInsertCast.push(ca);
 						}
 					}
 				}
@@ -1271,9 +1289,8 @@ export class ContextFunctionCall extends Context{
 	
 	public codeAction(range: Range): CodeAction[] {
 		const actions: CodeAction[] = [];
-		debugLogContext(this);
-		if (this._codeActionInsertCast) {
-			actions.push(...this._codeActionInsertCast.createCodeActions(range));
+		for (const each of this._codeActionInsertCast) {
+			actions.push(...each.createCodeActions(range));
 		}
 		return actions;
 	}
