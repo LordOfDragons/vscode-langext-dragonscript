@@ -80,7 +80,8 @@ export class DSDocParser extends CstParser{
 				{ALT: () => this.SUBRULE(this.version)},
 				{ALT: () => this.SUBRULE(this.throw)},
 				{ALT: () => this.SUBRULE(this.todo)},
-				{ALT: () => this.SUBRULE(this.warning)}
+				{ALT: () => this.SUBRULE(this.warning)},
+				{ALT: () => this.SUBRULE(this.see)}
 			])
 		});
 		this.SUBRULE(this.docBlockText);
@@ -167,7 +168,6 @@ export class DSDocParser extends CstParser{
 		this.OR([
 			{ALT: () => this.SUBRULE(this.emboss)},
 			{ALT: () => this.SUBRULE(this.reference)},
-			{ALT: () => this.SUBRULE(this.see)},
 			{ALT: () => this.SUBRULE(this.bold)},
 			{ALT: () => this.CONSUME(DSDocLexer.tokenString)},
 			{ALT: () => this.CONSUME(DSDocLexer.tokenWord)}
@@ -191,6 +191,5 @@ export class DSDocParser extends CstParser{
 	
 	public see = this.RULE("ruleSee", () => {
 		this.CONSUME(DSDocLexer.tokenSee);
-		this.CONSUME(DSDocLexer.tokenWord, {LABEL: "target"});
 	})
 }

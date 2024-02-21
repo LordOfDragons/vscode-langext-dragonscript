@@ -26,11 +26,11 @@ import { Position, Range, RemoteConsole } from "vscode-languageserver";
 import { Helpers } from "../../helpers";
 import { DocumentationNoteCstNode } from "../../nodeclasses/doc/note";
 import { Context } from "../context";
-import { ContextDocBase } from "./contextDoc";
+import { ContextDocBaseBlock } from "./baseBlock";
 import { ContextDocumentationDocState } from "./docState";
 
 
-export class ContextDocumentationNote extends ContextDocBase{
+export class ContextDocumentationNote extends ContextDocBaseBlock{
 	protected _node: DocumentationNoteCstNode;
 	
 	
@@ -47,6 +47,7 @@ export class ContextDocumentationNote extends ContextDocBase{
 	
 	public buildDoc(state: ContextDocumentationDocState): void {
 		state.newParagraph(Context.ContextType.DocumentationNote);
+		this.buildDocWords(state);
 	}
 	
 	
@@ -65,7 +66,8 @@ export class ContextDocumentationNote extends ContextDocBase{
 	}
 	
 	
-	log(console: RemoteConsole, prefix: string = "", _prefixLines: string = "") {
+	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
 		console.log(`${prefix}Note`);
+		this.logChildren(this._words, console, prefixLines)
 	}
 }

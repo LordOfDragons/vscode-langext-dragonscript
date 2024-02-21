@@ -26,11 +26,11 @@ import { Position, Range, RemoteConsole } from "vscode-languageserver";
 import { Helpers } from "../../helpers";
 import { DocumentationDeprecatedCstNode } from "../../nodeclasses/doc/deprecated";
 import { Context } from "../context";
-import { ContextDocBase } from "./contextDoc";
+import { ContextDocBaseBlock } from "./baseBlock";
 import { ContextDocumentationDocState } from "./docState";
 
 
-export class ContextDocumentationDeprecated extends ContextDocBase{
+export class ContextDocumentationDeprecated extends ContextDocBaseBlock{
 	protected _node: DocumentationDeprecatedCstNode;
 	
 	
@@ -47,6 +47,7 @@ export class ContextDocumentationDeprecated extends ContextDocBase{
 	
 	public buildDoc(state: ContextDocumentationDocState): void {
 		state.newParagraph(Context.ContextType.DocumentationDeprecated);
+		this.buildDocWords(state);
 	}
 	
 	
@@ -65,7 +66,8 @@ export class ContextDocumentationDeprecated extends ContextDocBase{
 	}
 	
 	
-	log(console: RemoteConsole, prefix: string = "", _prefixLines: string = "") {
+	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
 		console.log(`${prefix}Deprecated`);
+		this.logChildren(this._words, console, prefixLines)
 	}
 }

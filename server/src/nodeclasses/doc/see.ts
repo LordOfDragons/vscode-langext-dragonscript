@@ -8,5 +8,4 @@ export interface DocumentationSeeCstNode extends CstNode {
 
 export type DocumentationSeeCstChildren = {
 	see: IToken[];
-	target: IToken[];
 };

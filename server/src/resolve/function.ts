@@ -86,6 +86,10 @@ export class ResolveFunction extends Resolved{
 		return this.fullyQualifiedName;
 	}
 	
+	public get linkName(): string {
+		return `${super.linkName}${this._signature.resolveTextShort}`;
+	}
+	
 	
 	public get context(): ContextFunction | ContextBlock | undefined {
 		return this._context;
@@ -162,6 +166,11 @@ export class ResolveFunction extends Resolved{
 	
 	protected updateReportInfoText(): string {
 		return this._context?.reportInfoText ?? this._name;
+	}
+	
+	public get resolveLocation(): Location[] {
+		const l = this._context?.resolveLocationSelf;
+		return l ? [l] : [];
 	}
 	
 	public get references(): Location[] {

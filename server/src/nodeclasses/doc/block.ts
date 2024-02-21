@@ -10,6 +10,7 @@ import { DocumentationParagraphCstNode } from "./paragraph";
 import { DocumentationParamCstNode } from "./param";
 import { DocumentationReturnCstNode } from "./return";
 import { DocumentationReturnValueCstNode } from "./returnValue";
+import { DocumentationSeeCstNode } from "./see";
 import { DocumentationSinceCstNode } from "./since";
 import { DocumentationThrowCstNode } from "./throw";
 import { DocumentationTodoCstNode } from "./todo";
@@ -38,5 +39,6 @@ export type DocumentationBlockCstChildren = {
 	ruleThrow?: DocumentationThrowCstNode[];
 	ruleTodo?: DocumentationTodoCstNode[];
 	ruleWarning?: DocumentationWarningCstNode[];
+	ruleSee?: DocumentationSeeCstNode[];
 	docBlockText?: DocumentationBlockTextCstNode[];
 };

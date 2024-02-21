@@ -26,11 +26,11 @@ import { Position, Range, RemoteConsole } from "vscode-languageserver";
 import { Helpers } from "../../helpers";
 import { DocumentationTodoCstNode } from "../../nodeclasses/doc/todo";
 import { Context } from "../context";
-import { ContextDocBase } from "./contextDoc";
+import { ContextDocBaseBlock } from "./baseBlock";
 import { ContextDocumentationDocState } from "./docState";
 
 
-export class ContextDocumentationTodo extends ContextDocBase{
+export class ContextDocumentationTodo extends ContextDocBaseBlock{
 	protected _node: DocumentationTodoCstNode;
 	
 	
@@ -47,6 +47,7 @@ export class ContextDocumentationTodo extends ContextDocBase{
 	
 	public buildDoc(state: ContextDocumentationDocState): void {
 		state.newParagraph(Context.ContextType.DocumentationTodo);
+		this.buildDocWords(state);
 	}
 	
 	
@@ -65,7 +66,8 @@ export class ContextDocumentationTodo extends ContextDocBase{
 	}
 	
 	
-	log(console: RemoteConsole, prefix: string = "", _prefixLines: string = "") {
+	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
 		console.log(`${prefix}Todo`);
+		this.logChildren(this._words, console, prefixLines)
 	}
 }

@@ -53,8 +53,8 @@ export class ContextDocumentationEmboss extends ContextDocBase{
 	}
 	
 	
-	public resolveMembers(state: ResolveState): void {
-		this.word?.resolveMembers(state);
+	public resolveStatements(state: ResolveState): void {
+		this.word?.resolveStatements(state);
 	}
 	
 	

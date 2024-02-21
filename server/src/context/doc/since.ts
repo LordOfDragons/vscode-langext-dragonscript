@@ -26,11 +26,11 @@ import { Position, Range, RemoteConsole } from "vscode-languageserver";
 import { Helpers } from "../../helpers";
 import { DocumentationSinceCstNode } from "../../nodeclasses/doc/since";
 import { Context } from "../context";
-import { ContextDocBase } from "./contextDoc";
+import { ContextDocBaseBlock } from "./baseBlock";
 import { ContextDocumentationDocState } from "./docState";
 
 
-export class ContextDocumentationSince extends ContextDocBase{
+export class ContextDocumentationSince extends ContextDocBaseBlock{
 	protected _node: DocumentationSinceCstNode;
 	
 	
@@ -47,6 +47,7 @@ export class ContextDocumentationSince extends ContextDocBase{
 	
 	public buildDoc(state: ContextDocumentationDocState): void {
 		state.newParagraph(Context.ContextType.DocumentationSince);
+		this.buildDocWords(state);
 	}
 	
 	
@@ -65,7 +66,8 @@ export class ContextDocumentationSince extends ContextDocBase{
 	}
 	
 	
-	log(console: RemoteConsole, prefix: string = "", _prefixLines: string = "") {
+	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
 		console.log(`${prefix}Since`);
+		this.logChildren(this._words, console, prefixLines)
 	}
 }

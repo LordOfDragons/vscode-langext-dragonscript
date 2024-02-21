@@ -25,20 +25,32 @@
 import { Position, Range, RemoteConsole } from "vscode-languageserver";
 import { Helpers } from "../../helpers";
 import { DocumentationSeeCstNode } from "../../nodeclasses/doc/see";
+import { Resolved } from "../../resolve/resolved";
+import { ResolveState } from "../../resolve/state";
+import { debugLogMessage } from "../../server";
 import { Context } from "../context";
-import { ContextDocBase } from "./contextDoc";
+import { ContextDocBaseBlock } from "./baseBlock";
 import { ContextDocumentationDocState } from "./docState";
+import { ContextDocumentationWord } from "./word";
 
 
-export class ContextDocumentationSee extends ContextDocBase{
+export class ContextDocumentationSee extends ContextDocBaseBlock{
 	protected _node: DocumentationSeeCstNode;
-	protected _target: string;
+	protected _resolved: (Resolved | undefined)[] = [];
 	
 	
 	constructor(node: DocumentationSeeCstNode, parent: Context) {
 		super(Context.ContextType.DocumentationSee, parent);
 		this._node = node;
-		this._target = node.children.target[0].image;
+	}
+	
+	dispose(): void {
+		for (const each of this._resolved) {
+			each?.dispose();
+		}
+		this._resolved.splice(0);
+		
+		super.dispose();
 	}
 	
 	
@@ -46,13 +58,39 @@ export class ContextDocumentationSee extends ContextDocBase{
 		return this._node;
 	}
 	
-	public get target(): string {
-		return this._target;
+	
+	public resolveStatements(state: ResolveState): void {
+		for (const each of this._resolved) {
+			each?.dispose();
+		}
+		this._resolved.splice(0);
+		
+		for (const each of this._words) {
+			if (each.type == Context.ContextType.DocumentationWord) {
+				const r = this.resolveSymbol(state, this.parseSymbol((each as ContextDocumentationWord).text));
+				debugLogMessage(`CHECK ${(each as ContextDocumentationWord).text} => ${r?.resolveTextShort}`);
+				this._resolved.push(r);
+			} else {
+				this._resolved.push(undefined);
+			}
+		}
 	}
 	
 	
 	public buildDoc(state: ContextDocumentationDocState): void {
-		state.addWord(`🔗 *${this._target}*`);
+		state.newParagraph(Context.ContextType.DocumentationSee);
+		
+		for (var i=0; i<this._words.length; i++) {
+			const r = this._resolved.at(i);
+			if (r) {
+				const l = r.resolveLocation.at(0);
+				if (l) {
+					state.addWord(`[${r.linkName}](${l.uri}#${l.range.start.line + 1})`);
+					continue;
+				}
+			}
+			this._words[i].buildDoc(state);
+		}
 	}
 	
 	
@@ -71,7 +109,8 @@ export class ContextDocumentationSee extends ContextDocBase{
 	}
 	
 	
-	log(console: RemoteConsole, prefix: string = "", _prefixLines: string = "") {
+	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
 		console.log(`${prefix}See`);
+		this.logChildren(this._words, console, prefixLines)
 	}
 }

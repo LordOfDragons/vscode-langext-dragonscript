@@ -27,7 +27,6 @@ import { ContextDocumentationBold } from "./bold";
 import { ContextDocBase } from "./contextDoc";
 import { ContextDocumentationEmboss } from "./emboss";
 import { ContextDocumentationReference } from "./reference";
-import { ContextDocumentationSee } from "./see";
 import { ContextDocumentationString } from "./string";
 import { ContextDocumentationWord } from "./word";
 
@@ -43,8 +42,6 @@ export class ContextDocBuilder {
 			return new ContextDocumentationEmboss(c.ruleEmboss[0], parent);
 		} else if (c.ruleReference) {
 			return new ContextDocumentationReference(c.ruleReference[0], parent);
-		} else if (c.ruleSee) {
-			return new ContextDocumentationSee(c.ruleSee[0], parent);
 		} else if (c.ruleBold) {
 			return new ContextDocumentationBold(c.ruleBold[0], parent);
 		} else if (c.string) {

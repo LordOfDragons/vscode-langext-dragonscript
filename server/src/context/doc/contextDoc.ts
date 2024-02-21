@@ -22,8 +22,28 @@
  * SOFTWARE.
  */
 
+import { ResolveFunction } from "../../resolve/function";
+import { Resolved, ResolveUsage } from "../../resolve/resolved";
+import { ResolveSearch } from "../../resolve/search";
+import { ResolveSignature } from "../../resolve/signature";
+import { ResolveState } from "../../resolve/state";
+import { ResolveType } from "../../resolve/type";
+import { ResolveVariable } from "../../resolve/variable";
+import { debugLogMessage } from "../../server";
 import { Context } from "../context";
+import { ContextNamespace } from "../namespace";
+import { ContextClass } from "../scriptClass";
+import { ContextEnumeration } from "../scriptEnum";
+import { ContextInterface } from "../scriptInterface";
+import { TypeName } from "../typename";
 import { ContextDocumentationDocState } from "./docState";
+
+
+export interface ContextDocBaseSymbol {
+	nameClass?: string,
+	nameSymbol?: string,
+	arguments?: string[]
+}
 
 
 export class ContextDocBase extends Context{
@@ -33,5 +53,141 @@ export class ContextDocBase extends Context{
 	
 	
 	public buildDoc(state: ContextDocumentationDocState): void {
+	}
+	
+	
+	protected parseSymbol(word: string): ContextDocBaseSymbol | undefined {
+		const deliHash = word.indexOf('#');
+		const deliLParam = word.indexOf('(');
+		const deliRParam = word.indexOf(')');
+		
+		var nameClass: string | undefined;
+		var nameSymbol: string | undefined;
+		var args: string[] | undefined;
+		
+		if (deliHash > deliLParam || deliLParam > deliRParam) {
+			return undefined;
+		}
+		
+		if (deliLParam != -1) {
+			args = word.substring(deliLParam + 1, deliRParam).split(',');
+			word = word.substring(0, deliLParam);
+		}
+		
+		if (deliHash != -1) {
+			nameSymbol = word.substring(deliHash + 1);
+			word = word.substring(0, deliHash);
+		}
+		
+		if (word.length > 0) {
+			nameClass = word;
+		}
+		
+		return {
+			nameClass: nameClass,
+			nameSymbol: nameSymbol,
+			arguments: args
+		}
+	}
+	
+	protected resolveSymbol(state: ResolveState, symbol?: ContextDocBaseSymbol): Resolved | undefined {
+		if (!symbol) {
+			return undefined;
+		}
+		
+		var context: Context | undefined;
+		
+		for (let i=state.scopeContextStack.length - 1; i >= 0; i--) {
+			const c = state.scopeContextStack[i];
+			
+			switch (c.type) {
+			case Context.ContextType.Class:
+			case Context.ContextType.Interface:
+			case Context.ContextType.Enumeration:
+			case Context.ContextType.Namespace:
+				context = c;
+				break;
+			}
+			
+			if (context) {
+				break;
+			}
+		}
+		
+		if (!context) {
+			return undefined;
+		}
+		
+		var type: ResolveType | undefined;
+		
+		if (symbol.nameClass) {
+			var typeName: TypeName;
+			try {
+				typeName = TypeName.typeNamed(symbol.nameClass);
+			} catch {
+				return undefined;
+			}
+			
+			const usage = typeName.resolveType(state, this);
+			if (usage?.resolved) {
+				switch (usage.resolved.type) {
+				case Resolved.Type.Class:
+				case Resolved.Type.Interface:
+				case Resolved.Type.Enumeration:
+				case Resolved.Type.Namespace:
+					type = usage.resolved as ResolveType;
+					break;
+				}
+				usage.dispose();
+			}
+			
+			if (!type) {
+				return undefined;
+			}
+		}
+		
+		if (!symbol.nameSymbol) {
+			return type;
+		}
+		
+		let matches = new ResolveSearch();
+		matches.name = symbol.nameSymbol;
+		matches.searchSuperClasses = symbol.nameSymbol != 'new';
+		
+		if (symbol.arguments) {
+			let resolveSignature = new ResolveSignature();
+			for (const each of symbol.arguments) {
+				let matches2 = new ResolveSearch();
+				matches2.name = each;
+				matches2.onlyTypes = true;
+				state.search(matches2, context);
+				if (matches2.types.size == 0) {
+					return undefined;
+				}
+				resolveSignature.addArgument(matches2.types.values().next().value, undefined, Context.AutoCast.No);
+			}
+			
+			matches.ignoreVariables = true;
+			matches.signature = resolveSignature;
+		}
+		
+		if (type) {
+			type.search(matches);
+		} else {
+			state.search(matches, context);
+		}
+		
+		if (matches.functionsFull.length > 0) {
+			return matches.functionsFull[0];
+			
+		} else if (matches.variables.length > 0) {
+			return matches.variables[0];
+			
+		} else if (matches.types.size > 0) {
+			return matches.types.values().next().value;
+			
+		} else {
+			return undefined;
+		}
 	}
 }

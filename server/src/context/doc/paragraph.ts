@@ -27,12 +27,13 @@ import { Helpers } from "../../helpers";
 import { DocumentationParagraphCstNode } from "../../nodeclasses/doc/paragraph";
 import { ResolveState } from "../../resolve/state";
 import { Context } from "../context";
+import { ContextDocBaseBlock } from "./baseBlock";
 import { ContextDocBuilder } from "./builder";
 import { ContextDocBase } from "./contextDoc";
 import { ContextDocumentationDocState } from "./docState";
 
 
-export class ContextDocumentationParagraph extends ContextDocBase{
+export class ContextDocumentationParagraph extends ContextDocBaseBlock{
 	protected _node: DocumentationParagraphCstNode;
 	protected _title: ContextDocBase[] = [];
 	
@@ -64,9 +65,9 @@ export class ContextDocumentationParagraph extends ContextDocBase{
 	}
 	
 	
-	public resolveMembers(state: ResolveState): void {
+	public resolveStatements(state: ResolveState): void {
 		for (const each of this._title) {
-			each.resolveMembers(state);
+			each.resolveStatements(state);
 		}
 	}
 	
@@ -78,6 +79,7 @@ export class ContextDocumentationParagraph extends ContextDocBase{
 				each.buildDoc(state);
 			}
 		});
+		this.buildDocWords(state);
 	}
 	
 	
@@ -96,7 +98,8 @@ export class ContextDocumentationParagraph extends ContextDocBase{
 	}
 	
 	
-	log(console: RemoteConsole, prefix: string = "", _prefixLines: string = "") {
+	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
 		console.log(`${prefix}Paragraph`);
+		this.logChildren(this._words, console, prefixLines)
 	}
 }

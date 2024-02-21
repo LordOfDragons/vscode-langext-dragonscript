@@ -22,42 +22,67 @@
  * SOFTWARE.
  */
 
-import { Position, Range, RemoteConsole } from "vscode-languageserver";
+import { Position, Range } from "vscode-languageserver";
 import { Helpers } from "../../helpers";
-import { DocumentationThrowCstNode } from "../../nodeclasses/doc/throw";
+import { DocumentationBlockTextCstNode, DocumentationBlockTextWordCstNode } from "../../nodeclasses/doc/blockText";
+import { ResolveState } from "../../resolve/state";
 import { Context } from "../context";
-import { ContextDocBaseBlock } from "./baseBlock";
+import { ContextDocBuilder } from "./builder";
+import { ContextDocBase } from "./contextDoc";
 import { ContextDocumentationDocState } from "./docState";
+import { ContextDocumentationNewline } from "./newline";
 
 
-export class ContextDocumentationThrow extends ContextDocBaseBlock{
-	protected _node: DocumentationThrowCstNode;
-	protected _throwType: string;
-	public description: string[] = [];
+export class ContextDocBaseBlock extends ContextDocBase{
+	protected _words: ContextDocBase[] = [];
 	
 	
-	constructor(node: DocumentationThrowCstNode, parent: Context) {
-		super(Context.ContextType.DocumentationThrow, parent);
-		this._node = node;
-		this._throwType = node.children.type[0].image;
+	constructor(type: Context.ContextType, parent: Context) {
+		super(type, parent);
+	}
+	
+	dispose(): void {
+		this._words.forEach(each => each.dispose());
+		this._words.splice(0);
+		
+		super.dispose();
 	}
 	
 	
-	public get node(): DocumentationThrowCstNode {
-		return this._node;
-	}
-	
-	public get throwType(): string {
-		return this._throwType;
+	public get words(): Context[] {
+		return this._words;
 	}
 	
 	
-	public buildDoc(state: ContextDocumentationDocState): void {
-		this.description.splice(0);
-		state.doc.throws.push(this);
-		state.newParagraph(Context.ContextType.DocumentationThrow);
-		state.curThrow = this;
-		this.buildDocWords(state);
+	public addWords(node: DocumentationBlockTextCstNode): void {
+		const list = node.children.docBlockTextWord;
+		if (list) {
+			for (const each of list) {
+				const ec = each.children;
+				if (ec.docWord) {
+					const c = ContextDocBuilder.createWord(ec.docWord[0], this);
+					if (c) {
+						this._words.push(c);
+					}
+				} else if (ec.ruleNewline) {
+					this._words.push(new ContextDocumentationNewline(ec.ruleNewline[0], this));
+				}
+			}
+		}
+	}
+	
+	
+	public resolveStatements(state: ResolveState): void {
+		for (const each of this._words) {
+			each.resolveStatements(state);
+		}
+	}
+	
+	
+	protected buildDocWords(state: ContextDocumentationDocState): void {
+		for (const each of this._words) {
+			each.buildDoc(state);
+		}
 	}
 	
 	
@@ -65,19 +90,15 @@ export class ContextDocumentationThrow extends ContextDocBaseBlock{
 		if (!Helpers.isPositionInsideRange(this.range, position)) {
 			return undefined;
 		}
-		return this;
+		return this.contextAtPositionList(this._words, position)
+			?? this;
 	}
 	
 	public contextAtRange(range: Range): Context | undefined {
 		if (!Helpers.isRangeInsideRange(this.range, range)) {
 			return undefined;
 		}
-		return this;
-	}
-	
-	
-	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
-		console.log(`${prefix}Throw`);
-		this.logChildren(this._words, console, prefixLines)
+		return this.contextAtRangeList(this._words, range)
+			?? this;
 	}
 }

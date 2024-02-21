@@ -26,10 +26,10 @@ import { Position, Range, RemoteConsole } from "vscode-languageserver";
 import { Helpers } from "../../helpers";
 import { DocumentationCopyDocCstNode } from "../../nodeclasses/doc/copyDoc";
 import { Context } from "../context";
-import { ContextDocBase } from "./contextDoc";
+import { ContextDocBaseBlock } from "./baseBlock";
 
 
-export class ContextDocumentationCopyDoc extends ContextDocBase{
+export class ContextDocumentationCopyDoc extends ContextDocBaseBlock{
 	protected _node: DocumentationCopyDocCstNode;
 	
 	
@@ -58,7 +58,8 @@ export class ContextDocumentationCopyDoc extends ContextDocBase{
 	}
 	
 	
-	log(console: RemoteConsole, prefix: string = "", _prefixLines: string = "") {
+	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
 		console.log(`${prefix}CopyDoc`);
+		this.logChildren(this._words, console, prefixLines)
 	}
 }

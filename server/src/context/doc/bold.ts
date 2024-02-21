@@ -53,8 +53,8 @@ export class ContextDocumentationBold extends ContextDocBase{
 	}
 	
 	
-	public resolveMembers(state: ResolveState): void {
-		this._word?.resolveMembers(state);
+	public resolveStatements(state: ResolveState): void {
+		this._word?.resolveStatements(state);
 	}
 	
 	

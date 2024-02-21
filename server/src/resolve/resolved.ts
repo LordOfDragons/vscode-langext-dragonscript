@@ -82,8 +82,9 @@ export class Resolved{
 	protected _type: Resolved.Type;
 	protected _name: string;
 	protected _matchableName?: MatchableName;
-	protected _fullyQualifiedName?: string
-	protected _displayName?: string
+	protected _fullyQualifiedName?: string;
+	protected _displayName?: string;
+	protected _linkName?: string;
 	protected _resolveTextShort?: string;
 	protected _resolveTextLong?: string[];
 	protected _reportInfoText?: string;
@@ -144,7 +145,14 @@ export class Resolved{
 		}
 		return this._displayName;
 	}
-
+	
+	public get linkName(): string {
+		if (!this._linkName) {
+			this._linkName = this.parent ? `${this.parent.name}.${this.name}` : this.name;
+		}
+		return this._linkName;
+	}
+	
 	public get resolveTextShort(): string {
 		if (!this._resolveTextShort) {
 			this._resolveTextShort = this.updateResolveTextShort();

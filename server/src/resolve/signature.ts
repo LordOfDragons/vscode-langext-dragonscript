@@ -72,7 +72,7 @@ export class ResolveSignatureArgument{
 			return ResolveSignature.Match.Partial;
 		}
 		
-		if (autoCast === Context.AutoCast.No && fromType?.autoCast) {
+		if (autoCast === Context.AutoCast.No && fromType.autoCast) {
 			autoCast = fromType.autoCast;
 		}
 		

@@ -26,11 +26,11 @@ import { Position, Range, RemoteConsole } from "vscode-languageserver";
 import { Helpers } from "../../helpers";
 import { DocumentationReturnValueCstNode } from "../../nodeclasses/doc/returnValue";
 import { Context } from "../context";
-import { ContextDocBase } from "./contextDoc";
+import { ContextDocBaseBlock } from "./baseBlock";
 import { ContextDocumentationDocState } from "./docState";
 
 
-export class ContextDocumentationReturnValue extends ContextDocBase{
+export class ContextDocumentationReturnValue extends ContextDocBaseBlock{
 	protected _node: DocumentationReturnValueCstNode;
 	protected _value: string;
 	public description: string[] = [];
@@ -57,6 +57,7 @@ export class ContextDocumentationReturnValue extends ContextDocBase{
 		state.doc.retvals.push(this);
 		state.newParagraph(Context.ContextType.DocumentationReturnValue);
 		state.curRetVal = this;
+		this.buildDocWords(state);
 	}
 	
 	
@@ -75,7 +76,8 @@ export class ContextDocumentationReturnValue extends ContextDocBase{
 	}
 	
 	
-	log(console: RemoteConsole, prefix: string = "", _prefixLines: string = "") {
+	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
 		console.log(`${prefix}ReturnValue`);
+		this.logChildren(this._words, console, prefixLines)
 	}
 }

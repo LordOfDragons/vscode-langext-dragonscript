@@ -26,11 +26,11 @@ import { Position, Range, RemoteConsole } from "vscode-languageserver";
 import { Helpers } from "../../helpers";
 import { DocumentationParamCstNode } from "../../nodeclasses/doc/param";
 import { Context } from "../context";
-import { ContextDocBase } from "./contextDoc";
+import { ContextDocBaseBlock } from "./baseBlock";
 import { ContextDocumentationDocState } from "./docState";
 
 
-export class ContextDocumentationParam extends ContextDocBase{
+export class ContextDocumentationParam extends ContextDocBaseBlock{
 	protected _node: DocumentationParamCstNode;
 	protected _name: string;
 	public description: string[] = [];
@@ -63,6 +63,7 @@ export class ContextDocumentationParam extends ContextDocBase{
 		state.doc.params.set(this._name, this);
 		state.newParagraph(Context.ContextType.DocumentationParam);
 		state.curParam = this;
+		this.buildDocWords(state);
 	}
 	
 	
@@ -81,7 +82,8 @@ export class ContextDocumentationParam extends ContextDocBase{
 	}
 	
 	
-	log(console: RemoteConsole, prefix: string = "", _prefixLines: string = "") {
+	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
 		console.log(`${prefix}Param`);
+		this.logChildren(this._words, console, prefixLines)
 	}
 }

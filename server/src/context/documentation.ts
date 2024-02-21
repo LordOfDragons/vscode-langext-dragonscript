@@ -49,6 +49,7 @@ export class ContextDocumentation extends Context{
 	protected _sectionNote: string[] = [];
 	protected _sectionWarning: string[] = [];
 	protected _sectionThrows: string[] = [];
+	protected _sectionSee: string[] = [];
 	
 	
 	constructor(token: IToken, parent: Context) {
@@ -130,24 +131,26 @@ export class ContextDocumentation extends Context{
 		this._docText = undefined;
 		this._isDeprecated = false;
 		this._markup = undefined;
-		this._sectionDeprecated = [];
-		this._sectionBrief = [];
-		this._sectionDetails = [];
-		this._sectionParams = [];
-		this._sectionReturn = [];
-		this._sectionTodo = [];
-		this._sectionNote = [];
-		this._sectionWarning = [];
-		this._sectionThrows = [];
+		this._sectionDeprecated.splice(0);
+		this._sectionBrief.splice(0);
+		this._sectionDetails.splice(0);
+		this._sectionParams.splice(0);
+		this._sectionReturn.splice(0);
+		this._sectionTodo.splice(0);
+		this._sectionNote.splice(0);
+		this._sectionWarning.splice(0);
+		this._sectionThrows.splice(0);
+		this._sectionSee.splice(0);
 		this._resolveTextLong = undefined;
 		this._resolveTextShort = undefined;
 	}
 	
-	protected updateDocumentation(): void {
+	protected updateDocumentation(state: ResolveState): void {
 		this.parseDocumentation();
 		
 		const dc = this.docContext;
 		if (dc) {
+			dc.resolveStatements(state);
 			dc.buildDoc();
 			this._isDeprecated = dc.deprecated.length > 0;
 		}
@@ -167,6 +170,7 @@ export class ContextDocumentation extends Context{
 			this.buildSectionTodo(dc);
 			this.buildSectionNote(dc);
 			this.buildSectionWarning(dc);
+			this.buildSectionSee(dc);
 			
 			if (dc.since != '') {
 				lines.push(`Since Version: \`\`\`${dc.since}\`\`\``);
@@ -180,6 +184,7 @@ export class ContextDocumentation extends Context{
 			this.addParaSepIfRequired(lines);
 			lines.push(...this._sectionDetails);
 			
+			lines.push(...this._sectionSee);
 			lines.push(...this._sectionParams);
 			lines.push(...this._sectionReturn);
 			lines.push(...this._sectionThrows);
@@ -303,6 +308,19 @@ export class ContextDocumentation extends Context{
 		this._sectionThrows.push(parts.join('\n'));
 	}
 	
+	protected buildSectionSee(context: ContextDocumentationDoc): void {
+		if (context.see.length == 0) {
+			return;
+		}
+		
+		this._sectionSee.push('### 🔗 See');
+		let parts: string[] = [];
+		for (const each of context.see) {
+			parts.push(`  - ${each}`);
+		}
+		this._sectionSee.push(parts.join('\n'));
+	}
+	
 	protected updateResolveTextShort(): string {
 		//return this.docText.join('  \n');
 		return this.resolveTextLong.join('  \n');
@@ -321,8 +339,7 @@ export class ContextDocumentation extends Context{
 	
 	public resolveStatements(state: ResolveState): void {
 		this.dropDocumentation();
-		this.docContext?.resolveMembers(state);
-		this.updateDocumentation();
+		this.updateDocumentation(state);
 	}
 	
 	

@@ -27,11 +27,11 @@ import { Helpers } from "../../helpers";
 import { DocumentationCodeCstNode } from "../../nodeclasses/doc/code";
 import { ResolveState } from "../../resolve/state";
 import { Context } from "../context";
-import { ContextDocBase } from "./contextDoc";
+import { ContextDocBaseBlock } from "./baseBlock";
 import { ContextDocumentationDocState } from "./docState";
 
 
-export class ContextDocumentationCode extends ContextDocBase{
+export class ContextDocumentationCode extends ContextDocBaseBlock{
 	protected _node: DocumentationCodeCstNode;
 	protected _language: string;
 	protected _codeSuffix: string;
@@ -92,10 +92,6 @@ export class ContextDocumentationCode extends ContextDocBase{
 	}
 	
 	
-	public resolveMembers(state: ResolveState): void {
-	}
-	
-	
 	public buildDoc(state: ContextDocumentationDocState): void {
 		state.newParagraph();
 		state.addWord(`\`\`\`${this._language}`);
@@ -123,7 +119,8 @@ export class ContextDocumentationCode extends ContextDocBase{
 	}
 	
 	
-	log(console: RemoteConsole, prefix: string = "", _prefixLines: string = "") {
+	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
 		console.log(`${prefix}Code`);
+		this.logChildren(this._words, console, prefixLines)
 	}
 }

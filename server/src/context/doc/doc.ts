@@ -26,7 +26,9 @@ import { Position, Range, RemoteConsole } from "vscode-languageserver";
 import { Helpers } from "../../helpers";
 import { DocumentationDocCstNode } from "../../nodeclasses/doc/documentation";
 import { ResolveState } from "../../resolve/state";
+import { debugLogMessage } from "../../server";
 import { Context } from "../context";
+import { ContextDocBaseBlock } from "./baseBlock";
 import { ContextDocumentationBlockText } from "./blockText";
 import { ContextDocumentationBrief } from "./brief";
 import { ContextDocumentationCode } from "./code";
@@ -40,6 +42,7 @@ import { ContextDocumentationParagraph } from "./paragraph";
 import { ContextDocumentationParam } from "./param";
 import { ContextDocumentationReturn } from "./return";
 import { ContextDocumentationReturnValue } from "./returnValue";
+import { ContextDocumentationSee } from "./see";
 import { ContextDocumentationSince } from "./since";
 import { ContextDocumentationThrow } from "./throw";
 import { ContextDocumentationTodo } from "./todo";
@@ -49,7 +52,7 @@ import { ContextDocumentationWarning } from "./warning";
 
 export class ContextDocumentationDoc extends Context{
 	protected _node: DocumentationDocCstNode;
-	protected _blocks: ContextDocBase[] = [];
+	protected _blocks: ContextDocBaseBlock[] = [];
 	
 	public brief: string[] = [];
 	public details: string[] = [];
@@ -62,6 +65,7 @@ export class ContextDocumentationDoc extends Context{
 	public note: string[] = [];
 	public warning: string[] = [];
 	protected _throws: ContextDocumentationThrow[] = [];
+	public see: string[] = [];
 	
 	
 	constructor(node: DocumentationDocCstNode, parent: Context) {
@@ -100,10 +104,16 @@ export class ContextDocumentationDoc extends Context{
 				this._blocks.push(new ContextDocumentationVersion(ec.ruleVersion[0], this));
 			} else if (ec.ruleWarning) {
 				this._blocks.push(new ContextDocumentationWarning(ec.ruleWarning[0], this));
+			} else if (ec.ruleSee) {
+				this._blocks.push(new ContextDocumentationSee(ec.ruleSee[0], this));
 			}
 			
 			if (ec.docBlockText?.at(0)?.children.docBlockTextWord) {
-				this._blocks.push(new ContextDocumentationBlockText(ec.docBlockText[0], this));
+				if (this._blocks.length > 0) {
+					this._blocks[this._blocks.length - 1].addWords(ec.docBlockText[0]);
+				} else {
+					this._blocks.push(new ContextDocumentationBlockText(ec.docBlockText[0], this));
+				}
 			}
 		}
 	}
@@ -123,7 +133,7 @@ export class ContextDocumentationDoc extends Context{
 		return this._node;
 	}
 	
-	public get blocks(): Context[] {
+	public get blocks(): ContextDocBaseBlock[] {
 		return this._blocks;
 	}
 	
@@ -140,9 +150,9 @@ export class ContextDocumentationDoc extends Context{
 	}
 	
 	
-	public resolveMembers(state: ResolveState): void {
+	public resolveStatements(state: ResolveState): void {
 		for (const each of this._blocks) {
-			each.resolveMembers(state);
+			each.resolveStatements(state);
 		}
 	}
 	
@@ -159,6 +169,7 @@ export class ContextDocumentationDoc extends Context{
 		this.note.splice(0);
 		this.warning.splice(0);
 		this._throws.splice(0);
+		this.see.splice(0);
 	}
 	
 	public buildDoc(): void {
