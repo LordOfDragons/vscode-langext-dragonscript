@@ -497,7 +497,7 @@ export class ContextFunction extends Context{
 			default:
 				parts.push(` ${this._returnType} `);
 		}
-		parts.push(`${this.parent!.simpleName}.${this._name}(`);
+		parts.push(` ${this.parent!.simpleName}.${this._name}(`);
 		
 		var args = [];
 		for (const each of this._arguments) {

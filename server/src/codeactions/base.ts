@@ -81,7 +81,11 @@ export class BaseCodeAction {
 		
 		switch (ResolveSignatureArgument.typeMatches(targetType, sourceType, sourceAutoCast)) {
 		case ResolveSignature.Match.Full:
-			return undefined;
+			return {
+				edits: [],
+				compareToNull: false,
+				compareToNullNegate: false
+			};
 			
 		case ResolveSignature.Match.Partial:
 			break;

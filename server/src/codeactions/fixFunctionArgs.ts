@@ -1,21 +1,20 @@
-import { CodeAction, CodeActionKind, Diagnostic, Range, TextEdit } from "vscode-languageserver";
-import { Context } from "../context/context";
+import { CodeAction, CodeActionKind, Diagnostic, TextEdit } from "vscode-languageserver";
 import { ContextFunctionCall } from "../context/expressionCall";
 import { ResolveFunction } from "../resolve/function";
-import { ResolveNamespace } from "../resolve/namespace";
-import { ResolveSignature, ResolveSignatureArgument } from "../resolve/signature";
-import { ResolveType } from "../resolve/type";
 import { BaseCodeAction } from "./base";
 
 export class CodeActionDisambiguate extends BaseCodeAction {
 	protected _sourceContext: ContextFunctionCall;
 	protected _targetFunction: ResolveFunction;
+	protected _title: string;
 	
 	
-	constructor(diagnostic: Diagnostic, sourceContext: ContextFunctionCall, targetFuction: ResolveFunction) {
+	constructor(diagnostic: Diagnostic, sourceContext: ContextFunctionCall,
+			targetFuction: ResolveFunction, title: string) {
 		super(diagnostic);
 		this._sourceContext = sourceContext;
 		this._targetFunction = targetFuction;
+		this._title = title;
 	}
 	
 	
@@ -57,16 +56,18 @@ export class CodeActionDisambiguate extends BaseCodeAction {
 			}
 			
 			const result = this.autoCast(sourceType, targetType, arg.expressionAutoCast, arg);
-			if (result) {
-				changes[uri].push(...result.edits);
+			if (!result) {
+				return [];
 			}
+			
+			changes[uri].push(...result.edits);
 		}
 		
 		if (changes[uri].length == 0) {
 			return [];
 		}
 		
-		const title = `Disambiguate ${this.targetFunction.name}${this.targetFunction.signature.resolveTextShort}`;
+		const title = `${this._title} ${this.targetFunction.name}${this.targetFunction.signature.resolveTextShort}`;
 		
 		let actions: CodeAction[] = [];
 		this.addAction(actions, title, CodeActionKind.QuickFix, {changes: changes}, true);

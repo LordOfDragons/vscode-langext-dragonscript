@@ -54,7 +54,7 @@ import { CompletionHelper } from "../completionHelper";
 import { Resolved, ResolveUsage } from "../resolve/resolved";
 import { CodeActionInsertCast } from "../codeactions/insertCast";
 import { debugLogContext, debugLogMessage } from "../server";
-import { CodeActionDisambiguate } from "../codeactions/disambiguate";
+import { CodeActionDisambiguate as CodeActionFixFunctionArgs } from "../codeactions/fixFunctionArgs";
 
 
 export class ContextFunctionCall extends Context{
@@ -729,9 +729,9 @@ export class ContextFunctionCall extends Context{
 								each.context?.addReportInfo(ri, `Candidate: ${each.context.reportInfoText}`);
 							}
 							const di = state.reportError(this._name.range, `Ambigous function call ${this._name}${this._matches.signature?.resolveTextShort}`, ri);
-							if (di && this._matches.functionsPartial.length > 0) {
+							if (di) {
 								for (const each of this._matches.functionsPartial) {
-									this._codeActions.push(new CodeActionDisambiguate(di, this, each));
+									this._codeActions.push(new CodeActionFixFunctionArgs(di, this, each, 'Disambiguate'));
 								}
 							}
 							
@@ -755,7 +755,12 @@ export class ContextFunctionCall extends Context{
 							for (const each of matches2.functionsAll) {
 								each.context?.addReportInfo(ri, `Candidate: ${each.context.reportInfoText}`);
 							}
-							state.reportError(this._name.range, `Function call ${this._name}${this._matches.signature?.resolveTextShort} not found`, ri);
+							const di = state.reportError(this._name.range, `Function call ${this._name}${this._matches.signature?.resolveTextShort} not found`, ri);
+							if (di) {
+								for (const each of matches2.functionsAll) {
+									this._codeActions.push(new CodeActionFixFunctionArgs(di, this, each, 'Align with'));
+								}
+							}
 						}
 					}
 					
