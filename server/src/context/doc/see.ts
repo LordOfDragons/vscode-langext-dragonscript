@@ -27,7 +27,6 @@ import { Helpers } from "../../helpers";
 import { DocumentationSeeCstNode } from "../../nodeclasses/doc/see";
 import { Resolved } from "../../resolve/resolved";
 import { ResolveState } from "../../resolve/state";
-import { debugLogMessage } from "../../server";
 import { Context } from "../context";
 import { ContextDocBaseBlock } from "./baseBlock";
 import { ContextDocumentationDocState } from "./docState";
@@ -67,9 +66,7 @@ export class ContextDocumentationSee extends ContextDocBaseBlock{
 		
 		for (const each of this._words) {
 			if (each.type == Context.ContextType.DocumentationWord) {
-				const r = this.resolveSymbol(state, this.parseSymbol((each as ContextDocumentationWord).text));
-				debugLogMessage(`CHECK ${(each as ContextDocumentationWord).text} => ${r?.resolveTextShort}`);
-				this._resolved.push(r);
+				this._resolved.push(this.resolveSymbol(state, this.parseSymbol((each as ContextDocumentationWord).text)));
 			} else {
 				this._resolved.push(undefined);
 			}

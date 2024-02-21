@@ -43,6 +43,7 @@ pin Dragengine.Audio.MaterialSounds
 pin Dragengine.Commands
 pin Dragengine.BehaviorTreeSystem
 pin Dragengine.Gui.Layouts
+pin Dragengine.Utils
 
 requires "Math"  /* allowed */  // allowed
 
@@ -76,6 +77,8 @@ class ClassExtendImplement extends ClassExtend implements ActionListener, Collid
 		BehaviorTree.new().registerRule(null)
 		ScrollPanelLayout.new().addWidget(null, null)
 		CameraWrapper.new().getMatrix()
+		ECBehaviorVRHand.Instance.new(null, null).getDebugPanelPosition()
+		TextureReplacementList
 	end
 	
 	public func void callMe( int value, Block ablock )

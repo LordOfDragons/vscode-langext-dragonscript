@@ -22,14 +22,11 @@
  * SOFTWARE.
  */
 
-import { ResolveFunction } from "../../resolve/function";
-import { Resolved, ResolveUsage } from "../../resolve/resolved";
+import { Resolved } from "../../resolve/resolved";
 import { ResolveSearch } from "../../resolve/search";
 import { ResolveSignature } from "../../resolve/signature";
 import { ResolveState } from "../../resolve/state";
 import { ResolveType } from "../../resolve/type";
-import { ResolveVariable } from "../../resolve/variable";
-import { debugLogMessage } from "../../server";
 import { Context } from "../context";
 import { ContextNamespace } from "../namespace";
 import { ContextClass } from "../scriptClass";
@@ -70,7 +67,8 @@ export class ContextDocBase extends Context{
 		}
 		
 		if (deliLParam != -1) {
-			args = word.substring(deliLParam + 1, deliRParam).split(',');
+			const s = word.substring(deliLParam + 1, deliRParam);
+			args = s != '' ? s.split(',') : [];
 			word = word.substring(0, deliLParam);
 		}
 		
@@ -79,7 +77,7 @@ export class ContextDocBase extends Context{
 			word = word.substring(0, deliHash);
 		}
 		
-		if (word.length > 0) {
+		if (word.length > 0 || deliHash != -1) {
 			nameClass = word;
 		}
 		
@@ -96,16 +94,30 @@ export class ContextDocBase extends Context{
 		}
 		
 		var context: Context | undefined;
+		var contextType: ResolveType | undefined;
 		
 		for (let i=state.scopeContextStack.length - 1; i >= 0; i--) {
 			const c = state.scopeContextStack[i];
 			
 			switch (c.type) {
 			case Context.ContextType.Class:
+				context = c;
+				contextType = (c as ContextClass).resolveClass;
+				break;
+				
 			case Context.ContextType.Interface:
+				context = c;
+				contextType = (c as ContextInterface).resolveInterface;
+				break;
+				
 			case Context.ContextType.Enumeration:
+				context = c;
+				contextType = (c as ContextEnumeration).resolveEnumeration;
+				break;
+				
 			case Context.ContextType.Namespace:
 				context = c;
+				contextType = (c as ContextNamespace).resolveNamespace;
 				break;
 			}
 			
@@ -114,13 +126,16 @@ export class ContextDocBase extends Context{
 			}
 		}
 		
-		if (!context) {
+		if (!context || !contextType) {
 			return undefined;
 		}
 		
 		var type: ResolveType | undefined;
 		
-		if (symbol.nameClass) {
+		if (symbol.nameClass == '') {
+			type = contextType;
+			
+		} else if (symbol.nameClass) {
 			var typeName: TypeName;
 			try {
 				typeName = TypeName.typeNamed(symbol.nameClass);

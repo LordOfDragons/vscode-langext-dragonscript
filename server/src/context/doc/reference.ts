@@ -25,6 +25,8 @@
 import { Position, Range, RemoteConsole } from "vscode-languageserver";
 import { Helpers } from "../../helpers";
 import { DocumentationReferenceCstNode } from "../../nodeclasses/doc/reference";
+import { Resolved } from "../../resolve/resolved";
+import { ResolveState } from "../../resolve/state";
 import { Context } from "../context";
 import { ContextDocBase } from "./contextDoc";
 import { ContextDocumentationDocState } from "./docState";
@@ -33,12 +35,20 @@ import { ContextDocumentationDocState } from "./docState";
 export class ContextDocumentationReference extends ContextDocBase{
 	protected _node: DocumentationReferenceCstNode;
 	protected _target: string;
+	protected _resolved?: Resolved;
 	
 	
 	constructor(node: DocumentationReferenceCstNode, parent: Context) {
 		super(Context.ContextType.DocumentationReference, parent);
 		this._node = node;
 		this._target = node.children.target[0].image;
+	}
+	
+	dispose(): void {
+		this._resolved?.dispose();
+		this._resolved = undefined;
+		
+		super.dispose();
 	}
 	
 	
@@ -51,8 +61,25 @@ export class ContextDocumentationReference extends ContextDocBase{
 	}
 	
 	
+	public resolveStatements(state: ResolveState): void {
+		this._resolved?.dispose();
+		this._resolved = undefined;
+		
+		if (this._target) {
+			this._resolved = this.resolveSymbol(state, this.parseSymbol(this._target));
+		}
+	}
+	
+	
 	public buildDoc(state: ContextDocumentationDocState): void {
-		state.addWord(`🔗 *${this._target}*`);
+		if (this._resolved) {
+			const l = this._resolved.resolveLocation.at(0);
+			if (l) {
+				state.addWord(`[${this._resolved.linkName}](${l.uri}#${l.range.start.line + 1})`);
+				return;
+			}
+		}
+		state.addWord(this._target);
 	}
 	
 	
