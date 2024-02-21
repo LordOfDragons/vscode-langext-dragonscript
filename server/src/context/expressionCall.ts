@@ -714,9 +714,10 @@ export class ContextFunctionCall extends Context{
 						this.expressionType?.addReportInfo(ri, `Source Type: ${at1.reportInfoText}`);
 						at1.addReportInfo(ri, `Target Type: bool`);
 						const di = state.reportError(this._name.range, `Invalid cast from ${at1.name} to bool`, ri);
-						if (di && at1) {
+						if (di && at1 && this._name.range && o1.range) {
 							const ca = new CodeActionInsertCast(di, at1, ResolveNamespace.classBool,o1, o1.expressionAutoCast);
-							ca.wrapAll = true;
+							ca.wrapAll = false;
+							ca.negate = Range.create(this._name.range.start, o1.range.start);
 							this._codeActionInsertCast.push(ca);
 						}
 					}

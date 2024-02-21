@@ -1,34 +1,28 @@
-import { CodeAction, CodeActionKind, Diagnostic, Range, TextEdit, WorkspaceEdit } from "vscode-languageserver";
+import { CodeAction, CodeActionKind, Diagnostic, Range, TextEdit } from "vscode-languageserver";
 import { Context } from "../context/context";
-import { ContextFunctionCall } from "../context/expressionCall";
-import { Helpers } from "../helpers";
 import { ResolveNamespace } from "../resolve/namespace";
 import { ResolveSignature, ResolveSignatureArgument } from "../resolve/signature";
 import { ResolveType } from "../resolve/type";
-import { debugLogMessage } from "../server";
+import { BaseCodeAction } from "./base";
 
-export class CodeActionInsertCast {
-	protected _diagnostic: Diagnostic;
+export class CodeActionInsertCast extends BaseCodeAction {
 	protected _sourceType: ResolveType;
 	protected _targetType: ResolveType;
 	protected _sourceContext: Context;
 	protected _sourceAutoCast: Context.AutoCast;
 	public wrapAll = false;
+	public negate?: Range;
 	
 	
 	constructor(diagnostic: Diagnostic, sourceType: ResolveType, targetType: ResolveType,
 			sourceContext: Context, sourceAutoCast: Context.AutoCast) {
-		this._diagnostic = diagnostic;
+		super(diagnostic);
 		this._sourceType = sourceType;
 		this._targetType = targetType;
 		this._sourceContext = sourceContext;
 		this._sourceAutoCast = sourceAutoCast;
 	}
 	
-	
-	public get diagnostic(): Diagnostic {
-		return this._diagnostic;
-	}
 	
 	public get sourceType(): ResolveType {
 		return this._sourceType;
@@ -47,11 +41,7 @@ export class CodeActionInsertCast {
 	}
 	
 	
-	public createCodeActions(range: Range): CodeAction[] {
-		if (!Helpers.isRangeInsideRange(range, this._diagnostic.range)) {
-			return [];
-		}
-		
+	protected doCreateCodeActions(range: Range): CodeAction[] {
 		var autoNotNull = false;
 		
 		switch (ResolveSignatureArgument.typeMatches(this._targetType, this._sourceType, this._sourceAutoCast)) {
@@ -80,36 +70,17 @@ export class CodeActionInsertCast {
 		const changes: {[uri: string]: TextEdit[]} = {};
 		changes[uri] = [];
 		
-		var needsWrap = true;
-		
-		switch (this._sourceContext.type) {
-		case Context.ContextType.Block:
-		case Context.ContextType.Constant:
-		case Context.ContextType.Group:
-		case Context.ContextType.Member:
-			needsWrap = false;
-			break;
-			
-		case Context.ContextType.FunctionCall:
-			switch ((this._sourceContext as ContextFunctionCall).functionType) {
-			case ContextFunctionCall.FunctionType.function:
-			case ContextFunctionCall.FunctionType.functionSuper:
-			case ContextFunctionCall.FunctionType.increment:
-			case ContextFunctionCall.FunctionType.decrement:
-			case ContextFunctionCall.FunctionType.inverse:
-				needsWrap = false;
-				break;
-			}
-			break;
-		}
-		
-		var label: string;
+		const needsWrap = this.requiresWrap(this._sourceContext);
+		var title: string;
 		
 		if (autoNotNull) {
-			label = `Insert != null`
-			
+			if (this.negate) {
+				title = `Insert == null`
+			} else {
+				title = `Insert != null`
+			}
 		} else {
-			label = `Insert cast ${this._sourceType.name}`
+			title = `Insert cast ${this._sourceType.name}`
 		}
 		
 		var textBegin = '';
@@ -118,16 +89,21 @@ export class CodeActionInsertCast {
 		if (needsWrap) {
 			textBegin = '(';
 			if (autoNotNull) {
-				textEnd = ') != null';
-				
+				if (this.negate) {
+					textEnd = ') == null';
+				} else {
+					textEnd = ') != null';
+				}
 			} else {
 				textEnd = `) cast ${this._targetType.name}`;
 			}
-			
 		} else {
 			if (autoNotNull) {
-				textEnd = ' != null';
-				
+				if (this.negate) {
+					textEnd = ' == null';
+				} else {
+					textEnd = ' != null';
+				}
 			} else {
 				textEnd = ` cast ${this._targetType.name}`;
 			}
@@ -138,33 +114,17 @@ export class CodeActionInsertCast {
 			textEnd = textEnd + ')';
 		}
 		
+		if (this.negate) {
+			changes[uri].push(TextEdit.del(this.negate));
+		}
 		if (textBegin.length > 0) {
 			changes[uri].push(TextEdit.insert(crange.start, textBegin));
 		}
 		changes[uri].push(TextEdit.insert(crange.end, textEnd));
 		
 		let actions: CodeAction[] = [];
-		
-		actions.push({
-			title: label,
-			kind: CodeActionKind.QuickFix,
-			diagnostics: [this._diagnostic],
-			isPreferred: true,
-			edit: {
-				changes: changes
-			}
-		});
-		
-		actions.push({
-			title: label,
-			kind: CodeActionKind.SourceFixAll,
-			diagnostics: [this._diagnostic],
-			isPreferred: true,
-			edit: {
-				changes: changes
-			}
-		});
-		
+		this.addAction(actions, title, CodeActionKind.QuickFix, {changes: changes}, true);
+		this.addAction(actions, title, CodeActionKind.SourceFixAll, {changes: changes}, true);
 		return actions;
 	}
 }
