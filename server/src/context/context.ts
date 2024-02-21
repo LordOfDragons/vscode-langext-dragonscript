@@ -33,6 +33,7 @@ import { ResolveSignature, ResolveSignatureArgument } from "../resolve/signature
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { Resolved, ResolveUsage } from "../resolve/resolved";
 import { ContextDocumentation, ContextDocumentationIterator } from "./documentation";
+import { BaseCodeAction } from "../codeactions/base";
 
 
 /** Base context. */
@@ -51,6 +52,7 @@ export class Context {
 	protected _reportInfoText?: string;
 	private static _defaultTypeModifiers?: Context.TypeModifierSet;
 	public documentation?: ContextDocumentation;
+	protected _codeActions: BaseCodeAction[] = [];
 	
 
 	constructor(type: Context.ContextType, parent?: Context) {
@@ -64,6 +66,7 @@ export class Context {
 		this.expressionType = undefined;
 		this.expressionAutoCast = Context.AutoCast.No;
 		this.documentation = undefined;
+		this._codeActions.splice(0);
 	}
 
 
@@ -244,7 +247,11 @@ export class Context {
 	}
 	
 	public codeAction(range: Range): CodeAction[] {
-		return [];
+		const actions: CodeAction[] = [];
+		for (const each of this._codeActions) {
+			actions.push(...each.createCodeActions(range));
+		}
+		return actions;
 	}
 	
 	public referenceFor(usage: ResolveUsage): Location | undefined {

@@ -1,7 +1,16 @@
-import { CodeAction, CodeActionKind, Diagnostic, Range, WorkspaceEdit } from "vscode-languageserver";
+import { CodeAction, CodeActionKind, Diagnostic, Range, TextEdit, WorkspaceEdit } from "vscode-languageserver";
 import { Context } from "../context/context";
 import { ContextFunctionCall } from "../context/expressionCall";
 import { Helpers } from "../helpers";
+import { ResolveNamespace } from "../resolve/namespace";
+import { ResolveSignature, ResolveSignatureArgument } from "../resolve/signature";
+import { ResolveType } from "../resolve/type";
+
+export interface BaseCodeActionAutoCastResult {
+	edits: TextEdit[];
+	compareToNull: boolean;
+	compareToNullNegate: boolean;
+}
 
 export class BaseCodeAction {
 	protected _diagnostic: Diagnostic;
@@ -19,7 +28,7 @@ export class BaseCodeAction {
 	
 	public createCodeActions(range: Range): CodeAction[] {
 		return Helpers.isRangeInsideRange(range, this._diagnostic.range)
-			? this.doCreateCodeActions(range) : [];
+			? this.doCreateCodeActions() : [];
 	}
 	
 	
@@ -47,6 +56,89 @@ export class BaseCodeAction {
 		}
 	}
 	
+	protected autoCast(sourceType: ResolveType, targetType: ResolveType,
+			sourceAutoCast: Context.AutoCast, sourceContext: Context): BaseCodeActionAutoCastResult | undefined {
+		var compareToNullNegate: Range | undefined;
+		var compareToNull = false;
+		
+		if (sourceContext.type == Context.ContextType.FunctionCall) {
+			const cfc = sourceContext as ContextFunctionCall;
+			if (cfc.functionType == ContextFunctionCall.FunctionType.not) {
+				if (!cfc.object?.range || !cfc.object?.expressionType || !cfc.name.range) {
+					return undefined;
+				}
+				sourceContext = cfc.object;
+				sourceType = cfc.object.expressionType;
+				sourceAutoCast = cfc.object.expressionAutoCast;
+				compareToNullNegate = Range.create(cfc.name.range.start, cfc.object.range.start);
+			}
+		}
+		
+		const crange = sourceContext.range;
+		if (!crange) {
+			return undefined;
+		}
+		
+		switch (ResolveSignatureArgument.typeMatches(targetType, sourceType, sourceAutoCast)) {
+		case ResolveSignature.Match.Full:
+			return undefined;
+			
+		case ResolveSignature.Match.Partial:
+			break;
+		
+		default:
+			if (!sourceType.isPrimitive && targetType === ResolveNamespace.classBool) {
+				compareToNull = true;
+				
+			} else {
+				return undefined;
+			}
+		}
+		
+		const needsWrap = this.requiresWrap(sourceContext);
+		let edits: TextEdit[] = [];
+		
+		var textBegin = '';
+		var textEnd: string;
+		
+		if (needsWrap) {
+			textBegin = '(';
+			if (compareToNull) {
+				if (compareToNullNegate) {
+					textEnd = ') == null';
+				} else {
+					textEnd = ') != null';
+				}
+			} else {
+				textEnd = `) cast ${targetType.name}`;
+			}
+		} else {
+			if (compareToNull) {
+				if (compareToNullNegate) {
+					textEnd = ' == null';
+				} else {
+					textEnd = ' != null';
+				}
+			} else {
+				textEnd = ` cast ${targetType.name}`;
+			}
+		}
+		
+		if (compareToNullNegate) {
+			edits.push(TextEdit.del(compareToNullNegate));
+		}
+		if (textBegin.length > 0) {
+			edits.push(TextEdit.insert(crange.start, textBegin));
+		}
+		edits.push(TextEdit.insert(crange.end, textEnd));
+		
+		return {
+			edits: edits,
+			compareToNull: compareToNull,
+			compareToNullNegate: compareToNullNegate !== undefined
+		};
+	}
+	
 	protected addAction(list: CodeAction[], title: string, kind: CodeActionKind,
 			edit: WorkspaceEdit, preferred: boolean = false): void {
 		list.push({
@@ -58,7 +150,7 @@ export class BaseCodeAction {
 		});
 	}
 	
-	protected doCreateCodeActions(range: Range): CodeAction[] {
+	protected doCreateCodeActions(): CodeAction[] {
 		return [];
 	}
 }

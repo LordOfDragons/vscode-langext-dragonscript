@@ -169,6 +169,7 @@ public class OuterClass extends ClassExtendImplement
 		ClassExtendImplement.new("8", pMember3)
 		arg2 = pMember3
 		arg2 = not pMember3
+		ImpactMaterialSound.new("id").playSound(GameWorld.new(), null, null)
 		
 		//isATest(8, 8.2)
 		

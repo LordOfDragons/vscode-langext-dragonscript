@@ -54,6 +54,7 @@ import { CompletionHelper } from "../completionHelper";
 import { Resolved, ResolveUsage } from "../resolve/resolved";
 import { CodeActionInsertCast } from "../codeactions/insertCast";
 import { debugLogContext, debugLogMessage } from "../server";
+import { CodeActionDisambiguate } from "../codeactions/disambiguate";
 
 
 export class ContextFunctionCall extends Context{
@@ -76,8 +77,6 @@ export class ContextFunctionCall extends Context{
 	private _matchFunction?: ResolveFunction;
 	protected _resolveUsage?: ResolveUsage;
 	protected _resolveSignature?: ResolveSignature;
-	
-	protected _codeActionInsertCast: CodeActionInsertCast[] = [];
 	
 	
 	protected constructor(node: ExpressionAdditionCstNode | ExpressionBitOperationCstNode
@@ -482,7 +481,6 @@ export class ContextFunctionCall extends Context{
 		this._matchFunction = undefined;
 		this._resolveUsage?.dispose();
 		this._resolveUsage = undefined;
-		this._codeActionInsertCast.splice(0);
 	}
 
 
@@ -533,7 +531,7 @@ export class ContextFunctionCall extends Context{
 	}
 	
 	public resolveStatements(state: ResolveState): void {
-		this._codeActionInsertCast.splice(0);
+		this._codeActions.splice(0);
 		
 		this._object?.resolveStatements(state);
 		for (const each of this._arguments) {
@@ -666,7 +664,7 @@ export class ContextFunctionCall extends Context{
 					at1?.addReportInfo(ri, `Target Type: ${at2?.reportInfoText}`);
 					const di = state.reportError(this._name.range, `Invalid cast from ${at1?.name} to ${at2?.name}`, ri);
 					if (di && at1 && at2) {
-						this._codeActionInsertCast.push(new CodeActionInsertCast(
+						this._codeActions.push(new CodeActionInsertCast(
 							di, at1, at2, o1, o1.expressionAutoCast));
 					}
 				}
@@ -683,7 +681,7 @@ export class ContextFunctionCall extends Context{
 						at1.addReportInfo(ri, `Target Type: bool`);
 						const di = state.reportError(this._name.range, `Invalid cast from ${at1.name} to bool`, ri);
 						if (di && at1) {
-							this._codeActionInsertCast.push(new CodeActionInsertCast(
+							this._codeActions.push(new CodeActionInsertCast(
 								di, at1, ResolveNamespace.classBool, o1, o1.expressionAutoCast));
 						}
 					}
@@ -698,7 +696,7 @@ export class ContextFunctionCall extends Context{
 						at2.addReportInfo(ri, `Target Type: bool`);
 						const di = state.reportError(this._name.range, `Invalid cast from ${at2.name} to bool`, ri);
 						if (di && at2) {
-							this._codeActionInsertCast.push(new CodeActionInsertCast(
+							this._codeActions.push(new CodeActionInsertCast(
 								di, at2, ResolveNamespace.classBool, o2, o2.expressionAutoCast));
 						}
 					}
@@ -715,10 +713,8 @@ export class ContextFunctionCall extends Context{
 						at1.addReportInfo(ri, `Target Type: bool`);
 						const di = state.reportError(this._name.range, `Invalid cast from ${at1.name} to bool`, ri);
 						if (di && at1 && this._name.range && o1.range) {
-							const ca = new CodeActionInsertCast(di, at1, ResolveNamespace.classBool,o1, o1.expressionAutoCast);
-							ca.wrapAll = false;
-							ca.negate = Range.create(this._name.range.start, o1.range.start);
-							this._codeActionInsertCast.push(ca);
+							this._codeActions.push(new CodeActionInsertCast(di, at1,
+								ResolveNamespace.classBool, this, this.expressionAutoCast));
 						}
 					}
 				}
@@ -732,7 +728,12 @@ export class ContextFunctionCall extends Context{
 							for (const each of this._matches.functionsPartial) {
 								each.context?.addReportInfo(ri, `Candidate: ${each.context.reportInfoText}`);
 							}
-							state.reportError(this._name.range, `Ambigous function call ${this._name}${this._matches.signature?.resolveTextShort}`, ri);
+							const di = state.reportError(this._name.range, `Ambigous function call ${this._name}${this._matches.signature?.resolveTextShort}`, ri);
+							if (di && this._matches.functionsPartial.length > 0) {
+								for (const each of this._matches.functionsPartial) {
+									this._codeActions.push(new CodeActionDisambiguate(di, this, each));
+								}
+							}
 							
 						} else if (this._matches.functionsPartial.length == 0) {
 							let matches2 = new ResolveSearch(this._matches);
@@ -1286,14 +1287,6 @@ export class ContextFunctionCall extends Context{
 		}
 		
 		return {signatures: siginfo, activeSignature: activeSignature, activeParameter: activeParameter};
-	}
-	
-	public codeAction(range: Range): CodeAction[] {
-		const actions: CodeAction[] = [];
-		for (const each of this._codeActionInsertCast) {
-			actions.push(...each.createCodeActions(range));
-		}
-		return actions;
 	}
 	
 	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {

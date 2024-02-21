@@ -108,6 +108,7 @@ export class ResolveSignatureArgument{
 export class ResolveSignature{
 	protected _resolveTextShort?: string;
 	protected _resolveTextLong?: string[];
+	protected _resolveTextCompact?: string;
 
 
 	constructor () {
@@ -145,11 +146,11 @@ export class ResolveSignature{
 		}
 
 		var parts = this.arguments.map(each => {
-			const name: string = each.name !== undefined ? `${each.name} ` : "";
 			const type: string = each.type?.name ?? "?";
-			return `${name}${type}`;
+			const name: string = each.name !== undefined ? ` ${each.name}` : "";
+			return `${type}${name}`;
 		});
-		return `(${parts.join(",")})`;
+		return `(${parts.join(", ")})`;
 	}
 
 	public get resolveTextLong(): string[] {
@@ -165,13 +166,31 @@ export class ResolveSignature{
 		}
 
 		var parts = this.arguments.map(each => {
-			const name: string = each.name !== undefined ? `${each.name} ` : "";
 			const type: string = each.type?.fullyQualifiedName ?? "?";
-			return `${name}${type}`;
+			const name: string = each.name !== undefined ? ` ${each.name}` : "";
+			return `${type}${name}`;
 		});
-		return [`(${parts.join(",")})`];
+		return [`(${parts.join(", ")})`];
 	}
 
+	public get resolveTextCompact(): string {
+		if (!this._resolveTextCompact) {
+			this._resolveTextCompact = this.updateResolveTextCompact();
+		}
+		return this._resolveTextCompact ?? "?";
+	}
+	
+	protected updateResolveTextCompact(): string {
+		if (this.arguments.length == 0) {
+			return "()";
+		}
+		
+		var parts = this.arguments.map(each => {
+			return `${each.type?.name ?? "?"}`;
+		});
+		return `(${parts.join(", ")})`;
+	}
+	
 	protected updateReportInfoText(): string {
 		if (arguments.length == 0) {
 			return "()";

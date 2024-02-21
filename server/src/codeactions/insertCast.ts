@@ -10,8 +10,6 @@ export class CodeActionInsertCast extends BaseCodeAction {
 	protected _targetType: ResolveType;
 	protected _sourceContext: Context;
 	protected _sourceAutoCast: Context.AutoCast;
-	public wrapAll = false;
-	public negate?: Range;
 	
 	
 	constructor(diagnostic: Diagnostic, sourceType: ResolveType, targetType: ResolveType,
@@ -41,86 +39,33 @@ export class CodeActionInsertCast extends BaseCodeAction {
 	}
 	
 	
-	protected doCreateCodeActions(range: Range): CodeAction[] {
-		var autoNotNull = false;
-		
-		switch (ResolveSignatureArgument.typeMatches(this._targetType, this._sourceType, this._sourceAutoCast)) {
-		case ResolveSignature.Match.Full:
-		case ResolveSignature.Match.Partial:
-			break;
-			
-		default:
-			if (!this._sourceType.isPrimitive && this._targetType === ResolveNamespace.classBool) {
-				autoNotNull = true;
-			} else {
-				return [];
-			}
-		}
-		
+	protected doCreateCodeActions(): CodeAction[] {
 		const uri = this._sourceContext.documentUri;
 		if (!uri) {
 			return [];
 		}
 		
-		const crange = this._sourceContext.range;
-		if (!crange) {
+		const result = this.autoCast(this.sourceType, this.targetType, this.sourceAutoCast, this.sourceContext);
+		if (!result || result.edits.length == 0) {
 			return [];
 		}
 		
 		const changes: {[uri: string]: TextEdit[]} = {};
-		changes[uri] = [];
+		changes[uri] = result.edits;
 		
-		const needsWrap = this.requiresWrap(this._sourceContext);
 		var title: string;
 		
-		if (autoNotNull) {
-			if (this.negate) {
+		if (result.compareToNull) {
+			if (result.compareToNullNegate) {
 				title = `Insert == null`
+				
 			} else {
 				title = `Insert != null`
 			}
+			
 		} else {
-			title = `Insert cast ${this._sourceType.name}`
+			title = `Insert cast ${this._targetType.name}`
 		}
-		
-		var textBegin = '';
-		var textEnd: string;
-		
-		if (needsWrap) {
-			textBegin = '(';
-			if (autoNotNull) {
-				if (this.negate) {
-					textEnd = ') == null';
-				} else {
-					textEnd = ') != null';
-				}
-			} else {
-				textEnd = `) cast ${this._targetType.name}`;
-			}
-		} else {
-			if (autoNotNull) {
-				if (this.negate) {
-					textEnd = ' == null';
-				} else {
-					textEnd = ' != null';
-				}
-			} else {
-				textEnd = ` cast ${this._targetType.name}`;
-			}
-		}
-		
-		if (this.wrapAll) {
-			textBegin = '(' + textBegin;
-			textEnd = textEnd + ')';
-		}
-		
-		if (this.negate) {
-			changes[uri].push(TextEdit.del(this.negate));
-		}
-		if (textBegin.length > 0) {
-			changes[uri].push(TextEdit.insert(crange.start, textBegin));
-		}
-		changes[uri].push(TextEdit.insert(crange.end, textEnd));
 		
 		let actions: CodeAction[] = [];
 		this.addAction(actions, title, CodeActionKind.QuickFix, {changes: changes}, true);
