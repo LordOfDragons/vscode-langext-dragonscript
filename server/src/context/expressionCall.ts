@@ -23,7 +23,7 @@
  */
 
 import { Context } from "./context";
-import { CompletionItem, Definition, Diagnostic, DiagnosticRelatedInformation, DocumentSymbol, Hover, integer, Location, Position, Range, RemoteConsole, SignatureHelp, SignatureInformation } from "vscode-languageserver";
+import { CompletionItem, Definition, DiagnosticRelatedInformation, DocumentSymbol, Hover, integer, Location, Position, Range, RemoteConsole, SignatureHelp, SignatureInformation } from "vscode-languageserver";
 import { ContextBuilder } from "./contextBuilder";
 import { Identifier } from "./identifier";
 import { ExpressionAdditionCstNode } from "../nodeclasses/expressionAddition";
@@ -55,7 +55,7 @@ import { Resolved, ResolveUsage } from "../resolve/resolved";
 import { CodeActionInsertCast } from "../codeactions/insertCast";
 import { CodeActionDisambiguate as CodeActionFixFunctionArgs } from "../codeactions/fixFunctionArgs";
 import { CodeActionReplace } from "../codeactions/replace";
-import { CodeActionInsert } from "../codeactions/insert";
+import { CodeActionAssignmentNoEffect } from "../codeactions/assignNoEffect";
 
 
 export class ContextFunctionCall extends Context{
@@ -789,7 +789,7 @@ export class ContextFunctionCall extends Context{
 					other.addReportInfo(ri, `Target: ${this.targetResolveText}`);
 					const di = state.reportWarning(this._name.range, 'Assignment has no effect.', ri);
 					if (di) {
-						this.addCAAssignmentNoEffect(di, state, other);
+						this._codeActions.push(new CodeActionAssignmentNoEffect(di, this));
 					}
 				}
 				}break;
@@ -848,28 +848,6 @@ export class ContextFunctionCall extends Context{
 				this._codeActions.push(new CodeActionReplace(di, 'Replace with "false"', 'false', this));
 			}
 		}
-	}
-	
-	protected addCAAssignmentNoEffect(di: Diagnostic, state: ResolveState, other: Context): void {
-		if (!this._object || this._object.type !== Context.ContextType.Member
-		|| other.type !== Context.ContextType.Member) {
-			return;
-		}
-		
-		const m1 = this._object as ContextMember;
-		if (!m1.resolveArgument || !m1.range) {
-			return;
-		}
-		
-		let matches = new ResolveSearch();
-		matches.name = m1.resolveArgument.simpleName;
-		matches.ignoreFunctions = true;
-		ContextClass.thisContext(this)?.search(matches);
-		if (matches.variables.length == 0) {
-			return;
-		}
-		
-		this._codeActions.push(new CodeActionInsert(di, 'Insert "this."', 'this.', m1.range.start, m1));
 	}
 	
 	public expectedTypesForArgument(index: number): ResolveType[] {
