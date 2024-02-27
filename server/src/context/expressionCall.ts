@@ -23,7 +23,7 @@
  */
 
 import { Context } from "./context";
-import { CodeAction, CompletionItem, Definition, Diagnostic, DiagnosticRelatedInformation, DocumentSymbol, Hover, integer, Location, Position, Range, RemoteConsole, SignatureHelp, SignatureInformation } from "vscode-languageserver";
+import { CompletionItem, Definition, Diagnostic, DiagnosticRelatedInformation, DocumentSymbol, Hover, integer, Location, Position, Range, RemoteConsole, SignatureHelp, SignatureInformation } from "vscode-languageserver";
 import { ContextBuilder } from "./contextBuilder";
 import { Identifier } from "./identifier";
 import { ExpressionAdditionCstNode } from "../nodeclasses/expressionAddition";
@@ -53,8 +53,9 @@ import { TextDocument } from "vscode-languageserver-textdocument";
 import { CompletionHelper } from "../completionHelper";
 import { Resolved, ResolveUsage } from "../resolve/resolved";
 import { CodeActionInsertCast } from "../codeactions/insertCast";
-import { debugLogContext, debugLogMessage } from "../server";
 import { CodeActionDisambiguate as CodeActionFixFunctionArgs } from "../codeactions/fixFunctionArgs";
+import { CodeActionReplace } from "../codeactions/replace";
+import { CodeActionInsert } from "../codeactions/insert";
 
 
 export class ContextFunctionCall extends Context{
@@ -783,31 +784,92 @@ export class ContextFunctionCall extends Context{
 		switch (this._functionType) {
 			case ContextFunctionCall.FunctionType.assign:{
 				const other = this._arguments.at(0);
-				if (other && this.sameTarget(other)) {
+				if (this._object && other && this._object.sameTarget(other)) {
 					let ri: DiagnosticRelatedInformation[] = [];
 					other.addReportInfo(ri, `Target: ${this.targetResolveText}`);
-					state.reportWarning(this._name.range, 'Assignment has no effect.', ri);
+					const di = state.reportWarning(this._name.range, 'Assignment has no effect.', ri);
+					if (di) {
+						this.addCAAssignmentNoEffect(di, state, other);
+					}
 				}
 				}break;
 				
 			case ContextFunctionCall.FunctionType.equals:{
 				const other = this._arguments.at(0);
-				if (other && this.sameTarget(other)) {
-					let ri: DiagnosticRelatedInformation[] = [];
-					other.addReportInfo(ri, `Target: ${this.targetResolveText}`);
-					state.reportWarning(this._name.range, 'Comparisson is always true', ri);
+				if (this._object && other){
+					if (this._object.sameTarget(other)) {
+						this.addCACompareAlwaysTrue(state, other);
+					} else {
+						const result = this._object.sameValue(other);
+						if (result === true) {
+							this.addCACompareAlwaysTrue(state, other);
+						} else if (result === false) {
+							this.addCACompareAlwaysFalse(state, other);
+						}
+					}
 				}
 				}break;
 				
 			case ContextFunctionCall.FunctionType.notEquals:{
 				const other = this._arguments.at(0);
-				if (other && this.sameTarget(other)) {
-					let ri: DiagnosticRelatedInformation[] = [];
-					other.addReportInfo(ri, `Target: ${this.targetResolveText}`);
-					state.reportWarning(this._name.range, 'Comparisson is always false', ri);
+				if (this._object && other) {
+					if (this._object.sameTarget(other)) {
+						this.addCACompareAlwaysFalse(state, other);
+					} else {
+						const result = this._object.sameValue(other);
+						if (result === true) {
+							this.addCACompareAlwaysFalse(state, other);
+						} else if (result === false) {
+							this.addCACompareAlwaysTrue(state, other);
+						}
+					}
 				}
 				}break;
 		}
+	}
+	
+	protected addCACompareAlwaysTrue(state: ResolveState, other: Context): void {
+		if (this._name?.range) {
+			let ri: DiagnosticRelatedInformation[] = [];
+			other.addReportInfo(ri, `Target: ${this.targetResolveText}`);
+			const di = state.reportWarning(this._name.range, 'Comparisson is always true', ri);
+			if (di) {
+				this._codeActions.push(new CodeActionReplace(di, 'Replace with "true"', 'true', this));
+			}
+		}
+	}
+	
+	protected addCACompareAlwaysFalse(state: ResolveState, other: Context): void {
+		if (this._name?.range) {
+			let ri: DiagnosticRelatedInformation[] = [];
+			other.addReportInfo(ri, `Target: ${this.targetResolveText}`);
+			const di = state.reportWarning(this._name.range, 'Comparisson is always false', ri);
+			if (di) {
+				this._codeActions.push(new CodeActionReplace(di, 'Replace with "false"', 'false', this));
+			}
+		}
+	}
+	
+	protected addCAAssignmentNoEffect(di: Diagnostic, state: ResolveState, other: Context): void {
+		if (!this._object || this._object.type !== Context.ContextType.Member
+		|| other.type !== Context.ContextType.Member) {
+			return;
+		}
+		
+		const m1 = this._object as ContextMember;
+		if (!m1.resolveArgument || !m1.range) {
+			return;
+		}
+		
+		let matches = new ResolveSearch();
+		matches.name = m1.resolveArgument.simpleName;
+		matches.ignoreFunctions = true;
+		ContextClass.thisContext(this)?.search(matches);
+		if (matches.variables.length == 0) {
+			return;
+		}
+		
+		this._codeActions.push(new CodeActionInsert(di, 'Insert "this."', 'this.', m1.range.start, m1));
 	}
 	
 	public expectedTypesForArgument(index: number): ResolveType[] {
@@ -863,33 +925,6 @@ export class ContextFunctionCall extends Context{
 				}
 		}
 		return types;
-	}
-	
-	protected sameTarget(other: Context): boolean {
-		if (!this._object || other.type !== this._object.type) {
-			return false;
-		}
-		
-		switch (this._object.type) {
-			case Context.ContextType.Member:{
-				const m1 = this._object as ContextMember;
-				const m2 = other as ContextMember;
-				
-				if (m1.resolveArgument) {
-					return m1.resolveArgument === m2.resolveArgument;
-					
-				} else if (m1.resolveLocalVariable) {
-					return m1.resolveLocalVariable === m2.resolveLocalVariable;
-					
-				} else if (m1.resolveVariable) {
-					//return m1.resolveVariable === m2.resolveVariable;
-					// this is not working since the object can be different.
-					// but how to check this?
-				}
-				}break;
-		}
-		
-		return false;
 	}
 	
 	protected get targetResolveText(): string {

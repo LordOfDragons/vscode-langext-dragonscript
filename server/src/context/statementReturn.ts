@@ -31,6 +31,8 @@ import { Helpers } from "../helpers";
 import { ResolveSignature, ResolveSignatureArgument } from "../resolve/signature";
 import { ResolveType } from "../resolve/type";
 import { ResolveNamespace } from "../resolve/namespace";
+import { CodeActionInsertCast } from "../codeactions/insertCast";
+import { CodeActionRemove } from "../codeactions/remove";
 
 
 export class ContextReturn extends Context{
@@ -74,6 +76,7 @@ export class ContextReturn extends Context{
 	
 	public resolveStatements(state: ResolveState): void {
 		this._value?.resolveStatements(state);
+		this._codeActions.splice(0);
 		
 		const cbf = state.topScopeBlock ?? state.topScopeFunction;
 		if (!cbf) {
@@ -85,14 +88,17 @@ export class ContextReturn extends Context{
 		
 		if (frt && frt !== ResolveNamespace.classVoid) {
 			if (ov) {
-				const tv = ov?.expressionType;
+				const tv = ov.expressionType;
 				if (ResolveSignatureArgument.typeMatches(tv, frt, ov.expressionAutoCast) === ResolveSignature.Match.No) {
 					let ri: DiagnosticRelatedInformation[] = [];
 					tv?.addReportInfo(ri, `Return Value Type: ${tv?.reportInfoText}`);
 					frt.addReportInfo(ri, `Function Return Type: ${frt.reportInfoText}`);
 					cbf.addReportInfo(ri, `Function ${cbf.reportInfoText}`);
-					state.reportError(Helpers.rangeFrom(this.node.children.return[0]),
+					const di = state.reportError(Helpers.rangeFrom(this.node.children.return[0]),
 						`Invalid cast from ${tv?.name} to ${frt.name}`, ri);
+					if (di && tv) {
+						this._codeActions.push(new CodeActionInsertCast(di, tv, frt, ov, ov.expressionAutoCast));
+					}
 				}
 				
 			} else {
@@ -106,8 +112,12 @@ export class ContextReturn extends Context{
 			if (ov) {
 				let ri: DiagnosticRelatedInformation[] = [];
 				cbf.addReportInfo(ri, `Function ${cbf.reportInfoText}`);
-				state.reportError(Helpers.rangeFrom(this.node.children.return[0]),
+				const di = state.reportError(Helpers.rangeFrom(this.node.children.return[0]),
 					'Return value not allowed in function with void return type', ri);
+				if (di && this.range) {
+					this._codeActions.push(new CodeActionRemove(di, 'Remove return value',
+						Helpers.shrinkRange(this.range, 6, 0), this));
+				}
 			}
 		}
 	}

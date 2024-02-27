@@ -353,6 +353,16 @@ export class Context {
 		}
 	}
 	
+	/** Both contexts refer to the same target (member, argument, variable). */
+	public sameTarget(other: Context | undefined): boolean {
+		return false;
+	}
+	
+	/** Both contexts refer to the same compile time value. */
+	public sameValue(other: Context | undefined): boolean | undefined {
+		return undefined;
+	}
+	
 	protected reportError(diagnostics: Diagnostic[], uri: string, range: Range, message: string): Diagnostic {
 		return this.reportDiagnostic(diagnostics, uri, DiagnosticSeverity.Error, range, message);
 	}

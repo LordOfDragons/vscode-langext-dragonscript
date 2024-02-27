@@ -1,9 +1,8 @@
-import { CodeAction, CodeActionKind, Diagnostic, Range, TextEdit } from "vscode-languageserver";
+import { CodeAction, CodeActionKind, Diagnostic, TextEdit } from "vscode-languageserver";
 import { Context } from "../context/context";
-import { ResolveNamespace } from "../resolve/namespace";
-import { ResolveSignature, ResolveSignatureArgument } from "../resolve/signature";
 import { ResolveType } from "../resolve/type";
 import { BaseCodeAction } from "./base";
+import { CodeActionHelpers } from "./helpers";
 
 export class CodeActionInsertCast extends BaseCodeAction {
 	protected _sourceType: ResolveType;
@@ -45,7 +44,7 @@ export class CodeActionInsertCast extends BaseCodeAction {
 			return [];
 		}
 		
-		const result = this.autoCast(this.sourceType, this.targetType, this.sourceAutoCast, this.sourceContext);
+		const result = CodeActionHelpers.autoCast(this.sourceType, this.targetType, this.sourceAutoCast, this.sourceContext);
 		if (!result || result.edits.length == 0) {
 			return [];
 		}

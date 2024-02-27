@@ -23,7 +23,7 @@
  */
 
 import { IToken } from "chevrotain";
-import { Position, Range } from "vscode-languageserver"
+import { integer, Position, Range } from "vscode-languageserver"
 import { EndOfCommandCstNode } from "./nodeclasses/endOfCommand";
 
 
@@ -55,6 +55,18 @@ export class Helpers {
 		return Position.create(line - 1, column - 1);
 	}
 
+	/**
+	 * Shrink range.
+	 * @param range Range to shink.
+	 * @param cutStart Count of characters to cut from the start of the range.
+	 * @param cutEnd Count of characters to cut from the end of the range.
+	 * @returns Shrinked range.
+	 */
+	public static shrinkRange(range: Range, cutStart: integer, cutEnd: integer): Range {
+		return Range.create(range.start.line, range.start.character + cutStart,
+			range.end.line, range.end.character - cutEnd);
+	}
+	
 	public static isPositionInsideRange(range: Range | undefined, position: Position): boolean {
 		if (!range) {
 			return false;

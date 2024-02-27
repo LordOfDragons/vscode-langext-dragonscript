@@ -248,25 +248,6 @@ export class ContextMember extends Context{
 				this.expressionType = this._resolveType;
 				this.expressionTypeType = Context.ExpressionType.Type;
 			}
-			
-			/*
-			if (matchTypeCount > 1) {
-				var content = [`Ambigous member ${this._name}. Possible candidates:`];
-				if (this._matches.arguments.length > 0) {
-					content.push(`- Parameter: ${this._matches.arguments[0].resolveTextShort}`)
-				}
-				if (this._matches.localVariables.length > 0) {
-					content.push(`- Local Variable: ${this._matches.localVariables[0].resolveTextShort}`)
-				}
-				if (this._matches.variables.length > 0) {
-					content.push(`- Class Variable: ${this._matches.variables[0].resolveTextShort}`)
-				}
-				for (const each of this._matches.types) {
-					content.push(`- Type: ${each.resolveTextShort}`)
-				}
-				state.reportWarning(this._name.range, content.join('\n'));
-			}
-			*/
 		}
 		
 		if (this._resolveUsage) {
@@ -392,6 +373,34 @@ export class ContextMember extends Context{
 		return this.parent?.signatureHelpAtPosition(position);
 	}
 	
+	public sameTarget(other: Context | undefined): boolean {
+		if (!other || other.type !== this.type) {
+			return false;
+		}
+		
+		const m2 = other as ContextMember;
+		
+		if (this._resolveArgument) {
+			return this._resolveArgument === m2._resolveArgument;
+			
+		} else if (this._resolveLocalVariable) {
+			return this._resolveLocalVariable === m2._resolveLocalVariable;
+			
+		} else if (this._resolveVariable) {
+			if (this._resolveVariable !== m2._resolveVariable) {
+				return false;
+			}
+			
+			if (this._object) {
+				return this._object.sameTarget(m2._object);
+				
+			} else {
+				return !m2._object;
+			}
+		}
+		
+		return false;
+	}
 	
 	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
 		console.log(`${prefix}Member ${this._name ?? '-'} ${this.logRange}`);

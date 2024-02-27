@@ -2,6 +2,7 @@ import { CodeAction, CodeActionKind, Diagnostic, TextEdit } from "vscode-languag
 import { ContextFunctionCall } from "../context/expressionCall";
 import { ResolveFunction } from "../resolve/function";
 import { BaseCodeAction } from "./base";
+import { CodeActionHelpers } from "./helpers";
 
 export class CodeActionDisambiguate extends BaseCodeAction {
 	protected _sourceContext: ContextFunctionCall;
@@ -55,7 +56,7 @@ export class CodeActionDisambiguate extends BaseCodeAction {
 				return [];
 			}
 			
-			const result = this.autoCast(sourceType, targetType, arg.expressionAutoCast, arg);
+			const result = CodeActionHelpers.autoCast(sourceType, targetType, arg.expressionAutoCast, arg);
 			if (!result) {
 				return [];
 			}

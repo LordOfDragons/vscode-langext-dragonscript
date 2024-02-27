@@ -166,6 +166,7 @@ public class OuterClass extends ClassExtendImplement
 		pMember3
 		AnotherTest
 		
+		/*
 		pMember2 = ClassExtendImplement.new("8", true)
 		pMember1 = 8.5 + 12
 		ClassExtendImplement.new("8", pMember2 and pMember3)
@@ -174,6 +175,27 @@ public class OuterClass extends ClassExtendImplement
 		arg2 = pMember3
 		arg2 = not pMember3
 		ImpactMaterialSound.new("id").playSound(GameWorld.new(), null, null)
+		*/
+		
+		/*
+		arg2 = pMember3 == pMember3
+		arg2 = pMember3 == SimpleEnum.entry2
+		arg2 = pMember3 != pMember3
+		arg2 = pMember3 != SimpleEnum.entry2
+		arg2 = arg1 == arg1
+		arg2 = arg1 == "abc"
+		arg2 = arg1 != arg1
+		arg2 = 8 == 8
+		arg2 = 8 == 6
+		arg2 = 8 != 8
+		arg2 = 8.0 == 8
+		arg2 = 8.0 != 8
+		arg2 = this == this
+		arg2 = true == true
+		arg2 = null == null
+		arg2 = "abc" == "abc"
+		arg2 = "abc" != "abc"
+		*/
 		
 		//isATest(8, 8.2)
 		
@@ -226,6 +248,7 @@ public class OuterClass extends ClassExtendImplement
 		else
 			super.callMe( value, ablock )
 		end
+		//return "hello"
 	end
 	
 	public func int +( int value )
@@ -237,6 +260,8 @@ public class OuterClass extends ClassExtendImplement
 			var int temp = value * 2
 			return pMember1 - temp
 		else
+			//return 1.2 + 8
+			//return 0.8
 			throw EInvalidParam.new()
 		end
 	end

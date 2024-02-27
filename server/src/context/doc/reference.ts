@@ -75,7 +75,7 @@ export class ContextDocumentationReference extends ContextDocBase{
 		if (this._resolved) {
 			const l = this._resolved.resolveLocation.at(0);
 			if (l) {
-				state.addWord(`[${this._resolved.linkName}](${l.uri}#${l.range.start.line + 1})`);
+				state.addWord(`[${this._resolved.linkName}](${l.uri}#L${l.range.start.line + 1})`);
 				return;
 			}
 		}

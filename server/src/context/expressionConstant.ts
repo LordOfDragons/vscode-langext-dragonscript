@@ -270,6 +270,48 @@ export class ContextConstant extends Context{
 		return this.parent?.signatureHelpAtPosition(position);
 	}
 	
+	public sameValue(other: Context | undefined): boolean | undefined {
+		if (!other || other.type !== this.type) {
+			return undefined;
+		}
+		
+		const m2 = other as ContextConstant;
+		
+		switch (this._constantType) {
+		case ContextConstant.ConstantType.literalByte:
+		case ContextConstant.ConstantType.literalIntByte:
+		case ContextConstant.ConstantType.literalIntHex:
+		case ContextConstant.ConstantType.literalIntOct:
+		case ContextConstant.ConstantType.literalInt:
+		case ContextConstant.ConstantType.literalFloat:
+			switch (m2._constantType) {
+			case ContextConstant.ConstantType.literalByte:
+			case ContextConstant.ConstantType.literalIntByte:
+			case ContextConstant.ConstantType.literalIntHex:
+			case ContextConstant.ConstantType.literalIntOct:
+			case ContextConstant.ConstantType.literalInt:
+			case ContextConstant.ConstantType.literalFloat:
+				return m2._constantValue == this._constantValue;
+				
+			default:
+				return undefined;
+			}
+			
+		case ContextConstant.ConstantType.string:
+			return false;
+			
+		case ContextConstant.ConstantType.true:
+		case ContextConstant.ConstantType.false:
+		case ContextConstant.ConstantType.null:
+		case ContextConstant.ConstantType.this:
+		case ContextConstant.ConstantType.super:
+			return m2._constantType === this._constantType && m2._constantValue == this._constantValue;
+			
+		default:
+			return undefined;
+		}
+	}
+	
 	
 	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
 		console.log(`${prefix}Constant ${this._name} ${this.logRange}`);
