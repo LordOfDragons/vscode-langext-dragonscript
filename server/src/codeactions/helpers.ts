@@ -1,4 +1,4 @@
-import { Range, TextEdit } from "vscode-languageserver";
+import { integer, Range, TextEdit } from "vscode-languageserver";
 import { Context } from "../context/context";
 import { ContextFunctionCall } from "../context/expressionCall";
 import { ResolveNamespace } from "../resolve/namespace";
@@ -122,5 +122,64 @@ export class CodeActionHelpers {
 			compareToNull: compareToNull,
 			compareToNullNegate: compareToNullNegate !== undefined
 		};
+	}
+	
+	/**
+	 * Calculate name difference vector. For each character in the first string
+	 * the difference vector stores an integer with the count of characters to
+	 * skip before the respective first string character has been matched. If
+	 * the second string gets exhausted a count of 1000 is stored. The count
+	 * of surplus characters in the second string is stored at the end of the
+	 * difference vector.
+	 * 
+	 * For example if the first string is 'Member' and the second string is
+	 * 'getMemberName' then the difference vector will be [3,0,0,0,0,0,4].
+	 */
+	public static nameDifference(first: string, second: string): integer[] {
+		let diff: integer[] = [];
+		const len = second.length;
+		var index = 0;
+		
+		for (const each of first) {
+			var count = 0;
+			
+			while (index <= len) {
+				if (index == len) {
+					count = 1000;
+					break;
+				}
+				const c = second.charAt(index++);
+				if (c == each) {
+					break;
+				}
+				count++;
+			}
+			
+			diff.push(count);
+		}
+		
+		diff.push(len - index);
+		return diff;
+	}
+	
+	/** Total difference. */
+	public static totalNameDifference(diff: integer[]): integer {
+		return diff.reduce((a, b) => a + b, 0);
+	}
+	
+	/** Different vector is smaller. */
+	public static isNameDiffLessThan(a: integer[], b: integer[]): boolean {
+		const len = a.length;
+		for (var i=0; i<len; i++) {
+			const d1 = a[i];
+			const d2 = b.at(i) ?? 1000;
+			if (d1 < d2) {
+				return true;
+			}
+			if (d1 > d2) {
+				return false;
+			}
+		}
+		return false;
 	}
 }

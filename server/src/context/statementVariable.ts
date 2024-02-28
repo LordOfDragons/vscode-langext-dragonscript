@@ -107,6 +107,7 @@ export class ContextVariable extends Context {
 
 
 	public resolveMembers(state: ResolveState): void {
+		this._codeActions.splice(0);
 		if (this._firstVariable) {
 			this._typename.resolve = this._firstVariable._typename.resolve;
 		} else {

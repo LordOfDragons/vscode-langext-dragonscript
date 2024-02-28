@@ -877,7 +877,7 @@ export class CompletionHelper {
 		return search;
 	}
 	
-	private static searchExpressionType(context: Context, castable?: ResolveType[],
+	public static searchExpressionType(context: Context, castable?: ResolveType[],
 			restrictType?: Resolved.Type): ResolveSearch {
 		let search = new ResolveSearch();
 		search.allMatchingTypes = true;

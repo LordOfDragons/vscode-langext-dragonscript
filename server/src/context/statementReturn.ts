@@ -71,12 +71,12 @@ export class ContextReturn extends Context{
 
 	
 	public resolveMembers(state: ResolveState): void {
+		this.codeActions.splice(0);
 		this._value?.resolveMembers(state);
 	}
 	
 	public resolveStatements(state: ResolveState): void {
 		this._value?.resolveStatements(state);
-		this._codeActions.splice(0);
 		
 		const cbf = state.topScopeBlock ?? state.topScopeFunction;
 		if (!cbf) {
@@ -97,7 +97,7 @@ export class ContextReturn extends Context{
 					const di = state.reportError(Helpers.rangeFrom(this.node.children.return[0]),
 						`Invalid cast from ${tv?.name} to ${frt.name}`, ri);
 					if (di && tv) {
-						this._codeActions.push(new CodeActionInsertCast(di, tv, frt, ov, ov.expressionAutoCast));
+						this.codeActions.push(new CodeActionInsertCast(di, tv, frt, ov, ov.expressionAutoCast));
 					}
 				}
 				
@@ -115,7 +115,7 @@ export class ContextReturn extends Context{
 				const di = state.reportError(Helpers.rangeFrom(this.node.children.return[0]),
 					'Return value not allowed in function with void return type', ri);
 				if (di && this.range) {
-					this._codeActions.push(new CodeActionRemove(di, 'Remove return value',
+					this.codeActions.push(new CodeActionRemove(di, 'Remove return value',
 						Helpers.shrinkRange(this.range, 6, 0), this));
 				}
 			}

@@ -224,6 +224,7 @@ export class ContextInterface extends Context{
 	}
 
 	public resolveMembers(state: ResolveState): void {
+		this._codeActions.splice(0);
 		state.withScopeContext(this, () => {
 			for (const each of this._declarations) {
 				each.resolveMembers(state);

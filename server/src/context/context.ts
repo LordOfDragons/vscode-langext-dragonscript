@@ -126,6 +126,10 @@ export class Context {
 	public get simpleName(): string {
 		return "";
 	}
+	
+	public get codeActions(): BaseCodeAction[] {
+		return this._codeActions;
+	}
 
 	public resolveClasses(state: ResolveState): void {
 	}

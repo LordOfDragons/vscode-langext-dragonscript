@@ -25,7 +25,6 @@
 import { Position, Range, RemoteConsole } from "vscode-languageserver";
 import { Helpers } from "../../helpers";
 import { DocumentationCodeCstNode } from "../../nodeclasses/doc/code";
-import { ResolveState } from "../../resolve/state";
 import { Context } from "../context";
 import { ContextDocBaseBlock } from "./baseBlock";
 import { ContextDocumentationDocState } from "./docState";

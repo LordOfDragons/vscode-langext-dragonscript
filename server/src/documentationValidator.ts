@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-import { ILexingResult, tokenName } from "chevrotain";
+import { ILexingResult } from "chevrotain";
 import { Diagnostic, DiagnosticSeverity } from "vscode-languageserver";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { DSCapabilities } from "./capabilities";
@@ -33,7 +33,6 @@ import { DSDocLexer } from "./lexer_doc";
 import { DocumentationDocCstNode } from "./nodeclasses/doc/documentation";
 import { DSDocParser } from "./parser_doc";
 import { ScriptDocument } from "./scriptDocument";
-import { debugLogMessage, remoteConsole } from "./server";
 import { DSSettings } from "./settings";
 
 export class DocumentationValidator {

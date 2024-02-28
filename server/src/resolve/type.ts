@@ -29,7 +29,7 @@ import { ResolveFunctionGroup } from './functionGroup';
 import { ResolveFunction } from './function';
 import { ResolveVariable } from './variable';
 import { ResolveSearch } from './search';
-import { CompletionItem, CompletionItemKind, InsertTextFormat, MarkupContent, MarkupKind, Position, Range, TextEdit } from 'vscode-languageserver';
+import { CompletionItem, CompletionItemKind, InsertTextFormat, MarkupContent, Position, Range, TextEdit } from 'vscode-languageserver';
 import { Context } from '../context/context';
 import { Resolved } from './resolved';
 

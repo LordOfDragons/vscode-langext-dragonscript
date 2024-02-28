@@ -197,6 +197,25 @@ public class OuterClass extends ClassExtendImplement
 		arg2 = "abc" != "abc"
 		*/
 		
+		/*
+		member3 = SimpleEnum.entry2
+		action
+		behaviortree
+		inner
+		pMember1.string
+		pMember2.listener
+		pMember2.inner
+		pMember2.string
+		OuterClass.inner
+		tostring
+		*/
+		
+		/*
+		var listener t1
+		var inner t2
+		var OuterClass.inner t3
+		*/
+		
 		//isATest(8, 8.2)
 		
 		

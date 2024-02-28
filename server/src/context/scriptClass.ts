@@ -42,7 +42,6 @@ import { Helpers } from "../helpers";
 import { ResolveSearch } from "../resolve/search";
 import { Resolved, ResolveUsage } from "../resolve/resolved";
 import { TextDocument } from "vscode-languageserver-textdocument";
-import { IToken } from "chevrotain";
 import { CompletionHelper } from "../completionHelper";
 import { ContextDocumentationIterator } from "./documentation";
 
@@ -330,6 +329,7 @@ export class ContextClass extends Context{
 	}
 
 	public resolveMembers(state: ResolveState): void {
+		this._codeActions.splice(0);
 		state.withScopeContext(this, () => {
 			for (const each of this._declarations) {
 				each.resolveMembers(state);

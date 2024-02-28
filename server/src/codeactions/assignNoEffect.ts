@@ -10,13 +10,13 @@ export class CodeActionAssignmentNoEffect extends BaseCodeAction {
 	protected _context: ContextFunctionCall;
 	
 	
-	constructor(diagnostic: Diagnostic, contextAssign: ContextFunctionCall) {
+	constructor(diagnostic: Diagnostic, context: ContextFunctionCall) {
 		super(diagnostic);
-		this._context = contextAssign;
+		this._context = context;
 	}
 	
 	
-	public get contextAssign(): ContextFunctionCall {
+	public get context(): ContextFunctionCall {
 		return this._context;
 	}
 	

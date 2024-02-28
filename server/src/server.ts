@@ -67,7 +67,6 @@ import { PackageDEModule } from "./package/dragenginemodule";
 import { PackageDSLanguage } from "./package/dslanguage";
 import { ReportConfig } from './reportConfig';
 import { PackageWorkspace } from './package/workspacepackage';
-import { Helpers } from './helpers';
 import { Context } from './context/context';
 import { DocumentationValidator } from './documentationValidator';
 

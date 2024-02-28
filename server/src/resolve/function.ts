@@ -22,13 +22,12 @@
  * SOFTWARE.
  */
 
-import { CompletionItem, CompletionItemKind, CompletionItemTag, DiagnosticRelatedInformation, InsertTextFormat, integer, Location, MarkupContent, MarkupKind, ParameterInformation, Position, Range, SignatureInformation, TextEdit } from 'vscode-languageserver';
+import { CompletionItem, CompletionItemKind, CompletionItemTag, DiagnosticRelatedInformation, InsertTextFormat, Location, MarkupContent, MarkupKind, ParameterInformation, Range, SignatureInformation, TextEdit } from 'vscode-languageserver';
 import { ContextFunction } from '../context/classFunction';
 import { Context } from '../context/context';
 import { ContextDocumentation } from '../context/documentation';
 import { ContextBlock } from '../context/expressionBlock';
 import { RefactoringHelper } from '../refactoringHelper';
-import { debugLogMessage } from '../server';
 import { ResolveClass } from './class';
 import { ResolveFunctionGroup } from './functionGroup';
 import { ResolveNamespace } from './namespace';

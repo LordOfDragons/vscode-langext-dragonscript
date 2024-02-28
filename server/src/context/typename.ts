@@ -39,6 +39,8 @@ import { ContextInterface } from "./scriptInterface";
 import { ContextNamespace } from "./namespace";
 import { Helpers } from "../helpers";
 import { Resolved, ResolveUsage } from "../resolve/resolved";
+import { CompletionHelper } from "../completionHelper";
+import { CodeActionUnknownMember } from "../codeactions/unknownMember";
 
 
 export class TypeNamePart {
@@ -196,7 +198,13 @@ export class TypeName {
 				this.resolve = this.resolveBaseType(state, context);
 				const nextType = this.resolve?.resolved as ResolveType;
 				if (!nextType) {
-					state.reportError(each.name.range, `"${each.name.name}" not found.`);
+					const di = state.reportError(each.name.range, `"${each.name.name}" not found.`);
+					if (di) {
+						let ca = new CodeActionUnknownMember(di, context, each.name);
+						ca.includeTypes = true;
+						ca.searchTypes = new Set(CompletionHelper.searchExpressionType(context).types);
+						context.codeActions.push(ca);
+					}
 					return undefined;
 				}
 				
@@ -212,7 +220,12 @@ export class TypeName {
 					continue;
 				}
 				
-				state.reportError(each.name.range, `Type "${each.name.name}" not found in "${type!.name}".`);
+				const di = state.reportError(each.name.range, `Type "${each.name.name}" not found in "${type!.name}".`);
+				if (di) {
+					let ca = new CodeActionUnknownMember(di, context, each.name);
+					ca.includeTypes = true;
+					context.codeActions.push(ca);
+				}
 				return undefined;
 			}
 		}

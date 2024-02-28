@@ -89,6 +89,7 @@ export class ContextPinNamespace extends Context{
 	}
 
 	public resolveMembers(state: ResolveState): void {
+		this._codeActions.splice(0);
 		this.addPinToState(state);
 	}
 

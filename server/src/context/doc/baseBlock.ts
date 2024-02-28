@@ -24,7 +24,7 @@
 
 import { Position, Range } from "vscode-languageserver";
 import { Helpers } from "../../helpers";
-import { DocumentationBlockTextCstNode, DocumentationBlockTextWordCstNode } from "../../nodeclasses/doc/blockText";
+import { DocumentationBlockTextCstNode } from "../../nodeclasses/doc/blockText";
 import { ResolveState } from "../../resolve/state";
 import { Context } from "../context";
 import { ContextDocBuilder } from "./builder";

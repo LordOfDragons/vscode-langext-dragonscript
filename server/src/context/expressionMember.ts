@@ -41,6 +41,7 @@ import { TextDocument } from "vscode-languageserver-textdocument";
 import { CompletionHelper } from "../completionHelper";
 import { IToken } from "chevrotain";
 import { Resolved, ResolveUsage } from "../resolve/resolved";
+import { CodeActionUnknownMember } from "../codeactions/unknownMember";
 
 
 export class ContextMember extends Context{
@@ -168,6 +169,7 @@ export class ContextMember extends Context{
 	}
 	
 	public resolveMembers(state: ResolveState): void {
+		this._codeActions.splice(0);
 		this._object?.resolveMembers(state);
 	}
 	
@@ -203,7 +205,19 @@ export class ContextMember extends Context{
 		const matchTypeCount = this._matches.matchTypeCount;
 		
 		if (matchTypeCount == 0) {
-			state.reportError(this._name.range, `Unknown member ${this._name}`);
+			const di = state.reportError(this._name.range, `Unknown member ${this._name}`);
+			if (di) {
+				let ca = new CodeActionUnknownMember(di, this, this._name);
+				ca.includeVariables = true;
+				ca.includeFunctions = true;
+				ca.includeTypes = true;
+				ca.objectType = objtype;
+				ca.objectTypeType = this._object?.expressionTypeType ?? Context.ExpressionType.Void;
+				if (!objtype) {
+					ca.searchTypes = new Set(CompletionHelper.searchExpressionType(this).types);
+				}
+				this._codeActions.push(ca);
+			}
 			
 		} else {
 			if (this._matches.arguments.length > 0) {

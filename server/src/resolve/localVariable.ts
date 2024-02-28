@@ -23,9 +23,7 @@
  */
 
 import { CompletionItem, CompletionItemKind, DiagnosticRelatedInformation, InsertTextFormat, Location, Range, TextEdit } from 'vscode-languageserver';
-import { ContextFunctionArgument } from '../context/classFunctionArgument';
 import { ContextDocumentation } from '../context/documentation';
-import { ContextTryCatch } from '../context/statementTry';
 import { ContextVariable } from '../context/statementVariable';
 import { Resolved } from './resolved';
 import { ResolveType } from './type';
