@@ -750,7 +750,7 @@ export class DSParser extends CstParser{
 
 	public expressionAssignMore = this.RULE("expressionAssignMore", () => {
 		this.SUBRULE(this.expressionAssignOp, {LABEL: "operator"})
-		this.SUBRULE(this.expressionInlineIfElse, {LABEL: "right"})
+		this.SUBRULE(this.expressionAssign, {LABEL: "right"})
 	})
 
 	public expressionAssignOp = this.RULE("expressionAssignOp", () => {

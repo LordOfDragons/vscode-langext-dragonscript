@@ -407,7 +407,7 @@ export class ContextFunctionCall extends Context{
 			}
 			cfc._operator = true;
 
-			cfc._arguments.push(ContextBuilder.createExpressionInlineIfElse(each.children.right[0], cfc));
+			cfc._arguments.push(ContextBuilder.createExpressionAssign(each.children.right[0], cfc));
 			cfc.updateRange();
 			last = cfc;
 		}
@@ -826,6 +826,26 @@ export class ContextFunctionCall extends Context{
 				}
 				}break;
 		}
+		
+		switch (this._functionType) {
+			case ContextFunctionCall.FunctionType.assign:
+			case ContextFunctionCall.FunctionType.assignAdd:
+			case ContextFunctionCall.FunctionType.assignAnd:
+			case ContextFunctionCall.FunctionType.assignDivide:
+			case ContextFunctionCall.FunctionType.assignModulus:
+			case ContextFunctionCall.FunctionType.assignMultiply:
+			case ContextFunctionCall.FunctionType.assignOr:
+			case ContextFunctionCall.FunctionType.assignShiftLeft:
+			case ContextFunctionCall.FunctionType.assignShiftRight:
+			case ContextFunctionCall.FunctionType.assignSubtract:
+			case ContextFunctionCall.FunctionType.assignXor:
+				if (this._object && !this._object.expressionWriteable) {
+					let ri: DiagnosticRelatedInformation[] = [];
+					this._object.addReportInfo(ri, `Target: ${this._object.reportInfoText}`);
+					state.reportError(this._name.range, 'Target is not writeable', ri);
+				}
+				break;
+		}
 	}
 	
 	protected addCACompareAlwaysTrue(state: ResolveState, other: Context): void {
@@ -917,6 +937,30 @@ export class ContextFunctionCall extends Context{
 		
 		return '?';
 	}
+	
+	protected updateResolveTextLong(): string[] {
+		return this._matchFunction?.resolveTextLong ?? ['?'];
+	}
+	
+	protected updateResolveTextShort(): string {
+		return this._matchFunction?.resolveTextShort ?? '?';
+	}
+	
+	protected updateReportInfoText(): string {
+		switch (this._functionType) {
+			case ContextFunctionCall.FunctionType.cast:
+			case ContextFunctionCall.FunctionType.castable:
+			case ContextFunctionCall.FunctionType.typeof:
+			case ContextFunctionCall.FunctionType.assign:
+			case ContextFunctionCall.FunctionType.equals:
+			case ContextFunctionCall.FunctionType.notEquals:
+				return `${this._name} ${this._arguments.at(0)?.expressionType?.name}`;
+				
+			default:
+				return this._matchFunction?.reportInfoText ?? '?';
+		}
+	}
+	
 	
 	public collectChildDocSymbols(list: DocumentSymbol[]) {
 		super.collectChildDocSymbols(list);

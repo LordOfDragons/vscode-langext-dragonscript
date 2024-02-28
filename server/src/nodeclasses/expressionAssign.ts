@@ -20,7 +20,7 @@ export interface ExpressionAssignMoreCstNode extends CstNode {
 
 export type ExpressionAssignMoreCstChildren = {
 	operator: ExpressionAssignOpMoreCstNode[];
-	right: ExpressionInlineIfElseCstNode[];
+	right: ExpressionAssignCstNode[];
 };
 
 

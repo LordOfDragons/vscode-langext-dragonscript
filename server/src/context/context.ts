@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-import { CodeAction, CompletionItem, Definition, Diagnostic, DiagnosticRelatedInformation, DiagnosticSeverity, DocumentSymbol, Hover, integer, Location, Position, Range, RemoteConsole, SignatureHelp, SymbolInformation, URI } from "vscode-languageserver";
+import { CodeAction, CompletionItem, Definition, Diagnostic, DiagnosticRelatedInformation, DiagnosticSeverity, DocumentSymbol, Hover, Location, Position, Range, RemoteConsole, SignatureHelp, SymbolInformation, URI } from "vscode-languageserver";
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
 import { capabilities, logError } from "../server";
 import { ResolveState } from "../resolve/state";
@@ -47,6 +47,7 @@ export class Context {
 	public expressionType?: ResolveType;
 	public expressionAutoCast: Context.AutoCast = Context.AutoCast.No;
 	public expressionTypeType: Context.ExpressionType = Context.ExpressionType.Void;
+	public expressionWriteable = false;
 	protected _resolveTextShort?: string;
 	protected _resolveTextLong?: string[];
 	protected _reportInfoText?: string;
@@ -531,10 +532,10 @@ export namespace Context {
 
 		protected _canonical?: Context.TypeModifier[];
 		protected _typestring?: string;
-		protected _accessLevel: AccessLevel = AccessLevel.Public;
-		protected _abstract: boolean = false;
-		protected _fixed: boolean = false;
-		protected _static: boolean = false;
+		protected _accessLevel = AccessLevel.Public;
+		protected _abstract = false;
+		protected _fixed = false;
+		protected _static = false;
 
 		constructor(node: TypeModifiersCstNode | undefined, defaultModifier: Context.TypeModifier | undefined) {
 			super();

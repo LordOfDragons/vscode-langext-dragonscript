@@ -100,6 +100,18 @@ export class ContextEnumEntry extends Context{
 		return ContextEnumEntry._typeModifiers;
 	}
 
+	protected updateResolveTextShort(): string {
+		return `${this.parent?.simpleName} ${this.parent!.simpleName}.${this._name}`;
+	}
+
+	protected updateResolveTextLong(): string[] {
+		return [`${ContextEnumEntry.typeModifiers.typestring} **variable** *${this.parent?.simpleName}* *${this.parent!.fullyQualifiedName}*.**${this._name}**`];
+	}
+
+	protected updateReportInfoText(): string {
+		return `${ContextEnumEntry.typeModifiers.typestring} ${this.parent?.simpleName} ${this.parent!.simpleName}.${this._name}`;
+	}
+
 	public resolveMembers(state: ResolveState): void {
 		this._resolveVariable?.dispose();
 		this._resolveVariable = undefined;

@@ -125,7 +125,19 @@ export class ContextConstant extends Context{
 	public get constantType(): ContextConstant.ConstantType {
 		return this._constantType;
 	}
-
+	
+	protected updateResolveTextLong(): string[] {
+		return [`literal '${this._constantValue?.toString() ?? '?'}'`];
+	}
+	
+	protected updateResolveTextShort(): string {
+		return `literal '${this._constantValue?.toString() ?? '?'}'`;
+	}
+	
+	protected updateReportInfoText(): string {
+		return `literal '${this._constantValue?.toString() ?? '?'}'`;
+	}
+	
 	
 	public resolveStatements(state: ResolveState): void {
 		switch (this._constantType) {

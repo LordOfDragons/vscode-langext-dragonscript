@@ -23,7 +23,7 @@
  */
 
 import { Context } from "./context";
-import { CompletionItem, DocumentSymbol, Position, Range, RemoteConsole } from "vscode-languageserver";
+import { CompletionItem, DiagnosticRelatedInformation, DocumentSymbol, Position, Range, RemoteConsole } from "vscode-languageserver";
 import { ContextBuilder } from "./contextBuilder";
 import { ContextStatements } from "./statements";
 import { StatementForCstNode } from "../nodeclasses/statementFor";
@@ -149,6 +149,13 @@ export class ContextFor extends Context{
 		this.requireCastable(state, this._to, ResolveNamespace.classInt, 'To');
 		if (this._step) {
 			this.requireCastable(state, this._step, ResolveNamespace.classInt, 'Step');
+		}
+		
+		// find problems
+		if (!this._variable.expressionWriteable) {
+			let ri: DiagnosticRelatedInformation[] = [];
+			this._variable.addReportInfo(ri, `Variable: ${this._variable.reportInfoText}`);
+			state.reportError(this._variable.range, 'Variable is not writeable', ri);
 		}
 	}
 	
