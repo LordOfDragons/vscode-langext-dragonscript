@@ -92,8 +92,7 @@ export class ResolveNamespace extends ResolveType {
 	
 	
 	public isNamespace(name: string): boolean {
-		// TODO also check interface and enumerations once done
-		return !this._classes.has(name);
+		return !this._classes.has(name) && !this.interfaces.has(name) && !this._enumerations.has(name);
 	}
 	
 	

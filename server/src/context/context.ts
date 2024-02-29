@@ -47,7 +47,7 @@ export class Context {
 	public expressionType?: ResolveType;
 	public expressionAutoCast: Context.AutoCast = Context.AutoCast.No;
 	public expressionTypeType: Context.ExpressionType = Context.ExpressionType.Void;
-	public expressionWriteable = false;
+	public expressionWriteableResolve?: ResolveUsage;
 	protected _resolveTextShort?: string;
 	protected _resolveTextLong?: string[];
 	protected _reportInfoText?: string;

@@ -42,7 +42,6 @@ import { CompletionHelper } from "../completionHelper";
 import { IToken } from "chevrotain";
 import { Resolved, ResolveUsage } from "../resolve/resolved";
 import { CodeActionUnknownMember } from "../codeactions/unknownMember";
-import { debugLogMessage } from "../server";
 
 
 export class ContextMember extends Context{
@@ -236,7 +235,7 @@ export class ContextMember extends Context{
 				}
 				this.expressionType = this._resolveArgument.typename.resolve?.resolved as ResolveType;
 				this.expressionTypeType = Context.ExpressionType.Object;
-				this.expressionWriteable = true;
+				this.expressionWriteableResolve = this._resolveUsage;
 				
 			} else if (this._matches.localVariables.length > 0) {
 				this._resolveLocalVariable = this._matches.localVariables[0];
@@ -245,14 +244,16 @@ export class ContextMember extends Context{
 				}
 				this.expressionType = this._resolveLocalVariable.typename.resolve?.resolved as ResolveType;
 				this.expressionTypeType = Context.ExpressionType.Object;
-				this.expressionWriteable = true;
+				this.expressionWriteableResolve = this._resolveUsage;
 				
 			} else if (this._matches.variables.length > 0) {
 				this._resolveVariable = this._matches.variables[0];
 				this._resolveUsage = new ResolveUsage(this._resolveVariable, this);
 				this.expressionType = this._resolveVariable.variableType;
 				this.expressionTypeType = Context.ExpressionType.Object;
-				this.expressionWriteable = !(this._resolveVariable.typeModifiers?.isFixed ?? true);
+				if (this._resolveVariable.typeModifiers && !this._resolveVariable.typeModifiers?.isFixed) {
+					this.expressionWriteableResolve = this._resolveUsage;
+				}
 				
 				const tfcc = state.topScopeFunction?.parent as ContextClass;
 				if (tfcc?.type === Context.ContextType.Class) {

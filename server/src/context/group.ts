@@ -61,6 +61,19 @@ export class ContextGroup extends Context{
 	}
 	
 	
+	protected updateResolveTextLong(): string[] {
+		return this._expression.resolveTextLong;
+	}
+	
+	protected updateResolveTextShort(): string {
+		return this._expression.resolveTextShort;
+	}
+	
+	protected updateReportInfoText(): string {
+		return this._expression.reportInfoText;
+	}
+	
+	
 	public resolveMembers(state: ResolveState): void {
 		this._expression.resolveMembers(state);
 	}
@@ -70,6 +83,7 @@ export class ContextGroup extends Context{
 		this.expressionType = this._expression.expressionType;
 		this.expressionAutoCast = this._expression.expressionAutoCast;
 		this.expressionTypeType = this._expression.expressionTypeType;
+		this.expressionWriteableResolve = this._expression.expressionWriteableResolve;
 	}
 	
 	public collectChildDocSymbols(list: DocumentSymbol[]) {

@@ -613,10 +613,11 @@ export class ContextFunctionCall extends Context{
 				this.expressionType = ResolveNamespace.classBool;
 				this.expressionTypeType = Context.ExpressionType.Object;
 				break;
-
+				
 			case ContextFunctionCall.FunctionType.cast:
 				this.expressionType = this._castType?.resolve?.resolved as ResolveType;
 				this.expressionTypeType = Context.ExpressionType.Object;
+				this.expressionWriteableResolve = this._object?.expressionWriteableResolve;
 				break;
 				
 			default:
@@ -649,7 +650,23 @@ export class ContextFunctionCall extends Context{
 			case ContextFunctionCall.FunctionType.cast:
 			case ContextFunctionCall.FunctionType.castable:
 			case ContextFunctionCall.FunctionType.typeof:
-				// TODO check if argument is a class not an object
+				/*{
+				const r = this._castType?.resolve?.resolved;
+				if (r) {
+					switch (r.type) {
+					case ResolveType.Type.Class:
+					case ResolveType.Type.Interface:
+					case ResolveType.Type.Enumeration:
+						break;
+						
+					default:{
+						let ri: DiagnosticRelatedInformation[] = [];
+						r.addReportInfo(ri, `Cast Type: ${r.reportInfoText}`);
+						state.reportError(this._name.range, 'Cast type has to be class, interface or enumeration', ri);
+						}
+					}
+				}
+				}*/
 				break;
 				
 			case ContextFunctionCall.FunctionType.assign:
@@ -827,24 +844,32 @@ export class ContextFunctionCall extends Context{
 				}break;
 		}
 		
-		switch (this._functionType) {
-			case ContextFunctionCall.FunctionType.assign:
-			case ContextFunctionCall.FunctionType.assignAdd:
-			case ContextFunctionCall.FunctionType.assignAnd:
-			case ContextFunctionCall.FunctionType.assignDivide:
-			case ContextFunctionCall.FunctionType.assignModulus:
-			case ContextFunctionCall.FunctionType.assignMultiply:
-			case ContextFunctionCall.FunctionType.assignOr:
-			case ContextFunctionCall.FunctionType.assignShiftLeft:
-			case ContextFunctionCall.FunctionType.assignShiftRight:
-			case ContextFunctionCall.FunctionType.assignSubtract:
-			case ContextFunctionCall.FunctionType.assignXor:
-				if (this._object && !this._object.expressionWriteable) {
-					let ri: DiagnosticRelatedInformation[] = [];
-					this._object.addReportInfo(ri, `Target: ${this._object.reportInfoText}`);
-					state.reportError(this._name.range, 'Target is not writeable', ri);
-				}
-				break;
+		if (this._object) {
+			switch (this._functionType) {
+				case ContextFunctionCall.FunctionType.assign:
+				case ContextFunctionCall.FunctionType.assignAdd:
+				case ContextFunctionCall.FunctionType.assignAnd:
+				case ContextFunctionCall.FunctionType.assignDivide:
+				case ContextFunctionCall.FunctionType.assignModulus:
+				case ContextFunctionCall.FunctionType.assignMultiply:
+				case ContextFunctionCall.FunctionType.assignOr:
+				case ContextFunctionCall.FunctionType.assignShiftLeft:
+				case ContextFunctionCall.FunctionType.assignShiftRight:
+				case ContextFunctionCall.FunctionType.assignSubtract:
+				case ContextFunctionCall.FunctionType.assignXor:
+				case ContextFunctionCall.FunctionType.decrement:
+				case ContextFunctionCall.FunctionType.increment:{
+					let ewr = this._object.expressionWriteableResolve;
+					if (ewr) {
+						ewr.write = true;
+					} else if (this._name.range) {
+						let ri: DiagnosticRelatedInformation[] = [];
+						this._object.addReportInfo(ri, `Target: ${this._object.reportInfoText}`);
+						state.reportError(Helpers.spanRanges(this._name.range, this._object.range),
+							'Target is not writeable', ri);
+					}
+					}break;
+			}
 		}
 	}
 	
@@ -948,13 +973,15 @@ export class ContextFunctionCall extends Context{
 	
 	protected updateReportInfoText(): string {
 		switch (this._functionType) {
-			case ContextFunctionCall.FunctionType.cast:
-			case ContextFunctionCall.FunctionType.castable:
-			case ContextFunctionCall.FunctionType.typeof:
 			case ContextFunctionCall.FunctionType.assign:
 			case ContextFunctionCall.FunctionType.equals:
 			case ContextFunctionCall.FunctionType.notEquals:
 				return `${this._name} ${this._arguments.at(0)?.expressionType?.name}`;
+				
+			case ContextFunctionCall.FunctionType.cast:
+			case ContextFunctionCall.FunctionType.castable:
+			case ContextFunctionCall.FunctionType.typeof:
+				return `${this._name} ${this._castType?.name}`;
 				
 			default:
 				return this._matchFunction?.reportInfoText ?? '?';

@@ -152,7 +152,9 @@ export class ContextFor extends Context{
 		}
 		
 		// find problems
-		if (!this._variable.expressionWriteable) {
+		if (this._variable.expressionWriteableResolve) {
+			this._variable.expressionWriteableResolve.write = true;
+		} else {
 			let ri: DiagnosticRelatedInformation[] = [];
 			this._variable.addReportInfo(ri, `Variable: ${this._variable.reportInfoText}`);
 			state.reportError(this._variable.range, 'Variable is not writeable', ri);

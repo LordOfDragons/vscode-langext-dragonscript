@@ -67,6 +67,22 @@ export class Helpers {
 			range.end.line, range.end.character - cutEnd);
 	}
 	
+	/**
+	 * Create range spaning across two ranges. The second range can be undefined
+	 * in which case the first one is used. The ranges can be in any order.
+	 * @param a First range.
+	 * @param b Optional second range.
+	 */
+	public static spanRanges(a: Range, b: Range | undefined): Range {
+		if (!b) {
+			return a;
+		}
+		
+		const s = Helpers.isPositionBefore(a.start, b.start) ? a.start : b.start;
+		const e = Helpers.isPositionAfter(a.end, b.end) ? a.end : b.end;
+		return Range.create(s, e);
+	}
+	
 	public static isPositionInsideRange(range: Range | undefined, position: Position): boolean {
 		if (!range) {
 			return false;
