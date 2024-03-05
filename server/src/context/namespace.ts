@@ -163,6 +163,7 @@ export class ContextNamespace extends Context{
 	}
 	
 	public resolveInheritance(state: ResolveState): void {
+		super.resolveInheritance(state);
 		state.withScopeContext(this, () => {
 			for (const each of this._statements) {
 				each.resolveInheritance(state);
@@ -171,7 +172,6 @@ export class ContextNamespace extends Context{
 	}
 	
 	public resolveMembers(state: ResolveState): void {
-		this._codeActions.splice(0);
 		state.withScopeContext(this, () => {
 			for (const each of this._statements) {
 				each.resolveMembers(state);

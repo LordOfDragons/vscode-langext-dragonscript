@@ -85,11 +85,11 @@ export class ContextPinNamespace extends Context{
 	}
 
 	public resolveInheritance(state: ResolveState): void {
+		super.resolveInheritance(state);
 		this.addPinToState(state);
 	}
 
 	public resolveMembers(state: ResolveState): void {
-		this._codeActions.splice(0);
 		this.addPinToState(state);
 	}
 

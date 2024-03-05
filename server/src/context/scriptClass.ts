@@ -299,6 +299,7 @@ export class ContextClass extends Context{
 	}
 
 	public resolveInheritance(state: ResolveState): void {
+		super.resolveInheritance(state);
 		this._inheritanceResolved = true;
 
 		if (this._extends) {
@@ -329,7 +330,6 @@ export class ContextClass extends Context{
 	}
 
 	public resolveMembers(state: ResolveState): void {
-		this._codeActions.splice(0);
 		state.withScopeContext(this, () => {
 			for (const each of this._declarations) {
 				each.resolveMembers(state);

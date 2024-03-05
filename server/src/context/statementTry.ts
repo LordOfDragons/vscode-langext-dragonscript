@@ -87,7 +87,6 @@ export class ContextTryCatch extends Context {
 	
 	
 	public resolveMembers(state: ResolveState): void {
-		this._codeActions.splice(0);
 		this._typename.resolveType(state, this);
 		
 		this._resolveArgument?.dispose();

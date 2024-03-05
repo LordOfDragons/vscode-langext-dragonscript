@@ -345,7 +345,6 @@ export class ContextFunction extends Context{
 	}
 	
 	public resolveMembers(state: ResolveState): void {
-		this._codeActions.splice(0);
 		this._returnType?.resolveType(state, this);
 		
 		state.withScopeContext(this, () => {

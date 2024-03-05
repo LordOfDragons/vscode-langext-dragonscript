@@ -34,6 +34,7 @@ export class ScriptDocument {
 	protected _uri: string;
 	protected _console: RemoteConsole;
 
+	public package?: any; // not type Package due to inheritence cycle
 	protected _settings: DSSettings;
 	protected _node?: ScriptCstNode;
 	protected _context?: ContextScript;
@@ -57,6 +58,7 @@ export class ScriptDocument {
 
 	public dispose(): void {
 		this._context?.dispose();
+		this.package = undefined;
 	}
 
 

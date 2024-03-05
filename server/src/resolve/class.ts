@@ -103,7 +103,7 @@ export class ResolveClass extends ResolveType {
 		
 		if (type.type === ResolveType.Type.Interface) {
 			for (const each of this.context.implements) {
-				if ((each.resolve?.resolved as ResolveType).castable(type)) {
+				if ((each.resolve?.resolved as ResolveType)?.castable(type)) {
 					return true;
 				}
 			}

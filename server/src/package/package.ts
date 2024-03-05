@@ -69,6 +69,10 @@ export class Package {
 		return this._files;
 	}
 	
+	public get isLoaded(): boolean {
+		return this._loaded;
+	}
+	
 
 	public async load(): Promise<void> {
 		if (this._promiseLoading) {
@@ -104,6 +108,7 @@ export class Package {
 		//this._finishedCounter = 0;
 		this._scriptDocuments = [];
 		this._files = [];
+		this._loaded = false;
 	}
 
 	protected async loadFiles(): Promise<void> {
@@ -216,6 +221,7 @@ export class Package {
 		//scriptDocument.context?.log(connection.console);
 		
 		this._scriptDocuments.push(scriptDocument);
+		scriptDocument.package = this;
 
 		//this._finishedCounter++;
 		//scriptDocument.console.info(`Package '${this._id}' (${this._finishedCounter}/${this._files.length}): Parsed '${path}' in ${elapsedTime / 1000}s`);

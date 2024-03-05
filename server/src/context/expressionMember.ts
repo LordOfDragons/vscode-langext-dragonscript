@@ -177,7 +177,6 @@ export class ContextMember extends Context{
 	}
 	
 	public resolveMembers(state: ResolveState): void {
-		this._codeActions.splice(0);
 		this._object?.resolveMembers(state);
 	}
 	

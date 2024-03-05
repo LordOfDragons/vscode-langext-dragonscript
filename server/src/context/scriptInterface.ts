@@ -204,6 +204,7 @@ export class ContextInterface extends Context{
 	}
 
 	public resolveInheritance(state: ResolveState): void {
+		super.resolveInheritance(state);
 		this._inheritanceResolved = true;
 		
 		for (const each of this._implements) {
@@ -224,7 +225,6 @@ export class ContextInterface extends Context{
 	}
 
 	public resolveMembers(state: ResolveState): void {
-		this._codeActions.splice(0);
 		state.withScopeContext(this, () => {
 			for (const each of this._declarations) {
 				each.resolveMembers(state);

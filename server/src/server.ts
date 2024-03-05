@@ -69,6 +69,7 @@ import { ReportConfig } from './reportConfig';
 import { PackageWorkspace } from './package/workspacepackage';
 import { Context } from './context/context';
 import { DocumentationValidator } from './documentationValidator';
+import { Package } from './package/package';
 
 // Create a connection for the server, using Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -224,9 +225,10 @@ connection.onDidChangeConfiguration(change => {
 		(change.settings.dragonscriptLanguage || defaultSettings).pathDragengine;
 	
 	// Revalidate all open text documents
-	for (const each of documents.all()) {
+	/*for (const each of documents.all()) {
 		validateTextDocument(each);
-	}
+	}*/
+	workspacePackages.forEach (each => each.resolveAllLater());
 });
 
 function onDidChangeWorkspaceFolders() {
@@ -259,6 +261,7 @@ function onDidChangeWorkspaceFolders() {
 				if (!workspacePackages.find(p => p.uri == f.uri)) {
 					const wfpackage = new PackageWorkspace(connection.console, f);
 					workspacePackages.push(wfpackage);
+					console.log(`onDidChangeWorkspaceFolders reload ${f.uri}`);
 					wfpackage.reload();
 				}
 			}
@@ -295,12 +298,18 @@ async function validateTextDocumentAndReresolve(textDocument: TextDocument): Pro
 		return;
 	}
 	
+	if (!(scriptDocument?.package as Package)?.isLoaded) {
+		console.log(`validateTextDocumentAndReresolve(${textDocument.uri}): owner package not loaded yet`);
+		return;
+	}
+	
 	await validateTextDocument(textDocument);
 	workspacePackages.forEach (each => each.resolveAllLater());
 }
 
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
-	//console.log(`validateTextDocument ${textDocument.uri} ${textDocument.version}`);
+	console.log(`validateTextDocument ${textDocument.uri} ${textDocument.version}`);
+	
 	//let startTime = Date.now();
 	
 	let scriptDocument = scriptDocuments.get(textDocument.uri);
@@ -365,7 +374,12 @@ connection.onDidChangeWatchedFiles(change => {
 
 connection.onDocumentSymbol(
 	(params: DocumentSymbolParams): DocumentSymbol[] => {
-		return scriptDocuments.get(params.textDocument.uri)?.context?.documentSymbols ?? [];
+		const sd = scriptDocuments.get(params.textDocument.uri);
+		if (!sd || !(sd?.package as Package)?.isLoaded) {
+			return [];
+		}
+		
+		return sd.context?.documentSymbols ?? [];
 	}
 );
 
@@ -383,8 +397,13 @@ connection.onWorkspaceSymbol(
 
 connection.onHover(
 	(params: TextDocumentPositionParams): Hover | null => {
+		const sd = scriptDocuments.get(params.textDocument.uri);
+		if (!sd || !(sd?.package as Package)?.isLoaded) {
+			return null;
+		}
+		
 		try {
-			return scriptDocuments.get(params.textDocument.uri)?.context?.
+			return sd.context?.
 				contextAtPosition(params.position)?.
 				hover(params.position) ?? null;
 		} catch (error) {
@@ -396,13 +415,19 @@ connection.onHover(
 
 connection.onCompletion(
 	(params: TextDocumentPositionParams): CompletionItem[] => {
+		const sd = scriptDocuments.get(params.textDocument.uri);
+		if (!sd || !(sd?.package as Package)?.isLoaded) {
+			return [];
+		}
+		
+		const document = documents.get(params.textDocument.uri);
+		if (!document || !sd.context) {
+			return [];
+		}
+		
 		try {
-			const document = documents.get(params.textDocument.uri);
-			const scriptContext = scriptDocuments.get(params.textDocument.uri)?.context;
-			if (!document || !scriptContext) {
-				return [];
-			}
-			return scriptContext.contextAtPosition(params.position)?.
+			return sd.context.
+				contextAtPosition(params.position)?.
 				completion(document, params.position) ?? [];
 			
 		} catch (error) {
@@ -429,8 +454,13 @@ connection.onCompletionResolve(
 
 connection.onDefinition(
 	(params: TextDocumentPositionParams): Definition => {
+		const sd = scriptDocuments.get(params.textDocument.uri);
+		if (!sd || !(sd?.package as Package)?.isLoaded) {
+			return [];
+		}
+		
 		try {
-			return scriptDocuments.get(params.textDocument.uri)?.context?.
+			return sd.context?.
 				contextAtPosition(params.position)?.
 				definition(params.position) ?? [];
 		} catch (error) {
@@ -442,7 +472,12 @@ connection.onDefinition(
 
 connection.onReferences(
 	(params: ReferenceParams): Location[] => {
-		const resolved = scriptDocuments.get(params.textDocument.uri)?.context?.
+		const sd = scriptDocuments.get(params.textDocument.uri);
+		if (!sd || !(sd?.package as Package)?.isLoaded) {
+			return [];
+		}
+		
+		const resolved = sd.context?.
 			contextAtPosition(params.position)?.
 			resolvedAtPosition(params.position);
 		
@@ -471,7 +506,12 @@ connection.onDocumentHighlight(
 	(params: DocumentHighlightParams): DocumentHighlight[] => {
 		const uri = params.textDocument.uri;
 		
-		const resolved = scriptDocuments.get(uri)?.context?.
+		const sd = scriptDocuments.get(uri);
+		if (!sd || !(sd?.package as Package)?.isLoaded) {
+			return [];
+		}
+		
+		const resolved = sd.context?.
 			contextAtPosition(params.position)?.
 			resolvedAtPosition(params.position);
 		
@@ -505,7 +545,12 @@ connection.onDocumentHighlight(
 
 connection.onSignatureHelp(
 	(params: SignatureHelpParams): SignatureHelp | undefined => {
-		return scriptDocuments.get(params.textDocument.uri)?.context?.
+		const sd = scriptDocuments.get(params.textDocument.uri);
+		if (!sd || !(sd?.package as Package)?.isLoaded) {
+			return undefined;
+		}
+		
+		return sd.context?.
 			contextAtPosition(params.position)?.
 			signatureHelpAtPosition(params.position);
 	}
@@ -513,7 +558,12 @@ connection.onSignatureHelp(
 
 connection.onCodeAction(
 	(params: CodeActionParams): CodeAction[] => {
-		return scriptDocuments.get(params.textDocument.uri)?.context?.
+		const sd = scriptDocuments.get(params.textDocument.uri);
+		if (!sd || !(sd?.package as Package)?.isLoaded) {
+			return [];
+		}
+		
+		return sd.context?.
 			contextAtRange(params.range)?.
 			codeAction(params.range) ?? [];
 	}
@@ -521,7 +571,12 @@ connection.onCodeAction(
 
 connection.onRenameRequest(
 	(params: RenameParams): WorkspaceEdit | undefined => {
-		const resolved = scriptDocuments.get(params.textDocument.uri)?.context?.
+		const sd = scriptDocuments.get(params.textDocument.uri);
+		if (!sd || !(sd?.package as Package)?.isLoaded) {
+			return undefined;
+		}
+		
+		const resolved = sd.context?.
 			contextAtPosition(params.position)?.
 			resolvedAtPosition(params.position);
 		

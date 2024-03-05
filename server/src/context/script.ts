@@ -215,6 +215,7 @@ export class ContextScript extends Context{
 	}
 
 	public resolveInheritance(state: ResolveState): void {
+		super.resolveInheritance(state);
 		for (const each of this._statements) {
 			each.resolveInheritance(state);
 		}
