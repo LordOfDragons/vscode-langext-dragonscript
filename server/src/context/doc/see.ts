@@ -44,10 +44,7 @@ export class ContextDocumentationSee extends ContextDocBaseBlock{
 	}
 	
 	dispose(): void {
-		for (const each of this._resolved) {
-			each?.dispose();
-		}
-		this._resolved.splice(0);
+		this._resolved.splice(0); // no dispose!
 		
 		super.dispose();
 	}
@@ -59,10 +56,7 @@ export class ContextDocumentationSee extends ContextDocBaseBlock{
 	
 	
 	public resolveStatements(state: ResolveState): void {
-		for (const each of this._resolved) {
-			each?.dispose();
-		}
-		this._resolved.splice(0);
+		this._resolved.splice(0); // no dispose!
 		
 		for (const each of this._words) {
 			if (each.type == Context.ContextType.DocumentationWord) {

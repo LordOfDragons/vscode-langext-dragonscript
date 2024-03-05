@@ -45,8 +45,7 @@ export class ContextDocumentationReference extends ContextDocBase{
 	}
 	
 	dispose(): void {
-		this._resolved?.dispose();
-		this._resolved = undefined;
+		this._resolved = undefined; // no dispose!
 		
 		super.dispose();
 	}
@@ -62,8 +61,7 @@ export class ContextDocumentationReference extends ContextDocBase{
 	
 	
 	public resolveStatements(state: ResolveState): void {
-		this._resolved?.dispose();
-		this._resolved = undefined;
+		this._resolved = undefined; // no dispose!
 		
 		if (this._target) {
 			this._resolved = this.resolveSymbol(state, this.parseSymbol(this._target));

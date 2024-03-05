@@ -209,13 +209,14 @@ export class ContextEnumeration extends Context{
 	}
 
 	public dispose(): void {
-		this._resolveEnum?.dispose();
-		this._resolveEnum = undefined;
-
-		super.dispose();
 		for (const each of this._entries) {
 			each.dispose();
 		}
+		
+		this._resolveEnum?.dispose();
+		this._resolveEnum = undefined;
+		
+		super.dispose();
 	}
 
 
