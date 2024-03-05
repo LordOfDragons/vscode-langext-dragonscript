@@ -300,7 +300,7 @@ async function validateTextDocumentAndReresolve(textDocument: TextDocument): Pro
 	
 	const pkg = scriptDocument?.package as Package;
 	if (!pkg?.isLoaded) {
-		console.log(`validateTextDocumentAndReresolve(${textDocument.uri}): owner package not loaded yet`);
+		//console.log(`validateTextDocumentAndReresolve(${textDocument.uri}): owner package not loaded yet`);
 		return;
 	}
 	
@@ -310,9 +310,9 @@ async function validateTextDocumentAndReresolve(textDocument: TextDocument): Pro
 }
 
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
-	console.log(`validateTextDocument ${textDocument.uri} ${textDocument.version}`);
+	//console.log(`validateTextDocument ${textDocument.uri} ${textDocument.version}`);
 	
-	//let startTime = Date.now();
+	let startTime = Date.now();
 	
 	let scriptDocument = scriptDocuments.get(textDocument.uri);
 	if (scriptDocument) {
@@ -347,11 +347,6 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	scriptDocument.diagnosticsResolveMembers = await scriptDocument.resolveMembers(reportConfig);
 	scriptDocument.diagnosticsResolveStatements = await scriptDocument.resolveStatements(reportConfig);
 	
-	//let elapsedTime = Date.now() - startTime;
-	//connection.console.info(`Parsed '${scriptDocument.uri}' in ${elapsedTime / 1000}s`);
-	
-	//scriptDocument.context?.log(connection.console);
-	
 	const diagnostics: Diagnostic[] = [];
 	diagnostics.push(...scriptDocument.diagnosticsLexer);
 	diagnostics.push(...scriptDocument.diagnosticsClasses);
@@ -360,8 +355,6 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	diagnostics.push(...scriptDocument.diagnosticsResolveStatements);
 	
 	connection.sendDiagnostics({uri: textDocument.uri, diagnostics})
-	
-	//test(ResolveNamespace.root, "");
 }
 
 connection.onDidChangeWatchedFiles(change => {

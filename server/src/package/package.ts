@@ -136,12 +136,6 @@ export class Package {
 			each.diagnosticsResolveStatements = [];
 		}
 		
-		/*
-		await Promise.all(docs.map(async each => {
-			each.diagnosticsClasses = await each.resolveClasses(reportConfig);
-		}));
-		*/
-		
 		while (docs.length > 0) {
 			await Promise.all(docs.map(async each => {
 				each.diagnosticsInheritance = await each.resolveInheritance(reportConfig);
