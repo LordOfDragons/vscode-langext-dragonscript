@@ -126,6 +126,7 @@ export class ContextFor extends Context{
 	
 	
 	public resolveMembers(state: ResolveState): void {
+		super.resolveMembers(state);
 		state.withScopeContext(this, () => {
 			this._variable.resolveMembers(state);
 			this._from.resolveMembers(state);

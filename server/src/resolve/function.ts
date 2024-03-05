@@ -71,7 +71,7 @@ export class ResolveFunction extends Resolved{
 
 	public dispose(): void {
 		this._context = undefined;
-		this.removeFromParent();
+		super.dispose();
 		this._returnType = undefined;
 		this._signature.dispose();
 		this.functionGroup = undefined;

@@ -152,6 +152,8 @@ export class ContextBlock extends Context{
 	}
 	
 	public resolveMembers(state: ResolveState): void {
+		super.resolveMembers(state);
+		
 		this._returnType.resolveType(state, this);
 		
 		state.withScopeContext(this, () => {

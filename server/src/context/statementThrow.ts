@@ -67,6 +67,7 @@ export class ContextThrow extends Context{
 	
 	
 	public resolveMembers(state: ResolveState): void {
+		super.resolveMembers(state);
 		this._exception?.resolveMembers(state);
 	}
 	

@@ -113,9 +113,11 @@ export class ContextEnumEntry extends Context{
 	}
 
 	public resolveMembers(state: ResolveState): void {
+		super.resolveMembers(state);
+		
 		this._resolveVariable?.dispose();
 		this._resolveVariable = undefined;
-
+		
 		this._resolveVariable = new ResolveVariable(this);
 		var container = (this.parent as ContextEnumeration)?.resolveEnumeration;
 		if (container) {
@@ -281,6 +283,7 @@ export class ContextEnumeration extends Context{
 	}
 
 	public resolveMembers(state: ResolveState): void {
+		super.resolveMembers(state);
 		if (this._resolveEnum) {
 			// enumerations are a bit special. their script class receives a copy of each
 			// function in Enumeration class but with the type replace to the enum class

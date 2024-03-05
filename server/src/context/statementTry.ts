@@ -87,10 +87,12 @@ export class ContextTryCatch extends Context {
 	
 	
 	public resolveMembers(state: ResolveState): void {
-		this._typename.resolveType(state, this);
+		super.resolveMembers(state);
 		
 		this._resolveArgument?.dispose();
 		this._resolveArgument = undefined;
+		
+		this._typename.resolveType(state, this);
 		
 		this._resolveArgument = new ResolveArgument(this);
 		
@@ -249,6 +251,7 @@ export class ContextTry extends Context {
 	
 	
 	public resolveMembers(state: ResolveState): void {
+		super.resolveMembers(state);
 		state.withScopeContext(this, () => {
 			this._statements.resolveMembers(state);
 			for (const each of this._catches) {

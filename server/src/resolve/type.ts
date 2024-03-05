@@ -44,7 +44,6 @@ export class ResolveType extends Resolved{
 	protected _enumerations: Map<string, ResolveEnumeration> = new Map();
 	protected _functionGroups: Map<string, ResolveFunctionGroup> = new Map();
 	protected _variables: Map<string, ResolveVariable> = new Map();
-	protected _valid: boolean = true;
 	protected _childTypesBeforeSelf = false;
 	protected _resolveTextType = 'type ';
 	public autoCast: Context.AutoCast = Context.AutoCast.No;
@@ -58,7 +57,6 @@ export class ResolveType extends Resolved{
 	}
 
 	public dispose(): void {
-		this.invalidate();
 		for (const each of this._classes.values()) {
 			each.dispose();
 		}
@@ -164,14 +162,11 @@ export class ResolveType extends Resolved{
 	
 	
 	public get classes(): Map<string, ResolveClass> {
-		this.validate();
 		return this._classes;
 	}
 	
 	public class(name: string): ResolveClass | undefined {
-		let c = this._classes.get(name);
-		c?.validate();
-		return c;
+		return this._classes.get(name);
 	}
 	
 	public addClass(rclass: ResolveClass): void {
@@ -188,14 +183,11 @@ export class ResolveType extends Resolved{
 	
 	
 	public get interfaces(): Map<string, ResolveInterface> {
-		this.validate();
 		return this._interfaces;
 	}
 	
 	public interface(name: string): ResolveInterface | undefined {
-		let i = this._interfaces.get(name);
-		i?.validate();
-		return i;
+		return this._interfaces.get(name);
 	}
 	
 	public addInterface(iface: ResolveInterface): void {
@@ -212,14 +204,11 @@ export class ResolveType extends Resolved{
 	
 	
 	public get enumerations(): Map<string, ResolveEnumeration> {
-		this.validate();
 		return this._enumerations;
 	}
 	
 	public enumeration(name: string): ResolveEnumeration | undefined {
-		let i = this._enumerations.get(name);
-		i?.validate();
-		return i;
+		return this._enumerations.get(name);
 	}
 	
 	public addEnumeration(enumeration: ResolveEnumeration): void {
@@ -236,7 +225,6 @@ export class ResolveType extends Resolved{
 	
 	
 	public get functionGroups(): Map<string, ResolveFunctionGroup> {
-		this.validate();
 		return this._functionGroups;
 	}
 	
@@ -279,7 +267,6 @@ export class ResolveType extends Resolved{
 	
 	
 	public get variables(): Map<string, ResolveVariable> {
-		this.validate();
 		return this._variables;
 	}
 	
@@ -447,38 +434,5 @@ export class ResolveType extends Resolved{
 				search.addType(e);
 			}
 		}
-	}
-	
-	
-	public invalidate(): void {
-		this._valid = false;
-		
-		for (const each of this._classes.values()) {
-			each.invalidate();
-		}
-		for (const each of this._interfaces.values()) {
-			each.invalidate();
-		}
-		for (const each of this._enumerations.values()) {
-			each.invalidate();
-		}
-		
-		this.onInvalidate();
-	}
-	
-	public validate(): void {
-		if (this._valid) {
-			return;
-		}
-		
-		this._valid = true;
-		this.onValidate();
-	}
-	
-	
-	protected onInvalidate(): void {
-	}
-	
-	protected onValidate(): void {
 	}
 }

@@ -84,6 +84,7 @@ export class ContextInlineIfElse extends Context{
 	
 	
 	public resolveMembers(state: ResolveState): void {
+		super.resolveMembers(state);
 		this._condition.resolveMembers(state);
 		this._ifvalue.resolveMembers(state);
 		this._elsevalue.resolveMembers(state);

@@ -51,7 +51,6 @@ export class ResolveEnumeration extends ResolveType {
 	
 	public set context(context: ContextEnumeration | undefined) {
 		this._context = context;
-		this.invalidate();
 	}
 	
 	

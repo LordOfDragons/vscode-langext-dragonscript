@@ -138,7 +138,9 @@ export class Context {
 	}
 
 	public resolveInheritance(state: ResolveState): void {
-		/*
+	}
+
+	public resolveMembers(state: ResolveState): void {
 		this._hover = undefined;
 		this.expressionType = undefined;
 		this.expressionAutoCast = Context.AutoCast.No;
@@ -148,11 +150,8 @@ export class Context {
 		this._resolveTextShort = undefined;
 		this._resolveTextLong = undefined;
 		this._reportInfoText = undefined;
-		*/
+		
 		this._codeActions.splice(0);
-	}
-
-	public resolveMembers(state: ResolveState): void {
 	}
 
 	public resolveStatements(state: ResolveState): void {

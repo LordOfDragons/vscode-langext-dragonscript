@@ -52,7 +52,6 @@ export class ResolveInterface extends ResolveType {
 	
 	public set context(context: ContextInterface | undefined) {
 		this._context = context;
-		this.invalidate();
 	}
 	
 	

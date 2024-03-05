@@ -125,15 +125,17 @@ export class ContextClassVariable extends Context{
 	}
 
 	public resolveMembers(state: ResolveState): void {
+		super.resolveMembers(state);
+		
+		this._resolveVariable?.dispose();
+		this._resolveVariable = undefined;
+		
 		if (this._firstVariable) {
 			this._typename.resolve = this._firstVariable._typename.resolve;
 		} else {
 			this._typename.resolveType(state, this);
 		}
 		
-		this._resolveVariable?.dispose();
-		this._resolveVariable = undefined;
-
 		this._resolveVariable = new ResolveVariable(this);
 		if (this.parent) {
 			var container: ResolveType | undefined;

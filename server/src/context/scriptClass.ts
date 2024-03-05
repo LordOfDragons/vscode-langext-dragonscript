@@ -149,10 +149,6 @@ export class ContextClass extends Context{
 	}
 
 	public dispose(): void {
-		this._resolveClass?.dispose();
-		this._resolveClass = undefined;
-
-		super.dispose()
 		this._extends?.dispose();
 		if (this._implements) {
 			for (const each of this._implements) {
@@ -162,6 +158,11 @@ export class ContextClass extends Context{
 		for (const each of this._declarations) {
 			each.dispose();
 		}
+		
+		super.dispose()
+		
+		this._resolveClass?.dispose();
+		this._resolveClass = undefined;
 	}
 
 
@@ -299,7 +300,6 @@ export class ContextClass extends Context{
 	}
 
 	public resolveInheritance(state: ResolveState): void {
-		super.resolveInheritance(state);
 		this._inheritanceResolved = true;
 
 		if (this._extends) {
@@ -330,6 +330,7 @@ export class ContextClass extends Context{
 	}
 
 	public resolveMembers(state: ResolveState): void {
+		super.resolveMembers(state);
 		state.withScopeContext(this, () => {
 			for (const each of this._declarations) {
 				each.resolveMembers(state);

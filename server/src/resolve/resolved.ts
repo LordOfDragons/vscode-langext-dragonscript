@@ -48,9 +48,10 @@ export class ResolveUsage{
 	
 	public dispose(): void {
 		if (this._resolved?.canUsage) {
-			this._resolved?.removeUsage(this);
+			this._resolved.removeUsage(this);
 		}
 		
+		this._resolved = undefined;
 		this._context = undefined;
 		this._target = undefined;
 	}
@@ -97,12 +98,10 @@ export class Resolved{
 	}
 	
 	public dispose(): void {
-		const usage = this._usage;
-		this._usage = new Set();
-		
-		for (const each of usage) {
+		for (const each of this._usage) {
 			each.drop();
 		}
+		this._usage = new Set();
 		
 		this.removeFromParent();
 	}

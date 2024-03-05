@@ -71,7 +71,7 @@ export class ContextReturn extends Context{
 
 	
 	public resolveMembers(state: ResolveState): void {
-		this.codeActions.splice(0);
+		super.resolveMembers(state);
 		this._value?.resolveMembers(state);
 	}
 	

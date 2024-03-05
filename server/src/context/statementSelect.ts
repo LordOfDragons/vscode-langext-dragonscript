@@ -84,6 +84,7 @@ export class ContextSelectCase extends Context {
 	
 	
 	public resolveMembers(state: ResolveState): void {
+		super.resolveMembers(state);
 		state.withScopeContext(this, () => {
 			for (const each of this._values) {
 				each.resolveMembers(state);
@@ -225,6 +226,7 @@ export class ContextSelect extends Context {
 	
 	
 	public resolveMembers(state: ResolveState): void {
+		super.resolveMembers(state);
 		state.withScopeContext(this, () => {
 			this._value.resolveMembers(state);
 			for (const each of this._cases) {

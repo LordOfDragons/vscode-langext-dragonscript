@@ -53,7 +53,6 @@ export class ResolveClass extends ResolveType {
 	
 	public set context(context: ContextClass | undefined) {
 		this._context = context;
-		this.invalidate();
 	}
 	
 	public removeFromParent(): void {
@@ -141,16 +140,6 @@ export class ResolveClass extends ResolveType {
 	
 	public get documentation(): ContextDocumentation | undefined {
 		return this._context?.documentation;
-	}
-	
-	protected onValidate(): void {
-		super.onValidate();
-		
-		if (this._context) {
-			for (const each of this._context.declarations) {
-				
-			}
-		}
 	}
 }
 

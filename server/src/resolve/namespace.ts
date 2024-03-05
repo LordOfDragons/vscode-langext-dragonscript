@@ -57,27 +57,22 @@ export class ResolveNamespace extends ResolveType {
 	
 	public addContext(context: ContextNamespace) {
 		this._contexts.push(context);
-		this.invalidate();
 	}
 	
 	public removeContext(context: ContextNamespace) {
 		let index = this._contexts.indexOf(context);
 		if (index != -1) {
 			this._contexts.splice(index, 1);
-			this.invalidate();
 		}
 	}
 	
 	
 	public get namespaces(): Map<string, ResolveNamespace> {
-		this.validate();
 		return this._namespaces;
 	}
 	
 	public namespace(name: string): ResolveNamespace | undefined {
-		let ns = this._namespaces.get(name);
-		ns?.validate();
-		return ns;
+		return this._namespaces.get(name);
 	}
 	
 	public namespaceOrAdd(name: string): ResolveNamespace {
@@ -139,7 +134,6 @@ export class ResolveNamespace extends ResolveType {
 	}
 	
 	public static get root(): ResolveNamespace {
-		rootNamespace.validate();
 		return rootNamespace;
 	}
 	
@@ -245,15 +239,6 @@ export class ResolveNamespace extends ResolveType {
 	
 	public get documentation(): ContextDocumentation | undefined {
 		return this._contexts.find(c => c.documentation !== undefined)?.documentation;
-	}
-	
-	
-	protected onInvalidate(): void {
-		super.onInvalidate();
-		
-		for (const each of this._namespaces.values()) {
-			each.invalidate();
-		}
 	}
 }
 

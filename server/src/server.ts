@@ -298,13 +298,15 @@ async function validateTextDocumentAndReresolve(textDocument: TextDocument): Pro
 		return;
 	}
 	
-	if (!(scriptDocument?.package as Package)?.isLoaded) {
+	const pkg = scriptDocument?.package as Package;
+	if (!pkg?.isLoaded) {
 		console.log(`validateTextDocumentAndReresolve(${textDocument.uri}): owner package not loaded yet`);
 		return;
 	}
 	
 	await validateTextDocument(textDocument);
-	workspacePackages.forEach (each => each.resolveAllLater());
+	//workspacePackages.forEach (each => each.resolveAllLater());
+	pkg.resolveAllLater();
 }
 
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {

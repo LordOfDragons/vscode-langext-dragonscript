@@ -524,6 +524,7 @@ export class ContextFunctionCall extends Context{
 
 
 	public resolveMembers(state: ResolveState): void {
+		super.resolveMembers(state);
 		this._object?.resolveMembers(state);
 		for (const each of this._arguments) {
 			each.resolveMembers(state);

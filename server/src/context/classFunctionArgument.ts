@@ -89,11 +89,12 @@ export class ContextFunctionArgument extends Context{
 	}
 	
 	public resolveMembers(state: ResolveState): void {
-		this._typename?.resolveType(state, this);
+		super.resolveMembers(state);
 		
 		this._resolveArgument?.dispose();
 		this._resolveArgument = undefined;
 		
+		this._typename?.resolveType(state, this);
 		this._resolveArgument = new ResolveArgument(this);
 	}
 	

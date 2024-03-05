@@ -345,6 +345,11 @@ export class ContextFunction extends Context{
 	}
 	
 	public resolveMembers(state: ResolveState): void {
+		super.resolveMembers(state);
+		
+		this._resolveFunction?.dispose();
+		this._resolveFunction = undefined;
+		
 		this._returnType?.resolveType(state, this);
 		
 		state.withScopeContext(this, () => {
@@ -354,9 +359,6 @@ export class ContextFunction extends Context{
 			this._superCall?.resolveMembers(state);
 			this._statements?.resolveMembers(state);
 		});
-		
-		this._resolveFunction?.dispose();
-		this._resolveFunction = undefined;
 
 		this._resolveFunction = new ResolveFunction(this);
 		if (this.parent) {

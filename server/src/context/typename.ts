@@ -80,6 +80,11 @@ export class TypeNamePart {
 		
 		return this._resolve;
 	}
+	
+	public dropResolved(): void {
+		this._resolve?.dispose();
+		this._resolve = undefined;
+	}
 }
 
 
@@ -111,6 +116,8 @@ export class TypeName {
 		for (const each of this._parts) {
 			each.dispose();
 		}
+		
+		this.resolve?.dispose();
 		this.resolve = undefined;
 	}
 
@@ -166,9 +173,18 @@ export class TypeName {
 	}
 	
 	
+	public dropResolved(): void {
+		for (const each of this._parts) {
+			each.dropResolved();
+		}
+		
+		this.resolve?.dispose();
+		this.resolve = undefined;
+	}
+	
 	public resolveNamespace(state: ResolveState, context: Context): ResolveUsage | undefined {
 		var ns = ResolveNamespace.root;
-		this.resolve = undefined;
+		this.dropResolved();
 		
 		for (const each of this._parts) {
 			if (!ns.isNamespace(each.name.name)) {
@@ -190,7 +206,7 @@ export class TypeName {
 		
 		var type: ResolveType | undefined;
 		var first = true;
-		this.resolve = undefined;
+		this.dropResolved();
 		
 		for (const each of this._parts) {
 			// first entry has to resolve to a basic class
@@ -241,7 +257,7 @@ export class TypeName {
 		const name = part.name.name;
 		
 		const sostack = state.scopeContextStack;
-		this.resolve = undefined;
+		this.dropResolved();
 		
 		for (let i = sostack.length - 1; i >= 0; --i) {
 			const scope = sostack[i];

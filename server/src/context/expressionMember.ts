@@ -177,6 +177,18 @@ export class ContextMember extends Context{
 	}
 	
 	public resolveMembers(state: ResolveState): void {
+		super.resolveMembers(state);
+		
+		this._resolveUsage?.dispose();
+		this._resolveUsage = undefined;
+		
+		this._resolveArgument = undefined;
+		this._resolveLocalVariable = undefined;
+		this._resolveVariable = undefined;
+		this._resolveType = undefined;
+		
+		this._matches = undefined;
+		
 		this._object?.resolveMembers(state);
 	}
 	

@@ -69,6 +69,7 @@ export class ContextIfElif extends Context {
 	
 	
 	public resolveMembers(state: ResolveState): void {
+		super.resolveMembers(state);
 		state.withScopeContext(this, () => {
 			this._condition.resolveMembers(state);
 			this._statements.resolveMembers(state);
@@ -183,6 +184,7 @@ export class ContextIf extends Context {
 	
 	
 	public resolveMembers(state: ResolveState): void {
+		super.resolveMembers(state);
 		state.withScopeContext(this, () => {
 			this._condition.resolveMembers(state);
 			this._ifstatements.resolveMembers(state);

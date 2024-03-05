@@ -90,6 +90,9 @@ export class Package {
 		return this._promiseLoading;
 	}
 	
+	public resolveAllLater(): void {
+	}
+	
 
 	protected async loadPackage(): Promise<void> {
 	}
@@ -132,6 +135,12 @@ export class Package {
 			each.diagnosticsResolveMembers = [];
 			each.diagnosticsResolveStatements = [];
 		}
+		
+		/*
+		await Promise.all(docs.map(async each => {
+			each.diagnosticsClasses = await each.resolveClasses(reportConfig);
+		}));
+		*/
 		
 		while (docs.length > 0) {
 			await Promise.all(docs.map(async each => {

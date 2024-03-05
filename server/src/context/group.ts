@@ -75,6 +75,7 @@ export class ContextGroup extends Context{
 	
 	
 	public resolveMembers(state: ResolveState): void {
+		super.resolveMembers(state);
 		this._expression.resolveMembers(state);
 	}
 	
