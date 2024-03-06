@@ -145,6 +145,11 @@ export class ResolveVariable extends Resolved{
 		}
 	}
 	
+	public get resolveLocation(): Location[] {
+		const l = this._context?.resolveLocationSelf;
+		return l ? [l] : [];
+	}
+	
 	public createCompletionItem(range: Range): CompletionItem {
 		var kind: CompletionItemKind = CompletionItemKind.Field;
 		var title: string = 'variable';

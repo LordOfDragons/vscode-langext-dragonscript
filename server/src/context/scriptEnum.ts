@@ -165,6 +165,13 @@ export class ContextEnumEntry extends Context{
 		}
 		return super.definition(position);
 	}
+	
+	public resolvedAtPosition(position: Position): Resolved | undefined {
+		if (this._name.isPositionInside(position)) {
+			return this._resolveVariable;
+		}
+		return super.resolvedAtPosition(position);
+	}
 
 
 	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {

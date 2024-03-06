@@ -174,6 +174,10 @@ export class ContextClassVariable extends Context{
 		this._value?.resolveStatements(state);
 		
 		this.documentation?.resolveStatements(state);
+		
+		if (this._typeModifiers.isStatic && this._typeModifiers.isFixed && !this._value) {
+			state.reportError(this._name.range, `Static fixed variables require an initial value`);
+		}
 	}
 
 	public contextAtPosition(position: Position): Context | undefined {

@@ -62,7 +62,7 @@ export class ContextDocBase extends Context{
 		var nameSymbol: string | undefined;
 		var args: string[] | undefined;
 		
-		if (deliHash > deliLParam || deliLParam > deliRParam) {
+		if ((deliLParam != -1 && deliHash > deliLParam) || deliLParam > deliRParam) {
 			return undefined;
 		}
 		
