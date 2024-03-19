@@ -26,7 +26,7 @@ import { Context } from "./context";
 import { ClassVariableCstNode } from "../nodeclasses/declareClass";
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
 import { FullyQualifiedClassNameCstNode } from "../nodeclasses/fullyQualifiedClassName";
-import { CompletionItem, Definition, DocumentSymbol, Hover, Location, Position, Range, RemoteConsole, SymbolKind } from "vscode-languageserver";
+import { CompletionItem, Definition, DiagnosticRelatedInformation, DocumentSymbol, Hover, Location, Position, Range, RemoteConsole, SymbolKind } from "vscode-languageserver";
 import { TypeName } from "./typename";
 import { ContextBuilder } from "./contextBuilder";
 import { Identifier } from "./identifier";
@@ -165,7 +165,9 @@ export class ContextClassVariable extends Context{
 				const v = pcr.variable(this._name.name);
 				if (v) {
 					if (v.canAccess(parentClass)) {
-						state.reportWarning(this._name.range, `Shadows variable ${this._name.name} in ${pcr.fullyQualifiedName}`);
+						let ri: DiagnosticRelatedInformation[] = [];
+						v.addReportInfo(ri, `Target: ${v.reportInfoText}`);
+						state.reportWarning(this._name.range, `Shadows variable ${this._name.name} in ${pcr.fullyQualifiedName}`, ri);
 					}
 					break;
 				}
