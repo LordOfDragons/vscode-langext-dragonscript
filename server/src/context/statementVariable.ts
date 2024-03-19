@@ -23,7 +23,7 @@
  */
 
 import { Context } from "./context";
-import { Definition, DocumentSymbol, Hover, Location, Position, Range, RemoteConsole } from "vscode-languageserver";
+import { CompletionItem, Definition, DiagnosticRelatedInformation, DocumentSymbol, Hover, Location, Position, Range, RemoteConsole } from "vscode-languageserver";
 import { StatementVariableCstNode } from "../nodeclasses/statementVariables";
 import { TypeName } from "./typename";
 import { Identifier } from "./identifier";
@@ -36,6 +36,11 @@ import { HoverInfo } from "../hoverinfo";
 import { FullyQualifiedClassNameCstNode } from "../nodeclasses/fullyQualifiedClassName";
 import { Resolved, ResolveUsage } from "../resolve/resolved";
 import { ResolveLocalVariable } from "../resolve/localVariable";
+import { TextDocument } from "vscode-languageserver-textdocument";
+import { CompletionHelper } from "../completionHelper";
+import { ContextClass } from "./scriptClass";
+import { ResolveVariable } from "../resolve/variable";
+import { ResolveFunction } from "../resolve/function";
 
 
 export class ContextVariable extends Context {
@@ -118,17 +123,69 @@ export class ContextVariable extends Context {
 			this._typename.resolveType(state, this);
 		}
 		
-		this._resolveVariable = new ResolveLocalVariable(this);
 		
 		this._value?.resolveMembers(state);
 		
-		// TODO check for shadowing
+		// check for shadowing
+		const search = new ResolveSearch();
+		search.name = this._name.name;
+		search.addToAllList = true;
+		search.stopAfterFirstFound = true;
+		state.search(search, this);
+		
+		if (search.all.length > 0) {
+			const found = search.all[0];
+			
+			switch (found.type) {
+			case Context.ContextType.Variable:{
+				let ri: DiagnosticRelatedInformation[] = [];
+				found.addReportInfo(ri, `Target: ${found.reportInfoText}`);
+				state.reportWarning(this._name.range, `Shadows local variable ${this._name.name}`, ri);
+				}break;
+				
+			case Context.ContextType.FunctionArgument:
+			case Context.ContextType.TryCatch:{
+				let ri: DiagnosticRelatedInformation[] = [];
+				found.addReportInfo(ri, `Target: ${found.reportInfoText}`);
+				state.reportWarning(this._name.range, `Shadows argument ${this._name.name}`, ri);
+				}break;
+				
+			case Resolved.Type.Variable:{
+				const thisClass = ContextClass.thisContext(this)?.resolveClass;
+				if (thisClass) {
+					const v = found as ResolveVariable;
+					if (v.canAccess(thisClass)) {
+						let ri: DiagnosticRelatedInformation[] = [];
+						v.addReportInfo(ri, `Target: ${v.reportInfoText}`);
+						state.reportWarning(this._name.range, `Shadows variable ${this._name.name} in ${v.parent?.fullyQualifiedName}`, ri);
+					}
+				}
+				}break;
+				
+			case Resolved.Type.Function:{
+				const thisClass = ContextClass.thisContext(this)?.resolveClass;
+				if (thisClass) {
+					const f = found as ResolveFunction;
+					if (f.canAccess(thisClass)) {
+						let ri: DiagnosticRelatedInformation[] = [];
+						f.addReportInfo(ri, `Target: ${f.reportInfoText}`);
+						state.reportWarning(this._name.range, `Shadows function ${this._name.name} in ${f.parent?.fullyQualifiedName}`, ri);
+					}
+				}
+				}break;
+			}
+		}
+		
+		// has to come after resolving members in value to avoid them resolving this variable
+		this._resolveVariable = new ResolveLocalVariable(this);
 	}
 
 	public resolveStatements(state: ResolveState): void {
-		// pushScopeContext on purpose to keep context on stack until parent scope is removed
-		state.pushScopeContext(this);
 		this._value?.resolveStatements(state);
+		
+		// pushScopeContext on purpose to keep context on stack until parent scope is removed.
+		// has to come after resolving statements in value to avoid resolving this variable
+		state.pushScopeContext(this);
 	}
 	
 	public collectChildDocSymbols(list: DocumentSymbol[]) {
@@ -181,6 +238,10 @@ export class ContextVariable extends Context {
 			return;
 		}
 		
+		if (before && before === this._value) {
+			return;
+		}
+		
 		if (search.matchableName) {
 			if (search.matchableName.matches(this._name.matchableName)) {
 				search.addLocalVariable(this);
@@ -199,6 +260,21 @@ export class ContextVariable extends Context {
 			return this._typename.definition(position);
 		}
 		return super.definition(position);
+	}
+	
+	public completion(document: TextDocument, position: Position): CompletionItem[] {
+		if (this._firstVariable) {
+			return [];
+		}
+		
+		const npos = this._name?.range?.start;
+		if (!npos || Helpers.isPositionBefore(position, npos)) {
+			if (this._typename) {
+				return this._typename.completion(document, position, this);
+			}
+		}
+		
+		return CompletionHelper.createType(Range.create(position, position), this);
 	}
 	
 	public resolvedAtPosition(position: Position): Resolved | undefined {

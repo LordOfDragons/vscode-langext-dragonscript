@@ -33,6 +33,7 @@ import { ResolveType } from "../resolve/type";
 import { ResolveNamespace } from "../resolve/namespace";
 import { CodeActionInsertCast } from "../codeactions/insertCast";
 import { CodeActionRemove } from "../codeactions/remove";
+import { ContextFunction } from "./classFunction";
 
 
 export class ContextReturn extends Context{
@@ -83,7 +84,14 @@ export class ContextReturn extends Context{
 			return;
 		}
 		
-		const frt = cbf.returnType?.resolve?.resolved as ResolveType;
+		var frt = cbf.returnType?.resolve?.resolved as ResolveType;
+		if (cbf.type == Context.ContextType.Function) {
+			switch ((cbf as ContextFunction).functionType) {
+			case ContextFunction.Type.Constructor:
+				frt = ResolveNamespace.classVoid;
+				break;
+			}
+		}
 		const ov = this._value;
 		
 		if (frt && frt !== ResolveNamespace.classVoid) {

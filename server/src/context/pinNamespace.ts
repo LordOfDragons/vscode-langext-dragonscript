@@ -24,7 +24,7 @@
 
 import { Context } from "./context";
 import { PinNamespaceCstNode } from "../nodeclasses/pinNamespace";
-import { Definition, DocumentSymbol, Hover, Location, Position, Range, RemoteConsole, SymbolKind } from "vscode-languageserver";
+import { CompletionItem, Definition, DocumentSymbol, Hover, Location, Position, Range, RemoteConsole, SymbolKind } from "vscode-languageserver";
 import { TypeName } from "./typename";
 import { HoverInfo } from "../hoverinfo";
 import { ResolveState } from "../resolve/state";
@@ -33,6 +33,7 @@ import { Helpers } from "../helpers";
 import { ResolveSearch } from "../resolve/search";
 import { ResolveType } from "../resolve/type";
 import { Resolved, ResolveUsage } from "../resolve/resolved";
+import { TextDocument } from "vscode-languageserver-textdocument";
 
 
 export class ContextPinNamespace extends Context{
@@ -186,6 +187,13 @@ export class ContextPinNamespace extends Context{
 	
 	public get referenceSelf(): Location | undefined {
 		return this.resolveLocation(this._typename.range);
+	}
+	
+	public completion(document: TextDocument, position: Position): CompletionItem[] {
+		if (this._typename) {
+			return this._typename.completion(document, position, this);
+		}
+		return [];
 	}
 	
 

@@ -44,6 +44,8 @@ export class ResolveSearch {
 	protected _functionsWildcard: ResolveFunction[] = [];
 	protected _functionsAll: ResolveFunction[] = [];
 	protected _types: Set<ResolveType> = new Set();
+	protected _all: (ContextFunctionArgument | ContextTryCatch | ContextVariable
+		| ResolveVariable | ResolveFunction | ResolveType)[] = [];
 
 
 	constructor (copy?: ResolveSearch) {
@@ -69,6 +71,8 @@ export class ResolveSearch {
 			this.onlyCastable = copy.onlyCastable;
 			this.searchSuperClasses = copy.searchSuperClasses;
 			this.restrictTypeType = copy.restrictTypeType;
+			this.addToAllList = copy.addToAllList;
+			this.stopAfterFirstFound = copy.stopAfterFirstFound;
 		}
 	}
 	
@@ -139,9 +143,17 @@ export class ResolveSearch {
 	/** Restrict to type types. */
 	public restrictTypeType?: Resolved.Type;
 	
+	/** Add found elements to all list in the order they have been found. */
+	public addToAllList = false;
+	
+	/** If addToAllList is true stop searching after the first found element. */
+	public stopAfterFirstFound = false;
+	
+	
 	
 	/** Clear search result. */
 	public clearResults(): void {
+		this._all.splice(0);
 		this._localVariables.splice(0);
 		this._arguments.splice(0);
 		this._variables.splice(0);
@@ -191,6 +203,12 @@ export class ResolveSearch {
 		return this._types;
 	}
 	
+	/** All found elements in the order they have been found. */
+	public get all(): (ContextFunctionArgument | ContextTryCatch | ContextVariable
+			| ResolveVariable | ResolveFunction | ResolveType)[] {
+		return this._all;
+	}
+	
 	
 	public addArgument(argument: ContextFunctionArgument | ContextTryCatch): void {
 		if (!this.acceptArgument(argument)) {
@@ -198,6 +216,10 @@ export class ResolveSearch {
 		}
 		
 		this._arguments.push(argument);
+		
+		if (this.addToAllList) {
+			this._all.push(argument);
+		}
 	}
 	
 	public addLocalVariable(variable: ContextVariable): void {
@@ -206,6 +228,10 @@ export class ResolveSearch {
 		}
 		
 		this._localVariables.push(variable);
+		
+		if (this.addToAllList) {
+			this._all.push(variable);
+		}
 	}
 	
 	public addVariable(variable: ResolveVariable): void {
@@ -214,6 +240,10 @@ export class ResolveSearch {
 		}
 		
 		this._variables.push(variable);
+		
+		if (this.addToAllList) {
+			this._all.push(variable);
+		}
 	}
 	
 	public addFunction(rfunction: ResolveFunction): void {
@@ -244,6 +274,10 @@ export class ResolveSearch {
 		} else {
 			this._functionsAll.push(rfunction);
 		}
+		
+		if (this.addToAllList) {
+			this._all.push(rfunction);
+		}
 	}
 	
 	public addType(type: ResolveType): void {
@@ -252,6 +286,10 @@ export class ResolveSearch {
 		}
 		
 		this._types.add(type);
+		
+		if (this.addToAllList) {
+			this._all.push(type);
+		}
 	}
 	
 	
@@ -260,24 +298,62 @@ export class ResolveSearch {
 		const found = this._functionsAll;
 		this._functionsAll = [];
 		
-		for (const each of found) {
-			if (!this._functionsAll.find(f => f.name == each.name && f.signature.matchesExactly(each.signature))) {
-				this._functionsAll.push(each);
+		if (this.addToAllList) {
+			const removed: ResolveFunction[] = [];
+			
+			for (const each of found) {
+				if (!this._functionsAll.find(f => f.name == each.name && f.signature.matchesExactly(each.signature))) {
+					this._functionsAll.push(each);
+					removed.push(each);
+				}
+			}
+			
+			this._all = this._all.filter(f => !removed.includes(f as any));
+			
+		} else {
+			for (const each of found) {
+				if (!this._functionsAll.find(f => f.name == each.name && f.signature.matchesExactly(each.signature))) {
+					this._functionsAll.push(each);
+				}
 			}
 		}
 	}
 	
 	/** Remove all non-constructor functions. */
 	public removeNonConstructorFunctions(): void {
-		this._functionsAll = this._functionsAll.filter(f => {
-			const c = f.context as ContextFunction;
-			return c?.type === Context.ContextType.Function && c.functionType === ContextFunction.Type.Constructor;
-		});
+		if (this.addToAllList) {
+			const removed: ResolveFunction[] = [];
+			
+			this._functionsAll = this._functionsAll.filter(f => {
+				const c = f.context as ContextFunction;
+				if (c?.type === Context.ContextType.Function && c.functionType === ContextFunction.Type.Constructor) {
+					removed.push(f);
+					return true;
+				} else {
+					return false;
+				}
+			});
+			
+			this._all = this._all.filter(f => !removed.includes(f as any));
+			
+		} else {
+			this._functionsAll = this._functionsAll.filter(f => {
+				const c = f.context as ContextFunction;
+				return c?.type === Context.ContextType.Function && c.functionType === ContextFunction.Type.Constructor;
+			});
+		}
 	}
 	
 	/** Remove type if present. */
 	public removeType(type: ResolveType): void {
-		this._types.delete(type);
+		if (this.addToAllList) {
+			if (this._types.delete(type)) {
+				this._all = this._all.filter(f => f !== type);
+			}
+			
+		} else {
+			this._types.delete(type);
+		}
 	}
 	
 	

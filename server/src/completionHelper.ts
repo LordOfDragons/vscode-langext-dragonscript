@@ -930,6 +930,20 @@ export class CompletionHelper {
 		return items;
 	}
 	
+	/** Create sub type completions. */
+	public static createSubType(range: Range, context: Context,
+			type: ResolveType, restrictType?: Resolved.Type): CompletionItem[] {
+		let search = new ResolveSearch();
+		search.allMatchingTypes = true;
+		search.ignoreShadowedFunctions = true;
+		search.ignoreNamespaceParents = true;
+		search.onlyTypes = true;
+		search.restrictTypeType = restrictType;
+		type.search(search);
+		search.removeType(type);
+		return CompletionHelper.createFromSearch(range, context, search, undefined);
+	}
+	
 	/** Create object operators completions. */
 	public static createObjectOperators(range: Range, context: Context, object: Context): CompletionItem[] {
 		let items: CompletionItem[] = [];

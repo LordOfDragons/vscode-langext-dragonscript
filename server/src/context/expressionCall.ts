@@ -668,12 +668,28 @@ export class ContextFunctionCall extends Context{
 				}*/
 				break;
 				
-			case ContextFunctionCall.FunctionType.assign:
+			case ContextFunctionCall.FunctionType.assign:{
+				const o1 = this._arguments.at(0);
+				const o2 = this._object;
+				if (o1 && o2 && ResolveSignatureArgument.exprMatches(o1, o2) === ResolveSignature.Match.No) {
+					const at1 = o1.expressionType;
+					const at2 = o2.expressionType;
+					let ri: DiagnosticRelatedInformation[] = [];
+					at2?.addReportInfo(ri, `Source Type: ${at1?.reportInfoText}`);
+					at1?.addReportInfo(ri, `Target Type: ${at2?.reportInfoText}`);
+					const di = state.reportError(this._name.range, `Invalid cast from ${at1?.name} to ${at2?.name}`, ri);
+					if (di && at1 && at2) {
+						this._codeActions.push(new CodeActionInsertCast(
+							di, at1, at2, o1, o1.expressionAutoCast));
+					}
+				}
+				}break;
+			
 			case ContextFunctionCall.FunctionType.equals:
 			case ContextFunctionCall.FunctionType.notEquals:{
 				const o1 = this._arguments.at(0);
 				const o2 = this._object;
-				if (o1 && o2 && ResolveSignatureArgument.exprMatches(o1, o2) === ResolveSignature.Match.No) {
+				if (o1 && o2 && ResolveSignatureArgument.exprMatchesAnyway(o1, o2) === ResolveSignature.Match.No) {
 					const at1 = o1.expressionType;
 					const at2 = o2.expressionType;
 					let ri: DiagnosticRelatedInformation[] = [];
@@ -1154,8 +1170,12 @@ export class ContextFunctionCall extends Context{
 		return super.definition(position);
 	}
 	
-	public completion(_document: TextDocument, position: Position): CompletionItem[] {
+	public completion(document: TextDocument, position: Position): CompletionItem[] {
 		const range = this._name?.range ?? Range.create(position, position);
+		
+		if (this._castType && Helpers.isPositionInsideRange(this._castType?.range, position)) {
+			return this._castType.completion(document, position, this);
+		}
 		
 		if (Helpers.isPositionInsideRange(range, position)) {
 			if (this._object) {

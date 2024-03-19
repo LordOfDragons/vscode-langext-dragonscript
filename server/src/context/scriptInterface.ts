@@ -338,9 +338,10 @@ export class ContextInterface extends Context{
 			items.push(...CompletionHelper.createFunctionInterface(this, range));
 			
 		} else if (this._tokenImplements && Helpers.isPositionAfter(position, this._tokenImplements.end)) {
-			items.push(...CompletionHelper.createType(
-				this._implements.find(c => c.isPositionInside(position))?.range ?? range,
-				this, undefined, Resolved.Type.Interface));
+			const implement = this._implements.find(c => c.isPositionInside(position));
+			if (implement) {
+				items.push(...implement.completion(document, position, this, Resolved.Type.Interface));
+			}
 		}
 		
 		return items;

@@ -421,6 +421,7 @@ connection.onCompletion(
 		}
 		
 		try {
+			//console.log(`onCompletion: ${sd.context.contextAtPosition(params.position)?.constructor.name}`);
 			return sd.context.
 				contextAtPosition(params.position)?.
 				completion(document, params.position) ?? [];

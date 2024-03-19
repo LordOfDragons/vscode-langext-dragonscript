@@ -133,6 +133,9 @@ export class ResolveState {
 		for (let i=this._scopeContextStack.length - 1; i >= 0; i--) {
 			let c = this._scopeContextStack[i];
 			c.search(search, before)
+			if (search.stopAfterFirstFound && search.all.length > 0) {
+				break;
+			}
 			before = c;
 
 			if (!search.onlyTypes) {

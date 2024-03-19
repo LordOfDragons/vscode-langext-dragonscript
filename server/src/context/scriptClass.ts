@@ -285,7 +285,7 @@ export class ContextClass extends Context{
 
 			if (container && this._name) {
 				if (container.findType(this._name.name)) {
-					state.reportError(this._name.range, `Duplicate class ${this._name}`);
+					state.reportError(this._name.range, `Duplicate type name ${this._name}`);
 				} else {
 					container.addClass(this._resolveClass);
 				}
@@ -457,13 +457,15 @@ export class ContextClass extends Context{
 			items.push(...CompletionHelper.createFunctionOverrides(this, range));
 			
 		} else if (this._tokenImplements && Helpers.isPositionAfter(position, this._tokenImplements.end)) {
-			items.push(...CompletionHelper.createType(
-				this._implements.find(c => c.isPositionInside(position))?.range ?? range,
-				this, undefined, Resolved.Type.Interface));
+			const implement = this._implements.find(c => c.isPositionInside(position));
+			if (implement) {
+				items.push(...implement.completion(document, position, this, Resolved.Type.Interface));
+			}
 			
 		} else if (this._tokenExtends && Helpers.isPositionAfter(position, this._tokenExtends.start)) {
-			items.push(...CompletionHelper.createType(this._extends?.range ?? range,
-				this, undefined, Resolved.Type.Class));
+			if (this._extends) {
+				items.push(...this._extends?.completion(document, position, this, Resolved.Type.Class));
+			}
 		}
 		
 		return items;

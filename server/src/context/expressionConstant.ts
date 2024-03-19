@@ -174,6 +174,7 @@ export class ContextConstant extends Context{
 			case ContextConstant.ConstantType.true:
 			case ContextConstant.ConstantType.false:
 				this._resolveType = ResolveNamespace.classBool;
+				this.expressionAutoCast = Context.AutoCast.LiteralBool;
 				break;
 
 			case ContextConstant.ConstantType.this:

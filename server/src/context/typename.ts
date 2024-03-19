@@ -23,7 +23,7 @@
  */
 
 import { IToken } from "chevrotain"
-import { Definition, Hover, Location, Position, Range } from "vscode-languageserver";
+import { CompletionItem, Definition, Hover, Location, Position, Range } from "vscode-languageserver";
 import { HoverInfo } from "../hoverinfo";
 import { FullyQualifiedClassNameCstNode } from "../nodeclasses/fullyQualifiedClassName"
 import { ResolveNamespace } from "../resolve/namespace";
@@ -41,6 +41,7 @@ import { Helpers } from "../helpers";
 import { Resolved, ResolveUsage } from "../resolve/resolved";
 import { CompletionHelper } from "../completionHelper";
 import { CodeActionUnknownMember } from "../codeactions/unknownMember";
+import { TextDocument } from "vscode-languageserver-textdocument";
 
 
 export class TypeNamePart {
@@ -229,7 +230,12 @@ export class TypeName {
 				
 			// all other parts have to be direct children
 			} else {
-				const nextType = type!.findType(each.name.name);
+				var nextType = type!.findType(each.name.name);
+				
+				if (!nextType && type!.type === Resolved.Type.Namespace) {
+					nextType = (type! as ResolveNamespace).namespace(each.name.name);
+				}
+				
 				if (nextType) {
 					this.resolve = each.setResolve(nextType, context);
 					type = nextType;
@@ -582,7 +588,44 @@ export class TypeName {
 		};
 		return [];
 	}
-
+	
+	public completion(_document: TextDocument, position: Position,
+			context: Context, restrictType?: Resolved.Type): CompletionItem[] {
+		let i, plen = this._parts.length;
+		var parentType: ResolveType | undefined;
+		
+		for (i=0; i<plen; i++) {
+			let part = this._parts[i];
+			if (part.name.isPositionInside(position) || i == plen - 1) {
+				const range = part.name.range ?? Range.create(position, position);
+				if (parentType) {
+					return CompletionHelper.createSubType(range, context, parentType);
+				} else {
+					return CompletionHelper.createType(range, context);
+				}
+			}
+			
+			const resolved = part.resolve?.resolved;
+			if (!resolved) {
+				return [];
+			}
+			
+			switch (resolved.type) {
+			case Resolved.Type.Class:
+			case Resolved.Type.Interface:
+			case Resolved.Type.Enumeration:
+			case Resolved.Type.Namespace:
+				parentType = resolved as ResolveType;
+				break;
+				
+			default:
+				return [];
+			}
+		};
+		
+		return CompletionHelper.createType(Range.create(position, position), context);
+	}
+	
 	toString() : string {
 		return this._name;
 	}

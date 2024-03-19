@@ -15,8 +15,14 @@
 				"--extensionDevelopmentPath=${workspaceFolder}",
 				"${workspaceRoot}/test/test.code-workspace"
 				*/
+				/*
 				"--extensionDevelopmentPath=${workspaceFolder}",
 				"${workspaceRoot}/../descripts.code-workspace"
+				*/
+				
+				"--extensionDevelopmentPath=${workspaceFolder}",
+				"${workspaceRoot}/../scripts.code-workspace"
+				
 			],
 			//"outFiles": ["${workspaceRoot}/client/out/**/*.js"],
 			/*

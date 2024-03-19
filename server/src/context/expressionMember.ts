@@ -212,6 +212,8 @@ export class ContextMember extends Context{
 		this._matches = new ResolveSearch();
 		this._matches.name = this._name.name;
 		this._matches.ignoreFunctions = true;
+		this._matches.addToAllList = true;
+		this._matches.stopAfterFirstFound = true;
 		
 		if (this._matches.name) {
 			if (objtype) {
@@ -221,9 +223,7 @@ export class ContextMember extends Context{
 			}
 		}
 		
-		const matchTypeCount = this._matches.matchTypeCount;
-		
-		if (matchTypeCount == 0) {
+		if (this._matches.all.length == 0) {
 			const di = state.reportError(this._name.range, `Unknown member ${this._name}`);
 			if (di) {
 				let ca = new CodeActionUnknownMember(di, this, this._name);
@@ -239,26 +239,32 @@ export class ContextMember extends Context{
 			}
 			
 		} else {
-			if (this._matches.arguments.length > 0) {
-				this._resolveArgument = this._matches.arguments[0];
-				if (this._resolveArgument.resolveArgument) {
-					this._resolveUsage = new ResolveUsage(this._resolveArgument.resolveArgument, this);
-				}
-				this.expressionType = this._resolveArgument.typename.resolve?.resolved as ResolveType;
-				this.expressionTypeType = Context.ExpressionType.Object;
-				this.expressionWriteableResolve = this._resolveUsage;
-				
-			} else if (this._matches.localVariables.length > 0) {
-				this._resolveLocalVariable = this._matches.localVariables[0];
+			const found = this._matches.all[0];
+			
+			switch (found.type) {
+			case Context.ContextType.Variable:{
+				this._resolveLocalVariable = found as ContextVariable;
 				if (this._resolveLocalVariable.resolveVariable) {
 					this._resolveUsage = new ResolveUsage(this._resolveLocalVariable.resolveVariable, this);
 				}
 				this.expressionType = this._resolveLocalVariable.typename.resolve?.resolved as ResolveType;
 				this.expressionTypeType = Context.ExpressionType.Object;
 				this.expressionWriteableResolve = this._resolveUsage;
+				}break;
 				
-			} else if (this._matches.variables.length > 0) {
-				this._resolveVariable = this._matches.variables[0];
+			case Context.ContextType.FunctionArgument:
+			case Context.ContextType.TryCatch:{
+				this._resolveArgument = found as (ContextFunctionArgument | ContextTryCatch);
+				if (this._resolveArgument.resolveArgument) {
+					this._resolveUsage = new ResolveUsage(this._resolveArgument.resolveArgument, this);
+				}
+				this.expressionType = this._resolveArgument.typename.resolve?.resolved as ResolveType;
+				this.expressionTypeType = Context.ExpressionType.Object;
+				this.expressionWriteableResolve = this._resolveUsage;
+				}break;
+				
+			case Resolved.Type.Variable:{
+				this._resolveVariable = found as ResolveVariable;
 				this._resolveUsage = new ResolveUsage(this._resolveVariable, this);
 				this.expressionType = this._resolveVariable.variableType;
 				this.expressionTypeType = Context.ExpressionType.Object;
@@ -277,14 +283,19 @@ export class ContextMember extends Context{
 						state.reportError(this._name.range, `Can not access variable ${this._resolveVariable.name}`, ri);
 					}
 				}
+				}break;
 				
-			} else if (this._matches.types.size > 0) {
-				this._resolveType = this._matches.types.values().next().value;
+			case Resolved.Type.Class:
+			case Resolved.Type.Interface:
+			case Resolved.Type.Enumeration:
+			case Resolved.Type.Namespace:{
+				this._resolveType = found as ResolveType;
 				if (this._resolveType) {
 					this._resolveUsage = new ResolveUsage(this._resolveType, this);
 				}
 				this.expressionType = this._resolveType;
 				this.expressionTypeType = Context.ExpressionType.Type;
+				}break;
 			}
 		}
 		
@@ -336,19 +347,6 @@ export class ContextMember extends Context{
 			content.push('___');
 			content.push(...doc.resolveTextLong);
 		}
-		
-		/*
-		if (this._matches) {
-			content.push(`\n`);
-			content.push(`**member** ${this._name.name}`);
-			content.push(` lv(${this._matches.localVariables.length})`);
-			content.push(` a(${this._matches.arguments.length})`);
-			content.push(` v(${this._matches.variables.length})`);
-			content.push(` t(${this._matches.types.length})`);
-		} else {
-			content.push(`**member** ${this._name.name}`);
-		}
-		*/
 		
 		return new HoverInfo(content, this._name.range);
 	}

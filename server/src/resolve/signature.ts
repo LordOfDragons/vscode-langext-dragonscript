@@ -60,6 +60,33 @@ export class ResolveSignatureArgument{
 		return ResolveSignatureArgument.typeMatches(from.expressionType, to.expressionType, from.expressionAutoCast);
 	}
 	
+	public static exprMatchesAnyway(from: Context, to: Context) {
+		const result = this.exprMatches(from, to);
+		if (result === ResolveSignature.Match.Full) {
+			return ResolveSignature.Match.Full;
+		}
+		
+		switch (this.exprMatches(to, from)) {
+		case ResolveSignature.Match.Full:
+			return ResolveSignature.Match.Full;
+			
+		case ResolveSignature.Match.Partial:
+			return ResolveSignature.Match.Partial;
+			
+		case ResolveSignature.Match.Wildcard:
+			if (result === ResolveSignature.Match.Partial) {
+				return ResolveSignature.Match.Partial;
+				
+			} else {
+				return ResolveSignature.Match.Wildcard;
+			}
+			
+		case ResolveSignature.Match.No:
+		default:
+			return result;
+		}
+	}
+	
 	public static typeMatches(fromType: ResolveType | undefined, toType: ResolveType | undefined,
 	autoCast: Context.AutoCast): ResolveSignature.Match {
 		if (!fromType || !toType) {
@@ -90,6 +117,14 @@ export class ResolveSignatureArgument{
 		case Context.AutoCast.LiteralInt:
 		case Context.AutoCast.ValueInt:
 			if (toType.fullyQualifiedName == 'float' || toType.fullyQualifiedName == 'byte') {
+				return ResolveSignature.Match.Partial;
+			}
+			break;
+		
+		case Context.AutoCast.LiteralBool:
+			if (toType.fullyQualifiedName == 'float'
+					|| toType.fullyQualifiedName == 'int'
+					|| toType.fullyQualifiedName == 'byte') {
 				return ResolveSignature.Match.Partial;
 			}
 			break;

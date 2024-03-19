@@ -742,6 +742,9 @@ export namespace Context {
 		/** Auto cast literal of type int. */
 		LiteralInt,
 		
+		/** Auto cast literal of type bool. */
+		LiteralBool,
+		
 		/** Auto cast value of type byte. */
 		ValueByte,
 		

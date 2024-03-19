@@ -567,7 +567,14 @@ export class ContextFunction extends Context{
 		return this._name ? this.resolveLocation(this._name.range) : undefined;
 	}
 	
-	public completion(_document: TextDocument, position: Position): CompletionItem[] {
+	public completion(document: TextDocument, position: Position): CompletionItem[] {
+		const npos = this._name?.range?.start;
+		if (!npos || Helpers.isPositionBefore(position, npos)) {
+			if (this._returnType) {
+				return this._returnType.completion(document, position, this);
+			}
+		}
+		
 		return CompletionHelper.createType(Range.create(position, position), this);
 	}
 	

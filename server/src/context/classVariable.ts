@@ -26,7 +26,7 @@ import { Context } from "./context";
 import { ClassVariableCstNode } from "../nodeclasses/declareClass";
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
 import { FullyQualifiedClassNameCstNode } from "../nodeclasses/fullyQualifiedClassName";
-import { Definition, DocumentSymbol, Hover, Location, Position, Range, RemoteConsole, SymbolKind } from "vscode-languageserver";
+import { CompletionItem, Definition, DocumentSymbol, Hover, Location, Position, Range, RemoteConsole, SymbolKind } from "vscode-languageserver";
 import { TypeName } from "./typename";
 import { ContextBuilder } from "./contextBuilder";
 import { Identifier } from "./identifier";
@@ -40,6 +40,8 @@ import { ContextInterface } from "./scriptInterface";
 import { Helpers } from "../helpers";
 import { ResolveClass } from "../resolve/class";
 import { Resolved, ResolveUsage } from "../resolve/resolved";
+import { TextDocument } from "vscode-languageserver-textdocument";
+import { CompletionHelper } from "../completionHelper";
 
 
 export class ContextClassVariable extends Context{
@@ -253,8 +255,23 @@ export class ContextClassVariable extends Context{
 	public get referenceSelf(): Location | undefined {
 		return this.resolveLocation(this._name.range);
 	}
-
-
+	
+	public completion(document: TextDocument, position: Position): CompletionItem[] {
+		if (this._firstVariable) {
+			return [];
+		}
+		
+		const npos = this._name?.range?.start;
+		if (!npos || Helpers.isPositionBefore(position, npos)) {
+			if (this._typename) {
+				return this._typename.completion(document, position, this);
+			}
+		}
+		
+		return CompletionHelper.createType(Range.create(position, position), this);
+	}
+	
+	
 	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
 		console.log(`${prefix}Variable ${this._typeModifiers} ${this._typename.name} ${this._name}`);
 		this._value?.log(console, `${prefixLines}- Value: `, `${prefixLines}  `);

@@ -23,7 +23,7 @@
  */
 
 import { Context } from "./context";
-import { DiagnosticRelatedInformation, DocumentSymbol, Hover, Location, Position, Range, RemoteConsole } from "vscode-languageserver";
+import { CompletionItem, DiagnosticRelatedInformation, DocumentSymbol, Hover, Location, Position, Range, RemoteConsole } from "vscode-languageserver";
 import { ContextStatements } from "./statements";
 import { StatementCatchCstNode, StatementTryCstNode } from "../nodeclasses/statementTry";
 import { TypeName } from "./typename";
@@ -37,6 +37,7 @@ import { HoverInfo } from "../hoverinfo";
 import { ResolveSearch } from "../resolve/search";
 import { Resolved, ResolveUsage } from "../resolve/resolved";
 import { ResolveArgument } from "../resolve/argument";
+import { TextDocument } from "vscode-languageserver-textdocument";
 
 
 export class ContextTryCatch extends Context {
@@ -192,6 +193,16 @@ export class ContextTryCatch extends Context {
 	
 	public get referenceSelf(): Location | undefined {
 		return this.resolveLocation(this._variable.range);
+	}
+	
+	public completion(document: TextDocument, position: Position): CompletionItem[] {
+		const npos = this._variable?.range?.start;
+		if (!npos || Helpers.isPositionBefore(position, npos)) {
+			if (this._typename) {
+				return this._typename.completion(document, position, this);
+			}
+		}
+		return super.completion(document, position);
 	}
 	
 	

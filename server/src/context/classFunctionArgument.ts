@@ -168,10 +168,7 @@ export class ContextFunctionArgument extends Context{
 	public completion(document: TextDocument, position: Position): CompletionItem[] {
 		const npos = this._name.range?.start;
 		if (!npos || Helpers.isPositionBefore(position, npos)) {
-			const range = this._typename.range;
-			if (range) {
-				return CompletionHelper.createType(range, this);
-			}
+			return this._typename.completion(document, position, this);
 		}
 		return super.completion(document, position);
 	}
