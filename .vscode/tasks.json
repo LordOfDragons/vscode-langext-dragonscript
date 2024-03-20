@@ -18,6 +18,18 @@
 			"problemMatcher": [],
 			"label": "npm: build - client",
 			"detail": "npm run compile && npm run copy-assets"
+		},
+		{
+			"type": "shell",
+			"command": "./node_modules/.bin/vsce",
+			"args": [
+				"package",
+				"--pre-release"
+			],
+			"group": "build",
+			"problemMatcher": [],
+			"label": "vsce: package",
+			"detail": "vsce package"
 		}
 	]
 }

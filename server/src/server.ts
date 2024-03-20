@@ -218,17 +218,21 @@ connection.onDidChangeConfiguration(change => {
 		// Reset all cached document settings
 		documentSettings.clear();
 	} else {
-		globalSettings = <DSSettings>(change.settings.dragonscriptLanguage || defaultSettings);
+		globalSettings = <DSSettings>(change.settings?.dragonscriptLanguage || defaultSettings);
 	}
-
-	(<PackageDEModule>packages.get(PackageDEModule.PACKAGE_ID)).pathDragengine =
-		(change.settings.dragonscriptLanguage || defaultSettings).pathDragengine;
 	
-	// Revalidate all open text documents
-	/*for (const each of documents.all()) {
-		validateTextDocument(each);
-	}*/
-	workspacePackages.forEach (each => each.resolveAllLater());
+	connection.workspace.getConfiguration({
+		section: 'dragonscriptLanguage'
+	}).then(settings => {
+		(<PackageDEModule>packages.get(PackageDEModule.PACKAGE_ID)).pathDragengine =
+			(change.settings?.dragonscriptLanguage || defaultSettings).pathDragengine;
+		
+		// Revalidate all open text documents
+		/*for (const each of documents.all()) {
+			validateTextDocument(each);
+		}*/
+		workspacePackages.forEach (each => each.resolveAllLater());
+	});
 });
 
 function onDidChangeWorkspaceFolders() {

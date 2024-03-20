@@ -101,8 +101,14 @@ export class PackageDEModule extends Package {
 					pathEngine = "/usr/share/dragengine/modules/scripting/dragonscript";
 			}
 		}
-
-		var files = await readdir(pathEngine);
+		
+		var files: string[] = [];
+		try {
+			files = await readdir(pathEngine);
+		} catch {
+			this._console.log(`Package '${this._id}': Failed reading directory '${pathEngine}'`);
+		}
+		
 		for (const each of files) {
 			let modpath = join(pathEngine, each);
 			let stats = statSync(modpath);
