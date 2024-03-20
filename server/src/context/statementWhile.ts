@@ -74,15 +74,18 @@ export class ContextWhile extends Context{
 	
 	public resolveMembers(state: ResolveState): void {
 		super.resolveMembers(state);
+		
+		this._condition.resolveMembers(state);
+		
 		state.withScopeContext(this, () => {
-			this._condition.resolveMembers(state);
 			this._statements.resolveMembers(state);
 		});
 	}
 	
 	public resolveStatements(state: ResolveState): void {
+		this._condition.resolveStatements(state);
+		
 		state.withScopeContext(this, () => {
-			this._condition.resolveStatements(state);
 			this._statements.resolveStatements(state);
 		});
 		

@@ -377,8 +377,6 @@ export class ContextFunction extends Context{
 				}
 			}
 		}
-		
-		this._statements?.resolveMembers(state);
 	}
 	
 	public resolveStatements(state: ResolveState): void {
@@ -433,7 +431,7 @@ export class ContextFunction extends Context{
 		let parts = [];
 		parts.push(this._typeModifiers.typestring);
 		parts.push(` ${this._returnType?.name ?? "?"}`);
-		parts.push(` ${this._name}(`);
+		parts.push(` ${this.parent?.simpleName}.${this._name}(`);
 		
 		var args = [];
 		for (const each of this._arguments) {
@@ -514,7 +512,7 @@ export class ContextFunction extends Context{
 	}
 	
 	public search(search: ResolveSearch, before?: Context): void {
-		if (search.onlyTypes) {
+		if (search.onlyTypes || search.stopSearching) {
 			return;
 		}
 		
@@ -522,6 +520,9 @@ export class ContextFunction extends Context{
 			for (const each of this._arguments) {
 				if (search.matchableName.matches(each.name.matchableName)) {
 					search.addArgument(each);
+					if (search.stopSearching) {
+						return;
+					}
 				}
 			}
 			
@@ -529,12 +530,18 @@ export class ContextFunction extends Context{
 			for (const each of this._arguments) {
 				if (search.name == each.name.name) {
 					search.addArgument(each);
+					if (search.stopSearching) {
+						return;
+					}
 				}
 			}
 			
 		} else {
 			for (const each of this._arguments) {
 				search.addArgument(each);
+				if (search.stopSearching) {
+					return;
+				}
 			}
 		}
 	}

@@ -127,10 +127,14 @@ export class ContextEnumEntry extends Context{
 				container.addVariable(this._resolveVariable);
 			}
 		}
+	}
+	
+	public resolveStatements(state: ResolveState): void {
+		super.resolveStatements(state);
 		
 		this.documentation?.resolveStatements(state);
 	}
-
+	
 	public contextAtPosition(position: Position): Context | undefined {
 		if (!Helpers.isPositionInsideRange(this.range, position)) {
 			return undefined;
@@ -313,8 +317,6 @@ export class ContextEnumeration extends Context{
 			});
 		}
 		
-		this.documentation?.resolveStatements(state);
-		
 		state.withScopeContext(this, () => {
 			for (const each of this._entries) {
 				each.resolveMembers(state);
@@ -328,6 +330,8 @@ export class ContextEnumeration extends Context{
 				each.resolveStatements(state);
 			}
 		});
+		
+		this.documentation?.resolveStatements(state);
 	}
 
 	public contextAtPosition(position: Position): Context | undefined {

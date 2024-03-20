@@ -107,6 +107,10 @@ export class ContextPinNamespace extends Context{
 	
 	public searchExpression(search: ResolveSearch, moveUp: boolean, before: Context): void {
 		super.searchExpression(search, moveUp, before);
+		if (search.stopSearching) {
+			return;
+		}
+		
 		const ns = this._typename.lastPart?.resolve?.resolved as ResolveNamespace;
 		if (ns?.type === ResolveType.Type.Namespace) {
 			ns.search(search);

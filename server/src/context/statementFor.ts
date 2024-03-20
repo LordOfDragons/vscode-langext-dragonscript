@@ -127,21 +127,24 @@ export class ContextFor extends Context{
 	
 	public resolveMembers(state: ResolveState): void {
 		super.resolveMembers(state);
+		
+		this._variable.resolveMembers(state);
+		this._from.resolveMembers(state);
+		this._to.resolveMembers(state);
+		this._step?.resolveMembers(state);
+		
 		state.withScopeContext(this, () => {
-			this._variable.resolveMembers(state);
-			this._from.resolveMembers(state);
-			this._to.resolveMembers(state);
-			this._step?.resolveMembers(state);
 			this._statements.resolveMembers(state);
 		});
 	}
 	
 	public resolveStatements(state: ResolveState): void {
+		this._variable.resolveStatements(state);
+		this._from.resolveStatements(state);
+		this._to.resolveStatements(state);
+		this._step?.resolveStatements(state);
+		
 		state.withScopeContext(this, () => {
-			this._variable.resolveStatements(state);
-			this._from.resolveStatements(state);
-			this._to.resolveStatements(state);
-			this._step?.resolveStatements(state);
 			this._statements.resolveStatements(state);
 		});
 		

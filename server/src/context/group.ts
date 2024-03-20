@@ -94,6 +94,10 @@ export class ContextGroup extends Context{
 	
 	public searchExpression(search: ResolveSearch, moveUp: boolean, before: Context): void {
 		super.searchExpression(search, moveUp, before);
+		if (search.stopSearching) {
+			return;
+		}
+		
 		this._expression.searchExpression(search, false, this);
 	}
 	

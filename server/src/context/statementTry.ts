@@ -163,7 +163,7 @@ export class ContextTryCatch extends Context {
 	}
 	
 	public search(search: ResolveSearch, before?: Context): void {
-		if (search.onlyTypes) {
+		if (search.onlyTypes || search.stopSearching) {
 			return;
 		}
 		
@@ -263,21 +263,24 @@ export class ContextTry extends Context {
 	
 	public resolveMembers(state: ResolveState): void {
 		super.resolveMembers(state);
+		
 		state.withScopeContext(this, () => {
 			this._statements.resolveMembers(state);
-			for (const each of this._catches) {
-				each.resolveMembers(state);
-			}
 		});
+		
+		for (const each of this._catches) {
+			each.resolveMembers(state);
+		}
 	}
 	
 	public resolveStatements(state: ResolveState): void {
 		state.withScopeContext(this, () => {
 			this._statements.resolveStatements(state);
-			for (const each of this._catches) {
-				each.resolveStatements(state);
-			}
 		});
+		
+		for (const each of this._catches) {
+			each.resolveStatements(state);
+		}
 	}
 	
 	public contextAtPosition(position: Position): Context | undefined {

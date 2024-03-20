@@ -41,6 +41,7 @@ import { CompletionHelper } from "../completionHelper";
 import { ContextClass } from "./scriptClass";
 import { ResolveVariable } from "../resolve/variable";
 import { ResolveFunction } from "../resolve/function";
+import { debugLogMessage } from "../server";
 
 
 export class ContextVariable extends Context {
@@ -126,11 +127,11 @@ export class ContextVariable extends Context {
 		
 		this._value?.resolveMembers(state);
 		
-		// check for shadowing
+		// check for shadowing and duplication
 		const search = new ResolveSearch();
 		search.name = this._name.name;
 		search.addToAllList = true;
-		search.stopAfterFirstFound = true;
+		search.stopAfterFirstMatch = true;
 		state.search(search, this);
 		
 		if (search.all.length > 0) {
@@ -140,7 +141,7 @@ export class ContextVariable extends Context {
 			case Context.ContextType.Variable:{
 				let ri: DiagnosticRelatedInformation[] = [];
 				found.addReportInfo(ri, `Target: ${found.reportInfoText}`);
-				state.reportWarning(this._name.range, `Shadows local variable ${this._name.name}`, ri);
+				state.reportError(this._name.range, `Duplicate local variable ${this._name.name}`, ri);
 				}break;
 				
 			case Context.ContextType.FunctionArgument:
@@ -178,6 +179,10 @@ export class ContextVariable extends Context {
 		
 		// has to come after resolving members in value to avoid them resolving this variable
 		this._resolveVariable = new ResolveLocalVariable(this);
+		
+		// pushScopeContext on purpose to keep context on stack until parent scope is removed.
+		// has to come after resolving statements in value to avoid resolving this variable
+		state.pushScopeContext(this);
 	}
 
 	public resolveStatements(state: ResolveState): void {
@@ -234,7 +239,7 @@ export class ContextVariable extends Context {
 	}
 
 	public search(search: ResolveSearch, before?: Context): void {
-		if (search.onlyTypes) {
+		if (search.onlyTypes || search.stopSearching) {
 			return;
 		}
 		

@@ -298,52 +298,71 @@ export class ResolveType extends Resolved{
 	
 	
 	public search(search: ResolveSearch): void {
+		if (search.stopSearching) {
+			return;
+		}
+		
 		if (!search.onlyTypes) {
 			if (!search.onlyFunctions && !search.ignoreVariables) {
 				if (search.matchableName) {
 					for (const [,v] of this.variables) {
-						if (!search.matchableName.matches(v.matchableName)) {
-							continue;
+						if (search.matchableName.matches(v.matchableName)) {
+							search.addVariable(v);
+							if (search.stopSearching) {
+								return;
+							}
 						}
-						search.addVariable(v);
 					}
 					
 				} else if (search.name) {
 					let v = this.variable(search.name);
 					if (v) {
 						search.addVariable(v);
+						if (search.stopSearching) {
+							return;
+						}
 					}
 					
 				} else {
 					for (const [,v] of this.variables) {
 						search.addVariable(v);
+						if (search.stopSearching) {
+							return;
+						}
 					}
 				}
 			}
 			
 			if (!search.onlyVariables && !search.ignoreFunctions) {
-				if (search.functionsFull.length == 0 || !search.stopAfterFirstFullMatch) {
-					if (search.matchableName) {
-						for (const [,fg] of this.functionGroups) {
-							if (search.matchableName.matches(fg.matchableName)) {
-								for (const each of fg.functions) {
-									search.addFunction(each);
+				if (search.matchableName) {
+					for (const [,fg] of this.functionGroups) {
+						if (search.matchableName.matches(fg.matchableName)) {
+							for (const each of fg.functions) {
+								search.addFunction(each);
+								if (search.stopSearching) {
+									return;
 								}
 							}
 						}
-						
-					} else if (search.name) {
-						let fg = this.functionGroup(search.name);
-						if (fg) {
-							for (const each of fg.functions) {
-								search.addFunction(each);
+					}
+					
+				} else if (search.name) {
+					let fg = this.functionGroup(search.name);
+					if (fg) {
+						for (const each of fg.functions) {
+							search.addFunction(each);
+							if (search.stopSearching) {
+								return;
 							}
 						}
-						
-					} else {
-						for (const [,fg] of this.functionGroups) {
-							for (const each of fg.functions) {
-								search.addFunction(each);
+					}
+					
+				} else {
+					for (const [,fg] of this.functionGroups) {
+						for (const each of fg.functions) {
+							search.addFunction(each);
+							if (search.stopSearching) {
+								return;
 							}
 						}
 					}
@@ -354,20 +373,31 @@ export class ResolveType extends Resolved{
 		const ignoreConstructors = search.ignoreConstructors;
 		search.ignoreConstructors = true;
 		
-		if (this._childTypesBeforeSelf) {
-			this.searchChildTypes(search);
-			this.searchSelf(search);
+		try {
+			if (this._childTypesBeforeSelf) {
+				this.searchChildTypes(search);
+				if (search.stopSearching) {
+					return;
+				}
+				
+				this.searchSelf(search);
+				
+			} else {
+				this.searchSelf(search);
+				if (search.stopSearching) {
+					return;
+				}
+				
+				this.searchChildTypes(search);
+			}
 			
-		} else {
-			this.searchSelf(search);
-			this.searchChildTypes(search);
+		} finally {
+			search.ignoreConstructors = ignoreConstructors;
 		}
-		
-		search.ignoreConstructors = ignoreConstructors;
 	}
 	
 	protected searchSelf(search: ResolveSearch): void {
-		if (search.onlyVariables || search.onlyFunctions || search.ignoreTypes) {
+		if (search.onlyVariables || search.onlyFunctions || search.ignoreTypes || search.stopSearching) {
 			return;
 		}
 		
@@ -382,7 +412,7 @@ export class ResolveType extends Resolved{
 	}
 	
 	protected searchChildTypes(search: ResolveSearch): void {
-		if (search.onlyVariables || search.onlyFunctions || search.ignoreTypes) {
+		if (search.onlyVariables || search.onlyFunctions || search.ignoreTypes || search.stopSearching) {
 			return;
 		}
 		
@@ -390,18 +420,27 @@ export class ResolveType extends Resolved{
 			for (const [,c] of this.classes) {
 				if (search.matchableName.matches(c.matchableName)) {
 					search.addType(c);
+					if (search.stopSearching) {
+						return;
+					}
 				}
 			}
 			
 			for (const [,i] of this.interfaces) {
 				if (search.matchableName.matches(i.matchableName)) {
 					search.addType(i);
+					if (search.stopSearching) {
+						return;
+					}
 				}
 			}
 			
 			for (const [,e] of this.enumerations) {
 				if (search.matchableName.matches(e.matchableName)) {
 					search.addType(e);
+					if (search.stopSearching) {
+						return;
+					}
 				}
 			}
 			
@@ -409,29 +448,47 @@ export class ResolveType extends Resolved{
 			let c = this.class(search.name);
 			if (c) {
 				search.addType(c);
+				if (search.stopSearching) {
+					return;
+				}
 			}
 			
 			let i = this.interface(search.name);
 			if (i) {
 				search.addType(i);
+				if (search.stopSearching) {
+					return;
+				}
 			}
 			
 			let e = this.enumeration(search.name);
 			if (e) {
 				search.addType(e);
+				if (search.stopSearching) {
+					return;
+				}
 			}
 			
 		} else {
 			for (const [,c] of this.classes) {
 				search.addType(c);
+				if (search.stopSearching) {
+					return;
+				}
 			}
 			
 			for (const [,i] of this.interfaces) {
 				search.addType(i);
+				if (search.stopSearching) {
+					return;
+				}
 			}
 			
 			for (const [,e] of this.enumerations) {
 				search.addType(e);
+				if (search.stopSearching) {
+					return;
+				}
 			}
 		}
 	}

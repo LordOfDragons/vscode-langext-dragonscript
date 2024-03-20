@@ -105,11 +105,18 @@ export class ContextStatements extends Context{
 	
 	public searchExpression(search: ResolveSearch, moveUp: boolean, before: Context): void {
 		super.searchExpression(search, moveUp, before);
+		if (search.stopSearching) {
+			return;
+		}
+		
 		for (const each of this._statements) {
 			if (each === before) {
 				break;
 			}
 			each.searchExpression(search, false, this);
+			if (search.stopSearching) {
+				return;
+			}
 		}
 	}
 	

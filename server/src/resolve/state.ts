@@ -128,31 +128,43 @@ export class ResolveState {
 
 
 	public search(search: ResolveSearch, before: Context): void {
-		const onlyTypes = search.onlyTypes;
-
-		for (let i=this._scopeContextStack.length - 1; i >= 0; i--) {
-			let c = this._scopeContextStack[i];
-			c.search(search, before)
-			if (search.stopAfterFirstFound && search.all.length > 0) {
-				break;
-			}
-			before = c;
-
-			if (!search.onlyTypes) {
-				switch (c.type) {
-					case Context.ContextType.Class:
-					case Context.ContextType.Interface:
-					case Context.ContextType.Enumeration:
-						search.onlyTypes = true;
-				}
-			}
+		if (search.stopSearching) {
+			return;
 		}
 		
-		for (const each of this._pins) {
-			each.search(search);
+		const onlyTypes = search.onlyTypes;
+		
+		try {
+			for (let i=this._scopeContextStack.length - 1; i >= 0; i--) {
+				let c = this._scopeContextStack[i];
+				c.search(search, before)
+				if (search.stopSearching) {
+					break;
+				}
+				before = c;
+				
+				if (!search.onlyTypes) {
+					switch (c.type) {
+						case Context.ContextType.Class:
+						case Context.ContextType.Interface:
+						case Context.ContextType.Enumeration:
+							search.onlyTypes = true;
+					}
+				}
+			}
+			
+			if (!search.stopSearching) {
+				for (const each of this._pins) {
+					each.search(search);
+					if (search.stopSearching) {
+						return;
+					}
+				}
+			}
+			
+		} finally {
+			search.onlyTypes = onlyTypes;
 		}
-
-		search.onlyTypes = onlyTypes;
 	}
 
 

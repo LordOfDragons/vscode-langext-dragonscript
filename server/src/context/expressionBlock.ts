@@ -126,7 +126,7 @@ export class ContextBlock extends Context{
 	}
 
 	public search(search: ResolveSearch, before?: Context): void {
-		if (search.onlyTypes) {
+		if (search.onlyTypes || search.stopSearching) {
 			return;
 		}
 		
@@ -134,6 +134,9 @@ export class ContextBlock extends Context{
 			for (const each of this._arguments) {
 				if (search.matchableName.matches(each.name.matchableName)) {
 					search.addArgument(each);
+					if (search.stopSearching) {
+						return;
+					}
 				}
 			}
 			
@@ -141,12 +144,18 @@ export class ContextBlock extends Context{
 			for (const each of this._arguments) {
 				if (search.name == each.name.name) {
 					search.addArgument(each);
+					if (search.stopSearching) {
+						return;
+					}
 				}
 			}
 			
 		} else {
 			for (const each of this._arguments) {
 				search.addArgument(each);
+				if (search.stopSearching) {
+					return;
+				}
 			}
 		}
 	}

@@ -70,15 +70,18 @@ export class ContextIfElif extends Context {
 	
 	public resolveMembers(state: ResolveState): void {
 		super.resolveMembers(state);
+		
+		this._condition.resolveMembers(state);
+		
 		state.withScopeContext(this, () => {
-			this._condition.resolveMembers(state);
 			this._statements.resolveMembers(state);
 		});
 	}
 	
 	public resolveStatements(state: ResolveState): void {
+		this._condition.resolveStatements(state);
+		
 		state.withScopeContext(this, () => {
-			this._condition.resolveStatements(state);
 			this._statements.resolveStatements(state);
 		});
 		
@@ -185,25 +188,40 @@ export class ContextIf extends Context {
 	
 	public resolveMembers(state: ResolveState): void {
 		super.resolveMembers(state);
+		
+		this._condition.resolveMembers(state);
+		
 		state.withScopeContext(this, () => {
-			this._condition.resolveMembers(state);
 			this._ifstatements.resolveMembers(state);
-			for (const each of this._elif) {
-				each.resolveMembers(state);
-			}
-			this._elsestatements?.resolveMembers(state);
 		});
+		
+		for (const each of this._elif) {
+			each.resolveMembers(state);
+		}
+		
+		if (this._elsestatements) {
+			state.withScopeContext(this, () => {
+				this._elsestatements?.resolveMembers(state);
+			});
+		}
 	}
 	
 	public resolveStatements(state: ResolveState): void {
+		this._condition.resolveStatements(state);
+		
 		state.withScopeContext(this, () => {
-			this._condition.resolveStatements(state);
 			this._ifstatements.resolveStatements(state);
-			for (const each of this._elif) {
-				each.resolveStatements(state);
-			}
-			this._elsestatements?.resolveStatements(state);
 		});
+		
+		for (const each of this._elif) {
+			each.resolveStatements(state);
+		}
+		
+		if (this._elsestatements) {
+			state.withScopeContext(this, () => {
+				this._elsestatements?.resolveStatements(state);
+			});
+		}
 		
 		this.requireCastable(state, this._condition, ResolveNamespace.classBool, 'Condition');
 	}

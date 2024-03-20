@@ -312,7 +312,7 @@ async function validateTextDocumentAndReresolve(textDocument: TextDocument): Pro
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	//console.log(`validateTextDocument ${textDocument.uri} ${textDocument.version}`);
 	
-	let startTime = Date.now();
+	//let startTime = Date.now();
 	
 	let scriptDocument = scriptDocuments.get(textDocument.uri);
 	if (scriptDocument) {

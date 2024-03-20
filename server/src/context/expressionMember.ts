@@ -213,7 +213,7 @@ export class ContextMember extends Context{
 		this._matches.name = this._name.name;
 		this._matches.ignoreFunctions = true;
 		this._matches.addToAllList = true;
-		this._matches.stopAfterFirstFound = true;
+		this._matches.stopAfterFirstMatch = true;
 		
 		if (this._matches.name) {
 			if (objtype) {

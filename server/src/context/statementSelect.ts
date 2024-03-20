@@ -85,19 +85,22 @@ export class ContextSelectCase extends Context {
 	
 	public resolveMembers(state: ResolveState): void {
 		super.resolveMembers(state);
+		
+		for (const each of this._values) {
+			each.resolveMembers(state);
+		}
+		
 		state.withScopeContext(this, () => {
-			for (const each of this._values) {
-				each.resolveMembers(state);
-			}
 			this._statements.resolveMembers(state);
 		});
 	}
 	
 	public resolveStatements(state: ResolveState): void {
+		for (const each of this._values) {
+			each.resolveStatements(state);
+		}
+		
 		state.withScopeContext(this, () => {
-			for (const each of this._values) {
-				each.resolveStatements(state);
-			}
 			this._statements.resolveStatements(state);
 		});
 	}
@@ -227,23 +230,32 @@ export class ContextSelect extends Context {
 	
 	public resolveMembers(state: ResolveState): void {
 		super.resolveMembers(state);
-		state.withScopeContext(this, () => {
-			this._value.resolveMembers(state);
-			for (const each of this._cases) {
-				each.resolveMembers(state);
-			}
-			this._elsestatements?.resolveMembers(state);
-		});
+		
+		this._value.resolveMembers(state);
+		
+		for (const each of this._cases) {
+			each.resolveMembers(state);
+		}
+		
+		if (this._elsestatements) {
+			state.withScopeContext(this, () => {
+				this._elsestatements?.resolveMembers(state);
+			});
+		}
 	}
 	
 	public resolveStatements(state: ResolveState): void {
-		state.withScopeContext(this, () => {
-			this._value.resolveStatements(state);
-			for (const each of this._cases) {
-				each.resolveStatements(state);
-			}
-			this._elsestatements?.resolveStatements(state);
-		});
+		this._value.resolveStatements(state);
+		
+		for (const each of this._cases) {
+			each.resolveStatements(state);
+		}
+		
+		if (this._elsestatements) {
+			state.withScopeContext(this, () => {
+				this._elsestatements?.resolveStatements(state);
+			});
+		}
 	}
 	
 	public contextAtPosition(position: Position): Context | undefined {

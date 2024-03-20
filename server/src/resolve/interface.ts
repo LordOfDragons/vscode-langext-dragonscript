@@ -66,11 +66,18 @@ export class ResolveInterface extends ResolveType {
 	
 	public search(search: ResolveSearch): void {
 		super.search(search);
+		if (search.stopSearching) {
+			return;
+		}
 		
 		if (this.context) {
 			for (const each of this.context.implements) {
 				(each.resolve?.resolved as ResolveType)?.search(search);
+				if (search.stopSearching) {
+					return;
+				}
 			}
+			
 			ResolveNamespace.classObject.search(search);
 		}
 	}

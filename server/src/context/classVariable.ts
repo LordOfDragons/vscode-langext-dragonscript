@@ -160,7 +160,7 @@ export class ContextClassVariable extends Context{
 	public resolveStatements(state: ResolveState): void {
 		if (this.resolveVariable) {
 			const parentClass = this.resolveVariable.parent as ResolveClass;
-			let pcr = parentClass?.context?.extends?.resolve?.resolved as ResolveType;
+			let pcr = parentClass?.context?.extends?.resolve?.resolved as ResolveClass;
 			while (pcr) {
 				const v = pcr.variable(this._name.name);
 				if (v) {
@@ -171,7 +171,7 @@ export class ContextClassVariable extends Context{
 					}
 					break;
 				}
-				pcr = (pcr.parent as ResolveClass)?.context?.extends?.resolve?.resolved as ResolveType;
+				pcr = pcr.context?.extends?.resolve?.resolved as ResolveClass;
 			}
 		}
 
@@ -219,15 +219,15 @@ export class ContextClassVariable extends Context{
 	}
 
 	protected updateResolveTextShort(): string {
-		return `${this._typename} ${this.parent!.simpleName}.${this._name}`;
+		return `${this._typename} ${this.parent?.simpleName}.${this._name}`;
 	}
 
 	protected updateResolveTextLong(): string[] {
-		return [`${this._typeModifiers.typestring} **variable** *${this._typename}* *${this.parent!.fullyQualifiedName}*.**${this._name}**`];
+		return [`${this._typeModifiers.typestring} **variable** *${this._typename}* *${this.parent?.fullyQualifiedName}*.**${this._name}**`];
 	}
 
 	protected updateReportInfoText(): string {
-		return `${this._typeModifiers.typestring} ${this._typename} ${this.parent!.simpleName}.${this._name}`;
+		return `${this._typeModifiers.typestring} ${this._typename} ${this.parent?.simpleName}.${this._name}`;
 	}
 	
 	public definition(position: Position): Definition {

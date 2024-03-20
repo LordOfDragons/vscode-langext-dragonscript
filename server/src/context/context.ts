@@ -318,8 +318,15 @@ export class Context {
 	}
 	
 	public searchExpression(search: ResolveSearch, moveUp: boolean, before: Context): void {
+		if (search.stopSearching) {
+			return;
+		}
+		
 		if (moveUp) {
 			this.parent?.searchExpression(search, true, this);
+			if (search.stopSearching) {
+				return;
+			}
 		}
 		this.search(search, before);
 	}

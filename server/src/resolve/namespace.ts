@@ -92,11 +92,15 @@ export class ResolveNamespace extends ResolveType {
 	
 	
 	public search(search: ResolveSearch): void {
-		if (search.onlyVariables || search.onlyFunctions || search.ignoreTypes) {
+		if (search.onlyVariables || search.onlyFunctions || search.ignoreTypes || search.stopSearching) {
 			return;
 		}
 		
 		this.searchNamespace(search);
+		if (search.stopSearching) {
+			return;
+		}
+		
 		if (!search.ignoreNamespaceParents) {
 			(this.parent as ResolveType)?.search(search);
 		}
@@ -105,18 +109,31 @@ export class ResolveNamespace extends ResolveType {
 	/** Search all namespaces and all global classes. */
 	public searchGlobalTypes(search: ResolveSearch): void {
 		this.searchNamespace(search);
+		if (search.stopSearching) {
+			return;
+		}
+		
 		for (const [,ns] of this._namespaces) {
 			ns.searchGlobalTypes(search);
+			if (search.stopSearching) {
+				return;
+			}
 		}
 	}
 	
 	protected searchNamespace(search: ResolveSearch): void {
 		super.search(search);
+		if (search.stopSearching) {
+			return;
+		}
 		
 		if (search.matchableName) {
 			for (const [,ns] of this.namespaces) {
 				if (search.matchableName.matches(ns.matchableName)) {
 					search.addType(ns);
+					if (search.stopSearching) {
+						return;
+					}
 				}
 			}
 			

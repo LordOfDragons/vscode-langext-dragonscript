@@ -72,7 +72,7 @@ export class ResolveSearch {
 			this.searchSuperClasses = copy.searchSuperClasses;
 			this.restrictTypeType = copy.restrictTypeType;
 			this.addToAllList = copy.addToAllList;
-			this.stopAfterFirstFound = copy.stopAfterFirstFound;
+			this.stopAfterFirstMatch = copy.stopAfterFirstMatch;
 		}
 	}
 	
@@ -146,8 +146,11 @@ export class ResolveSearch {
 	/** Add found elements to all list in the order they have been found. */
 	public addToAllList = false;
 	
-	/** If addToAllList is true stop searching after the first found element. */
-	public stopAfterFirstFound = false;
+	/** If addToAllList is true stop searching after the first match. */
+	public stopAfterFirstMatch = false;
+	
+	/** Internal use only. Stop searching. */
+	public stopSearching = false;
 	
 	
 	
@@ -163,6 +166,7 @@ export class ResolveSearch {
 		this._functionsAll.splice(0);
 		this._types.clear();
 		this.signature = undefined;
+		this.stopSearching = false;
 	}
 	
 	/** Local variables. */
@@ -219,6 +223,9 @@ export class ResolveSearch {
 		
 		if (this.addToAllList) {
 			this._all.push(argument);
+			if (this.stopAfterFirstMatch) {
+				this.stopSearching = true;
+			}
 		}
 	}
 	
@@ -231,6 +238,9 @@ export class ResolveSearch {
 		
 		if (this.addToAllList) {
 			this._all.push(variable);
+			if (this.stopAfterFirstMatch) {
+				this.stopSearching = true;
+			}
 		}
 	}
 	
@@ -243,6 +253,9 @@ export class ResolveSearch {
 		
 		if (this.addToAllList) {
 			this._all.push(variable);
+			if (this.stopAfterFirstMatch) {
+				this.stopSearching = true;
+			}
 		}
 	}
 	
@@ -256,6 +269,9 @@ export class ResolveSearch {
 			switch (match) {
 				case ResolveSignature.Match.Full:
 					this._functionsFull.push(rfunction);
+					if (this.stopAfterFirstFullMatch) {
+						this.stopSearching = true;
+					}
 					break;
 					
 				case ResolveSignature.Match.Partial:
@@ -277,6 +293,9 @@ export class ResolveSearch {
 		
 		if (this.addToAllList) {
 			this._all.push(rfunction);
+			if (this.stopAfterFirstMatch) {
+				this.stopSearching = true;
+			}
 		}
 	}
 	
@@ -289,6 +308,9 @@ export class ResolveSearch {
 		
 		if (this.addToAllList) {
 			this._all.push(type);
+			if (this.stopAfterFirstMatch) {
+				this.stopSearching = true;
+			}
 		}
 	}
 	
