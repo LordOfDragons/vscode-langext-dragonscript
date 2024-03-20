@@ -153,10 +153,13 @@ export class Context {
 		
 		this._codeActions.splice(0);
 	}
-
+	
 	public resolveStatements(state: ResolveState): void {
 	}
-
+	
+	public leaveScope(state: ResolveState): void {
+	}
+	
 	public hover(position: Position): Hover | null {
 		if (!this._hover || (this._hover.range && !Helpers.isPositionInsideRange(this._hover.range, position))) {
 			this._hover = this.updateHover(position);

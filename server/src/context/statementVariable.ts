@@ -41,7 +41,8 @@ import { CompletionHelper } from "../completionHelper";
 import { ContextClass } from "./scriptClass";
 import { ResolveVariable } from "../resolve/variable";
 import { ResolveFunction } from "../resolve/function";
-import { debugLogMessage } from "../server";
+import { CodeActionRemove } from "../codeactions/remove";
+import { CodeActionCommentOut } from "../codeactions/commentout";
 
 
 export class ContextVariable extends Context {
@@ -51,12 +52,15 @@ export class ContextVariable extends Context {
 	protected _value?: Context;
 	protected _firstVariable?: ContextVariable;
 	protected _resolveVariable?: ResolveLocalVariable;
-
-
+	protected _checkUsage = false;
+	public isSingleVar = false;
+	public isLastVar = false;
+	
+	
 	constructor(node: StatementVariableCstNode,
 				typeNode: FullyQualifiedClassNameCstNode,
 				firstVar: ContextVariable | undefined,
-				endToken: IToken, parent: Context) {
+				endToken: IToken, varToken: IToken, parent: Context) {
 		super(Context.ContextType.Variable, parent);
 		this._node = node;
 		
@@ -67,8 +71,8 @@ export class ContextVariable extends Context {
 		if (node.children.value) {
 			this._value = ContextBuilder.createExpression(node.children.value[0], this);
 		}
-
-		let tokBegin = firstVar ? this._name.token : typeNode.children.identifier[0];
+		
+		let tokBegin = firstVar ? this._name.token : varToken; //typeNode.children.identifier[0];
 		if (tokBegin) {
 			this.range = Helpers.rangeFrom(tokBegin, endToken, true, false);
 		}
@@ -191,6 +195,70 @@ export class ContextVariable extends Context {
 		// pushScopeContext on purpose to keep context on stack until parent scope is removed.
 		// has to come after resolving statements in value to avoid resolving this variable
 		state.pushScopeContext(this);
+		this._checkUsage = true;
+	}
+	
+	public leaveScope(state: ResolveState): void {
+		if (this._checkUsage) {
+			this._checkUsage = false;
+			this._doCheckUsage(state);
+		}
+	}
+	
+	protected _doCheckUsage(state: ResolveState): void {
+		if (!this._resolveVariable) {
+			return;
+		}
+		
+		if (this._resolveVariable.usage.size == 0) {
+			const di = state.reportWarning(this._name.range, `Local variable is never used`);
+			if (di && this.range && this._name.range) {
+				const action = new CodeActionRemove(di, "Remove unused local variable", this.range, this);
+				var action2: CodeActionRemove | undefined;
+				var action3 = new CodeActionCommentOut(di, "Comment out unused local variable", this.range, this);
+				
+				if (this.isSingleVar) {
+					action.extendEnd = true;
+					action3.singleLineComment = true;
+					
+					if (this._value && this._value.range) {
+						action2 = new CodeActionRemove(di, "Remove unused local variable but keep init-value",
+							Range.create(this.range.start, this._value.range.start), this);
+					}
+					
+				} else {
+					if (this._value) {
+						action.range = Range.create(this._name.range.start,
+							this._value.range?.end ?? this._name.range.end);
+					} else {
+						action.range = this._name.range;
+					}
+					action3.range = this._name.range;
+					
+					if (this._firstVariable) {
+						action.extendBegin = true;
+						action.extendBeginChars.push(',')
+						action3.singleLineComment = this.isLastVar;
+						
+					} else {
+						action.extendEnd = true;
+						action.extendEndChars.push(',')
+					}
+				}
+				
+				this._codeActions.push(action);
+				
+				if (action2) {
+					this._codeActions.push(action2);
+				}
+				
+				action3.extendBegin = action.extendBegin;
+				action3.extendBeginChars = action.extendBeginChars;
+				action3.extendEnd = action.extendEnd;
+				action3.extendEndChars = action.extendEndChars;
+				this._codeActions.push(action3);
+			}
+		}
 	}
 	
 	public collectChildDocSymbols(list: DocumentSymbol[]) {

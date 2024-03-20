@@ -3,7 +3,7 @@ import { Context } from "../context/context";
 import { BaseCodeAction } from "./base";
 import { CodeActionHelpers } from "./helpers";
 
-export class CodeActionRemove extends BaseCodeAction {
+export class CodeActionCommentOut extends BaseCodeAction {
 	protected _title: string;
 	protected _context: Context;
 	protected _range: Range;
@@ -13,6 +13,7 @@ export class CodeActionRemove extends BaseCodeAction {
 	public extendBeginChars: string[] = ['\n', '\r', ' ', '\t', ':']
 	public extendEnd = false;
 	public extendEndChars: string[] = ['\n', '\r', ' ', '\t', ':']
+	public singleLineComment = false;
 	
 	
 	constructor(diagnostic: Diagnostic, title: string, range: Range, context: Context) {
@@ -54,8 +55,15 @@ export class CodeActionRemove extends BaseCodeAction {
 			range = CodeActionHelpers.extendEndSpaces(uri, range, this.extendEndChars) ?? range;
 		}
 		
+		var singleLineComment = this.singleLineComment
+			&& CodeActionHelpers.isSingleCommentSafe(uri, range);
+		
 		const changes: {[uri: string]: TextEdit[]} = {};
-		changes[uri] = [TextEdit.del(range)];
+		if (singleLineComment) {
+			changes[uri] = [TextEdit.insert(range.start, "// ")];
+		} else {
+			changes[uri] = [TextEdit.insert(range.end, " */"), TextEdit.insert(range.start, "/* ")];
+		}
 		
 		let actions: CodeAction[] = [];
 		this.addAction(actions, this._title, CodeActionKind.QuickFix, {changes: changes}, true);

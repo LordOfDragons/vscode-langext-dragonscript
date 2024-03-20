@@ -83,6 +83,11 @@ export class Helpers {
 		return Range.create(s, e);
 	}
 	
+	/** Move position. */
+	public static movePosition(position: Position, characters: integer, lines: integer = 0): Position {
+		return Position.create(position.line + lines, position.character + characters);
+	}
+	
 	public static isPositionInsideRange(range: Range | undefined, position: Position): boolean {
 		if (!range) {
 			return false;

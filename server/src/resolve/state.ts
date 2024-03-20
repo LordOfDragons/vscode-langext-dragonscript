@@ -81,7 +81,7 @@ export class ResolveState {
 	}
 
 	public popScopeContext(): void {
-		this._scopeContextStack.pop();
+		this._scopeContextStack.pop()?.leaveScope(this);
 		this._scopeContext = this._scopeContextStack[this._scopeContextStack.length - 1];
 	}
 

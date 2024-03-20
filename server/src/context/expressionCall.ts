@@ -893,8 +893,8 @@ export class ContextFunctionCall extends Context{
 			let ri: DiagnosticRelatedInformation[] = [];
 			other.addReportInfo(ri, `Target: ${this.targetResolveText}`);
 			const di = state.reportWarning(this._name.range, 'Comparisson is always true', ri);
-			if (di) {
-				this._codeActions.push(new CodeActionReplace(di, 'Replace with "true"', 'true', this));
+			if (di && this.range) {
+				this._codeActions.push(new CodeActionReplace(di, 'Replace with "true"', 'true', this.range, this));
 			}
 		}
 	}
@@ -904,8 +904,8 @@ export class ContextFunctionCall extends Context{
 			let ri: DiagnosticRelatedInformation[] = [];
 			other.addReportInfo(ri, `Target: ${this.targetResolveText}`);
 			const di = state.reportWarning(this._name.range, 'Comparisson is always false', ri);
-			if (di) {
-				this._codeActions.push(new CodeActionReplace(di, 'Replace with "false"', 'false', this));
+			if (di && this.range) {
+				this._codeActions.push(new CodeActionReplace(di, 'Replace with "false"', 'false', this.range, this));
 			}
 		}
 	}

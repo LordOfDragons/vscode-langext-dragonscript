@@ -10,6 +10,7 @@ export interface StatementVariablesCstNode extends CstNode {
 }
 
 export type StatementVariablesCstChildren = {
+	var: IToken[];
 	type: FullyQualifiedClassNameCstNode[];
 	comma?: IToken[];
 	statementVariable?: StatementVariableCstNode[];

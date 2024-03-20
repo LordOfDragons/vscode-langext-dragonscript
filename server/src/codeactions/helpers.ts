@@ -1,9 +1,11 @@
-import { integer, Range, TextEdit } from "vscode-languageserver";
+import { Diagnostic, integer, Range, TextEdit } from "vscode-languageserver";
 import { Context } from "../context/context";
 import { ContextFunctionCall } from "../context/expressionCall";
 import { ResolveNamespace } from "../resolve/namespace";
 import { ResolveSignature, ResolveSignatureArgument } from "../resolve/signature";
 import { ResolveType } from "../resolve/type";
+import { documents } from "../server";
+import { CodeActionRemove } from "./remove";
 
 export interface BaseCodeActionAutoCastResult {
 	edits: TextEdit[];
@@ -181,5 +183,61 @@ export class CodeActionHelpers {
 			}
 		}
 		return false;
+	}
+	
+	/** Extend begin range beyond adjacent newlines if possible. */
+	public static extendBeginSpaces(uri: string, range: Range, characters: string[]): Range | undefined {
+		const document = documents.get(uri);
+		if (!document) {
+			return undefined;
+		}
+		
+		var offset = document.offsetAt(range.start);
+		const text = document.getText();
+		
+		while (offset > 0) {
+			if (characters.includes(text[offset - 1])) {
+				offset--;
+			} else {
+				break;
+			}
+		}
+		
+		return Range.create(document.positionAt(offset), range.end);
+	}
+	
+	/** Extend end range beyond adjacent newlines if possible. */
+	public static extendEndSpaces(uri: string, range: Range, characters: string[]): Range | undefined {
+		const document = documents.get(uri);
+		if (!document) {
+			return undefined;
+		}
+		
+		var offset = document.offsetAt(range.end);
+		const text = document.getText();
+		var length = text.length;
+		
+		while (offset < length) {
+			if (characters.includes(text[offset])) {
+				offset++;
+			} else {
+				break;
+			}
+		}
+		
+		return Range.create(range.start, document.positionAt(offset));
+	}
+	
+	/** Text range contains no line splicing nor double colon. */
+	public static isSingleCommentSafe(uri: string, range: Range): boolean {
+		const document = documents.get(uri);
+		if (!document) {
+			return false;
+		}
+		
+		const text = document.getText(range);
+		return !text.includes("\\\n")
+			&& !text.includes("\\\r")
+			&& !text.includes(":");
 	}
 }

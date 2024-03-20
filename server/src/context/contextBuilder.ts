@@ -99,10 +99,15 @@ export class ContextBuilder{
 				let tokEnd = (declEnd.newline || declEnd.commandSeparator)![0];
 				var firstVar: ContextVariable | undefined = undefined;
 				let stalist: Context[] = [];
-
+				const varToken = vdecls.var[0];
+				const isSingleVar = count == 1;
+				const lastIndex = count - 1;
+				
 				for (let i = 0; i < count; i++) {
 					const v: ContextVariable = new ContextVariable(vdecls.statementVariable[i], typeNode,
-						firstVar, i < commaCount ? vdecls.comma![i] : tokEnd, parent);
+						firstVar, i < commaCount ? vdecls.comma![i] : tokEnd, varToken, parent);
+					v.isSingleVar = isSingleVar;
+					v.isLastVar = i == lastIndex;
 					stalist.push(v);
 					
 					if (i == 0) {

@@ -10,6 +10,8 @@ export interface BaseCodeActionAutoCastResult {
 export class BaseCodeAction {
 	protected _diagnostic: Diagnostic;
 	
+	public resolver?: string;
+	
 	
 	constructor(diagnostic: Diagnostic) {
 		this._diagnostic = diagnostic;
@@ -28,13 +30,15 @@ export class BaseCodeAction {
 	
 	
 	protected addAction(list: CodeAction[], title: string, kind: CodeActionKind,
-			edit: WorkspaceEdit, preferred: boolean = false): void {
+			edit: WorkspaceEdit, preferred: boolean = false,
+			resolver: string | undefined = undefined): void {
 		list.push({
 			title: title,
 			kind: kind,
 			diagnostics: [this._diagnostic],
 			isPreferred: preferred,
-			edit: edit
+			edit: edit,
+			data: resolver ?? this.resolver
 		});
 	}
 	
