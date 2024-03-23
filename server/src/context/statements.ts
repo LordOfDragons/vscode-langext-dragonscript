@@ -47,7 +47,7 @@ export class ContextStatements extends Context{
 		if (stas) {
 			var rangeBegin: Position | undefined;
 			var rangeEnd: Position | undefined;
-
+			
 			for (const staNode of stas) {
 				for (const staCtx of ContextBuilder.createStatement(staNode, this)) {
 					if (staCtx.range) {
@@ -59,7 +59,7 @@ export class ContextStatements extends Context{
 					this._statements.push(staCtx);
 				}
 			}
-
+			
 			if (rangeBegin && rangeEnd) {
 				this.range = Range.create(rangeBegin, rangeEnd);
 			}
@@ -137,7 +137,24 @@ export class ContextStatements extends Context{
 			?? this;
 	}
 	
-	public completion(_document: TextDocument, position: Position): CompletionItem[] {
+	public statementBefore(position: Position): Context | undefined {
+		var statement: Context | undefined;
+		for (const each of this._statements) {
+			const stapos = each.range?.end;
+			if (stapos && Helpers.isPositionBefore(position, stapos)) {
+				break;
+			}
+			statement = each;
+		}
+		return statement;
+	}
+	
+	public completion(document: TextDocument, position: Position): CompletionItem[] {
+		const statement = this.statementBefore(position);
+		if (statement) {
+			return statement.completion(document, position);
+		}
+		
 		return CompletionHelper.createStatement(Range.create(position, position), this);
 	}
 	

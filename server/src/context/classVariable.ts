@@ -45,37 +45,48 @@ import { CompletionHelper } from "../completionHelper";
 
 
 export class ContextClassVariable extends Context{
-	protected _node: ClassVariableCstNode;
+	protected _node?: ClassVariableCstNode;
 	protected _typeModifiers: Context.TypeModifierSet;
-	protected _name: Identifier;
+	protected _name?: Identifier;
 	protected _typename: TypeName;
 	protected _value?: Context;
 	protected _firstVariable?: ContextClassVariable;
 	protected _resolveVariable?: ResolveVariable;
 
 
-	constructor(node: ClassVariableCstNode,
+	constructor(node: ClassVariableCstNode | undefined,
 				typemodNode: TypeModifiersCstNode | undefined,
 				typeNode: FullyQualifiedClassNameCstNode,
 				firstVar: ContextClassVariable | undefined,
-				endToken: IToken, parent: Context) {
+				endToken: IToken | undefined, parent: Context) {
 		super(Context.ContextType.ClassVariable, parent);
 		this._node = node;
+		const children = node?.children;
+		
 		this._typeModifiers = new Context.TypeModifierSet(typemodNode, Context.TypeModifier.Private);
-		this._name = new Identifier(node.children.name[0]);
+		
+		if (children) {
+			this._name = new Identifier(children.name[0]);
+		}
+		
 		this._typename = new TypeName(typeNode);
 		this._firstVariable = firstVar;
 		
-		if (node.children.value) {
-			this._value = ContextBuilder.createExpression(node.children.value[0], this);
+		if (children?.value) {
+			this._value = ContextBuilder.createExpression(children.value[0], this);
 		}
-
-		let tokBegin = firstVar ? this._name.token : typeNode.children.identifier[0];
+		
+		let tokBegin = firstVar ? this._name?.token : typeNode.children.fullyQualifiedClassNamePart?.at(0)?.children.identifier?.at(0);
+		let tokEnd = endToken ?? this._name?.token;
+		
 		if (tokBegin) {
-			const symkind = this._typeModifiers.has(Context.TypeModifier.Fixed) ? SymbolKind.Constant : SymbolKind.Variable;
-			this.range = Helpers.rangeFrom(tokBegin, endToken, true, false);
-			this.documentSymbol = DocumentSymbol.create(this._name.name, this._typename.name, symkind,
-				this.range, Helpers.rangeFrom(tokBegin, endToken, true, true));
+			this.range = Helpers.rangeFrom(tokBegin, tokEnd, true, false);
+			
+			if (this._name) {
+				const symkind = this._typeModifiers.has(Context.TypeModifier.Fixed) ? SymbolKind.Constant : SymbolKind.Variable;
+				this.documentSymbol = DocumentSymbol.create(this._name.name, this._typename.name, symkind,
+					this.range, Helpers.rangeFrom(tokBegin, tokEnd, true, true));
+			}
 		}
 	}
 
@@ -89,7 +100,7 @@ export class ContextClassVariable extends Context{
 	}
 
 
-	public get node(): ClassVariableCstNode {
+	public get node(): ClassVariableCstNode | undefined {
 		return this._node;
 	}
 
@@ -97,7 +108,7 @@ export class ContextClassVariable extends Context{
 		return this._typeModifiers;
 	}
 
-	public get name(): Identifier {
+	public get name(): Identifier | undefined {
 		return this._name;
 	}
 
@@ -115,11 +126,11 @@ export class ContextClassVariable extends Context{
 
 	public get fullyQualifiedName(): string {
 		let n = this.parent?.fullyQualifiedName || "";
-		return n ? `${n}.${this._name}` : this._name.name;
+		return n ? `${n}.${this._name}` : this._name?.name ?? "?";
 	}
 
 	public get simpleName(): string {
-		return this._name.name;
+		return this._name?.name ?? "?";
 	}
 	
 	public get resolveVariable(): ResolveVariable | undefined {
@@ -138,27 +149,29 @@ export class ContextClassVariable extends Context{
 			this._typename.resolveType(state, this);
 		}
 		
-		this._resolveVariable = new ResolveVariable(this);
-		if (this.parent) {
-			var container: ResolveType | undefined;
-			if (this.parent.type === Context.ContextType.Class) {
-				container = (this.parent as ContextClass).resolveClass;
-			} else if (this.parent.type === Context.ContextType.Interface) {
-				container = (this.parent as ContextInterface).resolveInterface;
-			}
+		if (this._name) {
+			this._resolveVariable = new ResolveVariable(this);
+			if (this.parent) {
+				var container: ResolveType | undefined;
+				if (this.parent.type === Context.ContextType.Class) {
+					container = (this.parent as ContextClass).resolveClass;
+				} else if (this.parent.type === Context.ContextType.Interface) {
+					container = (this.parent as ContextInterface).resolveInterface;
+				}
 
-			if (container) {
-				if (container.variable(this._name.name)) {
-					state.reportError(this._name.range, `Duplicate variable ${this._name}`);
-				} else {
-					container.addVariable(this._resolveVariable);
+				if (container) {
+					if (container.variable(this._name.name)) {
+						state.reportError(this._name.range, `Duplicate variable ${this._name}`);
+					} else {
+						container.addVariable(this._resolveVariable);
+					}
 				}
 			}
 		}
 	}
 
 	public resolveStatements(state: ResolveState): void {
-		if (this.resolveVariable) {
+		if (this.resolveVariable && this._name) {
 			const parentClass = this.resolveVariable.parent as ResolveClass;
 			let pcr = parentClass?.context?.extends?.resolve?.resolved as ResolveClass;
 			while (pcr) {
@@ -180,7 +193,7 @@ export class ContextClassVariable extends Context{
 		this.documentation?.resolveStatements(state);
 		
 		if (this._typeModifiers.isStatic && this._typeModifiers.isFixed && !this._value) {
-			state.reportError(this._name.range, `Static fixed variables require an initial value`);
+			state.reportError(this._name?.range, `Static fixed variables require an initial value`);
 		}
 	}
 
@@ -201,7 +214,7 @@ export class ContextClassVariable extends Context{
 	}
 
 	protected updateHover(position: Position): Hover | null {
-		if (this._name.isPositionInside(position)) {
+		if (this._name?.isPositionInside(position)) {
 			let content: string[] = [];
 			content.push(...this.resolveTextLong);
 			if (this.documentation) {
@@ -231,7 +244,7 @@ export class ContextClassVariable extends Context{
 	}
 	
 	public definition(position: Position): Definition {
-		if (this._name.isPositionInside(position)) {
+		if (this._name?.isPositionInside(position)) {
 			return this.definitionSelf();
 		}
 		if (!this._firstVariable && this._typename.isPositionInside(position)) {
@@ -241,7 +254,7 @@ export class ContextClassVariable extends Context{
 	}
 	
 	public resolvedAtPosition(position: Position): Resolved | undefined {
-		if (this._name.isPositionInside(position)) {
+		if (this._name?.isPositionInside(position)) {
 			return this._resolveVariable;
 		} else if (!this._firstVariable && this._typename.isPositionInside(position)) {
 			return this._typename.resolve?.resolved;
@@ -255,7 +268,7 @@ export class ContextClassVariable extends Context{
 	}
 	
 	public get referenceSelf(): Location | undefined {
-		return this.resolveLocation(this._name.range);
+		return this._name ? this.resolveLocation(this._name.range) : undefined;
 	}
 	
 	public completion(document: TextDocument, position: Position): CompletionItem[] {
@@ -270,7 +283,8 @@ export class ContextClassVariable extends Context{
 			}
 		}
 		
-		return CompletionHelper.createType(Range.create(position, position), this);
+		// TODO propose variable names
+		return []
 	}
 	
 	

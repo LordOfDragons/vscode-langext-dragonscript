@@ -92,7 +92,7 @@ export type ClassVariablesCstChildren = {
 	type: FullyQualifiedClassNameCstNode[];
 	comma?: IToken[];
 	classVariable?: ClassVariableCstNode[];
-	endOfCommand: EndOfCommandCstNode[];
+	endOfCommand?: EndOfCommandCstNode[];
 };
 
 

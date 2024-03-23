@@ -71,8 +71,9 @@ export class ContextFunctionCall extends Context{
 	protected _name?: Identifier;
 	protected _arguments: Context[];
 	protected _castType?: TypeName;
-	protected _functionType: ContextFunctionCall.FunctionType = ContextFunctionCall.FunctionType.function;
+	protected _functionType = ContextFunctionCall.FunctionType.function;
 	protected _argCommaPos: Position[];
+	protected _argBeginPos?: Position;
 	
 	private _matches: ResolveSearch | undefined;
 	private _matchFunction?: ResolveFunction;
@@ -111,6 +112,7 @@ export class ContextFunctionCall extends Context{
 				cfc._functionType = ContextFunctionCall.FunctionType.subtract;
 			}
 			cfc._operator = true;
+			cfc._argBeginPos = cfc._name?.range?.end;
 			
 			cfc._arguments.push(ContextBuilder.createExpressionMultiply(each.children.right[0], cfc));
 			cfc.updateRange();
@@ -144,6 +146,7 @@ export class ContextFunctionCall extends Context{
 				cfc._functionType = ContextFunctionCall.FunctionType.xor;
 			}
 			cfc._operator = true;
+			cfc._argBeginPos = cfc._name?.range?.end;
 
 			cfc._arguments.push(ContextBuilder.createExpressionAddition(each.children.right[0], cfc));
 			cfc.updateRange();
@@ -180,6 +183,7 @@ export class ContextFunctionCall extends Context{
 				cfc._functionType = ContextFunctionCall.FunctionType.notEquals;
 			}
 			cfc._operator = true;
+			cfc._argBeginPos = cfc._name?.range?.end;
 
 			cfc._arguments.push(ContextBuilder.createExpressionBitOperation(each.children.right[0], cfc));
 			cfc.updateRange();
@@ -204,6 +208,7 @@ export class ContextFunctionCall extends Context{
 				cfc._functionType = ContextFunctionCall.FunctionType.logicalOr;
 			}
 			cfc._operator = true;
+			cfc._argBeginPos = cfc._name?.range?.end;
 
 			cfc._arguments.push(ContextBuilder.createExpressionCompare(each.children.right[0], cfc));
 			cfc.updateRange();
@@ -231,6 +236,7 @@ export class ContextFunctionCall extends Context{
 				cfc._functionType = ContextFunctionCall.FunctionType.modulus;
 			}
 			cfc._operator = true;
+			cfc._argBeginPos = cfc._name?.range?.end;
 
 			cfc._arguments.push(ContextBuilder.createExpressionPostfix(each.children.right[0], cfc));
 			cfc.updateRange();
@@ -286,6 +292,7 @@ export class ContextFunctionCall extends Context{
 				cfc._functionType = ContextFunctionCall.FunctionType.not;
 			}
 			cfc._operator = true;
+			cfc._argBeginPos = cfc._name?.range?.end;
 			cfc.updateRange();
 			last = cfc;
 		}
@@ -308,10 +315,13 @@ export class ContextFunctionCall extends Context{
 		
 		if (node.children.member) {
 			let member = node.children.member[memberIndex].children;
-			cfc._name = new Identifier(member.name[0]);
+			if (member.name) {
+				cfc._name = new Identifier(member.name[0]);
+			}
 			
 			if (member.functionCall) {
 				const fc = member.functionCall[0].children;
+				cfc._argBeginPos = Helpers.positionFrom(fc.leftParanthesis[0]);
 				if (fc.argument) {
 					for (const each of fc.argument) {
 						const ac = ContextBuilder.createExpressionAssign(each.children.expressionAssign[0], cfc);
@@ -335,7 +345,9 @@ export class ContextFunctionCall extends Context{
 	public static newFunctionCallDirect(node: ExpressionMemberCstNode, parent: Context): ContextFunctionCall {
 		let cfc = new ContextFunctionCall(node, -1, parent);
 		
-		cfc._name = new Identifier(node.children.name[0]);
+		if (node.children.name) {
+			cfc._name = new Identifier(node.children.name[0]);
+		}
 		cfc._operator = false;
 		cfc._functionType = ContextFunctionCall.FunctionType.function;
 		
@@ -343,6 +355,7 @@ export class ContextFunctionCall extends Context{
 			
 		if (node.children.functionCall) {
 			const fc = node.children.functionCall[0].children;
+			cfc._argBeginPos = Helpers.positionFrom(fc.leftParanthesis[0]);
 			const args = fc.argument;
 			if (args) {
 				for (const each of args) {
@@ -449,6 +462,8 @@ export class ContextFunctionCall extends Context{
 		cfc._functionType = ContextFunctionCall.FunctionType.functionSuper;
 		
 		var endPosition: Position | undefined;
+		
+		cfc._argBeginPos = Helpers.positionFrom(node.children.leftParanthesis[0]);
 		
 		const args = node.children.argument;
 		if (args) {
@@ -1171,11 +1186,18 @@ export class ContextFunctionCall extends Context{
 	}
 	
 	public completion(document: TextDocument, position: Position): CompletionItem[] {
-		const range = this._name?.range ?? Range.create(position, position);
-		
 		if (this._castType && Helpers.isPositionInsideRange(this._castType?.range, position)) {
 			return this._castType.completion(document, position, this);
 		}
+		
+		if (this._argBeginPos && Helpers.isPositionAfter(position, this._argBeginPos)) {
+			const indexArg = this.argumentIndexBefore(position);
+			if (indexArg >= 0 && indexArg < this._arguments.length) {
+				return this._arguments[indexArg].completion(document, position);
+			}
+		}
+		
+		const range = this._name?.range ?? Range.create(position, position);
 		
 		if (Helpers.isPositionInsideRange(range, position)) {
 			if (this._object) {
@@ -1384,17 +1406,21 @@ export class ContextFunctionCall extends Context{
 			}
 			
 			if (activeSignature !== null) {
-				var i;
-				for (i=this._argCommaPos.length-1; i>=0; i--) {
-					if (Helpers.isPositionAfter(position, this._argCommaPos[i])) {
-						break;
-					}
-				}
-				activeParameter = i + 1;
+				activeParameter = this.argumentIndexBefore(position);
 			}
 		}
 		
 		return {signatures: siginfo, activeSignature: activeSignature, activeParameter: activeParameter};
+	}
+	
+	public argumentIndexBefore(position: Position): integer {
+		var i;
+		for (i=this._argCommaPos.length-1; i>=0; i--) {
+			if (Helpers.isPositionAfter(position, this._argCommaPos[i])) {
+				break;
+			}
+		}
+		return i + 1;
 	}
 	
 	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {

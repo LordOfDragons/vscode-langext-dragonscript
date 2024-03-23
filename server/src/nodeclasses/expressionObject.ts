@@ -68,6 +68,6 @@ export interface ExpressionMemberCstNode extends CstNode {
 }
 
 export type ExpressionMemberCstChildren = {
-	name: IToken[];
+	name?: IToken[];
 	functionCall?: FunctionCallCstNode[];
 };

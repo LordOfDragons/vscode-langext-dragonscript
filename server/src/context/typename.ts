@@ -42,6 +42,7 @@ import { Resolved, ResolveUsage } from "../resolve/resolved";
 import { CompletionHelper } from "../completionHelper";
 import { CodeActionUnknownMember } from "../codeactions/unknownMember";
 import { TextDocument } from "vscode-languageserver-textdocument";
+import { debugLogMessage } from "../server";
 
 
 export class TypeNamePart {
@@ -101,13 +102,18 @@ export class TypeName {
 		this._parts = []
 		
 		const children = node?.children;
-		if (!children?.identifier) {
+		if (!children?.fullyQualifiedClassNamePart?.at(0)?.children.identifier?.at(0)) {
 			this._name = "";
 			return;
 		}
 		
-		for (const each of children.identifier) {
-			this._parts.push(new TypeNamePart(each));
+		for (const each of children.fullyQualifiedClassNamePart) {
+			const nodePart = each.children.identifier?.at(0);
+			if (nodePart) {
+				this._parts.push(new TypeNamePart(nodePart));
+			} else {
+				this._parts.push(new TypeNamePart(undefined, ""));
+			}
 		}
 		
 		this._name = this._parts.map(x => x.name.name).reduce((a, b) => `${a}.${b}`)
@@ -596,6 +602,7 @@ export class TypeName {
 		
 		for (i=0; i<plen; i++) {
 			let part = this._parts[i];
+			debugLogMessage(`typename.completion: i=${i}/${plen} part=${part.name.name}${Helpers.logRange(part.name.range)}`);
 			if (part.name.isPositionInside(position) || i == plen - 1) {
 				const range = part.name.range ?? Range.create(position, position);
 				if (parentType) {

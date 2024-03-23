@@ -23,11 +23,11 @@
  */
 
 import { Context } from "./context";
-import { FunctionBeginCstNode } from "../nodeclasses/declareFunction";
+import { FunctionArgumentsCstNode, FunctionBeginCstNode } from "../nodeclasses/declareFunction";
 import { InterfaceFunctionCstNode } from "../nodeclasses/declareInterface";
 import { ClassFunctionCstNode } from "../nodeclasses/declareClass";
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
-import { CompletionItem, Definition, DocumentSymbol, Hover, Location, Position, Range, RemoteConsole, SymbolKind } from "vscode-languageserver";
+import { CompletionItem, Definition, DocumentSymbol, Hover, Location, Position, Range, RemoteConsole, SymbolKind, integer } from "vscode-languageserver";
 import { TypeName } from "./typename";
 import { ContextFunctionArgument } from "./classFunctionArgument";
 import { Identifier } from "./identifier";
@@ -54,6 +54,8 @@ export class ContextFunction extends Context{
 	protected _name?: Identifier;
 	protected _returnType?: TypeName;
 	protected _arguments: ContextFunctionArgument[] = [];
+	protected _argCommaPos: Position[] = [];
+	protected _argBeginPos?: Position;
 	protected _superToken?: IToken;
 	protected _superCall?: ContextFunctionCall;
 	protected _statements?: ContextStatements;
@@ -112,14 +114,9 @@ export class ContextFunction extends Context{
 			this._name = new Identifier(fdecl2.identifier[0]); // is always "new"
 			this._returnType = ownerTypeName ? TypeName.typeNamed(ownerTypeName) : TypeName.typeObject;
 			this._typeModifiers.add(Context.TypeModifier.Static);
-
+			
 			if (fdecl2.functionArguments) {
-				let args = fdecl2.functionArguments[0].children.functionArgument;
-				if (args) {
-					for (const each of args) {
-						this._arguments.push(new ContextFunctionArgument(each, this));
-					}
-				}
+				this._processFuncArgs(fdecl2.functionArguments);
 			}
 			
 			if (fdecl2.functionCall) {
@@ -134,20 +131,20 @@ export class ContextFunction extends Context{
 					}
 				}
 			}
-
+			
 			let declEnd = fdecl2.endOfCommand[0].children;
 			tokEnd = (declEnd.newline || declEnd.commandSeparator)?.at(0) ?? tokEnd;
 			docSymKind = SymbolKind.Constructor;
-
+			
 		} else if (fdecl.children.classDestructor) {
 			let fdecl2 = fdecl.children.classDestructor[0].children;
 			this._functionType = ContextFunction.Type.Destructor;
 			this._name = new Identifier(fdecl2.identifier[0]); // is always "destructor"
 			this._returnType = TypeName.typeVoid;
-
+			
 			let declEnd = fdecl2.endOfCommand[0].children;
 			tokEnd = (declEnd.newline || declEnd.commandSeparator)?.at(0) ?? tokEnd;
-
+			
 		} else if (fdecl.children.regularFunction) {
 			let fdecl2 = fdecl.children.regularFunction[0].children;
 			
@@ -155,7 +152,7 @@ export class ContextFunction extends Context{
 				this._functionType = ContextFunction.Type.Regular;
 				this._returnType = new TypeName(fdecl2.returnType[0]);
 				this._name = new Identifier(fdecl2.name[0]);
-
+				
 			} else if(fdecl2.operator) {
 				this._functionType = ContextFunction.Type.Operator;
 				this._returnType = new TypeName(fdecl2.returnType[0]);
@@ -219,24 +216,18 @@ export class ContextFunction extends Context{
 				} else {
 					this._name = new Identifier(undefined, "??");
 				}
-
 			} else {
 				this._functionType = ContextFunction.Type.Regular;
 				this._returnType = TypeName.typeVoid;
 			}
-
+			
 			if (fdecl2.functionArguments) {
-				let args = fdecl2.functionArguments[0].children.functionArgument;
-				if (args) {
-					for (const each of args) {
-						this._arguments.push(new ContextFunctionArgument(each, this));
-					}
-				}
+				this._processFuncArgs(fdecl2.functionArguments);
 			}
-
+			
 			let declEnd = fdecl2.endOfCommand[0].children;
 			tokEnd = (declEnd.newline || declEnd.commandSeparator)?.at(0) ?? tokEnd;
-
+			
 		} else {
 			this._functionType = ContextFunction.Type.Regular;
 			this._returnType = TypeName.typeVoid;
@@ -259,7 +250,7 @@ export class ContextFunction extends Context{
 		}
 
 		if (tokBegin && tokEnd && this._name?.token) {
-			let args = this._arguments.map(each => `${each.typename.name} ${each.name.name}`);
+			let args = this._arguments.map(each => `${each.typename.name} ${each.simpleName}`);
 			let argText = args.length > 0 ? args.reduce((a,b) => `${a}, ${b}`) : "";
 			let retText = this._returnType?.name || "void";
 			let extText = `(${argText}): ${retText}`;
@@ -342,6 +333,25 @@ export class ContextFunction extends Context{
 	
 	public get resolveFunction(): ResolveFunction | undefined {
 		return this._resolveFunction;
+	}
+	
+	protected _processFuncArgs(nodes: FunctionArgumentsCstNode[]): void {
+		const children = nodes[0].children;
+		
+		this._argBeginPos = Helpers.positionFrom(children.leftParanthesis[0]);
+		
+		let args = children.functionArgument;
+		if (args) {
+			for (const each of args) {
+				this._arguments.push(new ContextFunctionArgument(each, this));
+			}
+		}
+		
+		if (children.comma) {
+			for (const each of children.comma) {
+				this._argCommaPos.push(Helpers.positionFrom(each));
+			}
+		}
 	}
 	
 	public resolveMembers(state: ResolveState): void {
@@ -518,7 +528,7 @@ export class ContextFunction extends Context{
 		
 		if (search.matchableName) {
 			for (const each of this._arguments) {
-				if (search.matchableName.matches(each.name.matchableName)) {
+				if (each.name && search.matchableName.matches(each.name.matchableName)) {
 					search.addArgument(each);
 					if (search.stopSearching) {
 						return;
@@ -528,7 +538,7 @@ export class ContextFunction extends Context{
 			
 		} else if (search.name) {
 			for (const each of this._arguments) {
-				if (search.name == each.name.name) {
+				if (each.name && search.name == each.name.name) {
 					search.addArgument(each);
 					if (search.stopSearching) {
 						return;
@@ -574,7 +584,24 @@ export class ContextFunction extends Context{
 		return this._name ? this.resolveLocation(this._name.range) : undefined;
 	}
 	
+	public argBeforePos(position: Position): integer {
+		var i;
+		for (i=this._argCommaPos.length-1; i>=0; i--) {
+			if (Helpers.isPositionAfter(position, this._argCommaPos[i])) {
+				break;
+			}
+		}
+		return i + 1;
+	}
+	
 	public completion(document: TextDocument, position: Position): CompletionItem[] {
+		if (this._argBeginPos && Helpers.isPositionAfter(position, this._argBeginPos)) {
+			const indexArg = this.argBeforePos(position);
+			if (indexArg >= 0 && indexArg < this._arguments.length) {
+				return this._arguments[indexArg].completion(document, position);
+			}
+		}
+		
 		const npos = this._name?.range?.start;
 		if (!npos || Helpers.isPositionBefore(position, npos)) {
 			if (this._returnType) {
@@ -599,7 +626,9 @@ export class ContextFunction extends Context{
 		}
 		s = `${s})`;
 		console.log(s);
-
+		
+		this.logChildren(this._arguments, console, `${prefixLines}- Arg: `, `${prefixLines}  `);
+		
 		if (this._superToken && this._superCall) {
 			if (this._superToken.image == 'this') {
 				console.log(`${prefixLines}- this`);

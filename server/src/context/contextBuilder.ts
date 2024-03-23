@@ -91,15 +91,16 @@ export class ContextBuilder{
 
 		} else if (c.statementVariables) {
 			let vdecls = c.statementVariables[0].children;
+			let typeNode = vdecls.type[0];
+			let declEnd = vdecls.endOfCommand?.at(0)?.children;
+			let tokEnd = (declEnd?.newline || declEnd?.commandSeparator)?.at(0);
+			const varToken = vdecls.var[0];
+			let stalist: Context[] = [];
+			
 			if (vdecls.statementVariable) {
-				let typeNode = vdecls.type[0];
 				let count = vdecls.statementVariable.length;
 				let commaCount = vdecls.comma?.length || 0;
-				let declEnd = vdecls.endOfCommand[0].children;
-				let tokEnd = (declEnd.newline || declEnd.commandSeparator)![0];
 				var firstVar: ContextVariable | undefined = undefined;
-				let stalist: Context[] = [];
-				const varToken = vdecls.var[0];
 				const isSingleVar = count == 1;
 				const lastIndex = count - 1;
 				
@@ -114,10 +115,17 @@ export class ContextBuilder{
 						firstVar = v;
 					}
 				}
-
-				return stalist;
+				
+			} else {
+				// happens while typing code
+				const v: ContextVariable = new ContextVariable(undefined, typeNode, undefined, tokEnd, varToken, parent);
+				v.isSingleVar = true;
+				v.isLastVar = true;
+				stalist.push(v);
 			}
-
+			
+			return stalist;
+			
 		} else if (c.expression) {
 			return [this.createExpression(c.expression[0], parent)];
 		}

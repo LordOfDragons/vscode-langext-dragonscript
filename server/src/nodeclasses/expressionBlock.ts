@@ -1,6 +1,7 @@
 import { CstNode, IToken } from "chevrotain";
 import { FunctionArgumentCstNode } from "./declareFunction";
 import { StatementsCstNode } from "./statement";
+import { EndOfCommandCstNode } from "./endOfCommand";
 
 
 export interface ExpressionBlockCstNode extends CstNode {
@@ -10,8 +11,8 @@ export interface ExpressionBlockCstNode extends CstNode {
 
 export type ExpressionBlockCstChildren = {
 	expressionBlockBegin: ExpressionBlockBeginCstNode[];
-	statements: StatementsCstNode[];
-	expressionBlockEnd: ExpressionBlockEndCstNode[];
+	statements?: StatementsCstNode[];
+	expressionBlockEnd?: ExpressionBlockEndCstNode[];
 };
 
 
@@ -22,7 +23,9 @@ export interface ExpressionBlockBeginCstNode extends CstNode {
 
 export type ExpressionBlockBeginCstChildren = {
 	block: IToken[];
+	comma?: IToken[];
 	functionArgument?: FunctionArgumentCstNode[];
+	endOfCommand?: EndOfCommandCstNode[];
 };
 
 

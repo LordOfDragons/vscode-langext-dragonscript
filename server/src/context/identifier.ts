@@ -39,7 +39,7 @@ export class Identifier {
 	constructor(token?: IToken, name?: string) {
 		this._token = token;
 		
-		if(name) {
+		if(name !== undefined) {
 			this._name = name;
 		} else if (token) {
 			this._name = token.image;
@@ -47,7 +47,7 @@ export class Identifier {
 			throw Error("Token and name can not both be undefined");
 		}
 		
-		if (token) {
+		if (token && token.isInsertedInRecovery !== true) {
 			this._range = Helpers.rangeFrom(token);
 		}
 	}

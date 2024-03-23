@@ -44,6 +44,7 @@ import { Resolved, ResolveUsage } from "../resolve/resolved";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { CompletionHelper } from "../completionHelper";
 import { ContextDocumentationIterator } from "./documentation";
+import { debugLogMessage } from "../server";
 
 
 export class ContextClass extends Context{
@@ -123,14 +124,15 @@ export class ContextClass extends Context{
 
 				} else if (each.children.classVariables) {
 					let vdecls = each.children.classVariables[0].children;
+					let typeNode = vdecls.type[0];
+					
 					if (vdecls.classVariable) {
-						let typeNode = vdecls.type[0];
 						let count = vdecls.classVariable.length;
 						let commaCount = vdecls.comma?.length || 0;
-						let declEnd = vdecls.endOfCommand[0].children;
-						let tokEnd = (declEnd.newline || declEnd.commandSeparator)![0];
+						let declEnd = vdecls.endOfCommand?.at(0)?.children;
+						let tokEnd = (declEnd?.newline || declEnd?.commandSeparator)?.at(0);
 						var firstVar: ContextClassVariable | undefined = undefined;
-
+						
 						for (let i = 0; i < count; i++) {
 							const v: ContextClassVariable = new ContextClassVariable(vdecls.classVariable[i], typemod, typeNode,
 								firstVar, i < commaCount ? vdecls.comma![i] : tokEnd, this);
@@ -140,6 +142,9 @@ export class ContextClass extends Context{
 								firstVar = v;
 							}
 						}
+						
+					} else {
+						this._declarations.push(new ContextClassVariable(undefined, typemod, typeNode, undefined, tokEnd, this));
 					}
 				}
 			}
@@ -445,6 +450,12 @@ export class ContextClass extends Context{
 	}
 	
 	public completion(document: TextDocument, position: Position): CompletionItem[] {
+		const declaration = this.declarationBefore(position);
+		if (declaration) {
+			debugLogMessage(`class.completion: ${declaration.constructor.name}`);
+			return declaration.completion(document, position);
+		}
+		
 		const range = Range.create(position, position);
 		let items: CompletionItem[] = [];
 		

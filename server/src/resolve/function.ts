@@ -65,7 +65,7 @@ export class ResolveFunction extends Resolved{
 		
 		for (const each of context.arguments) {
 			const type = (each.typename.resolve?.resolved as ResolveType) ?? ResolveNamespace.classVoid;
-			this._signature.addArgument(type, each.name.name);
+			this._signature.addArgument(type, each.simpleName);
 		}
 	}
 

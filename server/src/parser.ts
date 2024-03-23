@@ -119,10 +119,14 @@ export class DSParser extends CstParser{
 	public fullyQualifiedClassName = this.RULE("fullyQualifiedClassName", () => {
 		this.AT_LEAST_ONE_SEP({
 			SEP: DSLexer.tokenPeriod,
-			DEF: () => this.CONSUME(DSLexer.tokenIdentifier)
+			DEF: () => this.SUBRULE(this.fullyQualifiedClassNamePart)
 		})
 	})
-
+	
+	public fullyQualifiedClassNamePart = this.RULE("fullyQualifiedClassNamePart", () => {
+		this.CONSUME(DSLexer.tokenIdentifier);
+	})
+	
 	// end of command
 	public endOfCommand = this.RULE("endOfCommand", () => {
 		this.OR([

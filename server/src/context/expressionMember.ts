@@ -74,7 +74,7 @@ export class ContextMember extends Context{
 		}
 		cm._object = object ? object : ContextBuilder.createExpressionBaseObject(node.children.object[0], cm);
 		
-		const name = node.children.member?.at(memberIndex)?.children.name[0];
+		const name = node.children.member?.at(memberIndex)?.children.name?.at(0);
 		if (name && name.image) {
 			cm._name = new Identifier(name);
 		}
@@ -109,7 +109,7 @@ export class ContextMember extends Context{
 
 	public static newMember(node: ExpressionMemberCstNode, parent: Context) {
 		let cm = new ContextMember(node, 0, parent);
-		cm._name = new Identifier(node.children.name[0]);
+		cm._name = new Identifier(node.children.name?.at(0));
 		cm.range = cm._name?.range;
 		return cm;
 	}

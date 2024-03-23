@@ -743,7 +743,11 @@ export class CompletionHelper {
 	
 	
 	/** Create completion item for local variable. */
-	public static createLocalVariable(variable: ContextVariable, range: Range): CompletionItem {
+	public static createLocalVariable(variable: ContextVariable, range: Range): CompletionItem | undefined {
+		if (!variable.name) {
+			return undefined;
+		}
+		
 		const name = variable.name.name;
 		return {label: name,
 			kind: CompletionItemKind.Variable,
@@ -773,7 +777,10 @@ export class CompletionHelper {
 		let items: CompletionItem[] = [];
 		
 		for (const each of search.localVariables) {
-			items.push(CompletionHelper.createLocalVariable(each, range));
+			const item = CompletionHelper.createLocalVariable(each, range);
+			if (item) {
+				items.push(item);
+			}
 		}
 		
 		for (const each of search.arguments) {

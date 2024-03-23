@@ -46,8 +46,8 @@ import { CodeActionCommentOut } from "../codeactions/commentout";
 
 
 export class ContextVariable extends Context {
-	protected _node: StatementVariableCstNode;
-	protected _name: Identifier;
+	protected _node?: StatementVariableCstNode;
+	protected _name?: Identifier;
 	protected _typename: TypeName;
 	protected _value?: Context;
 	protected _firstVariable?: ContextVariable;
@@ -57,24 +57,28 @@ export class ContextVariable extends Context {
 	public isLastVar = false;
 	
 	
-	constructor(node: StatementVariableCstNode,
+	constructor(node: StatementVariableCstNode | undefined,
 				typeNode: FullyQualifiedClassNameCstNode,
 				firstVar: ContextVariable | undefined,
-				endToken: IToken, varToken: IToken, parent: Context) {
+				endToken: IToken | undefined, varToken: IToken, parent: Context) {
 		super(Context.ContextType.Variable, parent);
 		this._node = node;
+		const children = node?.children;
 		
-		this._name = new Identifier(node.children.name[0]);
+		if (children) {
+			this._name = new Identifier(children.name[0]);
+		}
 		this._typename = new TypeName(typeNode);
 		this._firstVariable = firstVar;
 		
-		if (node.children.value) {
-			this._value = ContextBuilder.createExpression(node.children.value[0], this);
+		if (children?.value) {
+			this._value = ContextBuilder.createExpression(children.value[0], this);
 		}
 		
-		let tokBegin = firstVar ? this._name.token : varToken; //typeNode.children.identifier[0];
+		let tokBegin = firstVar ? this._name?.token : varToken; //typeNode.children.identifier[0];
+		let tokEnd = endToken ?? this._name?.token;
 		if (tokBegin) {
-			this.range = Helpers.rangeFrom(tokBegin, endToken, true, false);
+			this.range = Helpers.rangeFrom(tokBegin, tokEnd, true, false);
 		}
 	}
 
@@ -87,11 +91,11 @@ export class ContextVariable extends Context {
 	}
 
 
-	public get node(): StatementVariableCstNode {
+	public get node(): StatementVariableCstNode | undefined {
 		return this._node;
 	}
 
-	public get name(): Identifier {
+	public get name(): Identifier | undefined {
 		return this._name;
 	}
 
@@ -108,7 +112,7 @@ export class ContextVariable extends Context {
 	}
 
 	public get simpleName(): string {
-		return this._name.name;
+		return this._name?.name ?? "?";
 	}
 	
 	public get resolveVariable(): ResolveLocalVariable | undefined {
@@ -132,52 +136,54 @@ export class ContextVariable extends Context {
 		this._value?.resolveMembers(state);
 		
 		// check for shadowing and duplication
-		const search = new ResolveSearch();
-		search.name = this._name.name;
-		search.addToAllList = true;
-		search.stopAfterFirstMatch = true;
-		state.search(search, this);
-		
-		if (search.all.length > 0) {
-			const found = search.all[0];
+		if (this._name) {
+			const search = new ResolveSearch();
+			search.name = this._name.name;
+			search.addToAllList = true;
+			search.stopAfterFirstMatch = true;
+			state.search(search, this);
 			
-			switch (found.type) {
-			case Context.ContextType.Variable:{
-				let ri: DiagnosticRelatedInformation[] = [];
-				found.addReportInfo(ri, `Target: ${found.reportInfoText}`);
-				state.reportError(this._name.range, `Duplicate local variable ${this._name.name}`, ri);
-				}break;
+			if (search.all.length > 0) {
+				const found = search.all[0];
 				
-			case Context.ContextType.FunctionArgument:
-			case Context.ContextType.TryCatch:{
-				let ri: DiagnosticRelatedInformation[] = [];
-				found.addReportInfo(ri, `Target: ${found.reportInfoText}`);
-				state.reportWarning(this._name.range, `Shadows argument ${this._name.name}`, ri);
-				}break;
-				
-			case Resolved.Type.Variable:{
-				const thisClass = ContextClass.thisContext(this)?.resolveClass;
-				if (thisClass) {
-					const v = found as ResolveVariable;
-					if (v.canAccess(thisClass)) {
-						let ri: DiagnosticRelatedInformation[] = [];
-						v.addReportInfo(ri, `Target: ${v.reportInfoText}`);
-						state.reportWarning(this._name.range, `Shadows variable ${this._name.name} in ${v.parent?.fullyQualifiedName}`, ri);
+				switch (found.type) {
+				case Context.ContextType.Variable:{
+					let ri: DiagnosticRelatedInformation[] = [];
+					found.addReportInfo(ri, `Target: ${found.reportInfoText}`);
+					state.reportError(this._name.range, `Duplicate local variable ${this._name.name}`, ri);
+					}break;
+					
+				case Context.ContextType.FunctionArgument:
+				case Context.ContextType.TryCatch:{
+					let ri: DiagnosticRelatedInformation[] = [];
+					found.addReportInfo(ri, `Target: ${found.reportInfoText}`);
+					state.reportWarning(this._name.range, `Shadows argument ${this._name.name}`, ri);
+					}break;
+					
+				case Resolved.Type.Variable:{
+					const thisClass = ContextClass.thisContext(this)?.resolveClass;
+					if (thisClass) {
+						const v = found as ResolveVariable;
+						if (v.canAccess(thisClass)) {
+							let ri: DiagnosticRelatedInformation[] = [];
+							v.addReportInfo(ri, `Target: ${v.reportInfoText}`);
+							state.reportWarning(this._name.range, `Shadows variable ${this._name.name} in ${v.parent?.fullyQualifiedName}`, ri);
+						}
 					}
-				}
-				}break;
-				
-			case Resolved.Type.Function:{
-				const thisClass = ContextClass.thisContext(this)?.resolveClass;
-				if (thisClass) {
-					const f = found as ResolveFunction;
-					if (f.canAccess(thisClass)) {
-						let ri: DiagnosticRelatedInformation[] = [];
-						f.addReportInfo(ri, `Target: ${f.reportInfoText}`);
-						state.reportWarning(this._name.range, `Shadows function ${this._name.name} in ${f.parent?.fullyQualifiedName}`, ri);
+					}break;
+					
+				case Resolved.Type.Function:{
+					const thisClass = ContextClass.thisContext(this)?.resolveClass;
+					if (thisClass) {
+						const f = found as ResolveFunction;
+						if (f.canAccess(thisClass)) {
+							let ri: DiagnosticRelatedInformation[] = [];
+							f.addReportInfo(ri, `Target: ${f.reportInfoText}`);
+							state.reportWarning(this._name.range, `Shadows function ${this._name.name} in ${f.parent?.fullyQualifiedName}`, ri);
+						}
 					}
+					}break;
 				}
-				}break;
 			}
 		}
 		
@@ -206,7 +212,7 @@ export class ContextVariable extends Context {
 	}
 	
 	protected _doCheckUsage(state: ResolveState): void {
-		if (!this._resolveVariable) {
+		if (!this._resolveVariable || !this._name) {
 			return;
 		}
 		
@@ -283,14 +289,14 @@ export class ContextVariable extends Context {
 	}
 
 	protected updateHover(position: Position): Hover | null {
-		if (this._name.isPositionInside(position)) {
+		if (this._name?.isPositionInside(position)) {
 			return new HoverInfo(this.resolveTextLong, this._name.range);
 		}
-
+		
 		if (!this._firstVariable && this._typename.isPositionInside(position)) {
 			return this._typename.hover(position);
 		}
-
+		
 		return null;
 	}
 
@@ -307,7 +313,7 @@ export class ContextVariable extends Context {
 	}
 
 	public search(search: ResolveSearch, before?: Context): void {
-		if (search.onlyTypes || search.stopSearching) {
+		if (!this._name || search.onlyTypes || search.stopSearching) {
 			return;
 		}
 		
@@ -326,7 +332,7 @@ export class ContextVariable extends Context {
 	}
 	
 	public definition(position: Position): Definition {
-		if (this._name.isPositionInside(position)) {
+		if (this._name?.isPositionInside(position)) {
 			return this.definitionSelf();
 		}
 		if (!this._firstVariable && this._typename.isPositionInside(position)) {
@@ -347,11 +353,12 @@ export class ContextVariable extends Context {
 			}
 		}
 		
-		return CompletionHelper.createType(Range.create(position, position), this);
+		// TODO propose variable names
+		return []
 	}
 	
 	public resolvedAtPosition(position: Position): Resolved | undefined {
-		if (this._name.isPositionInside(position)) {
+		if (this._name?.isPositionInside(position)) {
 			return this._resolveVariable;
 		} else if (this._typename?.isPositionInside(position)) {
 			return this._typename.resolve?.resolved;
@@ -366,12 +373,12 @@ export class ContextVariable extends Context {
 	}
 	
 	public get referenceSelf(): Location | undefined {
-		return this.resolveLocation(this._name.range);
+		return this._name ? this.resolveLocation(this._name.range) : undefined;
 	}
 
 
 	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
-		console.log(`${prefix}Local Variable ${this._typename.name} ${this._name}`);
+		console.log(`${prefix}Local Variable ${this._typename.name} ${this._name} ${Helpers.logRange(this.range)}`);
 		this._value?.log(console, `${prefixLines}- Value: `, `${prefixLines}  `);
 	}
 }

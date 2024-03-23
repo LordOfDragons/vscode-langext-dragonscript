@@ -23,8 +23,8 @@
  */
 
 import { Context } from "./context";
-import { CompletionItem, Definition, DocumentSymbol, Hover, Location, Position, Range, RemoteConsole, SignatureHelp, SymbolKind } from "vscode-languageserver";
-import { ExpressionBlockCstNode } from "../nodeclasses/expressionBlock";
+import { CompletionItem, Definition, DocumentSymbol, Hover, Location, Position, Range, RemoteConsole, SignatureHelp, SymbolKind, integer } from "vscode-languageserver";
+import { ExpressionBlockBeginCstNode, ExpressionBlockCstNode } from "../nodeclasses/expressionBlock";
 import { ContextFunctionArgument } from "./classFunctionArgument";
 import { ContextStatements } from "./statements";
 import { ResolveSearch } from "../resolve/search";
@@ -37,15 +37,18 @@ import { TypeName } from "./typename";
 import { IToken } from "chevrotain";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { CompletionHelper } from "../completionHelper";
+import { debugLogMessage } from "../server";
 
 
 export class ContextBlock extends Context{
 	protected _node: ExpressionBlockCstNode;
 	protected _tokenBlock: IToken;
+	protected _posAfterBlock: Position;
 	protected _arguments: ContextFunctionArgument[];
 	protected _statements: ContextStatements;
 	protected _resolveFunction?: ResolveFunction;
 	protected _returnType: TypeName;
+	protected _argCommaPos: Position[] = [];
 
 
 	constructor(node: ExpressionBlockCstNode, parent: Context) {
@@ -55,6 +58,7 @@ export class ContextBlock extends Context{
 		
 		this._node = node;
 		this._tokenBlock = children.block[0];
+		this._posAfterBlock = Helpers.positionFrom(this._tokenBlock, false);
 		this._arguments = [];
 		this._returnType = TypeName.typeObject;
 		
@@ -65,26 +69,52 @@ export class ContextBlock extends Context{
 			}
 		}
 		
-		this._statements = new ContextStatements(node.children.statements[0], this);
+		if (children.comma) {
+			for (const each of children.comma) {
+				this._argCommaPos.push(Helpers.positionFrom(each));
+			}
+		}
+		
+		this._statements = new ContextStatements(node.children.statements?.at(0), this);
 		
 		let tokBegin = this._tokenBlock;
-		let tokEnd = node.children.expressionBlockEnd[0].children.end[0];
+		let posBegin = Helpers.positionFrom(tokBegin);
 		
-		this.range = Helpers.rangeFrom(tokBegin, tokEnd, true, false);
+		var posEnd: Position | undefined;
 		
-		let args = this._arguments.map(each => `${each.typename.name} ${each.name.name}`);
+		let tokEnd = node.children.expressionBlockEnd?.at(0)?.children.end[0];
+		if (tokEnd) {
+			posEnd = Helpers.positionFrom(tokEnd, false);
+		}
+		if (!posEnd) {
+			posEnd = this._statements.range?.end;
+		}
+		if (!posEnd && this._arguments.length > 0) {
+			posEnd = this._arguments[this._arguments.length - 1].range?.end;
+		}
+		if (!posEnd) {
+			posEnd = Helpers.positionFrom(tokBegin, false);
+		}
+		
+		if (posEnd) {
+			this.range = Helpers.rangeFromPosition(posBegin, posEnd);
+		}
+		
+		let args = this._arguments.map(each => `${each.typename.name} ${each.simpleName}`);
 		let argText = args.length > 0 ? args.reduce((a,b) => `${a}, ${b}`) : "";
 		
-		this.documentSymbol = DocumentSymbol.create("block", `(${argText}): Object`,
-			SymbolKind.Function, this.range, Helpers.rangeFrom(tokBegin, tokEnd, true, true));
-		
-		let collected: DocumentSymbol[] = [];
-		this._statements.collectChildDocSymbols(collected);
-		if (collected.length > 0) {
-			if (!this.documentSymbol.children) {
-				this.documentSymbol.children = [];
+		if (this.range) {
+			this.documentSymbol = DocumentSymbol.create("block", `(${argText}): Object`,
+				SymbolKind.Function, this.range, Helpers.rangeFrom(tokBegin, tokEnd, true, true));
+			
+			let collected: DocumentSymbol[] = [];
+			this._statements.collectChildDocSymbols(collected);
+			if (collected.length > 0) {
+				if (!this.documentSymbol.children) {
+					this.documentSymbol.children = [];
+				}
+				this.documentSymbol.children.push(...collected);
 			}
-			this.documentSymbol.children.push(...collected);
 		}
 	}
 	
@@ -124,7 +154,17 @@ export class ContextBlock extends Context{
 	public get resolveFunction(): ResolveFunction | undefined {
 		return this._resolveFunction;
 	}
-
+	
+	public argBeforePos(position: Position): integer {
+		var i;
+		for (i=this._argCommaPos.length-1; i>=0; i--) {
+			if (Helpers.isPositionAfter(position, this._argCommaPos[i])) {
+				break;
+			}
+		}
+		return i + 1;
+	}
+	
 	public search(search: ResolveSearch, before?: Context): void {
 		if (search.onlyTypes || search.stopSearching) {
 			return;
@@ -132,7 +172,7 @@ export class ContextBlock extends Context{
 		
 		if (search.matchableName) {
 			for (const each of this._arguments) {
-				if (search.matchableName.matches(each.name.matchableName)) {
+				if (each.name && search.matchableName.matches(each.name.matchableName)) {
 					search.addArgument(each);
 					if (search.stopSearching) {
 						return;
@@ -142,7 +182,7 @@ export class ContextBlock extends Context{
 			
 		} else if(search.name) {
 			for (const each of this._arguments) {
-				if (search.name == each.name.name) {
+				if (each.name && search.name == each.name.name) {
 					search.addArgument(each);
 					if (search.stopSearching) {
 						return;
@@ -277,7 +317,14 @@ export class ContextBlock extends Context{
 		return this.resolveLocation(Helpers.rangeFrom(this._tokenBlock));
 	}
 	
-	public completion(_document: TextDocument, position: Position): CompletionItem[] {
+	public completion(document: TextDocument, position: Position): CompletionItem[] {
+		if (Helpers.isPositionAfter(position, this._posAfterBlock)) {
+			const indexArg = this.argBeforePos(position);
+			if (indexArg >= 0 && indexArg < this._arguments.length) {
+				return this._arguments[indexArg].completion(document, position);
+			}
+		}
+		
 		return CompletionHelper.createType(Range.create(position, position), this);
 	}
 	

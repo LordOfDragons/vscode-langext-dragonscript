@@ -14,7 +14,7 @@ export type StatementVariablesCstChildren = {
 	type: FullyQualifiedClassNameCstNode[];
 	comma?: IToken[];
 	statementVariable?: StatementVariableCstNode[];
-	endOfCommand: EndOfCommandCstNode[];
+	endOfCommand?: EndOfCommandCstNode[];
 };
 
 

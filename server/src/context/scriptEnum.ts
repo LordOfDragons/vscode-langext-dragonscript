@@ -91,6 +91,10 @@ export class ContextEnumEntry extends Context{
 		return n ? `${n}.${this._name}` : this._name.name;
 	}
 	
+	public get simpleName(): string {
+		return this._name.name;
+	}
+	
 	public static get typeModifiers(): Context.TypeModifierSet {
 		if (!ContextEnumEntry._typeModifiers) {
 			ContextEnumEntry._typeModifiers = new Context.TypeModifierSet(undefined, Context.TypeModifier.Public);

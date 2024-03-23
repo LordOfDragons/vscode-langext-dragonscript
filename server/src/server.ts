@@ -70,6 +70,7 @@ import { PackageWorkspace } from './package/workspacepackage';
 import { Context } from './context/context';
 import { DocumentationValidator } from './documentationValidator';
 import { Package } from './package/package';
+import { Helpers } from './helpers';
 
 // Create a connection for the server, using Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -425,7 +426,8 @@ connection.onCompletion(
 		}
 		
 		try {
-			//console.log(`onCompletion: ${sd.context.contextAtPosition(params.position)?.constructor.name}`);
+			console.log(`onCompletion ${Helpers.logPosition(params.position)}: ${sd.context.contextAtPosition(params.position)?.constructor.name}`);
+			debugLogContext(sd.context.contextAtPosition(params.position));
 			return sd.context.
 				contextAtPosition(params.position)?.
 				completion(document, params.position) ?? [];

@@ -39,7 +39,7 @@ export class ResolveVariable extends Resolved{
 	
 	
 	constructor (context: ContextClassVariable | ContextEnumEntry) {
-		super(context.name.name, Resolved.Type.Variable);
+		super(context.simpleName, Resolved.Type.Variable);
 		this._context = context;
 		
 		if (context.type === Context.ContextType.ClassVariable) {

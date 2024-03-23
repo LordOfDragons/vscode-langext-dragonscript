@@ -33,12 +33,11 @@ import { Helpers } from "../helpers";
 import { Resolved, ResolveUsage } from "../resolve/resolved";
 import { ResolveArgument } from "../resolve/argument";
 import { TextDocument } from "vscode-languageserver-textdocument";
-import { CompletionHelper } from "../completionHelper";
 
 
 export class ContextFunctionArgument extends Context{
 	protected _node: FunctionArgumentCstNode;
-	protected _name: Identifier;
+	protected _name?: Identifier;
 	protected _typename: TypeName;
 	protected _resolveArgument?: ResolveArgument;
 	
@@ -46,14 +45,21 @@ export class ContextFunctionArgument extends Context{
 	constructor(node: FunctionArgumentCstNode, parent: Context) {
 		super(Context.ContextType.FunctionArgument, parent)
 		this._node = node
-		this._name = new Identifier(node.children.name[0]);
+		
+		const nodeName = node.children.name?.at(0);
+		if (nodeName) {
+			this._name = new Identifier(nodeName);
+		}
 		this._typename = new TypeName(node.children.type[0]);
 		
-		let tokBegin = node.children.type[0].children.identifier[0];
-		let tokEnd = node.children.name[0];
-		this.range = Helpers.rangeFrom(tokBegin, tokEnd, true, false);
-		this.documentSymbol = DocumentSymbol.create(this._name.name, this._typename.name,
-			SymbolKind.Variable, this.range, Helpers.rangeFrom(tokBegin, tokEnd, true, true));
+		let tokBegin = node.children.type[0].children.fullyQualifiedClassNamePart?.at(0)?.children.identifier?.at(0);
+		let tokEnd = nodeName ?? this._typename.lastToken;
+		
+		if (this._name && tokBegin && tokEnd) {
+			this.range = Helpers.rangeFrom(tokBegin, tokEnd, true, false);
+			this.documentSymbol = DocumentSymbol.create(this._name.name, this._typename.name,
+				SymbolKind.Variable, this.range, Helpers.rangeFrom(tokBegin, tokEnd, true, true));
+		}
 	}
 	
 	dispose(): void {
@@ -68,7 +74,7 @@ export class ContextFunctionArgument extends Context{
 		return this._node
 	}
 	
-	public get name(): Identifier {
+	public get name(): Identifier | undefined {
 		return this._name
 	}
 	
@@ -77,11 +83,11 @@ export class ContextFunctionArgument extends Context{
 	}
 	
 	public get fullyQualifiedName(): string {
-		return this._name.name;
+		return this._name?.name || "?";
 	}
 	
 	public get simpleName(): string {
-		return this._name.name;
+		return this._name?.name || "?";
 	}
 	
 	public get resolveArgument(): ResolveArgument | undefined {
@@ -113,7 +119,7 @@ export class ContextFunctionArgument extends Context{
 	}
 	
 	protected updateHover(position: Position): Hover | null {
-		if (this._name.isPositionInside(position)) {
+		if (this._name?.isPositionInside(position)) {
 			return new HoverInfo(this.resolveTextLong, this._name.range);
 		}
 		if (this._typename.isPositionInside(position)) {
@@ -137,7 +143,7 @@ export class ContextFunctionArgument extends Context{
 	}
 	
 	public definition(position: Position): Definition {
-		if (this._name.isPositionInside(position)) {
+		if (this._name?.isPositionInside(position)) {
 			return this.definitionSelf();
 		}
 		if (this._typename.isPositionInside(position)) {
@@ -147,9 +153,10 @@ export class ContextFunctionArgument extends Context{
 	}
 	
 	public resolvedAtPosition(position: Position): Resolved | undefined {
-		if (this._name.isPositionInside(position)) {
+		if (this._name?.isPositionInside(position)) {
 			return this._resolveArgument;
-		} else if (this._typename?.isPositionInside(position)) {
+		}
+		if (this._typename?.isPositionInside(position)) {
 			return this._typename.resolve?.resolved;
 		}
 		return super.resolvedAtPosition(position);
@@ -162,11 +169,11 @@ export class ContextFunctionArgument extends Context{
 	}
 	
 	public get referenceSelf(): Location | undefined {
-		return this.resolveLocation(this._name.range);
+		return this.resolveLocation(this._name?.range);
 	}
 	
 	public completion(document: TextDocument, position: Position): CompletionItem[] {
-		const npos = this._name.range?.start;
+		const npos = this._name?.range?.start;
 		if (!npos || Helpers.isPositionBefore(position, npos)) {
 			return this._typename.completion(document, position, this);
 		}
@@ -175,6 +182,6 @@ export class ContextFunctionArgument extends Context{
 	
 	
 	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
-		console.log(`${prefix}Argument ${this._typename.name} ${this._name}`)
+		console.log(`${prefix}${this._typename.name} ${this._name}`)
 	}
 }

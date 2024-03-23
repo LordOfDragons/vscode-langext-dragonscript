@@ -7,5 +7,15 @@ export interface FullyQualifiedClassNameCstNode extends CstNode {
 }
 
 export type FullyQualifiedClassNameCstChildren = {
-	identifier: IToken[];
+	fullyQualifiedClassNamePart?: FullyQualifiedClassNamePartCstNode[];
+};
+
+
+export interface FullyQualifiedClassNamePartCstNode extends CstNode {
+	name: "fullyQualifiedClassNamePart";
+	children: FullyQualifiedClassNamePartCstChildren;
+}
+
+export type FullyQualifiedClassNamePartCstChildren = {
+	identifier?: IToken[];
 };
