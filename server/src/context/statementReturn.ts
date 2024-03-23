@@ -88,6 +88,7 @@ export class ContextReturn extends Context{
 		if (cbf.type == Context.ContextType.Function) {
 			switch ((cbf as ContextFunction).functionType) {
 			case ContextFunction.Type.Constructor:
+			case ContextFunction.Type.Destructor:
 				frt = ResolveNamespace.classVoid;
 				break;
 			}

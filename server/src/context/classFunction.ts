@@ -46,6 +46,8 @@ import { Resolved, ResolveUsage } from "../resolve/resolved";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { CompletionHelper } from "../completionHelper";
 import { debugLogMessage } from "../server";
+import { CodeActionRemove } from "../codeactions/remove";
+import { CodeActionReplace } from "../codeactions/replace";
 
 
 export class ContextFunction extends Context{
@@ -54,9 +56,11 @@ export class ContextFunction extends Context{
 	protected _functionType: ContextFunction.Type;
 	protected _name?: Identifier;
 	protected _returnType?: TypeName;
+	protected _realReturnType?: TypeName;
 	protected _arguments: ContextFunctionArgument[] = [];
 	protected _argCommaPos: Position[] = [];
 	protected _argBeginPos?: Position;
+	protected _argEndPos?: Position;
 	protected _superToken?: IToken;
 	protected _superCall?: ContextFunctionCall;
 	protected _statements?: ContextStatements;
@@ -102,64 +106,44 @@ export class ContextFunction extends Context{
 				}
 			}
 		}
-
+		
 		if (!fdecl) {
 			this._functionType = ContextFunction.Type.Regular;
 			this._returnType = TypeName.typeVoid;
-			debugLogMessage(`DEBUG: HIT 1`);
 			return;
 		}
 		
-		if (fdecl.children.classConstructor) {
-			let fdecl2 = fdecl.children.classConstructor[0].children;
-			this._functionType = ContextFunction.Type.Constructor;
-			this._name = new Identifier(fdecl2.identifier[0]); // is always "new"
-			this._returnType = ownerTypeName ? TypeName.typeNamed(ownerTypeName) : TypeName.typeObject;
-			this._typeModifiers.add(Context.TypeModifier.Static);
+		let fdecl2 = fdecl.children;
+		if (fdecl2.returnType) {
+			this._realReturnType = new TypeName(fdecl2.returnType[0]);
+		}
+		
+		if (fdecl2.functionName) {
+			const fdecl3 = fdecl2.functionName[0].children;
+			const identName = fdecl3?.name?.at(0);
+			const name = identName?.image;
 			
-			if (fdecl2.functionArguments) {
-				this._processFuncArgs(fdecl2.functionArguments);
-			}
-			
-			if (fdecl2.functionCall) {
-				let args = fdecl2.functionCall[0].children.argument;
-				if (args) {
-					if (fdecl2.this) {
-						this._superToken = fdecl2.this[0];
-						this._superCall = ContextFunctionCall.newSuperCall(fdecl2.functionCall[0], this, fdecl2.this[0]);
-					} else if (fdecl2.super) {
-						this._superToken = fdecl2.super[0];
-						this._superCall = ContextFunctionCall.newSuperCall(fdecl2.functionCall[0], this, fdecl2.super[0]);
-					}
+			if (name) {
+				this._name = new Identifier(identName);
+				
+				if (name == 'new') {
+					this._functionType = ContextFunction.Type.Constructor;
+					this._returnType = ownerTypeName ? TypeName.typeNamed(ownerTypeName) : TypeName.typeObject;
+					this._typeModifiers.add(Context.TypeModifier.Static);
+					docSymKind = SymbolKind.Constructor;
+					
+				} else if (name == 'destructor') {
+					this._functionType = ContextFunction.Type.Destructor;
+					this._returnType = TypeName.typeVoid;
+					
+				} else {
+					this._functionType = ContextFunction.Type.Regular;
+					this._returnType = this._realReturnType;
 				}
-			}
-			
-			let declEnd = fdecl2.endOfCommand?.at(0)?.children;
-			tokEnd = (declEnd?.newline || declEnd?.commandSeparator)?.at(0) ?? tokEnd;
-			docSymKind = SymbolKind.Constructor;
-			
-		} else if (fdecl.children.classDestructor) {
-			let fdecl2 = fdecl.children.classDestructor[0].children;
-			this._functionType = ContextFunction.Type.Destructor;
-			this._name = new Identifier(fdecl2.identifier[0]); // is always "destructor"
-			this._returnType = TypeName.typeVoid;
-			debugLogMessage(`DEBUG: HIT 2`);
-			
-			let declEnd = fdecl2.endOfCommand?.at(0)?.children;
-			tokEnd = (declEnd?.newline || declEnd?.commandSeparator)?.at(0) ?? tokEnd;
-			
-		} else if (fdecl.children.regularFunction) {
-			let fdecl2 = fdecl.children.regularFunction[0].children;
-			this._returnType = new TypeName(fdecl2.returnType[0]);
-			
-			let fdecl3 = fdecl2.regularFunctionName?.at(0)?.children;
-			
-			if (fdecl3?.name?.at(0)?.image) {
-				this._functionType = ContextFunction.Type.Regular;
-				this._name = new Identifier(fdecl3.name[0]);
 				
 			} else if(fdecl3?.operator) {
 				this._functionType = ContextFunction.Type.Operator;
+				this._returnType = this._realReturnType;
 				docSymKind = SymbolKind.Operator;
 				
 				let odecl = fdecl3.operator[0].children;
@@ -225,22 +209,35 @@ export class ContextFunction extends Context{
 				this._functionType = ContextFunction.Type.Regular;
 			}
 			
-			if (fdecl2.functionArguments) {
-				this._processFuncArgs(fdecl2.functionArguments);
-			}
-			
-			let declEnd = fdecl2.endOfCommand?.at(0)?.children;
-			tokEnd = (declEnd?.newline || declEnd?.commandSeparator)?.at(0) ?? tokEnd;
-			
 		} else {
 			this._functionType = ContextFunction.Type.Regular;
 			this._returnType = TypeName.typeVoid;
-			debugLogMessage(`DEBUG: HIT 3`);
 		}
-
+		
+		if (fdecl2.functionArguments) {
+			this._processFuncArgs(fdecl2.functionArguments);
+		}
+		
+		const fdeclsc = fdecl2.functionSuperCall?.at(0)?.children;
+		if (fdeclsc?.functionCall) {
+			let args = fdeclsc.functionCall[0].children.argument;
+			if (args) {
+				if (fdeclsc.this) {
+					this._superToken = fdeclsc.this[0];
+					this._superCall = ContextFunctionCall.newSuperCall(fdeclsc.functionCall[0], this, fdeclsc.this[0]);
+				} else if (fdeclsc.super) {
+					this._superToken = fdeclsc.super[0];
+					this._superCall = ContextFunctionCall.newSuperCall(fdeclsc.functionCall[0], this, fdeclsc.super[0]);
+				}
+			}
+		}
+		
+		let declEnd = fdecl2.endOfCommand?.at(0)?.children;
+		tokEnd = (declEnd?.newline || declEnd?.commandSeparator)?.at(0) ?? tokEnd;
+		
 		if (cfdecl?.children.statements) {
 			this._statements = new ContextStatements(cfdecl.children.statements[0], this);
-
+			
 			let declEnd = cfdecl.children.functionEnd;
 			if (declEnd) {
 				if (declEnd[0].children.end) {
@@ -251,13 +248,13 @@ export class ContextFunction extends Context{
 				}
 			}
 		}
-
+		
 		if (tokBegin && tokEnd && this._name?.token) {
 			let args = this._arguments.map(each => `${each.typename.name} ${each.simpleName}`);
 			let argText = args.length > 0 ? args.reduce((a,b) => `${a}, ${b}`) : "";
 			let retText = this._returnType?.name || "void";
 			let extText = `(${argText}): ${retText}`;
-
+			
 			this.range = Helpers.rangeFrom(tokBegin, tokEnd, true, false);
 			this.documentSymbol = DocumentSymbol.create(this._name.name, extText,
 				docSymKind, this.range, Helpers.rangeFrom(this._name.token, tokEnd, true, true));
@@ -280,7 +277,8 @@ export class ContextFunction extends Context{
 		this._resolveFunction = undefined;
 
 		super.dispose()
-		this._returnType?.dispose();
+		this._realReturnType?.dispose();
+		this._returnType = undefined;
 		for (const each of this._arguments) {
 			each.dispose();
 		}
@@ -307,6 +305,10 @@ export class ContextFunction extends Context{
 
 	public get returnType(): TypeName | undefined {
 		return this._returnType;
+	}
+
+	public get realReturnType(): TypeName | undefined {
+		return this._realReturnType;
 	}
 
 	public get arguments(): ContextFunctionArgument[] {
@@ -342,6 +344,9 @@ export class ContextFunction extends Context{
 		const children = nodes[0].children;
 		
 		this._argBeginPos = Helpers.positionFrom(children.leftParanthesis[0]);
+		if (children.rightParanthesis) {
+			this._argEndPos = Helpers.positionFrom(children.rightParanthesis[0], false);
+		}
 		
 		let args = children.functionArgument;
 		if (args) {
@@ -372,21 +377,73 @@ export class ContextFunction extends Context{
 			this._superCall?.resolveMembers(state);
 			this._statements?.resolveMembers(state);
 		});
-
+		
 		this._resolveFunction = new ResolveFunction(this);
 		if (this.parent) {
 			var container: ResolveType | undefined;
-			if (this.parent.type === Context.ContextType.Class) {
+			switch (this.parent.type) {
+			case Context.ContextType.Class:
 				container = (this.parent as ContextClass).resolveClass;
-			} else if (this.parent.type === Context.ContextType.Interface) {
+				break;
+				
+			case Context.ContextType.Interface:
 				container = (this.parent as ContextInterface).resolveInterface;
+				break;
 			}
-
+			
 			if (container) {
 				if (!container.addFunction(this._resolveFunction)) {
 					if (this._name?.range) {
 						state.reportError(this._name.range, `Duplicate function ${this._name}`);
 					}
+				}
+			}
+		}
+		
+		// show problems
+		if (this._name) {
+			switch (this._functionType){
+			case ContextFunction.Type.Constructor:
+			case ContextFunction.Type.Destructor:
+				if (this._realReturnType) {
+					const di = state.reportError(this._name.range,
+						`${ResolveFunction.functionTypeTitle(this._functionType)} can not have a return type`);
+					if (di && this._realReturnType?.range) {
+						const ca = new CodeActionRemove(di, "Remove return type", this._realReturnType?.range, this);
+						ca.extendEnd = true;
+						this._codeActions.push(ca);
+					}
+				}
+				break;
+				
+			case ContextFunction.Type.Regular:
+			case ContextFunction.Type.Operator:
+				if (!this._realReturnType) {
+					state.reportError(this._name.range,
+						`${ResolveFunction.functionTypeTitle(this._functionType)} requires a return type`);
+				}
+				break;
+			}
+			
+			if (this._functionType !== ContextFunction.Type.Constructor && this._superCall) {
+				const di = state.reportError(this._name.range,
+					`${ResolveFunction.functionTypeTitle(this._functionType)} can not have a super call`);
+				if (di && this._superCall?.range) {
+					const ca = new CodeActionRemove(di, "Remove super call", this._superCall?.range, this);
+					ca.extendBegin = true;
+					this._codeActions.push(ca);
+				}
+			}
+			
+			if (this._functionType === ContextFunction.Type.Destructor && this._arguments.length > 0) {
+				const di = state.reportError(this._name.range,
+					`${ResolveFunction.functionTypeTitle(this._functionType)} can not have arguments`);
+				if (di && this._argBeginPos && this._argEndPos) {
+					const ca = new CodeActionRemove(di, "Remove arguments",
+						Helpers.rangeFromPosition(this._argBeginPos, this._argEndPos), this);
+					ca.extendBegin = true;
+					ca.extendEnd = true;
+					this._codeActions.push(ca);
 				}
 			}
 		}

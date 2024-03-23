@@ -51,8 +51,7 @@ export class ResolveFunction extends Resolved{
 		
 		switch (context.type) {
 		case Context.ContextType.Function:
-			let cxtfunc = context as ContextFunction;
-			this._returnType = cxtfunc.returnType?.resolve?.resolved as ResolveType;
+			this._returnType = (context as ContextFunction).returnType?.resolve?.resolved as ResolveType;
 			break;
 			
 		case Context.ContextType.Block:
@@ -177,6 +176,25 @@ export class ResolveFunction extends Resolved{
 		return r ? [r] : [];
 	}
 	
+	public static functionTypeTitle(type: ContextFunction.Type): string {
+		switch (type){
+		case ContextFunction.Type.Constructor:
+			return 'Constructor';
+			
+		case ContextFunction.Type.Destructor:
+			return 'Destructor';
+			
+		case ContextFunction.Type.Regular:
+			return 'Function';
+			
+		case ContextFunction.Type.Operator:
+			return 'Operator';
+			
+		default:
+			return '?';
+		}
+	}
+	
 	public createCompletionItem(range: Range): CompletionItem {
 		let commitCharacters: string[] = [];
 		var label = this._name;
@@ -188,26 +206,24 @@ export class ResolveFunction extends Resolved{
 			switch (this._context.type) {
 			case Context.ContextType.Function:{
 				const ct = this._context as ContextFunction;
+				title = ResolveFunction.functionTypeTitle(ct.functionType).toLowerCase();
+				
 				switch (ct.functionType) {
 				case ContextFunction.Type.Constructor:
-					title = 'constructor';
 					text = text + this.createSnippetSignature();
 					label = `🚀 ${label}`;
 					break;
 					
 				case ContextFunction.Type.Destructor:
-					title = 'destructor';
 					text = text + '()';
 					label = `💣 ${label}`;
 					break;
 					
 				case ContextFunction.Type.Operator:
-					title = 'operator';
 					commitCharacters.push('.');
 					break;
 					
 				default:
-					title = 'function';
 					text = text + this.createSnippetSignature();
 					commitCharacters.push('.');
 					break;

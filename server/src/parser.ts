@@ -238,13 +238,29 @@ export class DSParser extends CstParser{
 			}
 		})
 	})
-
-	// declare function arguments
-	public functionArgument = this.RULE("functionArgument", () => {
-		this.SUBRULE(this.fullyQualifiedClassName, {LABEL: "type"})
-		this.CONSUME(DSLexer.tokenIdentifier, {LABEL: "name"})
+	
+	// begin class function declaration
+	public functionBegin = this.RULE("functionBegin", () => {
+		this.OPTION({
+			GATE: () => this.LA(1).tokenType !== DSLexer.tokenIdentifier
+				|| (this.LA(1).image != "new" && this.LA(1).image != "destructor"),
+			DEF: () => this.SUBRULE(this.fullyQualifiedClassName, {LABEL: "returnType"})
+		})
+		this.SUBRULE(this.functionName)
+		this.SUBRULE(this.functionArguments)
+		this.OPTION2(() => {
+			this.SUBRULE(this.functionSuperCall)
+		})
+		this.SUBRULE(this.endOfCommand)
 	})
-
+	
+	public functionName = this.RULE("functionName", () => {
+		this.OR([
+			{ALT: () => this.CONSUME(DSLexer.tokenIdentifier, {LABEL: "name"})},
+			{ALT: () => this.SUBRULE(this.functionOperator, {LABEL: "operator"})}
+		])
+	})
+	
 	public functionArguments = this.RULE("functionArguments", () => {
 		this.CONSUME(DSLexer.tokenLParan)
 		this.MANY_SEP({
@@ -254,58 +270,19 @@ export class DSParser extends CstParser{
 		this.CONSUME(DSLexer.tokenRParan)
 	})
 	
-	// declare class constructor
-	public classConstructor = this.RULE("classConstructor", () => {
-		this.CONSUME(DSLexer.tokenIdentifier)  // is always "new"
-		this.SUBRULE(this.functionArguments)
-		this.OPTION(() => {
-			this.OR([
-				{ALT: () => this.CONSUME(DSLexer.tokenThis)},
-				{ALT: () => this.CONSUME(DSLexer.tokenSuper)}
-			])
-			this.SUBRULE(this.functionCall)
-		})
-		this.SUBRULE(this.endOfCommand)
-	})
-
-	// declare class destructor
-	public classDestructor = this.RULE("classDestructor", () => {
-		this.CONSUME(DSLexer.tokenIdentifier)  // is always "destructor"
-		this.CONSUME(DSLexer.tokenLParan)
-		this.CONSUME(DSLexer.tokenRParan)
-		this.SUBRULE(this.endOfCommand)
+	public functionArgument = this.RULE("functionArgument", () => {
+		this.SUBRULE(this.fullyQualifiedClassName, {LABEL: "type"})
+		this.CONSUME(DSLexer.tokenIdentifier, {LABEL: "name"})
 	})
 	
-	// declare regular class function
-	public regularFunction = this.RULE("regularFunction", () => {
-		this.SUBRULE(this.fullyQualifiedClassName, {LABEL: "returnType"})
-		this.SUBRULE(this.regularFunctionName)
-		this.SUBRULE(this.functionArguments)
-		this.SUBRULE(this.endOfCommand)
-	})
-	
-	public regularFunctionName = this.RULE("regularFunctionName", () => {
+	public functionSuperCall = this.RULE("functionSuperCall", () => {
 		this.OR([
-			{ALT: () => this.CONSUME(DSLexer.tokenIdentifier, {LABEL: "name"})},
-			{ALT: () => this.SUBRULE(this.functionOperator, {LABEL: "operator"})}
+			{ALT: () => this.CONSUME(DSLexer.tokenThis)},
+			{ALT: () => this.CONSUME(DSLexer.tokenSuper)}
 		])
+		this.SUBRULE(this.functionCall)
 	})
 	
-	// begin class function declaration
-	public functionBegin = this.RULE("functionBegin", () => {
-		this.OR([
-			{
-				GATE: () => this.LA(1).tokenType === DSLexer.tokenIdentifier && this.LA(1).image == "new",
-				ALT: () => this.SUBRULE(this.classConstructor)
-			},
-			{
-				GATE: () => this.LA(1).tokenType === DSLexer.tokenIdentifier && this.LA(1).image == "destructor",
-				ALT: () => this.SUBRULE(this.classDestructor)
-			},
-			{ALT: () => this.SUBRULE(this.regularFunction)}
-		])
-	})
-
 	// class operator function name
 	public functionOperator = this.RULE("functionOperator", () => {
 		this.OR([

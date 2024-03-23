@@ -10,70 +10,20 @@ export interface FunctionBeginCstNode extends CstNode {
 }
 
 export type FunctionBeginCstChildren = {
-	classConstructor?: ClassConstructorCstNode[];
-	classDestructor?: ClassDestructorCstNode[];
-	regularFunction?: RegularFunctionCstNode[];
-};
-
-
-export interface ClassConstructorCstNode extends CstNode {
-	name: "classConstructor";
-	children: ClassConstructorCstChildren;
-}
-
-export type ClassConstructorCstChildren = {
-	identifier: IToken[]; // is always "new"
-	functionArguments: FunctionArgumentsCstNode[];
-	this?: IToken[];
-	super?: IToken[];
-	functionCall?: FunctionCallCstNode[];
-	endOfCommand?: EndOfCommandCstNode[];
-};
-
-
-export interface ClassDestructorCstNode extends CstNode {
-	name: "classDestructor";
-	children: ClassDestructorCstChildren;
-}
-
-export type ClassDestructorCstChildren = {
-	identifier: IToken[];  // is always "destructor"
-	endOfCommand?: EndOfCommandCstNode[];
-};
-
-
-export interface FunctionCallCstNode extends CstNode {
-	name: "functionCall";
-	children: FunctionCallCstChildren;
-}
-
-export type FunctionCallCstChildren = {
-	leftParanthesis: IToken[];
-	comma?: IToken[];
-	argument: ExpressionCstNode[];
-	rightParanthesis?: IToken[];
-};
-
-
-export interface RegularFunctionCstNode extends CstNode {
-	name: "regularFunction";
-	children: RegularFunctionCstChildren;
-}
-
-export type RegularFunctionCstChildren = {
 	returnType: FullyQualifiedClassNameCstNode[];
-	regularFunctionName?: RegularFunctionNameCstNode[];
+	functionName?: FunctionNameCstNode[];
 	functionArguments?: FunctionArgumentsCstNode[];
+	functionSuperCall?: FunctionSuperCallCstNode[];
 	endOfCommand?: EndOfCommandCstNode[];
 };
 
 
-export interface RegularFunctionNameCstNode extends CstNode {
-	name: "regularFunctionName";
-	children: RegularFunctionNameCstChildren;
+export interface FunctionNameCstNode extends CstNode {
+	name: "functionName";
+	children: FunctionNameCstChildren;
 }
 
-export type RegularFunctionNameCstChildren = {
+export type FunctionNameCstChildren = {
 	name?: IToken[];
 	operator?: FunctionOperatorCstNode[];
 };
@@ -136,6 +86,31 @@ export interface FunctionArgumentCstNode extends CstNode {
 export type FunctionArgumentCstChildren = {
 	type: FullyQualifiedClassNameCstNode[];
 	name?: IToken[];
+};
+
+
+export interface FunctionSuperCallCstNode extends CstNode {
+	name: "functionSuperCall";
+	children: FunctionSuperCallCstChildren;
+}
+
+export type FunctionSuperCallCstChildren = {
+	this?: IToken[];
+	super?: IToken[];
+	functionCall?: FunctionCallCstNode[];
+};
+
+
+export interface FunctionCallCstNode extends CstNode {
+	name: "functionCall";
+	children: FunctionCallCstChildren;
+}
+
+export type FunctionCallCstChildren = {
+	leftParanthesis: IToken[];
+	comma?: IToken[];
+	argument: ExpressionCstNode[];
+	rightParanthesis?: IToken[];
 };
 
 
