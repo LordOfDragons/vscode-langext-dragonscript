@@ -196,15 +196,15 @@ export class ContextClass extends Context{
 	}
 	
 	public declarationBefore(position: Position): Context | undefined {
-		var found: Context | undefined;
+		var declaration: Context | undefined;
 		for (const each of this._declarations) {
-			if (each.range && Helpers.isPositionBefore(position, each.range?.start)) {
-				found = each;
-			} else {
+			const stapos = each.range?.end;
+			if (stapos && Helpers.isPositionBefore(position, stapos)) {
 				break;
 			}
+			declaration = each;
 		}
-		return found;
+		return declaration;
 	}
 	
 	public get resolveClass(): ResolveClass | undefined {
@@ -450,6 +450,21 @@ export class ContextClass extends Context{
 	}
 	
 	public completion(document: TextDocument, position: Position): CompletionItem[] {
+		if (this._extends && Helpers.isPositionInsideRange(this._extends?.range, position)) {
+			return this._extends.completion(document, position, this);
+		}
+		
+		for (const each of this._implements) {
+			if (Helpers.isPositionInsideRange(each.range, position)) {
+				return each.completion(document, position, this);
+			}
+		}
+		
+		if (!this._positionBeginEnd || Helpers.isPositionBefore(position, this._positionBeginEnd)) {
+			// TODO propose class names
+			return [];
+		}
+		
 		const declaration = this.declarationBefore(position);
 		if (declaration) {
 			debugLogMessage(`class.completion: ${declaration.constructor.name}`);
@@ -496,10 +511,10 @@ export class ContextClass extends Context{
 	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
 		console.log(`${prefix}Class: ${this._typeModifiers} ${this._name} ${this.logRange}`);
 		if (this._extends) {
-			console.log(`${prefixLines}- Extend ${this._extends.name}`);
+			console.log(`${prefixLines}- Extend ${this._extends.name} ${Helpers.logRange(this._extends.range)}`);
 		}
 		for (const each of this._implements) {
-			console.log(`${prefixLines}- Implements ${each.name}`);
+			console.log(`${prefixLines}- Implements ${each.name} ${Helpers.logRange(each.range)}`);
 		}
 		this.logChildren(this._declarations, console, prefixLines);
 	}

@@ -45,6 +45,7 @@ import { ResolveSearch } from "../resolve/search";
 import { Resolved, ResolveUsage } from "../resolve/resolved";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { CompletionHelper } from "../completionHelper";
+import { debugLogMessage } from "../server";
 
 
 export class ContextFunction extends Context{
@@ -105,9 +106,10 @@ export class ContextFunction extends Context{
 		if (!fdecl) {
 			this._functionType = ContextFunction.Type.Regular;
 			this._returnType = TypeName.typeVoid;
+			debugLogMessage(`DEBUG: HIT 1`);
 			return;
 		}
-
+		
 		if (fdecl.children.classConstructor) {
 			let fdecl2 = fdecl.children.classConstructor[0].children;
 			this._functionType = ContextFunction.Type.Constructor;
@@ -132,8 +134,8 @@ export class ContextFunction extends Context{
 				}
 			}
 			
-			let declEnd = fdecl2.endOfCommand[0].children;
-			tokEnd = (declEnd.newline || declEnd.commandSeparator)?.at(0) ?? tokEnd;
+			let declEnd = fdecl2.endOfCommand?.at(0)?.children;
+			tokEnd = (declEnd?.newline || declEnd?.commandSeparator)?.at(0) ?? tokEnd;
 			docSymKind = SymbolKind.Constructor;
 			
 		} else if (fdecl.children.classDestructor) {
@@ -141,24 +143,26 @@ export class ContextFunction extends Context{
 			this._functionType = ContextFunction.Type.Destructor;
 			this._name = new Identifier(fdecl2.identifier[0]); // is always "destructor"
 			this._returnType = TypeName.typeVoid;
+			debugLogMessage(`DEBUG: HIT 2`);
 			
-			let declEnd = fdecl2.endOfCommand[0].children;
-			tokEnd = (declEnd.newline || declEnd.commandSeparator)?.at(0) ?? tokEnd;
+			let declEnd = fdecl2.endOfCommand?.at(0)?.children;
+			tokEnd = (declEnd?.newline || declEnd?.commandSeparator)?.at(0) ?? tokEnd;
 			
 		} else if (fdecl.children.regularFunction) {
 			let fdecl2 = fdecl.children.regularFunction[0].children;
+			this._returnType = new TypeName(fdecl2.returnType[0]);
 			
-			if (fdecl2.name?.at(0)?.image) {
+			let fdecl3 = fdecl2.regularFunctionName?.at(0)?.children;
+			
+			if (fdecl3?.name?.at(0)?.image) {
 				this._functionType = ContextFunction.Type.Regular;
-				this._returnType = new TypeName(fdecl2.returnType[0]);
-				this._name = new Identifier(fdecl2.name[0]);
+				this._name = new Identifier(fdecl3.name[0]);
 				
-			} else if(fdecl2.operator) {
+			} else if(fdecl3?.operator) {
 				this._functionType = ContextFunction.Type.Operator;
-				this._returnType = new TypeName(fdecl2.returnType[0]);
 				docSymKind = SymbolKind.Operator;
 				
-				let odecl = fdecl2.operator[0].children;
+				let odecl = fdecl3.operator[0].children;
 				if (odecl.assignMultiply) {
 					this._name = new Identifier(odecl.assignMultiply[0], "*=");
 				} else if(odecl.assignDivide) {
@@ -216,21 +220,22 @@ export class ContextFunction extends Context{
 				} else {
 					this._name = new Identifier(undefined, "??");
 				}
+				
 			} else {
 				this._functionType = ContextFunction.Type.Regular;
-				this._returnType = TypeName.typeVoid;
 			}
 			
 			if (fdecl2.functionArguments) {
 				this._processFuncArgs(fdecl2.functionArguments);
 			}
 			
-			let declEnd = fdecl2.endOfCommand[0].children;
-			tokEnd = (declEnd.newline || declEnd.commandSeparator)?.at(0) ?? tokEnd;
+			let declEnd = fdecl2.endOfCommand?.at(0)?.children;
+			tokEnd = (declEnd?.newline || declEnd?.commandSeparator)?.at(0) ?? tokEnd;
 			
 		} else {
 			this._functionType = ContextFunction.Type.Regular;
 			this._returnType = TypeName.typeVoid;
+			debugLogMessage(`DEBUG: HIT 3`);
 		}
 
 		if (cfdecl?.children.statements) {
@@ -242,9 +247,7 @@ export class ContextFunction extends Context{
 					tokEnd = declEnd[0].children.end[0];
 				} else {
 					let declEnd2 = declEnd[0].children.endOfCommand?.at(0)?.children;
-					if (declEnd2) {
-						tokEnd = (declEnd2.newline || declEnd2.commandSeparator)?.at(0) ?? tokEnd;
-					}
+					tokEnd = (declEnd2?.newline || declEnd2?.commandSeparator)?.at(0) ?? tokEnd;
 				}
 			}
 		}
@@ -609,7 +612,8 @@ export class ContextFunction extends Context{
 			}
 		}
 		
-		return CompletionHelper.createType(Range.create(position, position), this);
+		// TODO propose names
+		return [];
 	}
 	
 	

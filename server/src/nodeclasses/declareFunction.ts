@@ -27,7 +27,7 @@ export type ClassConstructorCstChildren = {
 	this?: IToken[];
 	super?: IToken[];
 	functionCall?: FunctionCallCstNode[];
-	endOfCommand: EndOfCommandCstNode[];
+	endOfCommand?: EndOfCommandCstNode[];
 };
 
 
@@ -38,7 +38,7 @@ export interface ClassDestructorCstNode extends CstNode {
 
 export type ClassDestructorCstChildren = {
 	identifier: IToken[];  // is always "destructor"
-	endOfCommand: EndOfCommandCstNode[];
+	endOfCommand?: EndOfCommandCstNode[];
 };
 
 
@@ -62,10 +62,20 @@ export interface RegularFunctionCstNode extends CstNode {
 
 export type RegularFunctionCstChildren = {
 	returnType: FullyQualifiedClassNameCstNode[];
+	regularFunctionName?: RegularFunctionNameCstNode[];
+	functionArguments?: FunctionArgumentsCstNode[];
+	endOfCommand?: EndOfCommandCstNode[];
+};
+
+
+export interface RegularFunctionNameCstNode extends CstNode {
+	name: "regularFunctionName";
+	children: RegularFunctionNameCstChildren;
+}
+
+export type RegularFunctionNameCstChildren = {
 	name?: IToken[];
 	operator?: FunctionOperatorCstNode[];
-	functionArguments: FunctionArgumentsCstNode[];
-	endOfCommand: EndOfCommandCstNode[];
 };
 
 

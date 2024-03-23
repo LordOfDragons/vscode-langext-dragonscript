@@ -210,7 +210,7 @@ export class DSParser extends CstParser{
 		this.CONSUME(DSLexer.tokenImplements)
 		this.AT_LEAST_ONE_SEP({
 			SEP: DSLexer.tokenComma,
-			DEF: () => {this.SUBRULE2(this.fullyQualifiedClassName, {LABEL: "interfaceName"})}
+			DEF: () => {this.SUBRULE(this.fullyQualifiedClassName, {LABEL: "interfaceName"})}
 		})
 	})
 
@@ -279,12 +279,16 @@ export class DSParser extends CstParser{
 	// declare regular class function
 	public regularFunction = this.RULE("regularFunction", () => {
 		this.SUBRULE(this.fullyQualifiedClassName, {LABEL: "returnType"})
+		this.SUBRULE(this.regularFunctionName)
+		this.SUBRULE(this.functionArguments)
+		this.SUBRULE(this.endOfCommand)
+	})
+	
+	public regularFunctionName = this.RULE("regularFunctionName", () => {
 		this.OR([
 			{ALT: () => this.CONSUME(DSLexer.tokenIdentifier, {LABEL: "name"})},
 			{ALT: () => this.SUBRULE(this.functionOperator, {LABEL: "operator"})}
 		])
-		this.SUBRULE(this.functionArguments)
-		this.SUBRULE(this.endOfCommand)
 	})
 	
 	// begin class function declaration

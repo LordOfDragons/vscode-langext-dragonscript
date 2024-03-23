@@ -25,7 +25,7 @@
 import { Context } from "./context"
 import { DeclareEnumerationCstNode, EnumerationEntryCstNode } from "../nodeclasses/declareEnumeration";
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
-import { Definition, DocumentSymbol, Hover, Location, Position, Range, RemoteConsole, SymbolInformation, SymbolKind } from "vscode-languageserver"
+import { CompletionItem, Definition, DocumentSymbol, Hover, Location, Position, Range, RemoteConsole, SymbolInformation, SymbolKind } from "vscode-languageserver"
 import { Identifier } from "./identifier";
 import { HoverInfo } from "../hoverinfo";
 import { ResolveState } from "../resolve/state";
@@ -42,6 +42,7 @@ import { TypeName } from "./typename";
 import { ResolveFunction } from "../resolve/function";
 import { Resolved } from "../resolve/resolved";
 import { ContextDocumentationIterator } from "./documentation";
+import { TextDocument } from "vscode-languageserver-textdocument";
 
 
 export class ContextEnumEntry extends Context{
@@ -194,6 +195,7 @@ export class ContextEnumeration extends Context{
 	protected _typeModifiers: Context.TypeModifierSet;
 	protected _entries: ContextEnumEntry[] = [];
 	protected _resolveEnum?: ResolveEnumeration;
+	protected _positionBeginEnd?: Position;
 
 
 	constructor(node: DeclareEnumerationCstNode, typemodNode: TypeModifiersCstNode | undefined, parent: Context) {
@@ -205,6 +207,8 @@ export class ContextEnumeration extends Context{
 		this._node = node;
 		this._name = new Identifier(edeclBegin.name[0]);
 		this._typeModifiers = new Context.TypeModifierSet(typemodNode, Context.TypeModifier.Public);
+		
+		this._positionBeginEnd = Helpers.endOfCommandBegin(edeclBegin.endOfCommand);
 
 		let tokEnd = edecl.enumerationEnd[0].children.end[0];
 		let tokEnum = edeclBegin.enum[0];
@@ -269,6 +273,18 @@ export class ContextEnumeration extends Context{
 	
 	public get resolveEnumeration(): ResolveEnumeration | undefined {
 		return this._resolveEnum;
+	}
+	
+	public entryBefore(position: Position): Context | undefined {
+		var entry: Context | undefined;
+		for (const each of this._entries) {
+			const stapos = each.range?.end;
+			if (stapos && Helpers.isPositionBefore(position, stapos)) {
+				break;
+			}
+			entry = each;
+		}
+		return entry;
 	}
 
 	public resolveClasses(state: ResolveState): void {
@@ -398,6 +414,21 @@ export class ContextEnumeration extends Context{
 		this.consumeDocumentationDescent(iterator);
 		this.consumeDocumentationList(iterator, this._entries);
 		iterator.firstAfter(this.range.end);
+	}
+	
+	public completion(document: TextDocument, position: Position): CompletionItem[] {
+		if (!this._positionBeginEnd || Helpers.isPositionBefore(position, this._positionBeginEnd)) {
+			// TODO propose class names
+			return [];
+		}
+		
+		const entry = this.entryBefore(position);
+		if (entry) {
+			return entry.completion(document, position);
+		}
+		
+		// TODO add completion items for adding enumeration entries
+		return [];
 	}
 	
 	

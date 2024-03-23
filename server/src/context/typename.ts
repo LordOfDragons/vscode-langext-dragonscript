@@ -47,10 +47,12 @@ import { debugLogMessage } from "../server";
 
 export class TypeNamePart {
 	protected _name: Identifier;
+	protected _tokenPeriod?: IToken;
 	protected _resolve?: ResolveUsage;
 	
-	constructor(token?: IToken, name?: string) {
+	constructor(token?: IToken, name?: string, tokenPeriod?: IToken) {
 		this._name = new Identifier(token, name);
+		this._tokenPeriod = tokenPeriod;
 	}
 	
 	dispose(): void {
@@ -65,6 +67,10 @@ export class TypeNamePart {
 	
 	public get name(): Identifier {
 		return this._name
+	}
+	
+	public get tokenPeriod(): IToken | undefined {
+		return this._tokenPeriod;
 	}
 	
 	public get resolve(): ResolveUsage | undefined {
@@ -95,6 +101,7 @@ export class TypeName {
 	protected _parts: TypeNamePart[]
 	protected _name: string
 	public resolve?: ResolveUsage;
+	protected _range: Range | null | undefined = null;
 
 
 	constructor(node?: FullyQualifiedClassNameCstNode) {
@@ -107,10 +114,14 @@ export class TypeName {
 			return;
 		}
 		
-		for (const each of children.fullyQualifiedClassNamePart) {
-			const nodePart = each.children.identifier?.at(0);
-			if (nodePart) {
-				this._parts.push(new TypeNamePart(nodePart));
+		const count = children.fullyQualifiedClassNamePart.length;
+		for (var i=0; i<count; i++) {
+			const nodePart = children.fullyQualifiedClassNamePart[i];
+			const nodePartIdentifier = nodePart.children.identifier?.at(0);
+			const tokenPeriod = children.period?.at(i - 1);
+			
+			if (nodePartIdentifier) {
+				this._parts.push(new TypeNamePart(nodePartIdentifier, undefined, tokenPeriod));
 			} else {
 				this._parts.push(new TypeNamePart(undefined, ""));
 			}
@@ -505,11 +516,35 @@ export class TypeName {
 	}
 
 	public get range(): Range | undefined {
-		let ft = this.firstToken;
-		let lt = this.lastToken;
-		if (ft !== undefined && lt !== undefined) {
-			return Helpers.rangeFrom(ft, lt);
+		if (this._range === null) {
+			this._range = this._updateRange();
 		}
+		return this._range;
+	}
+	
+	protected _updateRange(): Range | undefined {
+		const count = this._parts.length;
+		if (count == 0) {
+			return undefined;
+		}
+		
+		const firstToken = this._parts[0].name.token;
+		if (!firstToken) {
+			return undefined;
+		}
+		
+		const lastPart = this._parts[count - 1];
+		const lastToken = lastPart.name.token;
+		if (lastToken) {
+			if (lastToken.isInsertedInRecovery) {
+				if (lastPart.tokenPeriod) {
+					return Helpers.rangeFrom(firstToken, lastPart.tokenPeriod);
+				}
+			} else {
+				return Helpers.rangeFrom(firstToken, lastToken);
+			}
+		}
+		
 		return undefined;
 	}
 	

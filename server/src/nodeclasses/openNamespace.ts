@@ -1,5 +1,6 @@
 import { CstNode, IToken } from "chevrotain";
 import { FullyQualifiedClassNameCstNode } from "./fullyQualifiedClassName";
+import { EndOfCommandCstNode } from "./endOfCommand";
 
 
 export interface OpenNamespaceCstNode extends CstNode {
@@ -10,4 +11,5 @@ export interface OpenNamespaceCstNode extends CstNode {
 export type OpenNamespaceCstChildren = {
 	namespace: IToken[];
 	name: FullyQualifiedClassNameCstNode[];
+	endOfCommand?: EndOfCommandCstNode[];
 };

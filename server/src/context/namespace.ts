@@ -42,6 +42,7 @@ export class ContextNamespace extends Context{
 	protected _typename: TypeName;
 	protected _statements: Context[];
 	protected _resolveNamespace?: ResolveNamespace;
+	protected _positionBeginEnd?: Position;
 
 
 	constructor(node: OpenNamespaceCstNode, parent: Context) {
@@ -49,6 +50,8 @@ export class ContextNamespace extends Context{
 		this._node = node;
 		this._typename = new TypeName(node.children.name[0]);
 		this._statements = [];
+		
+		this._positionBeginEnd = Helpers.endOfCommandBegin(node.children.endOfCommand);
 
 		let tokNS = node.children.namespace[0];
 		let tokName = this._typename.lastToken || tokNS;
@@ -149,7 +152,19 @@ export class ContextNamespace extends Context{
 	public get simpleName(): string {
 		return this._typename.name;
 	}
-
+	
+	public statementBefore(position: Position): Context | undefined {
+		var statement: Context | undefined;
+		for (const each of this._statements) {
+			const stapos = each.range?.end;
+			if (stapos && Helpers.isPositionBefore(position, stapos)) {
+				break;
+			}
+			statement = each;
+		}
+		return statement;
+	}
+	
 	public resolveClasses(state: ResolveState): void {
 		this._resolveNamespace?.removeContext(this);
 		this._resolveNamespace = this._typename.resolveNamespace(state, this)?.resolved as ResolveNamespace;
@@ -279,6 +294,19 @@ export class ContextNamespace extends Context{
 	}
 	
 	public completion(document: TextDocument, position: Position): CompletionItem[] {
+		if (this._typename && Helpers.isPositionInsideRange(this._typename?.range, position)) {
+			return this._typename.completion(document, position, this);
+		}
+		
+		const statement = this.statementBefore(position);
+		if (statement) {
+			return statement.completion(document, position);
+		}
+		
+		if (!this._positionBeginEnd || Helpers.isPositionBefore(position, this._positionBeginEnd)) {
+			return [];
+		}
+		
 		const range = Range.create(position, position);
 		let items: CompletionItem[] = [];
 		

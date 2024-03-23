@@ -22,6 +22,7 @@ export interface EnumerationBeginCstNode extends CstNode {
 export type EnumerationBeginCstChildren = {
 	enum: IToken[];
 	name: IToken[];
+	endOfCommand?: EndOfCommandCstNode[];
 };
 
 

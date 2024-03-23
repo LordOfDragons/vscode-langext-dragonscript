@@ -169,7 +169,19 @@ export class ContextInterface extends Context{
 	public get inheritanceResolved(): boolean {
 		return this._inheritanceResolved;
 	}
-
+	
+	public declarationBefore(position: Position): Context | undefined {
+		var declaration: Context | undefined;
+		for (const each of this._declarations) {
+			const stapos = each.range?.end;
+			if (stapos && Helpers.isPositionBefore(position, stapos)) {
+				break;
+			}
+			declaration = each;
+		}
+		return declaration;
+	}
+	
 	public resolveClasses(state: ResolveState): void {
 		this._resolveInterface?.dispose();
 		this._resolveInterface = undefined;
@@ -328,6 +340,22 @@ export class ContextInterface extends Context{
 	}
 	
 	public completion(document: TextDocument, position: Position): CompletionItem[] {
+		for (const each of this._implements) {
+			if (Helpers.isPositionInsideRange(each.range, position)) {
+				return each.completion(document, position, this);
+			}
+		}
+		
+		if (!this._positionBeginEnd || Helpers.isPositionBefore(position, this._positionBeginEnd)) {
+			// TODO propose class names
+			return [];
+		}
+		
+		const declaration = this.declarationBefore(position);
+		if (declaration) {
+			return declaration.completion(document, position);
+		}
+		
 		const range = Range.create(position, position);
 		let items: CompletionItem[] = [];
 		

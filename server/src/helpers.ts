@@ -170,7 +170,7 @@ export class Helpers {
 	public static endOfCommandBegin(endOfCommand?: EndOfCommandCstNode[]): Position | undefined {
 		const c = endOfCommand?.at(0)?.children;
 		const tok = (c?.newline ?? c?.commandSeparator)?.at(0);
-		if (tok) {
+		if (tok && tok.isInsertedInRecovery !== true) {
 			return Helpers.positionFrom(tok);
 		}
 		return undefined;
