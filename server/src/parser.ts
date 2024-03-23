@@ -259,7 +259,7 @@ export class DSParser extends CstParser{
 		this.CONSUME(DSLexer.tokenIdentifier)  // is always "new"
 		this.SUBRULE(this.functionArguments)
 		this.OPTION(() => {
-			this.OR2([
+			this.OR([
 				{ALT: () => this.CONSUME(DSLexer.tokenThis)},
 				{ALT: () => this.CONSUME(DSLexer.tokenSuper)}
 			])
