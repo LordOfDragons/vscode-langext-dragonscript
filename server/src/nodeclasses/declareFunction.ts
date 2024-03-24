@@ -71,7 +71,7 @@ export interface FunctionArgumentsCstNode extends CstNode {
 }
 
 export type FunctionArgumentsCstChildren = {
-	leftParanthesis: IToken[];
+	leftParanthesis?: IToken[];
 	comma?: IToken[];
 	functionArgument?: FunctionArgumentCstNode[];
 	rightParanthesis?: IToken[];

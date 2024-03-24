@@ -117,6 +117,7 @@ export class ContextFunction extends Context{
 		if (fdecl2.returnType) {
 			this._realReturnType = new TypeName(fdecl2.returnType[0]);
 		}
+		this._returnType = this._realReturnType ?? TypeName.typeVoid;
 		
 		if (fdecl2.functionName) {
 			const fdecl3 = fdecl2.functionName[0].children;
@@ -138,12 +139,10 @@ export class ContextFunction extends Context{
 					
 				} else {
 					this._functionType = ContextFunction.Type.Regular;
-					this._returnType = this._realReturnType;
 				}
 				
 			} else if(fdecl3?.operator) {
 				this._functionType = ContextFunction.Type.Operator;
-				this._returnType = this._realReturnType;
 				docSymKind = SymbolKind.Operator;
 				
 				let odecl = fdecl3.operator[0].children;
@@ -211,7 +210,6 @@ export class ContextFunction extends Context{
 			
 		} else {
 			this._functionType = ContextFunction.Type.Regular;
-			this._returnType = TypeName.typeVoid;
 		}
 		
 		if (fdecl2.functionArguments) {
@@ -343,7 +341,9 @@ export class ContextFunction extends Context{
 	protected _processFuncArgs(nodes: FunctionArgumentsCstNode[]): void {
 		const children = nodes[0].children;
 		
-		this._argBeginPos = Helpers.positionFrom(children.leftParanthesis[0]);
+		if (children.leftParanthesis) {
+			this._argBeginPos = Helpers.positionFrom(children.leftParanthesis[0]);
+		}
 		if (children.rightParanthesis) {
 			this._argEndPos = Helpers.positionFrom(children.rightParanthesis[0], false);
 		}
