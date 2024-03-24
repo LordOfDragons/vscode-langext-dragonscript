@@ -75,10 +75,12 @@ export class ContextVariable extends Context {
 			this._value = ContextBuilder.createExpression(children.value[0], this);
 		}
 		
-		let tokBegin = firstVar ? this._name?.token : varToken; //typeNode.children.identifier[0];
-		let tokEnd = endToken ?? this._name?.token;
-		if (tokBegin) {
-			this.range = Helpers.rangeFrom(tokBegin, tokEnd, true, false);
+		const tokBegin = firstVar ? this._name?.token : varToken; //typeNode.children.identifier[0];
+		const tokEnd = endToken ?? this._name?.token;
+		const posEnd = tokEnd ? Helpers.positionFrom(tokEnd, false) : this._typename.range?.end;
+		
+		if (tokBegin && posEnd) {
+			this.range = Helpers.rangeFromPosition(Helpers.positionFrom(tokBegin), posEnd);
 		}
 	}
 
@@ -378,7 +380,7 @@ export class ContextVariable extends Context {
 
 
 	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
-		console.log(`${prefix}Local Variable ${this._typename.name} ${this._name} ${Helpers.logRange(this.range)}`);
+		console.log(`${prefix}Local Variable ${this._typename.name} ${this._name} ${this.logRange}`);
 		this._value?.log(console, `${prefixLines}- Value: `, `${prefixLines}  `);
 	}
 }

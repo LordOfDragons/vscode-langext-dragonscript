@@ -188,14 +188,7 @@ export class ContextSelect extends Context {
 		
 		const selEnd = node.children.statementSelectEnd?.at(0)?.children;
 		if (selEnd) {
-			if (selEnd.end) {
-				tokEnd = selEnd.end[0];
-			} else if (selEnd.endOfCommand) {
-				const selEnd2 = selEnd.endOfCommand[0].children;
-				if (selEnd2) {
-					tokEnd = (selEnd2.newline ?? selEnd2.commandSeparator)?.at(0);
-				}
-			}
+			tokEnd = selEnd.end?.at(0) ?? Helpers.endOfCommandToken(selEnd.endOfCommand);
 		}
 		
 		this.range = Helpers.rangeFrom(tokBegin, tokEnd, true, false);

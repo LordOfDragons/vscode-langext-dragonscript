@@ -458,7 +458,7 @@ export class Context {
 		}
 	}
 	
-	protected get logRange(): string {
+	public get logRange(): string {
 		return Helpers.logRange(this.range);
 	}
 }

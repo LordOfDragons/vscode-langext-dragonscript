@@ -44,10 +44,7 @@ import { Helpers } from "../helpers";
 import { ResolveSearch } from "../resolve/search";
 import { Resolved, ResolveUsage } from "../resolve/resolved";
 import { TextDocument } from "vscode-languageserver-textdocument";
-import { CompletionHelper } from "../completionHelper";
-import { debugLogMessage } from "../server";
 import { CodeActionRemove } from "../codeactions/remove";
-import { CodeActionReplace } from "../codeactions/replace";
 import { VisitorAllHasReturn } from "../visitor/allhasreturn";
 
 
@@ -82,8 +79,6 @@ export class ContextFunction extends Context{
 			tokBegin = (tmnode.abstract || tmnode.fixed || tmnode.native || tmnode.private
 				|| tmnode.protected || tmnode.public || tmnode.static)![0];
 		}
-
-		var tokEnd: IToken | undefined;
 
 		var fdecl: FunctionBeginCstNode | undefined;
 		let cfdecl: ClassFunctionCstNode | undefined;
@@ -231,32 +226,45 @@ export class ContextFunction extends Context{
 			}
 		}
 		
-		let declEnd = fdecl2.endOfCommand?.at(0)?.children;
-		tokEnd = (declEnd?.newline || declEnd?.commandSeparator)?.at(0) ?? tokEnd;
+		var posEnd: Position | undefined;
+		var posEndInner: Position | undefined;
 		
 		if (cfdecl?.children.statements) {
-			this._statements = new ContextStatements(cfdecl.children.statements[0], this);
-			
-			let declEnd = cfdecl.children.functionEnd;
-			if (declEnd) {
-				if (declEnd[0].children.end) {
-					tokEnd = declEnd[0].children.end[0];
-				} else {
-					let declEnd2 = declEnd[0].children.endOfCommand?.at(0)?.children;
-					tokEnd = (declEnd2?.newline || declEnd2?.commandSeparator)?.at(0) ?? tokEnd;
+			const cfdecl2 = cfdecl.children.functionEnd?.at(0)?.children;
+			if (cfdecl2) {
+				const tokEnd = cfdecl2.end?.at(0) ?? Helpers.endOfCommandToken(cfdecl2.endOfCommand);
+				if (tokEnd) {
+					posEndInner = Helpers.positionFrom(tokEnd);
+					posEnd = Helpers.positionFrom(tokEnd, false);
 				}
+			}
+			
+			this._statements = new ContextStatements(cfdecl.children.statements[0], this);
+			if (!posEnd) {
+				posEndInner = posEnd = this._statements.range?.end;
 			}
 		}
 		
-		if (tokBegin && tokEnd && this._name?.token) {
+		if (!posEnd) {
+			const tokEnd = Helpers.endOfCommandToken(fdecl2.endOfCommand);
+			if (tokEnd) {
+				posEndInner = Helpers.positionFrom(tokEnd);
+				posEnd = Helpers.positionFrom(tokEnd, false);
+			}
+		}
+		
+		if (tokBegin && posEnd && this._name?.token) {
 			let args = this._arguments.map(each => `${each.typename.name} ${each.simpleName}`);
 			let argText = args.length > 0 ? args.reduce((a,b) => `${a}, ${b}`) : "";
 			let retText = this._returnType?.name || "void";
 			let extText = `(${argText}): ${retText}`;
 			
-			this.range = Helpers.rangeFrom(tokBegin, tokEnd, true, false);
-			this.documentSymbol = DocumentSymbol.create(this._name.name, extText,
-				docSymKind, this.range, Helpers.rangeFrom(this._name.token, tokEnd, true, true));
+			this.range = Helpers.rangeFromPosition(Helpers.positionFrom(tokBegin), posEnd);
+			
+			if (this._name.range && posEndInner) {
+				this.documentSymbol = DocumentSymbol.create(this._name.name, extText, docSymKind,
+					this.range, Helpers.rangeFromPosition(this._name.range.start, posEndInner));
+			}
 		}
 		
 		if (this._statements && this.documentSymbol) {
@@ -695,6 +703,7 @@ export class ContextFunction extends Context{
 			delimiter = ", ";
 		}
 		s = `${s})`;
+		s = `${s} ${this.logRange}`;
 		console.log(s);
 		
 		this.logChildren(this._arguments, console, `${prefixLines}- Arg: `, `${prefixLines}  `);

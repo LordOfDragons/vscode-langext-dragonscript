@@ -123,14 +123,13 @@ export class ContextClass extends Context{
 					this._declarations.push(new ContextFunction(each.children.classFunction[0], typemod, this._name?.name, this));
 
 				} else if (each.children.classVariables) {
-					let vdecls = each.children.classVariables[0].children;
-					let typeNode = vdecls.type[0];
+					const vdecls = each.children.classVariables[0].children;
+					const typeNode = vdecls.type[0];
 					
 					if (vdecls.classVariable) {
-						let count = vdecls.classVariable.length;
-						let commaCount = vdecls.comma?.length || 0;
-						let declEnd = vdecls.endOfCommand?.at(0)?.children;
-						let tokEnd = (declEnd?.newline || declEnd?.commandSeparator)?.at(0);
+						const count = vdecls.classVariable.length;
+						const commaCount = vdecls.comma?.length || 0;
+						const tokEnd = Helpers.endOfCommandToken(vdecls.endOfCommand);
 						var firstVar: ContextClassVariable | undefined = undefined;
 						
 						for (let i = 0; i < count; i++) {

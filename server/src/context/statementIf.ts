@@ -37,8 +37,8 @@ export class ContextIfElif extends Context {
 	protected _node: StatementElifCstNode;
 	protected _condition: Context;
 	protected _statements: ContextStatements;
-
-
+	
+	
 	constructor(node: StatementElifCstNode, parent: Context) {
 		super(Context.ContextType.IfElif, parent);
 		this._node = node;
@@ -46,19 +46,20 @@ export class ContextIfElif extends Context {
 		this._statements = new ContextStatements(node.children.statements[0], parent);
 		
 		const tokBegin = node.children.elif[0];
-		let tokEnd = this._statements.range?.end;
+		var posEnd = this._statements.range?.end
+			?? Helpers.endOfCommandBegin(node.children.endOfCommand);
 		
-		if (tokEnd) {
-			this.range = Helpers.rangeFromPosition(Helpers.positionFrom(tokBegin), tokEnd);
+		if (posEnd) {
+			this.range = Helpers.rangeFromPosition(Helpers.positionFrom(tokBegin), posEnd);
 		}
 	}
-
+	
 	public dispose(): void {
 		this._condition.dispose()
 		this._statements.dispose()
 	}
-
-
+	
+	
 	public get condition(): Context {
 		return this._condition;
 	}
@@ -114,7 +115,7 @@ export class ContextIfElif extends Context {
 
 
 	log(console: RemoteConsole, prefix: string = "") {
-		console.log(`${prefix}- Elif`);
+		console.log(`${prefix}- Elif ${this.logRange}`);
 		this._condition.log(console, `${prefix}  - Cond: `, `${prefix}    `);
 		this._statements.log(console, `${prefix}  - `, `${prefix}    `);
 	}
@@ -269,13 +270,13 @@ export class ContextIf extends Context {
 	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
 		console.log(`${prefix}If-Else ${this.logRange}`);
 		this.logChild(this._condition, console, prefixLines, "Cond: ");
-		console.log(`${prefixLines}- If`);
+		console.log(`${prefixLines}- If ${this._ifstatements.logRange}`);
 		this.logChild(this._ifstatements, console, `${prefixLines}  `);
 		for (const each of this._elif) {
 			each.log(console, prefixLines);
 		}
 		if (this._elsestatements) {
-			console.log(`${prefixLines}- Else`);
+			console.log(`${prefixLines}- Else ${this._elsestatements.logRange}`);
 			this.logChild(this._elsestatements, console, `${prefixLines}  `);
 		}
 	}

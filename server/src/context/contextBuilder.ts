@@ -54,6 +54,7 @@ import { ContextBlock } from "./expressionBlock";
 import { integer } from "vscode-languageserver";
 import { ContextGroup } from "./group";
 import { ContextError } from "./error";
+import { Helpers } from "../helpers";
 
 
 /** Context builder. */
@@ -90,16 +91,15 @@ export class ContextBuilder{
 			return [new ContextTry(c.statementTry[0], parent)];
 
 		} else if (c.statementVariables) {
-			let vdecls = c.statementVariables[0].children;
-			let typeNode = vdecls.type[0];
-			let declEnd = vdecls.endOfCommand?.at(0)?.children;
-			let tokEnd = (declEnd?.newline || declEnd?.commandSeparator)?.at(0);
+			const vdecls = c.statementVariables[0].children;
+			const typeNode = vdecls.type[0];
+			const tokEnd = Helpers.endOfCommandToken(vdecls.endOfCommand);
 			const varToken = vdecls.var[0];
 			let stalist: Context[] = [];
 			
 			if (vdecls.statementVariable) {
-				let count = vdecls.statementVariable.length;
-				let commaCount = vdecls.comma?.length || 0;
+				const count = vdecls.statementVariable.length;
+				const commaCount = vdecls.comma?.length || 0;
 				var firstVar: ContextVariable | undefined = undefined;
 				const isSingleVar = count == 1;
 				const lastIndex = count - 1;

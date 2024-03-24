@@ -57,10 +57,9 @@ export class ContextEnumEntry extends Context{
 		this._node = node
 		this._name = new Identifier(node.children.name[0]);
 
-		let eoc = node.children.endOfCommand[0].children;
-		let tokBegin = this._name.token;
+		const tokBegin = this._name.token;
 		if (tokBegin) {
-			let tokEnd = eoc.newline ? eoc.newline[0] : eoc.commandSeparator![0];
+			const tokEnd = Helpers.endOfCommandToken(node.children.endOfCommand);
 			this.range = Helpers.rangeFrom(tokBegin, tokEnd);
 			this.documentSymbol = DocumentSymbol.create(this._name.name,
 				docTextExt, SymbolKind.EnumMember, this.range, this.range);

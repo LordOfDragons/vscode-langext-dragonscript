@@ -167,13 +167,22 @@ export class Helpers {
 		}
 	}
 	
+	public static endOfCommandToken(endOfCommand?: EndOfCommandCstNode[]): IToken | undefined {
+		const c = endOfCommand?.at(0)?.children;
+		const tok = (c?.newline ?? c?.commandSeparator)?.at(0);
+		return tok && tok.isInsertedInRecovery !== true ? tok : undefined;
+	}
+	
 	public static endOfCommandBegin(endOfCommand?: EndOfCommandCstNode[]): Position | undefined {
 		const c = endOfCommand?.at(0)?.children;
 		const tok = (c?.newline ?? c?.commandSeparator)?.at(0);
-		if (tok && tok.isInsertedInRecovery !== true) {
-			return Helpers.positionFrom(tok);
-		}
-		return undefined;
+		return tok && tok.isInsertedInRecovery !== true ? Helpers.positionFrom(tok) : undefined;
+	}
+	
+	public static endOfCommandRange(endOfCommand?: EndOfCommandCstNode[]): Range | undefined {
+		const c = endOfCommand?.at(0)?.children;
+		const tok = (c?.newline ?? c?.commandSeparator)?.at(0);
+		return tok && tok.isInsertedInRecovery !== true ? Helpers.rangeFrom(tok) : undefined;
 	}
 	
 	public static logPosition(position: Position | undefined) {

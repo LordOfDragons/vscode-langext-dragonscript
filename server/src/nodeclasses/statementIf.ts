@@ -1,6 +1,7 @@
 import { CstNode, IToken } from "chevrotain";
 import { ExpressionCstNode } from "./expression";
 import { StatementsCstNode } from "./statement";
+import { EndOfCommandCstNode } from "./endOfCommand";
 
 
 export interface StatementIfCstNode extends CstNode {
@@ -36,6 +37,7 @@ export interface StatementElifCstNode extends CstNode {
 export type StatementElifCstChildren = {
 	elif: IToken[];
 	condition: ExpressionCstNode[];
+	endOfCommand: EndOfCommandCstNode[];
 	statements: StatementsCstNode[];
 };
 
