@@ -150,11 +150,6 @@ export class ContextStatements extends Context{
 	}
 	
 	public completion(document: TextDocument, position: Position): CompletionItem[] {
-		const statement = this.statementBefore(position);
-		if (statement) {
-			return statement.completion(document, position);
-		}
-		
 		return CompletionHelper.createStatement(Range.create(position, position), this);
 	}
 	

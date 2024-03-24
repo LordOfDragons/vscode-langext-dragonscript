@@ -195,7 +195,7 @@ export class ContextPinNamespace extends Context{
 	
 	public completion(document: TextDocument, position: Position): CompletionItem[] {
 		if (this._typename) {
-			return this._typename.completion(document, position, this);
+			return this._typename.completion(document, position, this, [Resolved.Type.Namespace]);
 		}
 		return [];
 	}

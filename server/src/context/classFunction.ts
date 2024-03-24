@@ -672,7 +672,10 @@ export class ContextFunction extends Context{
 	}
 	
 	public completion(document: TextDocument, position: Position): CompletionItem[] {
-		if (this._argBeginPos && Helpers.isPositionAfter(position, this._argBeginPos)) {
+		if (this._argEndPos && Helpers.isPositionAfter(position, this._argEndPos)) {
+			return this._statements?.completion(document, position) ?? [];
+			
+		} else if (this._argBeginPos && Helpers.isPositionAfter(position, this._argBeginPos)) {
 			const indexArg = this.argBeforePos(position);
 			if (indexArg >= 0 && indexArg < this._arguments.length) {
 				return this._arguments[indexArg].completion(document, position);

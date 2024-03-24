@@ -43,6 +43,9 @@ import { ResolveVariable } from "../resolve/variable";
 import { ResolveFunction } from "../resolve/function";
 import { CodeActionRemove } from "../codeactions/remove";
 import { CodeActionCommentOut } from "../codeactions/commentout";
+import { ResolveSignature, ResolveSignatureArgument } from "../resolve/signature";
+import { ResolveType } from "../resolve/type";
+import { CodeActionInsertCast } from "../codeactions/insertCast";
 
 
 export class ContextVariable extends Context {
@@ -53,6 +56,7 @@ export class ContextVariable extends Context {
 	protected _firstVariable?: ContextVariable;
 	protected _resolveVariable?: ResolveLocalVariable;
 	protected _checkUsage = false;
+	protected _tokenAssign?: IToken;
 	public isSingleVar = false;
 	public isLastVar = false;
 	
@@ -72,6 +76,7 @@ export class ContextVariable extends Context {
 		this._firstVariable = firstVar;
 		
 		if (children?.value) {
+			this._tokenAssign = children.assign?.at(0);
 			this._value = ContextBuilder.createExpression(children.value[0], this);
 		}
 		
@@ -133,7 +138,6 @@ export class ContextVariable extends Context {
 		} else {
 			this._typename.resolveType(state, this);
 		}
-		
 		
 		this._value?.resolveMembers(state);
 		
@@ -198,7 +202,24 @@ export class ContextVariable extends Context {
 	}
 
 	public resolveStatements(state: ResolveState): void {
-		this._value?.resolveStatements(state);
+		if (this._value) {
+			this._value?.resolveStatements(state);
+			
+			const at1 = this._value.expressionType;
+			const at2 = this._typename.resolve?.resolved as ResolveType;
+			if (at1 && at2 && ResolveSignatureArgument.typeMatches(at1, at2, this._value.expressionAutoCast) === ResolveSignature.Match.No) {
+				let ri: DiagnosticRelatedInformation[] = [];
+				at2?.addReportInfo(ri, `Source Type: ${at1?.reportInfoText}`);
+				at1?.addReportInfo(ri, `Target Type: ${at2?.reportInfoText}`);
+				const range = this._tokenAssign ? Helpers.rangeFrom(this._tokenAssign) : this._name?.range;
+				if (range) {
+					const di = state.reportError(range, `Invalid cast from ${at1?.name} to ${at2?.name}`, ri);
+					if (di && at1 && at2) {
+						this._codeActions.push(new CodeActionInsertCast(di, at1, at2, this._value, this._value.expressionAutoCast));
+					}
+				}
+			}
+		}
 		
 		// pushScopeContext on purpose to keep context on stack until parent scope is removed.
 		// has to come after resolving statements in value to avoid resolving this variable

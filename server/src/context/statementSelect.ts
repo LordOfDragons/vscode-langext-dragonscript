@@ -29,7 +29,6 @@ import { ContextBuilder } from "./contextBuilder";
 import { ContextStatements } from "./statements";
 import { Helpers } from "../helpers";
 import { ResolveState } from "../resolve/state";
-import { IToken } from "chevrotain";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { CompletionHelper } from "../completionHelper";
 import { ResolveNamespace } from "../resolve/namespace";
@@ -158,9 +157,10 @@ export class ContextSelectCase extends Context {
 
 export class ContextSelect extends Context {
 	protected _node: StatementSelectCstNode;
-	protected _value: Context;
+	protected _value?: Context;
 	protected _cases: ContextSelectCase[];
 	protected _elsestatements?: ContextStatements;
+	protected _endBegin: Position;
 	
 	
 	constructor(node: StatementSelectCstNode, parent: Context) {
@@ -168,8 +168,16 @@ export class ContextSelect extends Context {
 		this._node = node;
 		this._cases = [];
 		
-		let selbegin = node.children.statementSelectBegin[0].children;
-		this._value = ContextBuilder.createExpression(selbegin.value[0], this);
+		const selbegin = node.children.statementSelectBegin[0].children;
+		if (selbegin.value) {
+			this._value = ContextBuilder.createExpression(selbegin.value[0], this);
+		}
+		
+		const tokBegin = selbegin.select[0];
+		
+		this._endBegin = Helpers.endOfCommandEnd(selbegin.endOfCommand)
+			?? this._value?.range?.end
+			?? Helpers.positionFrom(tokBegin, false);
 		
 		const body = node.children.statementSelectBody?.at(0)?.children;
 		if (body?.statementCase) {
@@ -178,25 +186,36 @@ export class ContextSelect extends Context {
 			}
 		}
 		
-		if (body?.statementSelectElse) {
-			this._elsestatements = new ContextStatements(body?.statementSelectElse[0].children.statements[0], this);
+		const selelse = body?.statementSelectElse?.at(0)?.children.statements[0];
+		if (selelse) {
+			this._elsestatements = new ContextStatements(selelse, this);
 		}
 		
-		const tokBegin = node.children.statementSelectBegin[0].children.select[0];
-		
-		var tokEnd: IToken | undefined;
+		var posEnd: Position | undefined;
 		
 		const selEnd = node.children.statementSelectEnd?.at(0)?.children;
 		if (selEnd) {
-			tokEnd = selEnd.end?.at(0) ?? Helpers.endOfCommandToken(selEnd.endOfCommand);
+			if (selEnd.end) {
+				posEnd = Helpers.positionFrom(selEnd.end[0], false);
+			} else {
+				posEnd = Helpers.endOfCommandEnd(selEnd.endOfCommand);
+			}
 		}
 		
-		this.range = Helpers.rangeFrom(tokBegin, tokEnd, true, false);
+		if (this.elsestatements) {
+			posEnd = posEnd ?? this._elsestatements?.range?.end;
+		} else if (this._cases.length > 0) {
+			posEnd = posEnd ?? this._cases.at(this._cases.length - 1)?.range?.end;
+		}
+		
+		posEnd = posEnd ?? this._endBegin;
+		
+		this.range = Helpers.rangeFromPosition(Helpers.positionFrom(tokBegin), posEnd);
 	}
 	
 	public dispose(): void {
 		super.dispose();
-		this._value.dispose();
+		this._value?.dispose();
 		for (const each of this._cases) {
 			each.dispose();
 		}
@@ -208,7 +227,7 @@ export class ContextSelect extends Context {
 		return this._node;
 	}
 	
-	public get value(): Context {
+	public get value(): Context | undefined {
 		return this._value;
 	}
 	
@@ -224,7 +243,7 @@ export class ContextSelect extends Context {
 	public resolveMembers(state: ResolveState): void {
 		super.resolveMembers(state);
 		
-		this._value.resolveMembers(state);
+		this._value?.resolveMembers(state);
 		
 		for (const each of this._cases) {
 			each.resolveMembers(state);
@@ -238,7 +257,7 @@ export class ContextSelect extends Context {
 	}
 	
 	public resolveStatements(state: ResolveState): void {
-		this._value.resolveStatements(state);
+		this._value?.resolveStatements(state);
 		
 		for (const each of this._cases) {
 			each.resolveStatements(state);
@@ -255,7 +274,7 @@ export class ContextSelect extends Context {
 		if (!Helpers.isPositionInsideRange(this.range, position)) {
 			return undefined;
 		}
-		return this._value.contextAtPosition(position)
+		return this._value?.contextAtPosition(position)
 			?? this.contextAtPositionList(this._cases, position)
 			?? this._elsestatements?.contextAtPosition(position)
 			?? this;
@@ -265,7 +284,7 @@ export class ContextSelect extends Context {
 		if (!Helpers.isRangeInsideRange(this.range, range)) {
 			return undefined;
 		}
-		return this._value.contextAtRange(range)
+		return this._value?.contextAtRange(range)
 			?? this.contextAtRangeList(this._cases, range)
 			?? this._elsestatements?.contextAtRange(range)
 			?? this;
@@ -284,21 +303,22 @@ export class ContextSelect extends Context {
 		const range = Range.create(position, position);
 		let items: CompletionItem[] = [];
 		
-		if (this._value.contextAtPosition(position)) {
-			items.push(...CompletionHelper.createExpression(this._value.range ?? range, this));
-		} else {
+		if (Helpers.isPositionAfter(position, this._endBegin)) {
 			items.push(CompletionHelper.createSelectCase(range));
 			if (this._cases.length > 0 && !this._elsestatements) {
 				items.push(CompletionHelper.createSelectElse(range));
 				items.push(...CompletionHelper.createExpression(range, this));
 			}
+			
+		} else {
+			items.push(...CompletionHelper.createExpression(this._value?.range ?? range, this));
 		}
 		
 		return items;
 	}
 	
 	public expectTypes(context: Context): ResolveType[] | undefined {
-		const vt = this._value.expressionType;
+		const vt = this._value?.expressionType;
 		if (vt) {
 			return vt === ResolveNamespace.classInt ? [ResolveNamespace.classInt] : [ResolveNamespace.classEnumeration];
 		} else {

@@ -21,6 +21,6 @@ export interface ExpressionInlineIfElseMoreCstNode extends CstNode {
 export type ExpressionInlineIfElseMoreCstChildren = {
 	if: IToken[];
 	expressionIf: ExpressionLogicCstNode[];
-	else: IToken[];
-	expressionElse: ExpressionLogicCstNode[];
+	else?: IToken[];
+	expressionElse?: ExpressionLogicCstNode[];
 };

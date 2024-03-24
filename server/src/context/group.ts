@@ -43,7 +43,17 @@ export class ContextGroup extends Context{
 		super(Context.ContextType.Group, parent);
 		this._node = node;
 		this._expression = ContextBuilder.createExpression(node.children.expression[0], this);
-		this.range = Helpers.rangeFrom(node.children.leftParanthesis[0], node.children.rightParanthesis[0]);
+		
+		const tokLParan = node.children.leftParanthesis[0];
+		
+		var posEnd: Position | undefined;
+		const tokRParan = node.children.rightParanthesis?.at(0);
+		if (tokRParan) {
+			posEnd = Helpers.positionFrom(tokRParan, false);
+		}
+		posEnd = posEnd ?? this._expression.range?.end ?? Helpers.positionFrom(tokLParan, false);
+		
+		this.range = Helpers.rangeFromPosition(Helpers.positionFrom(tokLParan), posEnd);
 	}
 	
 	public dispose(): void {

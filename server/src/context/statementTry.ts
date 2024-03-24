@@ -43,7 +43,7 @@ import { TextDocument } from "vscode-languageserver-textdocument";
 export class ContextTryCatch extends Context {
 	protected _node: StatementCatchCstNode;
 	protected _typename: TypeName;
-	protected _variable: Identifier;
+	protected _variable?: Identifier;
 	protected _statements: ContextStatements;
 	protected _resolveArgument?: ResolveArgument;
 	
@@ -55,20 +55,23 @@ export class ContextTryCatch extends Context {
 		
 		this._node = node;
 		this._typename = new TypeName(c.type[0]);
-		this._variable = new Identifier(c.variable[0]);
-		this._statements = new ContextStatements(c.statements[0], parent);
+		if (c.variable) {
+			this._variable = new Identifier(c.variable[0]);
+		}
+		this._statements = new ContextStatements(c.statements?.at(0), parent);
 		
 		const tokBegin = node.children.catch[0];
-		let tokEnd = this._statements.range?.end;
+		var posEnd = this._statements.range?.end
+			?? this._variable?.range?.end
+			?? this._typename.range?.end
+			?? Helpers.positionFrom(c.catch[0], false);
 		
-		if (tokEnd) {
-			this.range = Helpers.rangeFromPosition(Helpers.positionFrom(tokBegin), tokEnd);
-		}
+		this.range = Helpers.rangeFromPosition(Helpers.positionFrom(tokBegin), posEnd);
 	}
 	
 	public dispose(): void {
 		this._typename.dispose();
-		this._statements.dispose();
+		this._statements?.dispose();
 		this._resolveArgument?.dispose();
 		this._resolveArgument = undefined;
 	}
@@ -83,7 +86,7 @@ export class ContextTryCatch extends Context {
 	}
 	
 	public get simpleName(): string {
-		return this._variable.name;
+		return this._variable?.name ?? "?";
 	}
 	
 	public get resolveArgument(): ResolveArgument | undefined {
@@ -138,7 +141,7 @@ export class ContextTryCatch extends Context {
 	}
 	
 	protected updateHover(position: Position): Hover | null {
-		if (this._variable.isPositionInside(position)) {
+		if (this._variable?.isPositionInside(position)) {
 			return new HoverInfo(this.resolveTextLong, this._variable.range);
 			
 		} else if (this._typename.isPositionInside(position)) {
@@ -167,7 +170,7 @@ export class ContextTryCatch extends Context {
 	}
 	
 	public search(search: ResolveSearch, before?: Context): void {
-		if (search.onlyTypes || search.stopSearching) {
+		if (search.onlyTypes || search.stopSearching || !this._variable) {
 			return;
 		}
 		
@@ -182,7 +185,7 @@ export class ContextTryCatch extends Context {
 	}
 	
 	public resolvedAtPosition(position: Position): Resolved | undefined {
-		if (this._variable.isPositionInside(position)) {
+		if (this._variable?.isPositionInside(position)) {
 			return this._resolveArgument;
 		} else if (this._typename?.isPositionInside(position)) {
 			return this._typename.resolve?.resolved;
@@ -196,14 +199,16 @@ export class ContextTryCatch extends Context {
 	}
 	
 	public get referenceSelf(): Location | undefined {
-		return this.resolveLocation(this._variable.range);
+		return this._variable ? this.resolveLocation(this._variable.range) : undefined;
 	}
 	
 	public completion(document: TextDocument, position: Position): CompletionItem[] {
 		const npos = this._variable?.range?.start;
 		if (!npos || Helpers.isPositionBefore(position, npos)) {
 			if (this._typename) {
-				return this._typename.completion(document, position, this);
+				return this._typename.completion(document, position, this,
+					[Resolved.Type.Class, Resolved.Type.Namespace],
+					[ResolveNamespace.classException]);
 			}
 		}
 		return super.completion(document, position);
@@ -221,6 +226,7 @@ export class ContextTry extends Context {
 	protected _node: StatementTryCstNode;
 	protected _statements: ContextStatements;
 	protected _catches: ContextTryCatch[];
+	protected _endBegin: Position;
 	
 	
 	constructor(node: StatementTryCstNode, parent: Context) {
@@ -228,7 +234,13 @@ export class ContextTry extends Context {
 		this._node = node;
 		this._catches = [];
 		
-		this._statements = new ContextStatements(node.children.statements[0], this);
+		const tryBegin = node.children.statementTryBegin[0].children;
+		
+		const tokBegin = tryBegin.try[0];
+		this._endBegin = Helpers.endOfCommandEnd(tryBegin.endOfCommand)
+			?? Helpers.positionFrom(tokBegin, false);
+		
+		this._statements = new ContextStatements(node.children.statements?.at(0), this);
 		
 		const catches = node.children.statementCatch;
 		if (catches) {
@@ -237,10 +249,15 @@ export class ContextTry extends Context {
 			}
 		}
 		
-		const tokBegin = node.children.statementTryBegin[0].children.try[0];
-		let tokEnd = node.children.statementTryEnd[0].children.end[0];
+		var posEnd: Position | undefined;
 		
-		this.range = Helpers.rangeFrom(tokBegin, tokEnd, true, false);
+		const tryEnd = node.children.statementTryEnd?.at(0)?.children;
+		if (tryEnd) {
+			posEnd = Helpers.positionFrom(tryEnd.end[0], false);
+		}
+		posEnd = posEnd ?? this._catches.at(this._catches.length - 1)?.range?.end ?? this._endBegin;
+		
+		this.range = Helpers.rangeFromPosition(Helpers.positionFrom(tokBegin), posEnd);
 	}
 	
 	public dispose(): void {
@@ -262,6 +279,18 @@ export class ContextTry extends Context {
 	
 	public get catches(): ContextTryCatch[] {
 		return this._catches;
+	}
+	
+	public catchBefore(position: Position): ContextTryCatch | undefined {
+		var statement: ContextTryCatch | undefined;
+		for (const each of this._catches) {
+			const stapos = each.range?.end;
+			if (stapos && Helpers.isPositionBefore(position, stapos)) {
+				break;
+			}
+			statement = each;
+		}
+		return statement;
 	}
 	
 	
@@ -310,6 +339,19 @@ export class ContextTry extends Context {
 		this._statements.collectChildDocSymbols(list);
 		for (const each of this._catches) {
 			each.collectChildDocSymbols(list);
+		}
+	}
+	
+	public completion(document: TextDocument, position: Position): CompletionItem[] {
+		if (Helpers.isPositionAfter(position, this._endBegin)) {
+			const context = this.catchBefore(position);
+			if (context) {
+				return context.completion(document, position);
+			} else {
+				return this._statements.completion(document, position);
+			}
+		} else {
+			return [];
 		}
 	}
 	

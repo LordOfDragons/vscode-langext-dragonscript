@@ -23,7 +23,8 @@ export interface StatementSelectBeginCstNode extends CstNode {
 
 export type StatementSelectBeginCstChildren = {
 	select: IToken[];
-	value: ExpressionCstNode[];
+	value?: ExpressionCstNode[];
+	endOfCommand?: EndOfCommandCstNode[];
 };
 
 

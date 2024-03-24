@@ -426,7 +426,7 @@ connection.onCompletion(
 		}
 		
 		try {
-			console.log(`onCompletion ${Helpers.logPosition(params.position)}: ${sd.context.contextAtPosition(params.position)?.constructor.name}`);
+			// console.log(`onCompletion ${Helpers.logPosition(params.position)}: ${sd.context.contextAtPosition(params.position)?.constructor.name}`);
 			debugLogContext(sd.context.contextAtPosition(params.position));
 			return sd.context.
 				contextAtPosition(params.position)?.

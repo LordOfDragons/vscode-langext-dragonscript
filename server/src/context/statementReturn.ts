@@ -23,7 +23,7 @@
  */
 
 import { Context } from "./context";
-import { DiagnosticRelatedInformation, DocumentSymbol, Hover, Position, Range, RemoteConsole } from "vscode-languageserver";
+import { CompletionItem, DiagnosticRelatedInformation, DocumentSymbol, Hover, Position, Range, RemoteConsole } from "vscode-languageserver";
 import { ContextBuilder } from "./contextBuilder";
 import { StatementReturnCstNode } from "../nodeclasses/statementReturn";
 import { ResolveState } from "../resolve/state";
@@ -34,6 +34,7 @@ import { ResolveNamespace } from "../resolve/namespace";
 import { CodeActionInsertCast } from "../codeactions/insertCast";
 import { CodeActionRemove } from "../codeactions/remove";
 import { ContextFunction } from "./classFunction";
+import { TextDocument } from "vscode-languageserver-textdocument";
 
 
 export class ContextReturn extends Context{
@@ -155,11 +156,15 @@ export class ContextReturn extends Context{
 	protected updateHover(position: Position): Hover | null {
 		return null;
 	}
-
-
+	
+	public completion(document: TextDocument, position: Position): CompletionItem[] {
+		return this._value?.completion(document, position) ?? [];
+	}
+	
+	
 	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
 		if (this._value) {
-			this._value.log(console, `${prefix}Return: ${this.logRange}`, `${prefixLines}  `);
+			this._value.log(console, `${prefix}Return: ${this.logRange}: `, `${prefixLines}  `);
 		} else {
 			console.log(`${prefix}Return ${this.logRange}`);
 		}

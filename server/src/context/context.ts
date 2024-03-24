@@ -355,6 +355,10 @@ export class Context {
 		return undefined;
 	}
 	
+	public expectVariable(context: Context): Context.ExpectVariable {
+		return Context.ExpectVariable.None;
+	}
+	
 	public consumeDocumentation(iterator: ContextDocumentationIterator): void {
 		if (!this.range) {
 			return;
@@ -498,7 +502,7 @@ export namespace Context {
 		Try,
 		TryCatch,
 		Group,
-		Error,
+		Expression,
 		Documentation,
 		Comment,
 		
@@ -529,8 +533,7 @@ export namespace Context {
 		
 		Generic
 	}
-
-
+	
 	/** Type modifier. */
 	export enum TypeModifier {
 		Public,
@@ -541,18 +544,25 @@ export namespace Context {
 		Static,
 		Native
 	}
-
-	/** Acces level. */
+	
+	/** Access level. */
 	export enum AccessLevel {
 		Public,
 		Protected,
 		Private
 	}
-
-
+	
+	/** Expect variable result. */
+	export enum ExpectVariable {
+		None,
+		Read,
+		Write
+	}
+	
+	
 	/** Type modifier set. */
 	export class TypeModifierSet extends Set<Context.TypeModifier> {
-
+		
 		protected _canonical?: Context.TypeModifier[];
 		protected _typestring?: string;
 		protected _accessLevel = AccessLevel.Public;

@@ -295,7 +295,7 @@ export class ContextNamespace extends Context{
 	
 	public completion(document: TextDocument, position: Position): CompletionItem[] {
 		if (this._typename && Helpers.isPositionInsideRange(this._typename?.range, position)) {
-			return this._typename.completion(document, position, this);
+			return this._typename.completion(document, position, this, [Resolved.Type.Namespace]);
 		}
 		
 		const statement = this.statementBefore(position);

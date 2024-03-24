@@ -24,37 +24,57 @@
 
 import { Context } from "./context";
 import { StatementWhileCstNode } from "../nodeclasses/statementWhile";
-import { DocumentSymbol, Position, Range, RemoteConsole } from "vscode-languageserver";
+import { CompletionItem, DocumentSymbol, Position, Range, RemoteConsole } from "vscode-languageserver";
 import { ContextBuilder } from "./contextBuilder";
 import { ContextStatements } from "./statements";
 import { ResolveState } from "../resolve/state";
 import { ResolveNamespace } from "../resolve/namespace";
 import { Helpers } from "../helpers";
 import { ResolveType } from "../resolve/type";
+import { TextDocument } from "vscode-languageserver-textdocument";
+import { CompletionHelper } from "../completionHelper";
 
 
 export class ContextWhile extends Context{
 	protected _node: StatementWhileCstNode;
-	protected _condition: Context;
+	protected _condition?: Context;
 	protected _statements: ContextStatements;
+	protected _posEnd?: Position;
 	
 
 	constructor(node: StatementWhileCstNode, parent: Context) {
 		super(Context.ContextType.While, parent);
 		this._node = node;
-
-		this._condition = ContextBuilder.createExpression(node.children.statementWhileBegin[0].children.condition[0], this);
-		this._statements = new ContextStatements(node.children.statements[0], this);
 		
-		const tokBegin = node.children.statementWhileBegin[0].children.while[0];
-		let tokEnd = node.children.statementWhileEnd[0].children.end[0];
+		const whileBegin = node.children.statementWhileBegin[0].children;
+		if (whileBegin.condition) {
+			this._condition = ContextBuilder.createExpression(whileBegin.condition[0], this);
+		}
 		
-		this.range = Helpers.rangeFrom(tokBegin, tokEnd, true, false);
+		this._posEnd = Helpers.endOfCommandBegin(whileBegin.endOfCommand);
+		
+		this._statements = new ContextStatements(node.children.statements?.at(0), this);
+		
+		const tokBegin = whileBegin.while[0];
+		
+		var posEnd: Position | undefined;
+		
+		const whileEnd = node.children.statementWhileEnd?.at(0)?.children;
+		if (whileEnd) {
+			posEnd = Helpers.positionFrom(whileEnd.end[0], false);
+		}
+		
+		posEnd = posEnd ?? this._statements.range?.end
+			?? this._posEnd
+			?? this._condition?.range?.end
+			?? Helpers.positionFrom(tokBegin, false);
+		
+		this.range = Helpers.rangeFromPosition(Helpers.positionFrom(tokBegin), posEnd);
 	}
 
 	public dispose(): void {
 		super.dispose();
-		this._condition.dispose();
+		this._condition?.dispose();
 		this._statements.dispose();
 	}
 
@@ -63,7 +83,7 @@ export class ContextWhile extends Context{
 		return this._node;
 	}
 
-	public get condition(): Context {
+	public get condition(): Context | undefined {
 		return this._condition;
 	}
 
@@ -75,7 +95,7 @@ export class ContextWhile extends Context{
 	public resolveMembers(state: ResolveState): void {
 		super.resolveMembers(state);
 		
-		this._condition.resolveMembers(state);
+		this._condition?.resolveMembers(state);
 		
 		state.withScopeContext(this, () => {
 			this._statements.resolveMembers(state);
@@ -83,7 +103,7 @@ export class ContextWhile extends Context{
 	}
 	
 	public resolveStatements(state: ResolveState): void {
-		this._condition.resolveStatements(state);
+		this._condition?.resolveStatements(state);
 		
 		state.withScopeContext(this, () => {
 			this._statements.resolveStatements(state);
@@ -96,7 +116,7 @@ export class ContextWhile extends Context{
 		if (!Helpers.isPositionInsideRange(this.range, position)) {
 			return undefined;
 		}
-		return this._condition.contextAtPosition(position)
+		return this._condition?.contextAtPosition(position)
 			?? this._statements.contextAtPosition(position)
 			?? this;
 	}
@@ -105,7 +125,7 @@ export class ContextWhile extends Context{
 		if (!Helpers.isRangeInsideRange(this.range, range)) {
 			return undefined;
 		}
-		return this._condition.contextAtRange(range)
+		return this._condition?.contextAtRange(range)
 			?? this._statements.contextAtRange(range)
 			?? this;
 	}
@@ -121,6 +141,15 @@ export class ContextWhile extends Context{
 			return [ResolveNamespace.classBool];
 		}
 		return undefined;
+	}
+	
+	public completion(document: TextDocument, position: Position): CompletionItem[] {
+		if (this._posEnd && Helpers.isPositionAfter(position, this._posEnd)) {
+			return this._statements.completion(document, position);
+		} else {
+			const range = Range.create(position, position);
+			return CompletionHelper.createExpression(range, this);
+		}
 	}
 	
 	

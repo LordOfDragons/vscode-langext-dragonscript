@@ -23,12 +23,13 @@
  */
 
 import { Context } from "./context";
-import { DocumentSymbol, Position, Range, RemoteConsole } from "vscode-languageserver";
+import { CompletionItem, DocumentSymbol, Position, Range, RemoteConsole } from "vscode-languageserver";
 import { ContextBuilder } from "./contextBuilder";
 import { StatementThrowCstNode } from "../nodeclasses/statementThrow";
 import { Helpers } from "../helpers";
 import { ResolveState } from "../resolve/state";
 import { ResolveNamespace } from "../resolve/namespace";
+import { TextDocument } from "vscode-languageserver-textdocument";
 
 
 export class ContextThrow extends Context{
@@ -98,10 +99,14 @@ export class ContextThrow extends Context{
 			?? this;
 	}
 	
+	public completion(document: TextDocument, position: Position): CompletionItem[] {
+		return this._exception?.completion(document, position) ?? [];
+	}
+	
 	
 	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
 		if (this._exception) {
-			this._exception?.log(console, `${prefix}Throw: ${this.logRange}`, `${prefixLines}  `);
+			this._exception?.log(console, `${prefix}Throw: ${this.logRange}: `, `${prefixLines}  `);
 		} else {
 			console.log(`${prefix}Throw ${this.logRange}`);
 		}

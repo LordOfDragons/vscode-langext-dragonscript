@@ -22,16 +22,24 @@
  * SOFTWARE.
  */
 
+import { TextDocument } from "vscode-languageserver-textdocument";
 import { Context } from "./context";
-import { RemoteConsole } from "vscode-languageserver";
+import { CompletionItem, Position, Range, RemoteConsole } from "vscode-languageserver";
+import { CompletionHelper } from "../completionHelper";
 
 
-export class ContextError extends Context{
+export class ContextExpression extends Context{
 	constructor(parent: Context) {
-		super(Context.ContextType.Error, parent);
+		super(Context.ContextType.Expression, parent);
 	}
 	
+	
+	public completion(_document: TextDocument, position: Position): CompletionItem[] {
+		return CompletionHelper.createExpression(Range.create(position, position), this);
+	}
+	
+	
 	public log(console: RemoteConsole, prefix: string = "", _prefixLines: string = ""): void {
-		console.log(`${prefix}Error`);
+		console.log(`${prefix}Expression`);
 	}
 }

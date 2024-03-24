@@ -49,7 +49,7 @@ export interface StatementForFromCstNode extends CstNode {
 
 export type StatementForFromCstChildren = {
 	assign: IToken[];
-	value: ExpressionCstNode[];
+	value?: ExpressionCstNode[];
 };
 
 
@@ -61,7 +61,7 @@ export interface StatementForToCstNode extends CstNode {
 export type StatementForToCstChildren = {
 	to?: IToken[];
 	downto?: IToken[];
-	value: ExpressionCstNode[];
+	value?: ExpressionCstNode[];
 };
 
 

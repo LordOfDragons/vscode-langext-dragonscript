@@ -26,7 +26,7 @@ import { CompletionItem, CompletionItemKind, InsertTextFormat, Position, Range, 
 import { ContextFunctionArgument } from "./context/classFunctionArgument";
 import { Context } from "./context/context";
 import { ContextClass } from "./context/scriptClass";
-import { ContextIf } from "./context/statementIf";
+import { ContextIf, ContextIfElif } from "./context/statementIf";
 import { ContextSelect } from "./context/statementSelect";
 import { ContextTryCatch } from "./context/statementTry";
 import { ContextVariable } from "./context/statementVariable";
@@ -198,6 +198,19 @@ export class CompletionHelper {
 				'\t\${0}')};
 	}
 	
+	/** Create completion item for 'else' keyword. */
+	public static createElse(range: Range): CompletionItem {
+		range = Range.create(Position.create(range.start.line, Math.max(range.start.character - 1, 0)), range.end);
+		
+		return {label: 'else',
+			sortText: `${CompletionHelper.sortPrefixSnippet}else`,
+			kind: CompletionItemKind.Snippet,
+			insertTextFormat: InsertTextFormat.Snippet,
+			textEdit: TextEdit.replace(range,
+				'else\n' + 
+				'\t\${0}')};
+	}
+	
 	/** Create completion item for 'case' keyword. */
 	public static createSelectCase(range: Range): CompletionItem {
 		range = Range.create(Position.create(range.start.line, Math.max(range.start.character - 1, 0)), range.end);
@@ -309,6 +322,19 @@ export class CompletionHelper {
 				'catch \${1:Exception} \${2:exception}\n' +
 				'\t\n' +
 				'end')};
+	}
+	
+	/** Create completion item for 'catch' keyword. */
+	public static createCatch(range: Range): CompletionItem {
+		range = Range.create(Position.create(range.start.line, Math.max(range.start.character - 1, 0)), range.end);
+		
+		return {label: 'catch',
+			sortText: `${CompletionHelper.sortPrefixSnippet}catch`,
+			kind: CompletionItemKind.Snippet,
+			insertTextFormat: InsertTextFormat.Snippet,
+			textEdit: TextEdit.replace(range,
+				'catch \${1:Exception} \${2:exception}\n' +
+				'\t${0}')};
 	}
 	
 	/** Create completion item for 'return' keyword. */
@@ -696,17 +722,31 @@ export class CompletionHelper {
 		items.push(CompletionHelper.createTry(range));
 		items.push(CompletionHelper.createReturn(range));
 		
-		const p = context.parent;
-		if (p?.type === Context.ContextType.Statements && p.parent) {
+		var p: Context | undefined = context;
+		if (p.type !== Context.ContextType.Statements) {
+			p = context.parent;
+			if (p?.type !== Context.ContextType.Statements) {
+				p = undefined;
+			}
+		}
+		
+		if (p?.parent) {
 			switch (p.parent.type) {
-			case Context.ContextType.If:
-				if ((p.parent as ContextIf).elsestatements != p) {
+			case Context.ContextType.If:{
+				const ctxelse = (p.parent as ContextIf).elsestatements;
+				if (ctxelse != p) {
 					items.push(CompletionHelper.createElif(range));
+					if (!ctxelse) {
+						items.push(CompletionHelper.createElse(range));
+					}
 				}
-				break;
+				}break;
 				
 			case Context.ContextType.IfElif:
 				items.push(CompletionHelper.createElif(range));
+				if (!((p.parent as ContextIfElif).parent as ContextIf).elsestatements) {
+					items.push(CompletionHelper.createElse(range));
+				}
 				break;
 				
 			case Context.ContextType.Select:
@@ -723,6 +763,11 @@ export class CompletionHelper {
 				if (!(p.parent as ContextSelect).elsestatements) {
 					items.push(CompletionHelper.createSelectElse(range));
 				}
+				break;
+				
+			case Context.ContextType.Try:
+			case Context.ContextType.TryCatch:
+				items.push(CompletionHelper.createCatch(range));
 				break;
 			}
 		}
@@ -843,14 +888,33 @@ export class CompletionHelper {
 			castable = context.parent?.expectTypes(context);
 		}
 		
-		let search = CompletionHelper.searchExpression(context, castable);
+		const expectVariable = context.parent?.expectVariable(context) ?? Context.ExpectVariable.None;
+		var search: ResolveSearch;
+		
+		switch (expectVariable) {
+		case Context.ExpectVariable.Write:
+			search = this.searchVariable(context, true, castable);
+			break;
+			
+		case Context.ExpectVariable.Read:
+			search = this.searchVariable(context, false, castable);
+			break;
+			
+		case Context.ExpectVariable.None:
+			castable = [];
+			search = CompletionHelper.searchExpression(context);
+		}
 		const visibleTypes = new Set(search.types);
 		
-		search.onlyCastable = undefined;
-		ResolveNamespace.root.searchGlobalTypes(search);
+		if (expectVariable === Context.ExpectVariable.None) {
+			search.onlyCastable = undefined;
+			ResolveNamespace.root.searchGlobalTypes(search);
+		}
 		
 		let items: CompletionItem[] = [];
-		items.push(...CompletionHelper.createExpressionKeywords(context, range, castable));
+		if (expectVariable === Context.ExpectVariable.None) {
+			items.push(...CompletionHelper.createExpressionKeywords(context, range, castable));
+		}
 		items.push(...CompletionHelper.createFromSearch(range, context, search, visibleTypes));
 		return items;
 	}
@@ -869,7 +933,7 @@ export class CompletionHelper {
 		search.allMatchingTypes = true;
 		search.ignoreShadowedFunctions = true;
 		if (castable && castable?.length > 0) {
-			//search.onlyCastable = castable;
+			search.onlyCastable = castable;
 		}
 		
 		context.searchExpression(search, true, context);
@@ -884,14 +948,37 @@ export class CompletionHelper {
 		return search;
 	}
 	
+	private static searchVariable(context: Context, writeable: boolean, castable?: ResolveType[]): ResolveSearch {
+		let search = new ResolveSearch();
+		search.onlyVariables = true;
+		search.onlyWriteableVariables = writeable;
+		if (castable && castable?.length > 0) {
+			search.onlyCastable = castable;
+		}
+		
+		context.searchExpression(search, true, context);
+		
+		/*
+		search.onlyVariables = false;
+		search.onlyTypes = true;
+		
+		const objtype = ContextClass.thisContext(context)?.resolveClass;
+		if (objtype) {
+			objtype.search(search);
+		}
+		*/
+		
+		return search;
+	}
+	
 	public static searchExpressionType(context: Context, castable?: ResolveType[],
-			restrictType?: Resolved.Type): ResolveSearch {
+			restrictType?: Resolved.Type[]): ResolveSearch {
 		let search = new ResolveSearch();
 		search.allMatchingTypes = true;
 		search.onlyTypes = true;
 		search.restrictTypeType = restrictType;
 		if (castable && castable?.length > 0) {
-			//search.onlyCastable = castable;
+			search.onlyCastable = castable;
 		}
 		
 		context.searchExpression(search, true, context);
@@ -938,14 +1025,17 @@ export class CompletionHelper {
 	}
 	
 	/** Create sub type completions. */
-	public static createSubType(range: Range, context: Context,
-			type: ResolveType, restrictType?: Resolved.Type): CompletionItem[] {
+	public static createSubType(range: Range, context: Context, type: ResolveType,
+			restrictType?: Resolved.Type[], castable?: ResolveType[]): CompletionItem[] {
 		let search = new ResolveSearch();
 		search.allMatchingTypes = true;
 		search.ignoreShadowedFunctions = true;
 		search.ignoreNamespaceParents = true;
 		search.onlyTypes = true;
 		search.restrictTypeType = restrictType;
+		if (castable && castable?.length > 0) {
+			search.onlyCastable = castable;
+		}
 		type.search(search);
 		search.removeType(type);
 		return CompletionHelper.createFromSearch(range, context, search, undefined);
@@ -985,11 +1075,25 @@ export class CompletionHelper {
 	
 	/** Create type completions. */
 	public static createType(range: Range, context: Context, castable?: ResolveType[],
-			restrictType?: Resolved.Type): CompletionItem[] {
+			restrictType?: Resolved.Type[]): CompletionItem[] {
 		let search = CompletionHelper.searchExpressionType(context, castable, restrictType);
 		const visibleTypes = new Set(search.types);
 		
 		ResolveNamespace.root.searchGlobalTypes(search);
+		
+		let items: CompletionItem[] = [];
+		items.push(...CompletionHelper.createFromSearch(range, context, search, visibleTypes));
+		return items;
+	}
+	
+	/** Create variable. */
+	public static createVariable(range: Range, context: Context, writeable: boolean, castable?: ResolveType[]): CompletionItem[] {
+		if (!castable) {
+			castable = context.parent?.expectTypes(context);
+		}
+		
+		const search = this.searchVariable(context, writeable, castable)
+		const visibleTypes = new Set(search.types);
 		
 		let items: CompletionItem[] = [];
 		items.push(...CompletionHelper.createFromSearch(range, context, search, visibleTypes));

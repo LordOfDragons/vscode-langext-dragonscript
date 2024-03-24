@@ -1,6 +1,7 @@
 import { CstNode, IToken } from "chevrotain";
 import { FullyQualifiedClassNameCstNode } from "./fullyQualifiedClassName";
 import { StatementsCstNode } from "./statement";
+import { EndOfCommandCstNode } from "./endOfCommand";
 
 
 export interface StatementTryCstNode extends CstNode {
@@ -10,9 +11,9 @@ export interface StatementTryCstNode extends CstNode {
 
 export type StatementTryCstChildren = {
 	statementTryBegin: StatementTryBeginCstNode[];
-	statements: StatementsCstNode[];
+	statements?: StatementsCstNode[];
 	statementCatch?: StatementCatchCstNode[];
-	statementTryEnd: StatementTryEndCstNode[];
+	statementTryEnd?: StatementTryEndCstNode[];
 };
 
 
@@ -23,6 +24,7 @@ export interface StatementTryBeginCstNode extends CstNode {
 
 export type StatementTryBeginCstChildren = {
 	try: IToken[];
+	endOfCommand: EndOfCommandCstNode[];
 };
 
 
@@ -34,8 +36,8 @@ export interface StatementCatchCstNode extends CstNode {
 export type StatementCatchCstChildren = {
 	catch: IToken[];
 	type: FullyQualifiedClassNameCstNode[];
-	variable: IToken[];
-	statements: StatementsCstNode[];
+	variable?: IToken[];
+	statements?: StatementsCstNode[];
 };
 
 

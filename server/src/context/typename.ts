@@ -42,7 +42,6 @@ import { Resolved, ResolveUsage } from "../resolve/resolved";
 import { CompletionHelper } from "../completionHelper";
 import { CodeActionUnknownMember } from "../codeactions/unknownMember";
 import { TextDocument } from "vscode-languageserver-textdocument";
-import { debugLogMessage } from "../server";
 
 
 export class TypeNamePart {
@@ -630,25 +629,29 @@ export class TypeName {
 		return [];
 	}
 	
-	public completion(_document: TextDocument, position: Position,
-			context: Context, restrictType?: Resolved.Type): CompletionItem[] {
+	public completion(_document: TextDocument, position: Position, context: Context,
+			restrictType?: Resolved.Type[], castable?: ResolveType[]): CompletionItem[] {
 		let i, plen = this._parts.length;
 		var parentType: ResolveType | undefined;
 		
 		for (i=0; i<plen; i++) {
 			let part = this._parts[i];
-			debugLogMessage(`typename.completion: i=${i}/${plen} part=${part.name.name}${Helpers.logRange(part.name.range)}`);
+			//debugLogMessage(`typename.completion: i=${i}/${plen} part=${part.name.name}${Helpers.logRange(part.name.range)} | ${restrictType}`);
 			if (part.name.isPositionInside(position) || i == plen - 1) {
 				const range = part.name.range ?? Range.create(position, position);
 				if (parentType) {
-					return CompletionHelper.createSubType(range, context, parentType);
+					return CompletionHelper.createSubType(range, context, parentType, restrictType, castable);
 				} else {
-					return CompletionHelper.createType(range, context);
+					return CompletionHelper.createType(range, context, castable, restrictType);
 				}
 			}
 			
 			const resolved = part.resolve?.resolved;
 			if (!resolved) {
+				return [];
+			}
+			
+			if (restrictType && !restrictType.includes(resolved.type)) {
 				return [];
 			}
 			
@@ -665,7 +668,7 @@ export class TypeName {
 			}
 		};
 		
-		return CompletionHelper.createType(Range.create(position, position), context);
+		return CompletionHelper.createType(Range.create(position, position), context, undefined, restrictType);
 	}
 	
 	toString() : string {

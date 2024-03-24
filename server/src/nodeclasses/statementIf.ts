@@ -25,7 +25,8 @@ export interface StatementIfBeginCstNode extends CstNode {
 export type StatementIfBeginCstChildren = {
 	if: IToken[];
 	condition: ExpressionCstNode[];
-	statements: StatementsCstNode[];
+	endOfCommand?: EndOfCommandCstNode[];
+	statements?: StatementsCstNode[];
 };
 
 
@@ -36,9 +37,9 @@ export interface StatementElifCstNode extends CstNode {
 
 export type StatementElifCstChildren = {
 	elif: IToken[];
-	condition: ExpressionCstNode[];
-	endOfCommand: EndOfCommandCstNode[];
-	statements: StatementsCstNode[];
+	condition?: ExpressionCstNode[];
+	endOfCommand?: EndOfCommandCstNode[];
+	statements?: StatementsCstNode[];
 };
 
 

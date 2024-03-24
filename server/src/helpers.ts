@@ -179,6 +179,12 @@ export class Helpers {
 		return tok && tok.isInsertedInRecovery !== true ? Helpers.positionFrom(tok) : undefined;
 	}
 	
+	public static endOfCommandEnd(endOfCommand?: EndOfCommandCstNode[]): Position | undefined {
+		const c = endOfCommand?.at(0)?.children;
+		const tok = (c?.newline ?? c?.commandSeparator)?.at(0);
+		return tok && tok.isInsertedInRecovery !== true ? Helpers.positionFrom(tok, false) : undefined;
+	}
+	
 	public static endOfCommandRange(endOfCommand?: EndOfCommandCstNode[]): Range | undefined {
 		const c = endOfCommand?.at(0)?.children;
 		const tok = (c?.newline ?? c?.commandSeparator)?.at(0);

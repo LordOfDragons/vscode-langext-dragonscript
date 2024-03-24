@@ -368,7 +368,8 @@ export class ContextInterface extends Context{
 		} else if (this._tokenImplements && Helpers.isPositionAfter(position, this._tokenImplements.end)) {
 			const implement = this._implements.find(c => c.isPositionInside(position));
 			if (implement) {
-				items.push(...implement.completion(document, position, this, Resolved.Type.Interface));
+				items.push(...implement.completion(document, position, this,
+					[Resolved.Type.Interface, Resolved.Type.Namespace]));
 			}
 		}
 		

@@ -1,6 +1,7 @@
 import { CstNode, IToken } from "chevrotain";
 import { ExpressionCstNode } from "./expression";
 import { StatementsCstNode } from "./statement";
+import { EndOfCommandCstNode } from "./endOfCommand";
 
 
 export interface StatementWhileCstNode extends CstNode {
@@ -10,8 +11,8 @@ export interface StatementWhileCstNode extends CstNode {
 
 export type StatementWhileCstChildren = {
 	statementWhileBegin: StatementWhileBeginCstNode[];
-	statements: StatementsCstNode[];
-	statementWhileEnd: StatementWhileEndCstNode[];
+	statements?: StatementsCstNode[];
+	statementWhileEnd?: StatementWhileEndCstNode[];
 };
 
 
@@ -22,7 +23,8 @@ export interface StatementWhileBeginCstNode extends CstNode {
 
 export type StatementWhileBeginCstChildren = {
 	while: IToken[];
-	condition: ExpressionCstNode[];
+	condition?: ExpressionCstNode[];
+	endOfCommand?: EndOfCommandCstNode[];
 };
 
 

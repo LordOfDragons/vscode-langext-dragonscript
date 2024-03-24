@@ -32,13 +32,16 @@ import { Helpers } from "../helpers";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { CompletionHelper } from "../completionHelper";
 import { ResolveType } from "../resolve/type";
+import { IToken } from "chevrotain";
 
 
 export class ContextInlineIfElse extends Context{
 	protected _node: ExpressionInlineIfElseCstNode;
 	protected _condition: Context;
 	protected _ifvalue: Context;
-	protected _elsevalue: Context;
+	protected _elsevalue?: Context;
+	protected _tokenIf: IToken;
+	protected _tokenElse?: IToken;
 
 
 	constructor(node: ExpressionInlineIfElseCstNode, parent: Context) {
@@ -48,11 +51,25 @@ export class ContextInlineIfElse extends Context{
 		let c = node.children;
 		let m = c.more![0].children;
 		this._condition = ContextBuilder.createExpressionLogic(c.condition[0], this);
-		this._ifvalue = ContextBuilder.createExpressionLogic(m.expressionIf[0], this);
-		this._elsevalue = ContextBuilder.createExpressionLogic(m.expressionElse[0], this);
+		this._ifvalue = ContextBuilder.createExpressionLogic(m.expressionIf[0], this)
+		if (m.expressionElse) {
+			this._elsevalue = ContextBuilder.createExpressionLogic(m.expressionElse[0], this);
+		}
+		
+		this._tokenIf = m.if[0];
+		this._tokenElse = m.else?.at(0);
 		
 		const rangeBegin = this._condition.range?.start;
-		const rangeEnd = this._elsevalue.range?.end;
+		
+		var rangeEnd = this._elsevalue?.range?.end;
+		if (!rangeEnd && this._tokenElse) {
+			rangeEnd = Helpers.positionFrom(this._tokenElse, false);
+		}
+		rangeEnd = rangeEnd ?? this._ifvalue.range?.end;
+		if (!rangeEnd) {
+			rangeEnd = Helpers.positionFrom(this._tokenIf, false);
+		}
+		
 		if (rangeBegin && rangeEnd) {
 			this.range = Range.create(rangeBegin, rangeEnd);
 		}
@@ -62,7 +79,7 @@ export class ContextInlineIfElse extends Context{
 		super.dispose();
 		this._condition.dispose();
 		this._ifvalue.dispose();
-		this._elsevalue.dispose();
+		this._elsevalue?.dispose();
 	}
 
 
@@ -78,7 +95,7 @@ export class ContextInlineIfElse extends Context{
 		return this._ifvalue;
 	}
 
-	public get elsevalue(): Context {
+	public get elsevalue(): Context | undefined {
 		return this._elsevalue;
 	}
 	
@@ -87,13 +104,13 @@ export class ContextInlineIfElse extends Context{
 		super.resolveMembers(state);
 		this._condition.resolveMembers(state);
 		this._ifvalue.resolveMembers(state);
-		this._elsevalue.resolveMembers(state);
+		this._elsevalue?.resolveMembers(state);
 	}
 	
 	public resolveStatements(state: ResolveState): void {
 		this._condition.resolveStatements(state);
 		this._ifvalue.resolveStatements(state);
-		this._elsevalue.resolveStatements(state);
+		this._elsevalue?.resolveStatements(state);
 		
 		this.expressionType = this._ifvalue.expressionType;
 		this.expressionAutoCast = this._ifvalue.expressionAutoCast;
@@ -107,7 +124,7 @@ export class ContextInlineIfElse extends Context{
 		super.collectChildDocSymbols(list);
 		this._condition.collectChildDocSymbols(list);
 		this._ifvalue.collectChildDocSymbols(list);
-		this._elsevalue.collectChildDocSymbols(list);
+		this._elsevalue?.collectChildDocSymbols(list);
 	}
 	
 	public contextAtPosition(position: Position): Context | undefined {
@@ -116,7 +133,7 @@ export class ContextInlineIfElse extends Context{
 		}
 		return this._condition.contextAtPosition(position)
 			?? this._ifvalue.contextAtPosition(position)
-			?? this._elsevalue.contextAtPosition(position)
+			?? this._elsevalue?.contextAtPosition(position)
 			?? this;
 	}
 	
@@ -126,28 +143,23 @@ export class ContextInlineIfElse extends Context{
 		}
 		return this._condition.contextAtRange(range)
 			?? this._ifvalue.contextAtRange(range)
-			?? this._elsevalue.contextAtRange(range)
+			?? this._elsevalue?.contextAtRange(range)
 			?? this;
 	}
 	
 	public completion(document: TextDocument, position: Position): CompletionItem[] {
-		const nc = this._node.children.more?.at(0)?.children;
 		const range = Range.create(position, position);
-		
-		if (!nc) {
-			return CompletionHelper.createExpression(range, this, [ResolveNamespace.classBool]);
-		}
-		
-		const rangeIf = Helpers.rangeFrom(nc.if[0]);
-		const rangeElse = Helpers.rangeFrom(nc.else[0]);
+		const rangeIf = Helpers.rangeFrom(this._tokenIf);
+		const rangeElse = this._tokenElse ? Helpers.rangeFrom(this._tokenElse) : undefined;
 		
 		if (Helpers.isPositionBefore(position, rangeIf.start)) {
 			return CompletionHelper.createExpression(range, this, [ResolveNamespace.classBool]);
 			
-		} else if (Helpers.isPositionAfter(position, rangeIf.end) && Helpers.isPositionBefore(position, rangeElse.start)) {
+		} else if (Helpers.isPositionAfter(position, rangeIf.end)
+		&& (!rangeElse || Helpers.isPositionBefore(position, rangeElse.start))) {
 			return CompletionHelper.createExpression(range, this);
 			
-		} else if (Helpers.isPositionAfter(position, rangeElse.end)) {
+		} else if (!rangeElse || Helpers.isPositionAfter(position, rangeElse.end)) {
 			return CompletionHelper.createExpression(range, this,
 				this._ifvalue.expressionType ? [this._ifvalue.expressionType] : undefined);
 		}
@@ -175,6 +187,6 @@ export class ContextInlineIfElse extends Context{
 		console.log(`${prefix}Inline If-Else ${this.logRange}`);
 		this._condition.log(console, `${prefixLines}- Cond: `, `${prefixLines}  `);
 		this._ifvalue.log(console, `${prefixLines}- If: `, `${prefixLines}  `);
-		this._elsevalue.log(console, `${prefixLines}- Else: `, `${prefixLines}  `);
+		this._elsevalue?.log(console, `${prefixLines}- Else: `, `${prefixLines}  `);
 	}
 }

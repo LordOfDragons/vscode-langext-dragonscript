@@ -44,7 +44,6 @@ import { Resolved, ResolveUsage } from "../resolve/resolved";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { CompletionHelper } from "../completionHelper";
 import { ContextDocumentationIterator } from "./documentation";
-import { debugLogMessage } from "../server";
 
 
 export class ContextClass extends Context{
@@ -466,7 +465,6 @@ export class ContextClass extends Context{
 		
 		const declaration = this.declarationBefore(position);
 		if (declaration) {
-			debugLogMessage(`class.completion: ${declaration.constructor.name}`);
 			return declaration.completion(document, position);
 		}
 		
@@ -484,12 +482,14 @@ export class ContextClass extends Context{
 		} else if (this._tokenImplements && Helpers.isPositionAfter(position, this._tokenImplements.end)) {
 			const implement = this._implements.find(c => c.isPositionInside(position));
 			if (implement) {
-				items.push(...implement.completion(document, position, this, Resolved.Type.Interface));
+				items.push(...implement.completion(document, position, this,
+					[Resolved.Type.Interface, Resolved.Type.Namespace]));
 			}
 			
 		} else if (this._tokenExtends && Helpers.isPositionAfter(position, this._tokenExtends.start)) {
 			if (this._extends) {
-				items.push(...this._extends?.completion(document, position, this, Resolved.Type.Class));
+				items.push(...this._extends?.completion(document, position, this,
+					[Resolved.Type.Class, Resolved.Type.Namespace]));
 			}
 		}
 		

@@ -55,6 +55,7 @@ export class ResolveSearch {
 			this.onlyTypes = copy.onlyTypes;
 			this.ignoreTypes = copy.ignoreTypes;
 			this.onlyVariables = copy.onlyVariables;
+			this.onlyWriteableVariables = copy.onlyWriteableVariables;
 			this.onlyFunctions = copy.onlyFunctions;
 			this.ignoreVariables = copy.ignoreVariables;
 			this.ignoreFunctions = copy.ignoreFunctions;
@@ -91,6 +92,9 @@ export class ResolveSearch {
 	
 	/** Search only variables. */
 	public onlyVariables: boolean = false;
+	
+	/** Search only writeable variables. */
+	public onlyWriteableVariables: boolean = false;
 	
 	/** Search only functions. */
 	public onlyFunctions: boolean = false;
@@ -141,7 +145,7 @@ export class ResolveSearch {
 	public ignoreConstructors = false;
 	
 	/** Restrict to type types. */
-	public restrictTypeType?: Resolved.Type;
+	public restrictTypeType?: Resolved.Type[];
 	
 	/** Add found elements to all list in the order they have been found. */
 	public addToAllList = false;
@@ -416,6 +420,10 @@ export class ResolveSearch {
 			}
 		}
 		
+		if (this.onlyWriteableVariables && variable.typeModifiers?.isFixed) {
+			return false;
+		}
+		
 		if (this.onlyCastable){
 			const type = variable.variableType;
 			if (type && !this.onlyCastable.find(t => type.castable(t))) {
@@ -473,12 +481,19 @@ export class ResolveSearch {
 		if (!this.allMatchingTypes && this._types.size > 0) {
 			return false;
 		}
-		if (this.restrictTypeType && type.type != this.restrictTypeType) {
+		if (this.restrictTypeType && !this.restrictTypeType.includes(type.type)) {
 			return false;
 		}
 		
-		if (this.onlyCastable && !this.onlyCastable.find(t => type.castable(t))) {
-			return false;
+		if (this.onlyCastable) {
+			switch (type.type) {
+			case Resolved.Type.Class:
+			case Resolved.Type.Interface:
+				if (!this.onlyCastable.find(t => type.castable(t))) {
+					return false;
+				}
+				break;
+			}
 		}
 		
 		return true;

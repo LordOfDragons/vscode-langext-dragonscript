@@ -25,5 +25,6 @@ export interface StatementVariableCstNode extends CstNode {
 
 export type StatementVariableCstChildren = {
 	name: IToken[];
+	assign?: IToken[];
 	value?: ExpressionCstNode[];
 };

@@ -1188,9 +1188,8 @@ export class ContextFunctionCall extends Context{
 	public completion(document: TextDocument, position: Position): CompletionItem[] {
 		if (this._castType && Helpers.isPositionInsideRange(this._castType?.range, position)) {
 			return this._castType.completion(document, position, this);
-		}
-		
-		if (this._argBeginPos && Helpers.isPositionAfter(position, this._argBeginPos)) {
+			
+		} else if (this._argBeginPos && Helpers.isPositionAfter(position, this._argBeginPos)) {
 			const indexArg = this.argumentIndexBefore(position);
 			if (indexArg >= 0 && indexArg < this._arguments.length) {
 				return this._arguments[indexArg].completion(document, position);
@@ -1422,6 +1421,7 @@ export class ContextFunctionCall extends Context{
 		}
 		return i + 1;
 	}
+	
 	
 	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
 		console.log(`${prefix}Call ${this._name ?? '-'} ${this.logRange}`);

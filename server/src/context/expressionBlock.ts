@@ -24,7 +24,7 @@
 
 import { Context } from "./context";
 import { CompletionItem, Definition, DocumentSymbol, Hover, Location, Position, Range, RemoteConsole, SignatureHelp, SymbolKind, integer } from "vscode-languageserver";
-import { ExpressionBlockBeginCstNode, ExpressionBlockCstNode } from "../nodeclasses/expressionBlock";
+import { ExpressionBlockCstNode } from "../nodeclasses/expressionBlock";
 import { ContextFunctionArgument } from "./classFunctionArgument";
 import { ContextStatements } from "./statements";
 import { ResolveSearch } from "../resolve/search";
@@ -37,7 +37,6 @@ import { TypeName } from "./typename";
 import { IToken } from "chevrotain";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { CompletionHelper } from "../completionHelper";
-import { debugLogMessage } from "../server";
 
 
 export class ContextBlock extends Context{
@@ -49,6 +48,7 @@ export class ContextBlock extends Context{
 	protected _resolveFunction?: ResolveFunction;
 	protected _returnType: TypeName;
 	protected _argCommaPos: Position[] = [];
+	protected _argEndPos?: Position;
 
 
 	constructor(node: ExpressionBlockCstNode, parent: Context) {
@@ -68,6 +68,9 @@ export class ContextBlock extends Context{
 				this._arguments.push(new ContextFunctionArgument(each, this));
 			}
 		}
+		
+		this._argEndPos = Helpers.endOfCommandBegin(children.endOfCommand)
+			?? this._arguments.at(this._arguments.length - 1)?.range?.end;
 		
 		if (children.comma) {
 			for (const each of children.comma) {
@@ -318,7 +321,10 @@ export class ContextBlock extends Context{
 	}
 	
 	public completion(document: TextDocument, position: Position): CompletionItem[] {
-		if (Helpers.isPositionAfter(position, this._posAfterBlock)) {
+		if (this._argEndPos && Helpers.isPositionAfter(position, this._argEndPos)) {
+			return this._statements?.completion(document, position) ?? [];
+			
+		} else if (Helpers.isPositionAfter(position, this._posAfterBlock)) {
 			const indexArg = this.argBeforePos(position);
 			if (indexArg >= 0 && indexArg < this._arguments.length) {
 				return this._arguments[indexArg].completion(document, position);
