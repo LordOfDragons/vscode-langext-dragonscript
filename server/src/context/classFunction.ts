@@ -48,6 +48,7 @@ import { CompletionHelper } from "../completionHelper";
 import { debugLogMessage } from "../server";
 import { CodeActionRemove } from "../codeactions/remove";
 import { CodeActionReplace } from "../codeactions/replace";
+import { VisitorAllHasReturn } from "../visitor/allhasreturn";
 
 
 export class ContextFunction extends Context{
@@ -459,8 +460,16 @@ export class ContextFunction extends Context{
 		});
 		
 		this.documentation?.resolveStatements(state);
+		
+		// check for problems
+		if (this._name
+		&& this._functionType !== ContextFunction.Type.Constructor
+		&& this._returnType && this._returnType?.name != 'void'
+		&& this._statements && !(new VisitorAllHasReturn).check(this._statements)) {
+			state.reportError(this._name.range, `Not all control path return a value or throw an exception`);
+		}
 	}
-
+	
 	public contextAtPosition(position: Position): Context | undefined {
 		if (!Helpers.isPositionInsideRange(this.range, position)) {
 			return undefined;

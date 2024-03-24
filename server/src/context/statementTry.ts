@@ -74,6 +74,10 @@ export class ContextTryCatch extends Context {
 	}
 	
 	
+	public get statements(): ContextStatements {
+		return this._statements;
+	}
+	
 	public get typename(): TypeName {
 		return this._typename;
 	}
@@ -252,7 +256,7 @@ export class ContextTry extends Context {
 		return this._node;
 	}
 	
-	public get statements(): Context {
+	public get statements(): ContextStatements {
 		return this._statements;
 	}
 	

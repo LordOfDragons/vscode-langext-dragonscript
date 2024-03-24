@@ -159,6 +159,7 @@ fixed class String
 	 * \details Each character in characters is tested individually.
 	 */
 	public func int findAny( String characters )
+		return 0
 	end
 	
 	/**

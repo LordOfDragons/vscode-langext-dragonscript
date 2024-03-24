@@ -8,7 +8,7 @@
 			"group": "build",
 			"problemMatcher": [],
 			"label": "npm: build - server",
-			"detail": "npm run compile && npm run copy-assets"
+			"detail": "npm run compile && npm run copy-assets",
 		},
 		{
 			"type": "npm",
@@ -29,7 +29,11 @@
 			"group": "build",
 			"problemMatcher": [],
 			"label": "vsce: package",
-			"detail": "vsce package"
+			"detail": "vsce package",
+			"dependsOn": [
+				"npm: build - server",
+				"npm: build - client"
+			]
 		}
 	]
 }

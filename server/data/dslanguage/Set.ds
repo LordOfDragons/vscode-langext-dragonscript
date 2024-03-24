@@ -76,6 +76,7 @@ fixed class Set
 	
 	/** \brief Create set with values added from array. */
 	public static func Set newFrom( Array array )
+		return null
 	end
 	/*@}*/
 	
