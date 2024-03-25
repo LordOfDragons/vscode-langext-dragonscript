@@ -31,6 +31,7 @@ import { ReportConfig } from "../reportConfig";
 import { ScriptDocument } from "../scriptDocument";
 import { getDocumentSettings, scriptDocuments, validator } from "../server";
 import { DeferredPromiseVoid } from "../deferredPromise";
+import { Minimatch, minimatch } from 'minimatch';
 
 export class Package {
 	protected _console: RemoteConsole;
@@ -311,22 +312,28 @@ export class Package {
 		}
 	}
 	
-	protected async scanPackage(list: string[], path: string): Promise<void> {
+	protected async scanPackage(list: string[], path: string, exclude: Minimatch[] = []): Promise<void> {
 		let files = await readdir(path);
 		let directories: string[] = []
-
+		
 		for (const each of files) {
 			let childpath = join(path, each);
+			
+			if (exclude.find(m => m.match(childpath))) {
+				continue;
+			}
+			
 			let stats = statSync(childpath);
 			if (stats.isDirectory()) {
 				directories.push(childpath);
+				
 			} else if (stats.isFile()) {
 				if (each.endsWith('.ds')) {
 					list.push(childpath);
 				}
 			}
 		}
-
-		await Promise.all(directories.map(each => this.scanPackage(list, each)));
+		
+		await Promise.all(directories.map(each => this.scanPackage(list, each, exclude)));
 	}
 }

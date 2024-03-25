@@ -61,7 +61,7 @@ import {
 import { ContextScript } from "./context/script";
 import { ScriptDocuments } from "./scriptDocuments";
 import { ScriptValidator } from "./scriptValidator";
-import { DSSettings } from "./settings";
+import { DSSettings, FileSettings } from "./settings";
 import { DSCapabilities } from "./capabilities";
 import { ScriptDocument } from "./scriptDocument";
 import { Packages } from "./package/packages";
@@ -281,6 +281,19 @@ export async function getDocumentSettings(resource: string): Promise<DSSettings>
 		return connection.workspace.getConfiguration({
 			scopeUri: resource,
 			section: 'dragonscriptLanguage'
+		});
+	}
+}
+
+export async function getFileSettings(resource: string): Promise<FileSettings> {
+	if (!capabilities.hasConfiguration) {
+		return {
+			exclude: {}
+		};
+	} else {
+		return connection.workspace.getConfiguration({
+			scopeUri: resource,
+			section: 'files'
 		});
 	}
 }

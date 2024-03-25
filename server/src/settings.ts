@@ -24,10 +24,14 @@
 
 export interface DSSettings {
 	maxNumberOfProblems: number;
-
+	
 	/** Path to Drag[en]gine installation. Empty string to auto-detect. */
 	pathDragengine: string;
-
+	
 	/** Workspace required Drag[en]gine DragonScript Module Package. */
 	requiresPackageDragengine: boolean
+}
+
+export interface FileSettings {
+	exclude: { [pattern: string]: boolean; };
 }

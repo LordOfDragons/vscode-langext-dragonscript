@@ -24,10 +24,12 @@
 
 import { Diagnostic, RemoteConsole, WorkspaceFolder } from "vscode-languageserver";
 import { ReportConfig } from "../reportConfig";
-import { getDocumentSettings, packages, reportDiagnostics } from "../server";
+import { debugLogContext, debugLogMessage, debugLogObj, getDocumentSettings, getFileSettings, packages, reportDiagnostics } from "../server";
 import { PackageDEModule } from "./dragenginemodule";
 import { PackageDSLanguage } from "./dslanguage";
 import { Package } from "./package";
+import { Minimatch } from "minimatch";
+import { join } from "path";
 
 export class PackageWorkspace extends Package {
 	private _uri: string;
@@ -75,9 +77,21 @@ export class PackageWorkspace extends Package {
 			await pkg.load();
 		}
 		
+		const fileSettings = await getFileSettings(this._uri);
+		
 		this._console.log(`WorkspacePackage '${this._name}': Scan files`);
 		let startTime = Date.now();
-		await this.scanPackage(this._files, this._path);
+		
+		const exclude: Minimatch[] = [];
+		for (const pattern of Object.keys(fileSettings.exclude)) {
+			if (fileSettings.exclude[pattern]) {
+				const path = join(this._path, pattern);
+				debugLogMessage(`exclude: '${pattern}' => '${path}'`);
+				exclude.push(new Minimatch(path));
+			}
+		}
+		
+		await this.scanPackage(this._files, this._path, exclude);
 		let elapsedTime = Date.now() - startTime;
 		this._console.log(`WorkspacePackage '${this._name}': Files scanned in ${elapsedTime / 1000}s found ${this._files.length} files`);
 		
