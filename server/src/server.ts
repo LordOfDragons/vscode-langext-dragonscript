@@ -50,7 +50,9 @@ import {
 	CodeAction,
 	RenameParams,
 	WorkspaceEdit,
-	TextEdit} from 'vscode-languageserver/node'
+	TextEdit,
+	DidChangeConfigurationParams,
+	DidChangeWatchedFilesParams} from 'vscode-languageserver/node'
 
 import {
 	TextDocument
@@ -70,7 +72,6 @@ import { PackageWorkspace } from './package/workspacepackage';
 import { Context } from './context/context';
 import { DocumentationValidator } from './documentationValidator';
 import { Package } from './package/package';
-import { Helpers } from './helpers';
 
 // Create a connection for the server, using Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -123,7 +124,13 @@ export function remoteConsole() {
 }
 
 
-// Create a simple text document manager.
+const defaultSettings: DSSettings = {
+	maxNumberOfProblems: 1000,
+	pathDragengine: '',
+	requiresPackageDragengine: false
+};
+export let globalSettings: DSSettings = defaultSettings;
+
 export const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
 export const capabilities: DSCapabilities = new DSCapabilities;
 export const validator = new ScriptValidator(capabilities);
@@ -131,6 +138,7 @@ export const scriptDocuments: ScriptDocuments = new ScriptDocuments(connection.c
 export const documentationValidator = new DocumentationValidator(capabilities);
 
 const workspacePackages: PackageWorkspace[] = [];
+export const packages: Packages = new Packages();
 
 
 connection.onInitialize((params: InitializeParams) => {
@@ -179,104 +187,96 @@ connection.onInitialize((params: InitializeParams) => {
 	return result;
 });
 
-connection.onInitialized(() => {
+connection.onInitialized(async () => {
 	if (capabilities.hasConfiguration) {
 		connection.client.register(DidChangeConfigurationNotification.type, undefined);
 	}
 	if (capabilities.hasWorkspaceFolder) {
-		connection.workspace.onDidChangeWorkspaceFolders(_event => {
-			onDidChangeWorkspaceFolders();
+		connection.workspace.onDidChangeWorkspaceFolders(async _event => {
+			await onDidChangeWorkspaceFolders();
 		});
 	}
 	
 	packages.add(new PackageDSLanguage(connection.console));
 	packages.add(new PackageDEModule(connection.console));
 	
-	if (capabilities.hasConfiguration) {
-		connection.workspace.getConfiguration('dragonscriptLanguage').then(settings => {
-			(<PackageDEModule>packages.get(PackageDEModule.PACKAGE_ID)).pathDragengine = settings.pathDragengine;
-		});
-	}
+	const wsSettings = capabilities.hasConfiguration
+		? await connection.workspace.getConfiguration({section: 'dragonscriptLanguage'})
+		: defaultSettings;
 	
-	onDidChangeWorkspaceFolders();
+	const settings = wsSettings ?? defaultSettings;
+	
+	(packages.get(PackageDEModule.PACKAGE_ID) as PackageDEModule).pathDragengine = settings.pathDragengine;
+	
+	await onDidChangeWorkspaceFolders();
 });
 
-// The global settings, used when the `workspace/configuration` request is not supported by the client.
-const defaultSettings: DSSettings = {
-	maxNumberOfProblems: 1000,
-	pathDragengine: "",
-	requiresPackageDragengine: false
-};
-export let globalSettings: DSSettings = defaultSettings;
-
-// Cache the settings of all open documents
-const documentSettings: Map<string, Thenable<DSSettings>> = new Map();
-
-export const packages: Packages = new Packages();
-
-connection.onDidChangeConfiguration(change => {
-	if (capabilities.hasConfiguration) {
-		// Reset all cached document settings
-		documentSettings.clear();
-	} else {
-		globalSettings = <DSSettings>(change.settings?.dragonscriptLanguage || defaultSettings);
-	}
-	
-	connection.workspace.getConfiguration({
-		section: 'dragonscriptLanguage'
-	}).then(settings => {
-		(<PackageDEModule>packages.get(PackageDEModule.PACKAGE_ID)).pathDragengine =
-			(change.settings?.dragonscriptLanguage || defaultSettings).pathDragengine;
+connection.onDidChangeConfiguration(
+	async (change: DidChangeConfigurationParams): Promise<void> => {
+		const wsSettings = await connection.workspace.getConfiguration({
+			section: 'dragonscriptLanguage'
+		});
+		const settings = wsSettings
+			?? (change.settings?.dragonscriptLanguage as DSSettings)
+			?? defaultSettings;
+		
+		if (!capabilities.hasConfiguration) {
+			globalSettings = settings;
+		}
+		
+		(packages.get(PackageDEModule.PACKAGE_ID) as PackageDEModule).pathDragengine = settings.pathDragengine;
 		
 		// Revalidate all open text documents
 		/*for (const each of documents.all()) {
 			validateTextDocument(each);
 		}*/
-		workspacePackages.forEach (each => each.resolveAllLater());
-	});
-});
+		for (const each of workspacePackages) {
+			each.resolveAllLater();
+		}
+	}
+);
 
-function onDidChangeWorkspaceFolders() {
-	connection.workspace.getWorkspaceFolders().then(folders => {
-		// dispose of folders no more existing
-		let retainPackages: PackageWorkspace[] = [];
-		let disposePackages: PackageWorkspace[] = [];
-		
-		if (folders) {
-			for (const p of workspacePackages) {
-				if (folders.find(f => f.uri == p.uri)) {
-					retainPackages.push(p);
-				} else {
-					disposePackages.push(p);
-				}
-			}
-			
-		} else {
-			disposePackages.push(...workspacePackages);
-		}
-		
-		workspacePackages.length = 0;
-		workspacePackages.push(...retainPackages);
-		
-		disposePackages.forEach(p => p.dispose());
-		
-		// add new packages
-		if (folders) {
-			for (const f of folders) {
-				if (!workspacePackages.find(p => p.uri == f.uri)) {
-					const wfpackage = new PackageWorkspace(connection.console, f);
-					workspacePackages.push(wfpackage);
-					console.log(`onDidChangeWorkspaceFolders reload ${f.uri}`);
-					wfpackage.reload();
-				}
+async function onDidChangeWorkspaceFolders() {
+	const folders = await connection.workspace.getWorkspaceFolders();
+	
+	// dispose of folders no more existing
+	const retainPackages: PackageWorkspace[] = [];
+	const disposePackages: PackageWorkspace[] = [];
+	
+	if (folders) {
+		for (const p of workspacePackages) {
+			if (folders.find(f => f.uri == p.uri)) {
+				retainPackages.push(p);
+			} else {
+				disposePackages.push(p);
 			}
 		}
-	});
+		
+	} else {
+		disposePackages.push(...workspacePackages);
+	}
+	
+	workspacePackages.length = 0;
+	workspacePackages.push(...retainPackages);
+	
+	disposePackages.forEach(p => p.dispose());
+	
+	// add new packages
+	if (folders) {
+		for (const f of folders) {
+			if (!workspacePackages.find(p => p.uri == f.uri)) {
+				const wfpackage = new PackageWorkspace(connection.console, f);
+				workspacePackages.push(wfpackage);
+				console.log(`onDidChangeWorkspaceFolders reload ${f.uri}`);
+				wfpackage.reload();
+			}
+		}
+	}
 }
 
-export function getDocumentSettings(resource: string): Thenable<DSSettings> {
+export async function getDocumentSettings(resource: string): Promise<DSSettings> {
 	if (!capabilities.hasConfiguration) {
-		return Promise.resolve(globalSettings);
+		return globalSettings;
 	} else {
 		return connection.workspace.getConfiguration({
 			scopeUri: resource,
@@ -285,14 +285,9 @@ export function getDocumentSettings(resource: string): Thenable<DSSettings> {
 	}
 }
 
-// Only keep settings for open documents
-documents.onDidClose(e => {
-	documentSettings.delete(e.document.uri);
-});
-
 // The content of a text document has changed. This event is emitted
 // when the text document first opened or when its content has changed.
-documents.onDidChangeContent(change => {
+documents.onDidChangeContent(async change => {
 	//console.log(`onDidChangeContent ${change.document.uri} ${change.document.version}`);
 	validateTextDocumentAndReresolve(change.document);
 });
@@ -308,25 +303,11 @@ async function ensureDocument(uri: string): Promise<ScriptDocument> {
 	return sd;
 }
 
-/*
-async function ensureDocument(uri: string): Promise<ScriptDocument | undefined> {
-	let scriptDocument = scriptDocuments.get(uri);
-	if (!scriptDocument) {
-		const textDocument = documents.get(uri);
-		
-		await validateTextDocument(textDocument);
-		scriptDocument = scriptDocuments.get(uri);
-		if (!scriptDocument) {
-			return undefined;
-		}
+async function ensureWorkspaceDocuments(): Promise<void> {
+	for (const each of workspacePackages) {
+		await each.load();
 	}
-	
-	const pkg = scriptDocument.package as Package;
-	await pkg?.load();
-	
-	return scriptDocument;
 }
-*/
 
 async function validateTextDocumentAndReresolve(textDocument: TextDocument): Promise<void> {
 	const scriptDocument = scriptDocuments.get(textDocument.uri);
@@ -393,15 +374,17 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	connection.sendDiagnostics({uri: textDocument.uri, diagnostics})
 }
 
-connection.onDidChangeWatchedFiles(change => {
-	/*
-	change.changes.forEach(each => {
-		//if (each.type === FileChangeType.Changed) {
-			console.log(`onDidChangeWatchedFiles ${each.uri}`);
-		//}
-	});
-	*/
-});
+connection.onDidChangeWatchedFiles(
+	async (params: DidChangeWatchedFilesParams): Promise<void> => {
+		/*
+		change.changes.forEach(each => {
+			//if (each.type === FileChangeType.Changed) {
+				console.log(`onDidChangeWatchedFiles ${each.uri}`);
+			//}
+		});
+		*/
+	}
+);
 
 connection.onDocumentSymbol(
 	async (params: DocumentSymbolParams): Promise<DocumentSymbol[]> => {
@@ -411,7 +394,9 @@ connection.onDocumentSymbol(
 );
 
 connection.onWorkspaceSymbol(
-	(params: WorkspaceSymbolParams): SymbolInformation[] => {
+	async (_params: WorkspaceSymbolParams): Promise<SymbolInformation[]> => {
+		await ensureWorkspaceDocuments();
+		
 		const symbols: SymbolInformation[] = [];
 		for (const pkg of workspacePackages) {
 			for (const scrdoc of pkg.scriptDocuments) {
@@ -423,12 +408,8 @@ connection.onWorkspaceSymbol(
 )
 
 connection.onHover(
-	(params: TextDocumentPositionParams): Hover | null => {
-		const sd = scriptDocuments.get(params.textDocument.uri);
-		if (!sd || !(sd?.package as Package)?.isLoaded) {
-			return null;
-		}
-		
+	async (params: TextDocumentPositionParams): Promise<Hover | null> => {
+		const sd = await ensureDocument(params.textDocument.uri);
 		try {
 			return sd.context?.
 				contextAtPosition(params.position)?.
@@ -441,11 +422,8 @@ connection.onHover(
 );
 
 connection.onCompletion(
-	(params: TextDocumentPositionParams): CompletionItem[] => {
-		const sd = scriptDocuments.get(params.textDocument.uri);
-		if (!sd || !(sd?.package as Package)?.isLoaded) {
-			return [];
-		}
+	async (params: TextDocumentPositionParams): Promise<CompletionItem[]> => {
+		const sd = await ensureDocument(params.textDocument.uri);
 		
 		const document = documents.get(params.textDocument.uri);
 		if (!document || !sd.context) {
@@ -454,7 +432,7 @@ connection.onCompletion(
 		
 		try {
 			// console.log(`onCompletion ${Helpers.logPosition(params.position)}: ${sd.context.contextAtPosition(params.position)?.constructor.name}`);
-			debugLogContext(sd.context.contextAtPosition(params.position));
+			// debugLogContext(sd.context.contextAtPosition(params.position));
 			return sd.context.
 				contextAtPosition(params.position)?.
 				completion(document, params.position) ?? [];
@@ -482,12 +460,8 @@ connection.onCompletionResolve(
 */
 
 connection.onDefinition(
-	(params: TextDocumentPositionParams): Definition => {
-		const sd = scriptDocuments.get(params.textDocument.uri);
-		if (!sd || !(sd?.package as Package)?.isLoaded) {
-			return [];
-		}
-		
+	async (params: TextDocumentPositionParams): Promise<Definition> => {
+		const sd = await ensureDocument(params.textDocument.uri);
 		try {
 			return sd.context?.
 				contextAtPosition(params.position)?.
@@ -500,11 +474,8 @@ connection.onDefinition(
 );
 
 connection.onReferences(
-	(params: ReferenceParams): Location[] => {
-		const sd = scriptDocuments.get(params.textDocument.uri);
-		if (!sd || !(sd?.package as Package)?.isLoaded) {
-			return [];
-		}
+	async (params: ReferenceParams): Promise<Location[]> => {
+		const sd = await ensureDocument(params.textDocument.uri);
 		
 		const resolved = sd.context?.
 			contextAtPosition(params.position)?.
@@ -514,7 +485,7 @@ connection.onReferences(
 			return [];
 		}
 		
-		let references: Location[] = [];
+		const references: Location[] = [];
 		
 		if (params.context.includeDeclaration) {
 			references.push(...resolved.references);
@@ -532,13 +503,9 @@ connection.onReferences(
 )
 
 connection.onDocumentHighlight(
-	(params: DocumentHighlightParams): DocumentHighlight[] => {
+	async (params: DocumentHighlightParams): Promise<DocumentHighlight[]> => {
 		const uri = params.textDocument.uri;
-		
-		const sd = scriptDocuments.get(uri);
-		if (!sd || !(sd?.package as Package)?.isLoaded) {
-			return [];
-		}
+		const sd = await ensureDocument(uri);
 		
 		const resolved = sd.context?.
 			contextAtPosition(params.position)?.
@@ -548,7 +515,7 @@ connection.onDocumentHighlight(
 			return [];
 		}
 		
-		let hilight: DocumentHighlight[] = [];
+		const hilight: DocumentHighlight[] = [];
 		
 		for (const each of resolved.references) {
 			if (each.uri == uri) {
@@ -573,11 +540,8 @@ connection.onDocumentHighlight(
 )
 
 connection.onSignatureHelp(
-	(params: SignatureHelpParams): SignatureHelp | undefined => {
-		const sd = scriptDocuments.get(params.textDocument.uri);
-		if (!sd || !(sd?.package as Package)?.isLoaded) {
-			return undefined;
-		}
+	async (params: SignatureHelpParams): Promise<SignatureHelp | undefined> => {
+		const sd = await ensureDocument(params.textDocument.uri);
 		
 		return sd.context?.
 			contextAtPosition(params.position)?.
@@ -586,11 +550,8 @@ connection.onSignatureHelp(
 )
 
 connection.onCodeAction(
-	(params: CodeActionParams): CodeAction[] => {
-		const sd = scriptDocuments.get(params.textDocument.uri);
-		if (!sd || !(sd?.package as Package)?.isLoaded) {
-			return [];
-		}
+	async (params: CodeActionParams): Promise<CodeAction[]> => {
+		const sd = await ensureDocument(params.textDocument.uri);
 		
 		return sd.context?.
 			contextAtRange(params.range)?.
@@ -599,11 +560,8 @@ connection.onCodeAction(
 )
 
 connection.onRenameRequest(
-	(params: RenameParams): WorkspaceEdit | undefined => {
-		const sd = scriptDocuments.get(params.textDocument.uri);
-		if (!sd || !(sd?.package as Package)?.isLoaded) {
-			return undefined;
-		}
+	async (params: RenameParams): Promise<WorkspaceEdit | undefined> => {
+		const sd = await ensureDocument(params.textDocument.uri);
 		
 		const resolved = sd.context?.
 			contextAtPosition(params.position)?.

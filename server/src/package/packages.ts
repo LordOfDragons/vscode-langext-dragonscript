@@ -57,4 +57,10 @@ export class Packages {
 			visitor(each);
 		}
 	}
+	
+	public async ensureAllLoaded(): Promise<void> {
+		for (const each of this._packages.values()) {
+			await each.load();
+		}
+	}
 }
