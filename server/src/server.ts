@@ -297,8 +297,39 @@ documents.onDidChangeContent(change => {
 	validateTextDocumentAndReresolve(change.document);
 });
 
+async function ensureDocument(uri: string): Promise<ScriptDocument> {
+	let sd = scriptDocuments.get(uri);
+	while (!sd) {
+		await new Promise(resolve => setTimeout(resolve, 250));
+		sd = scriptDocuments.get(uri);
+	}
+	
+	await (sd.package as Package)?.load();
+	return sd;
+}
+
+/*
+async function ensureDocument(uri: string): Promise<ScriptDocument | undefined> {
+	let scriptDocument = scriptDocuments.get(uri);
+	if (!scriptDocument) {
+		const textDocument = documents.get(uri);
+		
+		await validateTextDocument(textDocument);
+		scriptDocument = scriptDocuments.get(uri);
+		if (!scriptDocument) {
+			return undefined;
+		}
+	}
+	
+	const pkg = scriptDocument.package as Package;
+	await pkg?.load();
+	
+	return scriptDocument;
+}
+*/
+
 async function validateTextDocumentAndReresolve(textDocument: TextDocument): Promise<void> {
-	let scriptDocument = scriptDocuments.get(textDocument.uri);
+	const scriptDocument = scriptDocuments.get(textDocument.uri);
 	if (scriptDocument && textDocument.version == scriptDocument.revision) {
 		return;
 	}
@@ -373,19 +404,15 @@ connection.onDidChangeWatchedFiles(change => {
 });
 
 connection.onDocumentSymbol(
-	(params: DocumentSymbolParams): DocumentSymbol[] => {
-		const sd = scriptDocuments.get(params.textDocument.uri);
-		if (!sd || !(sd?.package as Package)?.isLoaded) {
-			return [];
-		}
-		
+	async (params: DocumentSymbolParams): Promise<DocumentSymbol[]> => {
+		const sd = await ensureDocument(params.textDocument.uri);
 		return sd.context?.documentSymbols ?? [];
 	}
 );
 
 connection.onWorkspaceSymbol(
 	(params: WorkspaceSymbolParams): SymbolInformation[] => {
-		let symbols: SymbolInformation[] = [];
+		const symbols: SymbolInformation[] = [];
 		for (const pkg of workspacePackages) {
 			for (const scrdoc of pkg.scriptDocuments) {
 				scrdoc.context?.collectWorkspaceSymbols(symbols);

@@ -33,13 +33,18 @@ import { DSSettings } from "./settings";
 export class ScriptDocument {
 	protected _uri: string;
 	protected _console: RemoteConsole;
-
+	
 	public package?: any; // not type Package due to inheritence cycle
 	protected _settings: DSSettings;
 	protected _node?: ScriptCstNode;
 	protected _context?: ContextScript;
 	protected _documentationTokens: IToken[] = [];
 	protected _commentTokens: IToken[] = [];
+	
+	protected _classesResolved = false;
+	protected _inheritanceResolved = false;
+	protected _membersResolved = false;
+	protected _statementsResolved = false;
 	
 	public requiresAnotherTurn: boolean = false;
 	public revision: number = 1;
@@ -48,20 +53,20 @@ export class ScriptDocument {
 	public diagnosticsInheritance: Diagnostic[] = [];
 	public diagnosticsResolveMembers: Diagnostic[] = [];
 	public diagnosticsResolveStatements: Diagnostic[] = [];
-
-
+	
+	
 	constructor(uri: string, console: RemoteConsole, settings: DSSettings) {
 		this._uri = uri;
 		this._console = console;
 		this._settings = settings;
 	}
-
+	
 	public dispose(): void {
 		this._context?.dispose();
 		this.package = undefined;
 	}
-
-
+	
+	
 	public get console(): RemoteConsole {
 		return this._console;
 	}
@@ -69,20 +74,20 @@ export class ScriptDocument {
 	public get uri(): string {
 		return this._uri;
 	}
-
+	
 	public get settings(): DSSettings {
 		return this._settings;
 	}
-
+	
 	public set settings(value: DSSettings) {
 		this._settings = value;
 		// TODO invalidate
 	}
-
+	
 	public get node(): ScriptCstNode | undefined {
 		return this._node;
 	}
-
+	
 	public set node(value: ScriptCstNode | undefined) {
 		this._node = value;
 		// TODO invalidate
@@ -103,64 +108,108 @@ export class ScriptDocument {
 	public set commentTokens(value: IToken[]) {
 		this._commentTokens = value;
 	}
-
+	
 	public get context(): ContextScript | undefined {
 		return this._context;
 	}
-
+	
 	public set context(context: ContextScript | undefined) {
 		if (context === this._context) {
 			return;
 		}
-
+		
 		this._context?.dispose();
 		this._context = context;
 		// TODO invalidate
 	}
-
-
+	
+	
+	public get areClassesResolved(): boolean {
+		return this._classesResolved;
+	}
+	
+	public async waitClassesResolved(): Promise<void> {
+		while (!this._classesResolved) {
+			await new Promise(resolve => setTimeout(resolve, 250));
+		}
+	}
+	
+	public get isInheritanceResolved(): boolean {
+		return this._inheritanceResolved;
+	}
+	
+	public async waitInheritanceResolved(): Promise<void> {
+		while (!this._inheritanceResolved) {
+			await new Promise(resolve => setTimeout(resolve, 250));
+		}
+	}
+	
+	public get areMembersResolved(): boolean {
+		return this._membersResolved;
+	}
+	
+	public async waitMembersResolved(): Promise<void> {
+		while (!this._membersResolved) {
+			await new Promise(resolve => setTimeout(resolve, 250));
+		}
+	}
+	
+	public get areStatementsResolved(): boolean {
+		return this._statementsResolved;
+	}
+	
+	public async waitStatementsResolved(): Promise<void> {
+		while (!this._statementsResolved) {
+			await new Promise(resolve => setTimeout(resolve, 250));
+		}
+	}
+	
+	
 	public async resolveClasses(reportConfig: ReportConfig): Promise<Diagnostic[]> {
-		let diagnostics: Diagnostic[] = [];
+		const diagnostics: Diagnostic[] = [];
 		
 		if (this.context) {
-			let state = new ResolveState(diagnostics, this.uri, reportConfig);
-			this.context.resolveClasses(state);
+			this.context.resolveClasses(new ResolveState(diagnostics, this.uri, reportConfig));
 		}
-
+		
+		this._classesResolved = true;
 		return diagnostics;
 	}
-
+	
 	public async resolveInheritance(reportConfig: ReportConfig): Promise<Diagnostic[]> {
-		let diagnostics: Diagnostic[] = [];
+		const  diagnostics: Diagnostic[] = [];
 		
 		if (this.context) {
-			let state = new ResolveState(diagnostics, this.uri, reportConfig);
+			const state = new ResolveState(diagnostics, this.uri, reportConfig);
 			this.context.resolveInheritance(state);
 			this.requiresAnotherTurn = state.requiresAnotherTurn;
 		}
-
+		
+		if (!this.requiresAnotherTurn) {
+			this._inheritanceResolved = true;
+		}
 		return diagnostics;
 	}
-
+	
 	public async resolveMembers(reportConfig: ReportConfig): Promise<Diagnostic[]> {
-		let diagnostics: Diagnostic[] = [];
+		const diagnostics: Diagnostic[] = [];
 		
 		if (this.context) {
-			let state = new ResolveState(diagnostics, this.uri, reportConfig);
-			this.context.resolveMembers(state);
+			this.context.resolveMembers(new ResolveState(diagnostics, this.uri, reportConfig));
 		}
-
+		
+		this._membersResolved = true;
 		return diagnostics;
 	}
-
+	
 	public async resolveStatements(reportConfig: ReportConfig): Promise<Diagnostic[]> {
-		let diagnostics: Diagnostic[] = [];
+		const diagnostics: Diagnostic[] = [];
 		
 		if (this.context) {
-			let state = new ResolveState(diagnostics, this.uri, reportConfig);
-			this.context.resolveStatements(state);
+			this.context.resolveStatements(new ResolveState(diagnostics, this.uri, reportConfig));
 		}
-
+		
+		this._statementsResolved = true;
 		return diagnostics;
 	}
 }
