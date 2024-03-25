@@ -24,44 +24,88 @@
 
 import { RemoteConsole } from "vscode-languageserver";
 import { ScriptDocument } from "./scriptDocument";
+import { DeferredPromise } from "./deferredPromise";
+
+
+class DeferredPromiseGet extends DeferredPromise<ScriptDocument> {
+	private _uri: string;
+	
+	constructor (uri: string) {
+		super();
+		this._uri = uri;
+	}
+	
+	public get uri(): string {
+		return this._uri;
+	}
+}
+
 
 export class ScriptDocuments {
 	protected _console: RemoteConsole;
 	protected _documents: Map<string, ScriptDocument>;
-
-
+	protected _promisesGet: DeferredPromiseGet[] = [];
+	
+	
 	constructor(console: RemoteConsole) {
 		this._console = console;
 		this._documents = new Map<string, ScriptDocument>();
 	}
-
+	
 	public dispose(): void {
 		this.removeAll()
+		
+		const promises = [...this._promisesGet];
+		this._promisesGet.splice(0);
+		for (const each of promises) {
+			each.fail();
+		}
 	}
-
-
+	
+	
 	/** All documents. */
 	public get documents(): Map<string, ScriptDocument> {
 		return this._documents;
 	}
-
+	
 	/** Document for URI or undefined. */
 	public get(uri: string): ScriptDocument | undefined {
 		return this._documents.get(uri);
 	}
-
+	
+	/** Document for URI waiting for it to appear if absend. */
+	public async ensureGet(uri: string): Promise<ScriptDocument> {
+		const document = this._documents.get(uri);
+		if (document) {
+			return document;
+		}
+		
+		const promise = new DeferredPromiseGet(uri);
+		this._promisesGet.push(promise);
+		return promise.promise;
+	}
+	
 	/** Add document replacing existing one if present. */
 	public add(document: ScriptDocument): void {
 		this._documents.get(document.uri)?.dispose();
 		this._documents.set(document.uri, document);
+		
+		const promises = this._promisesGet.filter(p => p.uri == document.uri);
+		for (const each of promises) {
+			const index = this._promisesGet.indexOf(each);
+			if (index != -1) {
+				this._promisesGet.splice(index, 1);
+			}
+			each.succeed(document);
+		}
 	}
-
+	
 	/** Remove document. */
 	public remove(document: ScriptDocument): void {
 		this._documents.get(document.uri)?.dispose();
 		this._documents.delete(document.uri);
 	}
-
+	
 	/** Remove all documents. */
 	public removeAll(): void {
 		for (const each of this._documents.values()) {

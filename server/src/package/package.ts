@@ -30,41 +30,49 @@ import { ContextScript } from "../context/script";
 import { ReportConfig } from "../reportConfig";
 import { ScriptDocument } from "../scriptDocument";
 import { getDocumentSettings, scriptDocuments, validator } from "../server";
+import { DeferredPromiseVoid } from "../deferredPromise";
 
 export class Package {
 	protected _console: RemoteConsole;
 	protected _id: string;
-	protected _loaded: boolean = false;
-	protected _promiseLoading?: Promise<void>;
+	protected _loaded = false;
+	protected _isLoading = false;
+	protected _promisesLoading: DeferredPromiseVoid[] = [];
 	protected _loadingStartTime?: number;
 	protected _scriptDocuments: ScriptDocument[];
 	protected _files: string[] = [];
 	//protected _finishedCounter: number = 0;
-
-
+	
+	
 	constructor(console: RemoteConsole, id: string) {
 		this._console = console;
 		this._id = id;
 		this._scriptDocuments = [];
 	}
-
+	
 	public dispose(): void {
 		this._scriptDocuments = [];
+		
+		const promises = [...this._promisesLoading];
+		this._promisesLoading.splice(0);
+		for (const each of promises) {
+			each.fail();
+		}
 	}
-
-
+	
+	
 	public get console(): RemoteConsole {
 		return this._console;
 	}
-
+	
 	public get id(): string {
 		return this._id;
 	}
-
+	
 	public get scriptDocuments(): ScriptDocument[] {
 		return this._scriptDocuments;
 	}
-
+	
 	public get files(): string[] {
 		return this._files;
 	}
@@ -73,21 +81,60 @@ export class Package {
 		return this._loaded;
 	}
 	
-
+	
 	public async load(): Promise<void> {
-		if (this._promiseLoading) {
-			return this._promiseLoading;
+		//debugLogMessage(`package(${this._id}).load: isLoading=${this._isLoading} loaded=${this._loaded} promises=${this._promisesLoading.length}`);
+		if (this._isLoading) {
+			return this.waitFinishLoad();
 		} else if (!this._loaded) {
-			this._promiseLoading = this.reload();
-			return this._promiseLoading;
+			return this.reload();
 		}
 	}
-
+	
 	public async reload(): Promise<void> {
+		//debugLogMessage(`package(${this._id}).reload: isLoading=${this._isLoading} loaded=${this._loaded} promises=${this._promisesLoading.length}`);
+		// this one here is really tricky. calling await can cause multiple multiple
+		// reload() to get past the await although only one is allowed to. this is
+		// because the _isLoading variable is not set until after the await causing
+		// other load() calls to think they can safely call reload()
+		if (this._isLoading) {
+			await this.waitFinishLoad();
+		}
 		this.clear();
+		
 		this._loadingStartTime = Date.now();
-		this._promiseLoading = this.loadPackage();
-		return this._promiseLoading;
+		this._isLoading = true;
+		
+		//debugLogMessage(`package(${this._id}).reload[begin]: isLoading=${this._isLoading} loaded=${this._loaded} promises=${this._promisesLoading.length}`);
+		try {
+			await this.loadPackage();
+		} catch (e) {
+			//debugLogMessage(`package(${this._id}).load[failed]: isLoading=${this._isLoading} loaded=${this._loaded} promises=${this._promisesLoading.length}`);
+			const promises = [...this._promisesLoading];
+			this._promisesLoading.splice(0);
+			this._isLoading = false;
+			for (const each of promises) {
+				each.fail();
+			}
+			throw e;
+		}
+		
+		//debugLogMessage(`package(${this._id}).load[finished]: isLoading=${this._isLoading} loaded=${this._loaded} promises=${this._promisesLoading.length}`);
+		const promises = [...this._promisesLoading];
+		this._promisesLoading.splice(0);
+		this._isLoading = false;
+		for (const each of promises) {
+			each.succeed();
+		}
+	}
+	
+	protected async waitFinishLoad(): Promise<void> {
+		//debugLogMessage(`package(${this._id}).waitFinishLoad: isLoading=${this._isLoading} loaded=${this._loaded} promises=${this._promisesLoading.length}`);
+		if (this._isLoading) {
+			const promise = new DeferredPromiseVoid();
+			this._promisesLoading.push(promise);
+			return promise.promise;
+		}
 	}
 	
 	public resolveAllLater(): void {
@@ -101,17 +148,17 @@ export class Package {
 		let elapsedTime = Date.now() - (this._loadingStartTime ?? 0);
 		this._loadingStartTime = undefined;
 		this._loaded = true;
-		this._promiseLoading = undefined;
+		this._isLoading = false;
 		this._console.log(`Package '${this._id}': Done loading in ${elapsedTime / 1000}s`);
 	}
 	
 	protected clear(): void {
-		this._promiseLoading = undefined;
 		this._loadingStartTime = undefined;
 		//this._finishedCounter = 0;
 		this._scriptDocuments = [];
 		this._files = [];
 		this._loaded = false;
+		this._isLoading = false;
 	}
 
 	protected async loadFiles(): Promise<void> {
@@ -167,9 +214,12 @@ export class Package {
 
 		let uri = `file://${path}`
 		let scriptDocument = scriptDocuments.get(uri);
-		if (!scriptDocument) {
+		if (scriptDocument) {
+			scriptDocument.package = this;
+		} else {
 			const settings = await getDocumentSettings(uri);
 			scriptDocument = new ScriptDocument(uri, this.console, settings);
+			scriptDocument.package = this;
 			scriptDocuments.add(scriptDocument);
 		}
 		
@@ -224,7 +274,6 @@ export class Package {
 		//scriptDocument.context?.log(connection.console);
 		
 		this._scriptDocuments.push(scriptDocument);
-		scriptDocument.package = this;
 
 		//this._finishedCounter++;
 		//scriptDocument.console.info(`Package '${this._id}' (${this._finishedCounter}/${this._files.length}): Parsed '${path}' in ${elapsedTime / 1000}s`);

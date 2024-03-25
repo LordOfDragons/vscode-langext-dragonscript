@@ -61,8 +61,8 @@ export class PackageDEModule extends Package {
 	}
 
 	protected clear(): void {
-		this._pathModule = undefined;
 		super.clear();
+		this._pathModule = undefined;
 	}
 
 	protected async loadPackage(): Promise<void> {

@@ -293,12 +293,7 @@ documents.onDidChangeContent(async change => {
 });
 
 async function ensureDocument(uri: string): Promise<ScriptDocument> {
-	let sd = scriptDocuments.get(uri);
-	while (!sd) {
-		await new Promise(resolve => setTimeout(resolve, 250));
-		sd = scriptDocuments.get(uri);
-	}
-	
+	let sd = await scriptDocuments.ensureGet(uri);
 	await (sd.package as Package)?.load();
 	return sd;
 }
