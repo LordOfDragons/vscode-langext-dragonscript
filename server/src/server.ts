@@ -127,7 +127,8 @@ export function remoteConsole() {
 const defaultSettings: DSSettings = {
 	maxNumberOfProblems: 1000,
 	pathDragengine: '',
-	requiresPackageDragengine: false
+	requiresPackageDragengine: false,
+	scriptDirectories: ['.']
 };
 export let globalSettings: DSSettings = defaultSettings;
 
@@ -265,6 +266,11 @@ async function onDidChangeWorkspaceFolders() {
 	if (folders) {
 		for (const f of folders) {
 			if (!workspacePackages.find(p => p.uri == f.uri)) {
+				const settings = await getDocumentSettings(f.uri);
+				if (settings.scriptDirectories.length == 0) {
+					continue;
+				}
+				
 				const wfpackage = new PackageWorkspace(connection.console, f);
 				workspacePackages.push(wfpackage);
 				console.log(`onDidChangeWorkspaceFolders reload ${f.uri}`);

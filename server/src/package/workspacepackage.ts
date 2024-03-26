@@ -80,7 +80,7 @@ export class PackageWorkspace extends Package {
 		const fileSettings = await getFileSettings(this._uri);
 		
 		this._console.log(`WorkspacePackage '${this._name}': Scan files`);
-		let startTime = Date.now();
+		const startTime = Date.now();
 		
 		const exclude: Minimatch[] = [];
 		for (const pattern of Object.keys(fileSettings.exclude)) {
@@ -91,7 +91,12 @@ export class PackageWorkspace extends Package {
 			}
 		}
 		
-		await this.scanPackage(this._files, this._path, exclude);
+		for (const each of settings.scriptDirectories) {
+			const path = join(this._path, each);
+			this._console.log(`- '${each}' => '${path}'`);
+			await this.scanPackage(this._files, path, exclude);
+		}
+		//await this.scanPackage(this._files, this._path, exclude);
 		let elapsedTime = Date.now() - startTime;
 		this._console.log(`WorkspacePackage '${this._name}': Files scanned in ${elapsedTime / 1000}s found ${this._files.length} files`);
 		

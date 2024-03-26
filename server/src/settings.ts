@@ -30,6 +30,9 @@ export interface DSSettings {
 	
 	/** Workspace required Drag[en]gine DragonScript Module Package. */
 	requiresPackageDragengine: boolean
+	
+	/** Source directories. */
+	scriptDirectories: string[]
 }
 
 export interface FileSettings {

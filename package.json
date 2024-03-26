@@ -20,10 +20,13 @@
 	],
 	"version": "1.1.0",
 	"engines": {
-		"vscode": "^1.75.0"
+		"vscode": "^1.63.0"
 	},
 	"categories": [
 		"Programming Languages"
+	],
+	"activationEvents": [
+		"onLanguage:dragonscript"
 	],
 	"main": "./client/out/extension",
 	"contributes": {
@@ -62,6 +65,12 @@
 					"type": "boolean",
 					"default": false,
 					"description": "Workspace requires Drag[en]gine DragonScript Module Package."
+				},
+				"dragonscriptLanguage.scriptDirectories": {
+					"scope": "resource",
+					"type": "array",
+					"default": ["."],
+					"description": "List of directories to scan for source files. Typically scripts are located in one directory (default workspace root). Empty list disabled DragonScript support for workspace."
 				},
 				"dragonscriptLanguage.maxNumberOfProblems": {
 					"scope": "resource",
