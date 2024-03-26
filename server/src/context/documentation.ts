@@ -29,7 +29,29 @@ import { DocumentationDocCstNode } from "../nodeclasses/doc/documentation";
 import { ResolveState } from "../resolve/state";
 import { debugErrorMessage, debugLogMessage, documentationValidator, documents, scriptDocuments } from "../server";
 import { Context } from "./context";
+import { ContextDocBase } from "./doc/contextDoc";
 import { ContextDocumentationDoc } from "./doc/doc";
+
+
+export class DocumentationWhitespace {
+	private _token: IToken;
+	private _range?: Range;
+	
+	public constructor (token: IToken) {
+		this._token = token;
+	}
+	
+	public get token(): IToken {
+		return this._token;
+	}
+	
+	public get range(): Range {
+		if (!this._range) {
+			this._range = Helpers.rangeFrom(this._token);
+		}
+		return this._range;
+	}
+}
 
 
 export class ContextDocumentation extends Context{
@@ -50,6 +72,7 @@ export class ContextDocumentation extends Context{
 	protected _sectionWarning: string[] = [];
 	protected _sectionThrows: string[] = [];
 	protected _sectionSee: string[] = [];
+	protected _whitespaces: DocumentationWhitespace[] = [];
 	
 	
 	constructor(token: IToken, parent: Context) {
@@ -81,6 +104,36 @@ export class ContextDocumentation extends Context{
 	
 	public get isDeprecated(): boolean {
 		return this._isDeprecated;
+	}
+	
+	public get whitespaces(): DocumentationWhitespace[] {
+		return this._whitespaces;
+	}
+	
+	public setWhitespaces(tokens: IToken[]) {
+		this._whitespaces = tokens.map(t => new DocumentationWhitespace(t));
+	}
+	
+	public whitespaceBefore(position: Position): DocumentationWhitespace | undefined {
+		var whitespace: DocumentationWhitespace | undefined;
+		for (const each of this._whitespaces) {
+			if (Helpers.isPositionBefore(position, each.range.start)) {
+				break;
+			}
+			whitespace = each;
+		}
+		return whitespace;
+	}
+	
+	public static parentDocumentation(context: ContextDocBase): ContextDocumentation | undefined {
+		var c: Context | undefined = context;
+		while (c) {
+			if (c.type === Context.ContextType.Documentation) {
+				return c as ContextDocumentation;
+			}
+			c = c.parent;
+		}
+		return undefined;
 	}
 	
 	
@@ -193,6 +246,7 @@ export class ContextDocumentation extends Context{
 			lines.push(...this._sectionTodo);
 		}
 		
+		//lines = [lines.join('\n')];
 		return lines;
 	}
 	

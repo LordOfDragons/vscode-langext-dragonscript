@@ -44,7 +44,7 @@ export class DSDocLexer extends Lexer{
 	public static readonly tokenSpace = createToken({
 		name: "space",
 		pattern: /[ \t\f]+/,
-		group: Lexer.SKIPPED
+		group: "whitespace"
 	})
 	
 	public static readonly tokenNewline = createToken({
@@ -178,8 +178,20 @@ export class DSDocLexer extends Lexer{
 		pattern: /\\warning/
 	})
 	
-	public static readonly tokenDocLine = createToken({
-		name: "docLine",
+	public static readonly tokenMinus = createToken({
+		name: "minus",
+		pattern: /\-/,
+		longer_alt: DSDocLexer.tokenWord
+	})
+	
+	public static readonly tokenPlus = createToken({
+		name: "plus",
+		pattern: /\+/,
+		longer_alt: DSDocLexer.tokenWord
+	})
+	
+	public static readonly tokenAsteric = createToken({
+		name: "asteric",
 		pattern: /\*/,
 		longer_alt: DSDocLexer.tokenWord
 	})
@@ -189,7 +201,6 @@ export class DSDocLexer extends Lexer{
 		DSDocLexer.tokenDocBegin,
 		DSDocLexer.tokenDocBegin2,
 		DSDocLexer.tokenDocEnd,
-		DSDocLexer.tokenDocLine,
 		
 		DSDocLexer.tokenSpace,
 		DSDocLexer.tokenNewline,
@@ -213,6 +224,9 @@ export class DSDocLexer extends Lexer{
 		DSDocLexer.tokenTodo,
 		DSDocLexer.tokenWarning,
 		DSDocLexer.tokenBold,
+		DSDocLexer.tokenMinus,
+		DSDocLexer.tokenPlus,
+		DSDocLexer.tokenAsteric,
 		
 		DSDocLexer.tokenWord
 	]

@@ -530,6 +530,7 @@ export namespace Context {
 		DocumentationString,
 		DocumentationWord,
 		DocumentationNewline,
+		DocumentationList,
 		
 		Generic
 	}

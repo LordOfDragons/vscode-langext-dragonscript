@@ -30,11 +30,14 @@ import { Context } from "../context";
 import { ContextDocBaseBlock } from "./baseBlock";
 import { ContextDocumentationBlockText } from "./blockText";
 import { ContextDocumentationBrief } from "./brief";
+import { ContextDocBuilder } from "./builder";
 import { ContextDocumentationCode } from "./code";
 import { ContextDocumentationCopyDoc } from "./copyDoc";
 import { ContextDocumentationDeprecated } from "./deprecated";
 import { ContextDocumentationDetails } from "./details";
 import { ContextDocumentationDocState } from "./docState";
+import { ContextDocumentationList } from "./list";
+import { ContextDocumentationNewline } from "./newline";
 import { ContextDocumentationNote } from "./note";
 import { ContextDocumentationParagraph } from "./paragraph";
 import { ContextDocumentationParam } from "./param";
@@ -46,6 +49,7 @@ import { ContextDocumentationThrow } from "./throw";
 import { ContextDocumentationTodo } from "./todo";
 import { ContextDocumentationVersion } from "./version";
 import { ContextDocumentationWarning } from "./warning";
+import { ContextDocumentationWordIterator } from "./worditerator";
 
 
 export class ContextDocumentationDoc extends Context{
@@ -106,11 +110,43 @@ export class ContextDocumentationDoc extends Context{
 				this._blocks.push(new ContextDocumentationSee(ec.ruleSee[0], this));
 			}
 			
-			if (ec.docBlockText?.at(0)?.children.docBlockTextWord) {
-				if (this._blocks.length > 0) {
-					this._blocks[this._blocks.length - 1].addWords(ec.docBlockText[0]);
-				} else {
-					this._blocks.push(new ContextDocumentationBlockText(ec.docBlockText[0], this));
+			const words = ec.docBlockText?.at(0)?.children.docBlockTextWord;
+			if (words) {
+				const iterator = new ContextDocumentationWordIterator(words);
+				var word = iterator.current;
+				var newline = true;
+				
+				if (this._blocks.length == 0) {
+					this._blocks.push(new ContextDocumentationBlockText(this));
+				}
+				var block = this._blocks[this._blocks.length - 1];
+				
+				while (word) {
+					const ec = word.children;
+					word = iterator.next;
+					if (ec.docWord) {
+						const ec2 = ec.docWord[0].children;
+						
+						if (newline) {
+							newline = false;
+							
+							const tokenList = ec2.plus?.at(0) ?? ec2.minus?.at(0) ?? ec2.asteric?.at(0);
+							if (tokenList) {
+								block = new ContextDocumentationList(tokenList, this);
+								this._blocks.push(block);
+								continue;
+							}
+						}
+						
+						const c = ContextDocBuilder.createWord(ec.docWord[0], block);
+						if (c) {
+							block.words.push(c);
+						}
+						
+					} else if (ec.ruleNewline) {
+						block.words.push(new ContextDocumentationNewline(ec.ruleNewline[0], this));
+						newline = true;
+					}
 				}
 			}
 		}

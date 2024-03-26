@@ -49,7 +49,7 @@ export class ContextDocumentationString extends ContextDocBase{
 	
 	
 	public buildDoc(state: ContextDocumentationDocState): void {
-		state.addWord(this._token.image);
+		state.addWordEscape(this._token.image);
 	}
 	
 	

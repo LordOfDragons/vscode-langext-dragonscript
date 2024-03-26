@@ -61,6 +61,14 @@ export class ContextDocumentationDocState {
 		}
 	}
 	
+	public escapeHtml(text: string): string {
+		return text.replace(/&/g, "&amp;")
+			.replace(/</g, "&lt;")
+			.replace(/>/g, "&gt;")
+			.replace(/"/g, "&quot;")
+			.replace(/'/g, "&#39;");
+	}
+	
 	public addWord(word: string): void {
 		this.hasNewline = false;
 		if (this._wordWrap) {
@@ -69,6 +77,10 @@ export class ContextDocumentationDocState {
 		} else {
 			this.words.push(word);
 		}
+	}
+	
+	public addWordEscape(word: string): void {
+		this.addWord(this.escapeHtml(word));
 	}
 	
 	public wrap(wrapBegin: string, wrapEnd: string, block: Function): void {

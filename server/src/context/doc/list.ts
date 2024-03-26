@@ -22,62 +22,27 @@
  * SOFTWARE.
  */
 
-import { Position, Range } from "vscode-languageserver";
-import { Helpers } from "../../helpers";
-import { ResolveState } from "../../resolve/state";
+import { IToken } from "chevrotain";
+import { RemoteConsole } from "vscode-languageserver";
 import { Context } from "../context";
-import { ContextDocBase } from "./contextDoc";
+import { ContextDocBaseBlock } from "./baseBlock";
 import { ContextDocumentationDocState } from "./docState";
 
 
-export class ContextDocBaseBlock extends ContextDocBase{
-	protected _words: ContextDocBase[] = [];
-	
-	
-	constructor(type: Context.ContextType, parent: Context) {
-		super(type, parent);
-	}
-	
-	dispose(): void {
-		this._words.forEach(each => each.dispose());
-		this._words.splice(0);
-		
-		super.dispose();
+export class ContextDocumentationList extends ContextDocBaseBlock{
+	constructor(_token: IToken, parent: Context) {
+		super(Context.ContextType.DocumentationList, parent);
 	}
 	
 	
-	public get words(): Context[] {
-		return this._words;
+	public buildDoc(state: ContextDocumentationDocState): void {
+		state.newParagraph();
+		state.addWord('  -');
+		this.buildDocWords(state);
 	}
 	
 	
-	public resolveStatements(state: ResolveState): void {
-		for (const each of this._words) {
-			each.resolveStatements(state);
-		}
-	}
-	
-	
-	protected buildDocWords(state: ContextDocumentationDocState): void {
-		for (const each of this._words) {
-			each.buildDoc(state);
-		}
-	}
-	
-	
-	public contextAtPosition(position: Position): Context | undefined {
-		if (!Helpers.isPositionInsideRange(this.range, position)) {
-			return undefined;
-		}
-		return this.contextAtPositionList(this._words, position)
-			?? this;
-	}
-	
-	public contextAtRange(range: Range): Context | undefined {
-		if (!Helpers.isRangeInsideRange(this.range, range)) {
-			return undefined;
-		}
-		return this.contextAtRangeList(this._words, range)
-			?? this;
+	log(console: RemoteConsole, prefix: string = "", _prefixLines: string = "") {
+		console.log(`${prefix}Newline`);
 	}
 }

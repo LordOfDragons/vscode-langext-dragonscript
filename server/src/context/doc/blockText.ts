@@ -23,25 +23,14 @@
  */
 
 import { RemoteConsole } from "vscode-languageserver";
-import { DocumentationBlockTextCstNode } from "../../nodeclasses/doc/blockText";
 import { Context } from "../context";
 import { ContextDocBaseBlock } from "./baseBlock";
 import { ContextDocumentationDocState } from "./docState";
 
 
 export class ContextDocumentationBlockText extends ContextDocBaseBlock{
-	protected _node: DocumentationBlockTextCstNode;
-	
-	
-	constructor(node: DocumentationBlockTextCstNode, parent: Context) {
+	constructor(parent: Context) {
 		super(Context.ContextType.DocumentationBlockText, parent);
-		this._node = node;
-		this.addWords(node);
-	}
-	
-	
-	public get node(): DocumentationBlockTextCstNode {
-		return this._node;
 	}
 	
 	

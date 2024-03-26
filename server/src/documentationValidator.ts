@@ -63,12 +63,14 @@ export class DocumentationValidator {
 		const lexed = this.doLex(textDocument, documentation, scriptDocument.settings, diagnostics);
 		documentation.docNode = this.doParse(textDocument, documentation, scriptDocument.settings, lexed, diagnostics);
 		documentation.docContext = new ContextDocumentationDoc(documentation.docNode, documentation);
+		documentation.setWhitespaces(lexed.groups['whitespace']);
 	}
 	
 	public parseLog(scriptDocument: ScriptDocument, documentation: ContextDocumentation, logs: string[]): void {
 		const lexed = this.doLexLog(scriptDocument, documentation, scriptDocument.settings, logs);
 		documentation.docNode = this.doParseLog(scriptDocument, documentation, scriptDocument.settings, lexed, logs);
 		documentation.docContext = new ContextDocumentationDoc(documentation.docNode, documentation);
+		documentation.setWhitespaces(lexed.groups['whitespace']);
 	}
 	
 	

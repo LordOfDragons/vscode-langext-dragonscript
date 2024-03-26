@@ -43,7 +43,7 @@ export class DSDocParser extends CstParser{
 	
 	public newline = this.RULE("ruleNewline", () => {
 		this.CONSUME(DSDocLexer.tokenNewline);
-		this.OPTION(() => this.CONSUME(DSDocLexer.tokenDocLine));
+		this.OPTION(() => this.CONSUME(DSDocLexer.tokenAsteric));
 	})
 	
 	
@@ -153,7 +153,7 @@ export class DSDocParser extends CstParser{
 	
 	
 	public docBlockText = this.RULE("docBlockText", () => {
-		this.OPTION(() => this.CONSUME(DSDocLexer.tokenDocLine));
+		this.OPTION(() => this.CONSUME(DSDocLexer.tokenAsteric));
 		this.MANY(() => this.SUBRULE(this.docBlockTextWord));
 	})
 	
@@ -170,6 +170,9 @@ export class DSDocParser extends CstParser{
 			{ALT: () => this.SUBRULE(this.reference)},
 			{ALT: () => this.SUBRULE(this.bold)},
 			{ALT: () => this.CONSUME(DSDocLexer.tokenString)},
+			{ALT: () => this.CONSUME(DSDocLexer.tokenMinus)},
+			{ALT: () => this.CONSUME(DSDocLexer.tokenPlus)},
+			{ALT: () => this.CONSUME(DSDocLexer.tokenAsteric)},
 			{ALT: () => this.CONSUME(DSDocLexer.tokenWord)}
 		]);
 	})

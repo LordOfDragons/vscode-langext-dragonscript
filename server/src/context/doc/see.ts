@@ -76,7 +76,7 @@ export class ContextDocumentationSee extends ContextDocBaseBlock{
 			if (r) {
 				const l = r.resolveLocation.at(0);
 				if (l) {
-					state.addWord(`[${r.linkName}](${l.uri}#L${l.range.start.line + 1})`);
+					state.addWordEscape(`[${r.linkName}](${l.uri}#L${l.range.start.line + 1})`);
 					continue;
 				}
 			}
