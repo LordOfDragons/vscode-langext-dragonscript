@@ -29,29 +29,7 @@ import { DocumentationDocCstNode } from "../nodeclasses/doc/documentation";
 import { ResolveState } from "../resolve/state";
 import { debugErrorMessage, debugLogMessage, documentationValidator, documents, scriptDocuments } from "../server";
 import { Context } from "./context";
-import { ContextDocBase } from "./doc/contextDoc";
 import { ContextDocumentationDoc } from "./doc/doc";
-
-
-export class DocumentationWhitespace {
-	private _token: IToken;
-	private _range?: Range;
-	
-	public constructor (token: IToken) {
-		this._token = token;
-	}
-	
-	public get token(): IToken {
-		return this._token;
-	}
-	
-	public get range(): Range {
-		if (!this._range) {
-			this._range = Helpers.rangeFrom(this._token);
-		}
-		return this._range;
-	}
-}
 
 
 export class ContextDocumentation extends Context{
@@ -60,7 +38,6 @@ export class ContextDocumentation extends Context{
 	public docNode?: DocumentationDocCstNode;
 	public docContext?: ContextDocumentationDoc;
 	protected _docText?: string[];
-	protected _isDeprecated = false;
 	protected _markup: MarkupContent | undefined;
 	protected _sectionDeprecated: string[] = [];
 	protected _sectionBrief: string[] = [];
@@ -72,7 +49,8 @@ export class ContextDocumentation extends Context{
 	protected _sectionWarning: string[] = [];
 	protected _sectionThrows: string[] = [];
 	protected _sectionSee: string[] = [];
-	protected _whitespaces: DocumentationWhitespace[] = [];
+	protected _sectionDate: string[] = [];
+	protected _sectionAuthor: string[] = [];
 	
 	
 	constructor(token: IToken, parent: Context) {
@@ -103,28 +81,10 @@ export class ContextDocumentation extends Context{
 	}
 	
 	public get isDeprecated(): boolean {
-		return this._isDeprecated;
+		return this.docContext?.hasDeprecated ?? false;
 	}
 	
-	public get whitespaces(): DocumentationWhitespace[] {
-		return this._whitespaces;
-	}
-	
-	public setWhitespaces(tokens: IToken[]) {
-		this._whitespaces = tokens.map(t => new DocumentationWhitespace(t));
-	}
-	
-	public whitespaceBefore(position: Position): DocumentationWhitespace | undefined {
-		var whitespace: DocumentationWhitespace | undefined;
-		for (const each of this._whitespaces) {
-			if (Helpers.isPositionBefore(position, each.range.start)) {
-				break;
-			}
-			whitespace = each;
-		}
-		return whitespace;
-	}
-	
+	/*
 	public static parentDocumentation(context: ContextDocBase): ContextDocumentation | undefined {
 		var c: Context | undefined = context;
 		while (c) {
@@ -135,6 +95,7 @@ export class ContextDocumentation extends Context{
 		}
 		return undefined;
 	}
+	*/
 	
 	
 	protected parseDocumentation(): void {
@@ -182,7 +143,6 @@ export class ContextDocumentation extends Context{
 	
 	protected dropDocumentation(): void {
 		this._docText = undefined;
-		this._isDeprecated = false;
 		this._markup = undefined;
 		this._sectionDeprecated.splice(0);
 		this._sectionBrief.splice(0);
@@ -194,19 +154,15 @@ export class ContextDocumentation extends Context{
 		this._sectionWarning.splice(0);
 		this._sectionThrows.splice(0);
 		this._sectionSee.splice(0);
+		this._sectionDate.splice(0);
+		this._sectionAuthor.splice(0);
 		this._resolveTextLong = undefined;
 		this._resolveTextShort = undefined;
 	}
 	
 	protected updateDocumentation(state: ResolveState): void {
 		this.parseDocumentation();
-		
-		const dc = this.docContext;
-		if (dc) {
-			dc.resolveStatements(state);
-			dc.buildDoc();
-			this._isDeprecated = dc.deprecated.length > 0;
-		}
+		this.docContext?.resolveStatements(state);
 	}
 	
 	protected updateResolveTextLong(): string[] {
@@ -214,6 +170,8 @@ export class ContextDocumentation extends Context{
 		
 		const dc = this.docContext;
 		if (dc) {
+			dc.buildDoc();
+			
 			this.buildSectionDeprecated(dc);
 			this.buildSectionBrief(dc);
 			this.buildSectionDetails(dc);
@@ -224,10 +182,14 @@ export class ContextDocumentation extends Context{
 			this.buildSectionNote(dc);
 			this.buildSectionWarning(dc);
 			this.buildSectionSee(dc);
+			this.buildSectionDate(dc);
+			this.buildSectionAuthor(dc);
 			
 			if (dc.since != '') {
 				lines.push(`Since Version: \`\`\`${dc.since}\`\`\``);
 			}
+			lines.push(...this._sectionDate);
+			lines.push(...this._sectionAuthor);
 			
 			lines.push(...this._sectionDeprecated);
 			
@@ -246,7 +208,6 @@ export class ContextDocumentation extends Context{
 			lines.push(...this._sectionTodo);
 		}
 		
-		//lines = [lines.join('\n')];
 		return lines;
 	}
 	
@@ -375,6 +336,30 @@ export class ContextDocumentation extends Context{
 		this._sectionSee.push(parts.join('\n'));
 	}
 	
+	protected buildSectionDate(context: ContextDocumentationDoc): void {
+		if (context.date.length == 0) {
+			return;
+		}
+		
+		let parts: string[] = [];
+		for (const each of context.date) {
+			parts.push(`\`\`\`${each}\`\`\``);
+		}
+		this._sectionDate.push(`Date: ${parts.join(', ')}`);
+	}
+	
+	protected buildSectionAuthor(context: ContextDocumentationDoc): void {
+		if (context.author.length == 0) {
+			return;
+		}
+		
+		let parts: string[] = [];
+		for (const each of context.author) {
+			parts.push(`\`\`\`${each}\`\`\``);
+		}
+		this._sectionAuthor.push(`Author: ${parts.join(', ')}`);
+	}
+	
 	protected updateResolveTextShort(): string {
 		//return this.docText.join('  \n');
 		return this.resolveTextLong.join('  \n');
@@ -413,27 +398,26 @@ export class ContextDocumentation extends Context{
 	
 	
 	protected buildDocText(): string[] {
-		let content: string[] = [];
-		for (let each of this._token.image.split('\n')) {
-			each = each.trim();
-			if (each == '*') {
-				continue;
-			} else if (each.startsWith('/**')) {
-				each = each.substring(3);
-			} else if (each.startsWith('*/')) {
-				continue;
-			} else if (each.startsWith('* ')) {
-				each = each.substring(2);
+		var text = this._token.image;
+		var indexStart = 0, indexEnd = text.length;
+		var skipLineStart = false;
+		
+		if (text.startsWith('/**')) {
+			indexStart = 3;
+			if (text.endsWith('*/')) {
+				indexEnd -= 2;
 			}
-			if (each.endsWith('*/')) {
-				each = each.substring(0, each.length - 2);
-			}
-			if (each.trim().length == 0) {
-				continue;
-			}
-			content.push(each);
+			skipLineStart = true;
+		} else if (text.startsWith('//<!')) {
+			indexStart = 4;
 		}
-		return content;
+		text = text.substring(indexStart, indexEnd);
+		
+		let lines = text.split('\n').map(l => l.trim());
+		if (skipLineStart) {
+			lines = lines.map(l => l.startsWith('*') ? l.substring(1) : l);
+		}
+		return lines;
 	}
 	
 	

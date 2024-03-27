@@ -22,25 +22,52 @@
  * SOFTWARE.
  */
 
-import { IToken } from "chevrotain";
-import { RemoteConsole } from "vscode-languageserver";
+import { Position, Range, RemoteConsole } from "vscode-languageserver";
+import { Helpers } from "../../helpers";
+import { DocumentationDateCstNode } from "../../nodeclasses/doc/date";
 import { Context } from "../context";
-import { ContextDocBase } from "./contextDoc";
+import { ContextDocBaseBlock } from "./baseBlock";
 import { ContextDocumentationDocState } from "./docState";
 
 
-export class ContextDocumentationNewline extends ContextDocBase{
-	constructor(_token: IToken, parent: Context) {
-		super(Context.ContextType.DocumentationNewline, parent);
+export class ContextDocumentationDate extends ContextDocBaseBlock{
+	protected _node: DocumentationDateCstNode;
+	
+	
+	constructor(node: DocumentationDateCstNode, parent: Context) {
+		super(Context.ContextType.DocumentationDate, parent);
+		this._node = node;
+	}
+	
+	
+	public get node(): DocumentationDateCstNode {
+		return this._node;
 	}
 	
 	
 	public buildDoc(state: ContextDocumentationDocState): void {
-		state.addNewline();
+		state.newParagraph(Context.ContextType.DocumentationDate);
+		this.buildDocWords(state);
 	}
 	
 	
-	log(console: RemoteConsole, prefix: string = "", _prefixLines: string = "") {
-		console.log(`${prefix}Newline`);
+	public contextAtPosition(position: Position): Context | undefined {
+		if (!Helpers.isPositionInsideRange(this.range, position)) {
+			return undefined;
+		}
+		return this;
+	}
+	
+	public contextAtRange(range: Range): Context | undefined {
+		if (!Helpers.isRangeInsideRange(this.range, range)) {
+			return undefined;
+		}
+		return this;
+	}
+	
+	
+	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
+		console.log(`${prefix}Date`);
+		this.logChildren(this._words, console, prefixLines)
 	}
 }

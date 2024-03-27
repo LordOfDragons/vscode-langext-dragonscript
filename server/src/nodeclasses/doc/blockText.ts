@@ -1,5 +1,4 @@
-import { CstNode } from "chevrotain";
-import { DocumentationNewlineCstNode } from "./newline";
+import { CstNode, IToken } from "chevrotain";
 import { DocumentationWordCstNode } from "./word";
 
 
@@ -20,5 +19,5 @@ export interface DocumentationBlockTextWordCstNode extends CstNode {
 
 export type DocumentationBlockTextWordCstChildren = {
 	docWord?: DocumentationWordCstNode[];
-	ruleNewline?: DocumentationNewlineCstNode[];
+	newline?: IToken[];
 };

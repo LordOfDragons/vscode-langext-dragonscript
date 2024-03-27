@@ -41,6 +41,7 @@ export class ContextDocumentationDocState {
 	public curRetVal?: ContextDocumentationReturnValue;
 	public curThrow?: ContextDocumentationThrow;
 	public curSee?: ContextDocumentationSee;
+	protected _first = false;
 	
 	
 	constructor(doc: ContextDocumentationDoc) {
@@ -54,10 +55,15 @@ export class ContextDocumentationDocState {
 	}
 	
 	public addNewline(): void {
+		if (this._first) {
+			return;
+		}
+		
 		if (this.hasNewline) {
 			this.endParagraph();
 		} else {
 			this.hasNewline = true;
+			this._first = false;
 		}
 	}
 	
@@ -71,6 +77,7 @@ export class ContextDocumentationDocState {
 	
 	public addWord(word: string): void {
 		this.hasNewline = false;
+		this._first = false;
 		if (this._wordWrap) {
 			this.words.push(this._wordWrap + word);
 			this._wordWrap = undefined;
@@ -101,6 +108,7 @@ export class ContextDocumentationDocState {
 	
 	public endParagraph(): void {
 		this.hasNewline = false;
+		this._first = false;
 		
 		if (this.words.length > 0) {
 			this.lines.push(this.words.join(' '));
@@ -184,6 +192,18 @@ export class ContextDocumentationDocState {
 				
 			case Context.ContextType.DocumentationSee:
 				this._doc.see.push(...this.lines);
+				this.lines = [];
+				this.curBlockType = Context.ContextType.DocumentationDetails;
+				break;
+				
+			case Context.ContextType.DocumentationDate:
+				this._doc.date.push(...this.lines);
+				this.lines = [];
+				this.curBlockType = Context.ContextType.DocumentationDetails;
+				break;
+				
+			case Context.ContextType.DocumentationAuthor:
+				this._doc.author.push(...this.lines);
 				this.lines = [];
 				this.curBlockType = Context.ContextType.DocumentationDetails;
 				break;

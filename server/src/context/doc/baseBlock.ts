@@ -27,11 +27,13 @@ import { Helpers } from "../../helpers";
 import { ResolveState } from "../../resolve/state";
 import { Context } from "../context";
 import { ContextDocBase } from "./contextDoc";
+import { DocumentationWhitespace } from "./whitespace";
 import { ContextDocumentationDocState } from "./docState";
 
 
 export class ContextDocBaseBlock extends ContextDocBase{
 	protected _words: ContextDocBase[] = [];
+	protected _indent?: DocumentationWhitespace;
 	
 	
 	constructor(type: Context.ContextType, parent: Context) {
@@ -50,6 +52,21 @@ export class ContextDocBaseBlock extends ContextDocBase{
 		return this._words;
 	}
 	
+	public get indent(): DocumentationWhitespace | undefined {
+		return this._indent;
+	}
+	
+	public get indentText(): string {
+		return this._indent?.token.image ?? '';
+	}
+	
+	protected findIndent(state: ContextDocumentationDocState): void {
+		this.prepareRange(state);
+		const position = this.range?.start;
+		if (position) {
+			this._indent = state.doc.whitespaceBefore(position);
+		}
+	}
 	
 	public resolveStatements(state: ResolveState): void {
 		for (const each of this._words) {

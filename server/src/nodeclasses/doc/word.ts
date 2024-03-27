@@ -14,8 +14,6 @@ export type DocumentationWordCstChildren = {
 	ruleReference: DocumentationReferenceCstNode[];
 	ruleBold: DocumentationBoldCstNode[];
 	string: IToken[];
-	minus: IToken[];
-	plus: IToken[];
-	asteric: IToken[];
+	docLine: IToken[];
 	word: IToken[];
 };

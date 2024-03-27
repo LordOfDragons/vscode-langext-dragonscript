@@ -1,8 +1,10 @@
 import { CstNode } from "chevrotain";
+import { DocumentationAuthorCstNode } from "./author";
 import { DocumentationBlockTextCstNode } from "./blockText";
 import { DocumentationBriefCstNode } from "./brief";
 import { DocumentationCodeCstNode } from "./code";
 import { DocumentationCopyDocCstNode } from "./copyDoc";
+import { DocumentationDateCstNode } from "./date";
 import { DocumentationDeprecatedCstNode } from "./deprecated";
 import { DocumentationDetailsCstNode } from "./details";
 import { DocumentationNoteCstNode } from "./note";
@@ -40,5 +42,7 @@ export type DocumentationBlockCstChildren = {
 	ruleTodo?: DocumentationTodoCstNode[];
 	ruleWarning?: DocumentationWarningCstNode[];
 	ruleSee?: DocumentationSeeCstNode[];
+	ruleDate?: DocumentationDateCstNode[];
+	ruleAuthor?: DocumentationAuthorCstNode[];
 	docBlockText?: DocumentationBlockTextCstNode[];
 };

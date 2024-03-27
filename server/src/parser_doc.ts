@@ -35,33 +35,9 @@ export class DSDocParser extends CstParser{
 	
 	
 	public documentation = this.RULE("documentation", () => {
-		this.SUBRULE(this.docBegin);
-		this.SUBRULE(this.docBody);
-		this.SUBRULE(this.docEnd);
+		this.MANY(() => this.SUBRULE(this.docBlock));
 	})
 	
-	
-	public newline = this.RULE("ruleNewline", () => {
-		this.CONSUME(DSDocLexer.tokenNewline);
-		this.OPTION(() => this.CONSUME(DSDocLexer.tokenAsteric));
-	})
-	
-	
-	public docBegin = this.RULE("ruleDocBegin", () => {
-		this.OR([
-			{ALT: () => this.CONSUME(DSDocLexer.tokenDocBegin)},
-			{ALT: () => this.CONSUME(DSDocLexer.tokenDocBegin2)}
-		]);
-		this.OPTION(() => this.SUBRULE(this.newline));
-	})
-	
-	public docBody = this.RULE("ruleDocBody", () => {
-		this.AT_LEAST_ONE(() => this.SUBRULE(this.docBlock));
-	})
-	
-	public docEnd = this.RULE("ruleDocEnd", () => {
-		this.OPTION(() => this.CONSUME(DSDocLexer.tokenDocEnd));
-	})
 	
 	public docBlock = this.RULE("docBlock", () => {
 		this.OPTION(() => {
@@ -81,7 +57,9 @@ export class DSDocParser extends CstParser{
 				{ALT: () => this.SUBRULE(this.throw)},
 				{ALT: () => this.SUBRULE(this.todo)},
 				{ALT: () => this.SUBRULE(this.warning)},
-				{ALT: () => this.SUBRULE(this.see)}
+				{ALT: () => this.SUBRULE(this.see)},
+				{ALT: () => this.SUBRULE(this.date)},
+				{ALT: () => this.SUBRULE(this.author)}
 			])
 		});
 		this.SUBRULE(this.docBlockText);
@@ -153,14 +131,13 @@ export class DSDocParser extends CstParser{
 	
 	
 	public docBlockText = this.RULE("docBlockText", () => {
-		this.OPTION(() => this.CONSUME(DSDocLexer.tokenAsteric));
 		this.MANY(() => this.SUBRULE(this.docBlockTextWord));
 	})
 	
 	public docBlockTextWord = this.RULE("docBlockTextWord", () => {
 		this.OR([
 			{ALT: () => this.SUBRULE(this.docWord)},
-			{ALT: () => this.SUBRULE(this.newline)}
+			{ALT: () => this.CONSUME(DSDocLexer.tokenNewline)}
 		]);
 	})
 	
@@ -170,9 +147,6 @@ export class DSDocParser extends CstParser{
 			{ALT: () => this.SUBRULE(this.reference)},
 			{ALT: () => this.SUBRULE(this.bold)},
 			{ALT: () => this.CONSUME(DSDocLexer.tokenString)},
-			{ALT: () => this.CONSUME(DSDocLexer.tokenMinus)},
-			{ALT: () => this.CONSUME(DSDocLexer.tokenPlus)},
-			{ALT: () => this.CONSUME(DSDocLexer.tokenAsteric)},
 			{ALT: () => this.CONSUME(DSDocLexer.tokenWord)}
 		]);
 	})
@@ -194,5 +168,13 @@ export class DSDocParser extends CstParser{
 	
 	public see = this.RULE("ruleSee", () => {
 		this.CONSUME(DSDocLexer.tokenSee);
+	})
+	
+	public date = this.RULE("ruleDate", () => {
+		this.CONSUME(DSDocLexer.tokenDate);
+	})
+	
+	public author = this.RULE("ruleAuthor", () => {
+		this.CONSUME(DSDocLexer.tokenAuthor);
 	})
 }

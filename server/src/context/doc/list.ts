@@ -24,20 +24,36 @@
 
 import { IToken } from "chevrotain";
 import { RemoteConsole } from "vscode-languageserver";
+import { Helpers } from "../../helpers";
+import { debugLogMessage } from "../../server";
 import { Context } from "../context";
 import { ContextDocBaseBlock } from "./baseBlock";
 import { ContextDocumentationDocState } from "./docState";
 
 
 export class ContextDocumentationList extends ContextDocBaseBlock{
-	constructor(_token: IToken, parent: Context) {
+	protected _token: IToken;
+	
+	
+	constructor(token: IToken, parent: Context) {
 		super(Context.ContextType.DocumentationList, parent);
+		this._token = token;
 	}
 	
 	
+	public prepareRange(state: ContextDocumentationDocState): void {
+		const lastWord = this._words.at(this._words.length - 1);
+		lastWord?.prepareRange(state);
+		
+		this.range = Helpers.rangeFrom(this._token);
+		this.range = Helpers.rangeFromPosition(this.range.start, lastWord?.range?.end ?? this.range.end);
+	}
+	
 	public buildDoc(state: ContextDocumentationDocState): void {
+		this.findIndent(state);
+		
 		state.newParagraph();
-		state.addWord('  -');
+		state.addWord(`  ${this.indentText}-`);
 		this.buildDocWords(state);
 	}
 	

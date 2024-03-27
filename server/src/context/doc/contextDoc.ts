@@ -49,6 +49,9 @@ export class ContextDocBase extends Context{
 	}
 	
 	
+	public prepareRange(state: ContextDocumentationDocState): void {
+	}
+	
 	public buildDoc(state: ContextDocumentationDocState): void {
 	}
 	

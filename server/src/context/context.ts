@@ -531,6 +531,8 @@ export namespace Context {
 		DocumentationWord,
 		DocumentationNewline,
 		DocumentationList,
+		DocumentationDate,
+		DocumentationAuthor,
 		
 		Generic
 	}

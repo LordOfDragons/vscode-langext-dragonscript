@@ -22,25 +22,52 @@
  * SOFTWARE.
  */
 
-import { IToken } from "chevrotain";
-import { RemoteConsole } from "vscode-languageserver";
+import { Position, Range, RemoteConsole } from "vscode-languageserver";
+import { Helpers } from "../../helpers";
+import { DocumentationAuthorCstNode } from "../../nodeclasses/doc/author";
 import { Context } from "../context";
-import { ContextDocBase } from "./contextDoc";
+import { ContextDocBaseBlock } from "./baseBlock";
 import { ContextDocumentationDocState } from "./docState";
 
 
-export class ContextDocumentationNewline extends ContextDocBase{
-	constructor(_token: IToken, parent: Context) {
-		super(Context.ContextType.DocumentationNewline, parent);
+export class ContextDocumentationAuthor extends ContextDocBaseBlock{
+	protected _node: DocumentationAuthorCstNode;
+	
+	
+	constructor(node: DocumentationAuthorCstNode, parent: Context) {
+		super(Context.ContextType.DocumentationAuthor, parent);
+		this._node = node;
+	}
+	
+	
+	public get node(): DocumentationAuthorCstNode {
+		return this._node;
 	}
 	
 	
 	public buildDoc(state: ContextDocumentationDocState): void {
-		state.addNewline();
+		state.newParagraph(Context.ContextType.DocumentationAuthor);
+		this.buildDocWords(state);
 	}
 	
 	
-	log(console: RemoteConsole, prefix: string = "", _prefixLines: string = "") {
-		console.log(`${prefix}Newline`);
+	public contextAtPosition(position: Position): Context | undefined {
+		if (!Helpers.isPositionInsideRange(this.range, position)) {
+			return undefined;
+		}
+		return this;
+	}
+	
+	public contextAtRange(range: Range): Context | undefined {
+		if (!Helpers.isRangeInsideRange(this.range, range)) {
+			return undefined;
+		}
+		return this;
+	}
+	
+	
+	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
+		console.log(`${prefix}Author`);
+		this.logChildren(this._words, console, prefixLines)
 	}
 }

@@ -33,6 +33,7 @@ import { DSDocLexer } from "./lexer_doc";
 import { DocumentationDocCstNode } from "./nodeclasses/doc/documentation";
 import { DSDocParser } from "./parser_doc";
 import { ScriptDocument } from "./scriptDocument";
+import { debugLogMessage } from "./server";
 import { DSSettings } from "./settings";
 
 export class DocumentationValidator {
@@ -63,21 +64,21 @@ export class DocumentationValidator {
 		const lexed = this.doLex(textDocument, documentation, scriptDocument.settings, diagnostics);
 		documentation.docNode = this.doParse(textDocument, documentation, scriptDocument.settings, lexed, diagnostics);
 		documentation.docContext = new ContextDocumentationDoc(documentation.docNode, documentation);
-		documentation.setWhitespaces(lexed.groups['whitespace']);
+		documentation.docContext.setWhitespaces(lexed.groups['whitespace']);
 	}
 	
 	public parseLog(scriptDocument: ScriptDocument, documentation: ContextDocumentation, logs: string[]): void {
 		const lexed = this.doLexLog(scriptDocument, documentation, scriptDocument.settings, logs);
 		documentation.docNode = this.doParseLog(scriptDocument, documentation, scriptDocument.settings, lexed, logs);
 		documentation.docContext = new ContextDocumentationDoc(documentation.docNode, documentation);
-		documentation.setWhitespaces(lexed.groups['whitespace']);
+		documentation.docContext.setWhitespaces(lexed.groups['whitespace']);
 	}
 	
 	
 	protected doLex(textDocument: TextDocument, documentation: ContextDocumentation,
 			settings: DSSettings, diagnostics: Diagnostic[]): ILexingResult {
 				
-		const lexed = this._lexer.tokenize(documentation.token.image);
+		const lexed = this._lexer.tokenize(documentation.docText.join('\n'));
 		
 		if (lexed.errors.length > 0) {
 			const docOffset = textDocument.offsetAt(Helpers.positionFrom(documentation.token, true));
@@ -114,7 +115,7 @@ export class DocumentationValidator {
 	
 	protected doLexLog(document: ScriptDocument, documentation: ContextDocumentation,
 			settings: DSSettings, logs: string[]): ILexingResult {
-		const lexed = this._lexer.tokenize(documentation.token.image);
+		const lexed = this._lexer.tokenize(documentation.docText.join('\n'));
 		
 		for (const error of lexed.errors.slice(0, settings.maxNumberOfProblems)) {
 			logs.push(`[EE] ${document.uri}:? : ${error.message}`);
@@ -173,7 +174,7 @@ export class DocumentationValidator {
 			const docOffset = documentation.token.startLine ?? 0;
 			
 			/*
-			debugLogMessage(`text: "${documentation.token.image}"`);
+			debugLogMessage(`text: "${documentation.docText.join('\n')}"`);
 			for (const t of lexed.tokens) {
 				debugLogMessage(`lexed: ${tokenName(t.tokenType)} => "${t.image}"`);
 			};

@@ -24,6 +24,7 @@
 
 import { IToken } from "chevrotain";
 import { RemoteConsole } from "vscode-languageserver";
+import { Helpers } from "../../helpers";
 import { Context } from "../context";
 import { ContextDocBase } from "./contextDoc";
 import { ContextDocumentationDocState } from "./docState";
@@ -47,6 +48,12 @@ export class ContextDocumentationWord extends ContextDocBase{
 		return this._token.image;
 	}
 	
+	
+	public prepareRange(state: ContextDocumentationDocState): void {
+		if (!this.range) {
+			this.range = Helpers.rangeFrom(this._token);
+		}
+	}
 	
 	public buildDoc(state: ContextDocumentationDocState): void {
 		state.addWordEscape(this._token.image);

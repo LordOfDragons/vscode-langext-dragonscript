@@ -46,14 +46,8 @@ export class ContextDocBuilder {
 			return new ContextDocumentationBold(c.ruleBold[0], parent);
 		} else if (c.string) {
 			return new ContextDocumentationString(c.string[0], parent);
-		} else if (c.minus) {
-			return new ContextDocumentationWord(c.minus[0], parent);
-		} else if (c.plus) {
-			return new ContextDocumentationWord(c.plus[0], parent);
-		} else if (c.asteric) {
-			return new ContextDocumentationWord(c.asteric[0], parent);
-		} else if (c.word) {
-			return new ContextDocumentationWord(c.word[0], parent);
+		} else if (c.word ?? c.docLine) {
+			return new ContextDocumentationWord((c.word ?? c.docLine)[0], parent);
 		}
 		return undefined;
 	}

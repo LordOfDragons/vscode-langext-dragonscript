@@ -26,21 +26,6 @@ import { createToken, Lexer } from "chevrotain"
 
 
 export class DSDocLexer extends Lexer{
-	public static readonly tokenDocBegin = createToken({
-		name: "docBegin",
-		pattern: /\/\*\*/
-	})
-	
-	public static readonly tokenDocBegin2 = createToken({
-		name: "docBegin2",
-		pattern: /\/\/<!/
-	})
-	
-	public static readonly tokenDocEnd = createToken({
-		name: "docEnd",
-		pattern: /\*\//
-	})
-	
 	public static readonly tokenSpace = createToken({
 		name: "space",
 		pattern: /[ \t\f]+/,
@@ -178,30 +163,18 @@ export class DSDocLexer extends Lexer{
 		pattern: /\\warning/
 	})
 	
-	public static readonly tokenMinus = createToken({
-		name: "minus",
-		pattern: /\-/,
-		longer_alt: DSDocLexer.tokenWord
+	public static readonly tokenDate = createToken({
+		name: "date",
+		pattern: /\\date/
 	})
 	
-	public static readonly tokenPlus = createToken({
-		name: "plus",
-		pattern: /\+/,
-		longer_alt: DSDocLexer.tokenWord
-	})
-	
-	public static readonly tokenAsteric = createToken({
-		name: "asteric",
-		pattern: /\*/,
-		longer_alt: DSDocLexer.tokenWord
+	public static readonly tokenAuthor = createToken({
+		name: "author",
+		pattern: /\\author/
 	})
 	
 	
 	public static readonly allTokens = [
-		DSDocLexer.tokenDocBegin,
-		DSDocLexer.tokenDocBegin2,
-		DSDocLexer.tokenDocEnd,
-		
 		DSDocLexer.tokenSpace,
 		DSDocLexer.tokenNewline,
 		DSDocLexer.tokenString,
@@ -223,10 +196,9 @@ export class DSDocLexer extends Lexer{
 		DSDocLexer.tokenThrow,
 		DSDocLexer.tokenTodo,
 		DSDocLexer.tokenWarning,
+		DSDocLexer.tokenDate,
+		DSDocLexer.tokenAuthor,
 		DSDocLexer.tokenBold,
-		DSDocLexer.tokenMinus,
-		DSDocLexer.tokenPlus,
-		DSDocLexer.tokenAsteric,
 		
 		DSDocLexer.tokenWord
 	]
