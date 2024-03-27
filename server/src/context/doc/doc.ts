@@ -54,6 +54,8 @@ import { ContextDocumentationWordIterator } from "./worditerator";
 import { ContextDocumentationDate } from "./date";
 import { ContextDocumentationAuthor } from "./author";
 import { DocumentationWhitespace } from "./whitespace";
+import { debugLogMessage } from "../../server";
+import { ContextDocumentationTable } from "./table";
 
 
 export class ContextDocumentationDoc extends Context{
@@ -79,8 +81,7 @@ export class ContextDocumentationDoc extends Context{
 	protected _whitespaces: DocumentationWhitespace[] = [];
 	protected _iterWhitespace: integer = 0;
 	
-	public static tokensList: string[] = ['-', '+', '*'];
-	
+	public static regexList = /^(-#|-|\+|\*|\d+\.)$/;
 	
 	constructor(node: DocumentationDocCstNode, parent: Context) {
 		super(Context.ContextType.DocumentationDoc, parent);
@@ -148,10 +149,17 @@ export class ContextDocumentationDoc extends Context{
 							newline = false;
 							
 							const word = (ec2.word ?? ec2.docLine)?.at(0);
-							if (word && ContextDocumentationDoc.tokensList.includes(word.image)) {
-								block = new ContextDocumentationList(word, this);
-								this._blocks.push(block);
-								continue;
+							
+							if (word) {
+								if (ContextDocumentationDoc.regexList.test(word.image)) {
+									block = new ContextDocumentationList(word, this);
+									this._blocks.push(block);
+									continue;
+									
+								} else if (word.image == '|') {
+									block = new ContextDocumentationTable(word, this);
+									this._blocks.push(block);
+								}
 							}
 						}
 						

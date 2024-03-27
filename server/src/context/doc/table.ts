@@ -30,12 +30,12 @@ import { ContextDocBaseBlock } from "./baseBlock";
 import { ContextDocumentationDocState } from "./docState";
 
 
-export class ContextDocumentationList extends ContextDocBaseBlock{
+export class ContextDocumentationTable extends ContextDocBaseBlock{
 	protected _token: IToken;
 	
 	
 	constructor(token: IToken, parent: Context) {
-		super(Context.ContextType.DocumentationList, parent);
+		super(Context.ContextType.DocumentationTable, parent);
 		this._token = token;
 	}
 	
@@ -51,20 +51,7 @@ export class ContextDocumentationList extends ContextDocBaseBlock{
 	public buildDoc(state: ContextDocumentationDocState): void {
 		this.findIndent(state);
 		
-		state.newParagraph();
-		
-		const character = this._token.image.at(0);
-		switch (character) {
-		case '-':
-		case '+':
-		case '*':
-			state.addWord(`  ${this.indentText}-`);
-			break;
-			
-		default:
-			state.addWord(`  ${this.indentText}1.`);
-		}
-		
+		state.endLine();
 		this.buildDocWords(state);
 	}
 	

@@ -63,7 +63,6 @@ export class ContextDocumentationDocState {
 			this.endParagraph();
 		} else {
 			this.hasNewline = true;
-			this._first = false;
 		}
 	}
 	
@@ -106,7 +105,7 @@ export class ContextDocumentationDocState {
 	}
 	
 	
-	public endParagraph(): void {
+	public endLine(): void {
 		this.hasNewline = false;
 		this._first = false;
 		
@@ -114,6 +113,10 @@ export class ContextDocumentationDocState {
 			this.lines.push(this.words.join(' '));
 			this.words.splice(0);
 		}
+	}
+	
+	public endParagraph(): void {
+		this.endLine();
 		
 		if (this.lines.length > 0) {
 			switch (this.curBlockType) {
