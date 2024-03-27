@@ -34,6 +34,7 @@ import { ContextDocumentationDocState } from "./docState";
 export class ContextDocBaseBlock extends ContextDocBase{
 	protected _words: ContextDocBase[] = [];
 	protected _indent?: DocumentationWhitespace;
+	protected _canAppend = true;
 	
 	
 	constructor(type: Context.ContextType, parent: Context) {
@@ -47,6 +48,10 @@ export class ContextDocBaseBlock extends ContextDocBase{
 		super.dispose();
 	}
 	
+	
+	public get canAppend(): boolean {
+		return this._canAppend;
+	}
 	
 	public get words(): Context[] {
 		return this._words;

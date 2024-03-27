@@ -134,10 +134,11 @@ export class ContextDocumentationDoc extends Context{
 				var word = iterator.current;
 				var newline = true;
 				
-				if (this._blocks.length == 0) {
-					this._blocks.push(new ContextDocumentationBlockText(this));
+				var block = this._blocks.at(this._blocks.length - 1);
+				if (!block?.canAppend) {
+					block = new ContextDocumentationBlockText(this);
+					this._blocks.push(block);
 				}
-				var block = this._blocks[this._blocks.length - 1];
 				
 				while (word) {
 					const ec = word.children;

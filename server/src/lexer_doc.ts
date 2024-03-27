@@ -77,15 +77,10 @@ export class DSDocLexer extends Lexer{
 	
 	public static readonly tokenCode = createToken({
 		name: "code",
-		pattern: new RegExp("\\\\code(\\{[^}]+\\})?"
-			+ "(.|[\n\r])*"
+		pattern: new RegExp("\\\\code(\\{[^}]+?\\})?"
+			+ "(.|[\n\r])*?"
 			+ "\\\\endcode"
 			)
-	})
-	
-	public static readonly tokenEndCode = createToken({
-		name: "endcode",
-		pattern: /\\endcode/
 	})
 	
 	public static readonly tokenCopyDoc = createToken({

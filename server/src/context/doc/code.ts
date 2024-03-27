@@ -40,6 +40,7 @@ export class ContextDocumentationCode extends ContextDocBaseBlock{
 	constructor(node: DocumentationCodeCstNode, parent: Context) {
 		super(Context.ContextType.DocumentationCode, parent);
 		this._node = node;
+		this._canAppend = false;
 		
 		const token = node.children.code[0];
 		var text = token.image;
@@ -58,19 +59,15 @@ export class ContextDocumentationCode extends ContextDocBaseBlock{
 			this._language = 'dragonscript';
 			break;
 			
+		case '.xml':
+			this._language = 'xml';
+			break;
+			
 		default:
 			this._language = 'text';
 		}
 		
-		this._codeLines = text.split('\n').map(l => {
-			l = l.trim();
-			if (l.startsWith('* ')) {
-				l = l.substring(2);
-			} else if (l.startsWith('*')) {
-				l = l.substring(1);
-			}
-			return l;
-		});
+		this._codeLines = text.split('\n');
 	}
 	
 	
