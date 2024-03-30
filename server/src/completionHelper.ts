@@ -47,12 +47,12 @@ export class CompletionHelper {
 		
 		const parent = ContextClass.thisContext(context);
 		const tp = parent?.resolveClass;
-		if (tp && (!castable || castable.find(t => tp.castable(t)))) {
+		if (tp /*&& (!castable || castable.find(t => tp.castable(t)))*/) {
 			items.push(parent.resolveClass.createCompletionItemThis(range));
 			
 			const parent2 = ContextClass.superContext(context);
 			const tp2 = parent2?.resolveClass;
-			if (tp2 && (!castable || castable.find(t => tp2.castable(t)))) {
+			if (tp2 /*&& (!castable || castable.find(t => tp2.castable(t)))*/) {
 				items.push(parent2?.resolveClass.createCompletionItemSuper(range));
 			}
 		}
@@ -693,20 +693,20 @@ export class CompletionHelper {
 		items.push(CompletionHelper.createInlineIfElse(range));
 		items.push(...CompletionHelper.createThisSuper(context, range, castable));
 		
-		if (!castable || castable.includes(ResolveNamespace.classBool)) {
+		//if (!castable || castable.includes(ResolveNamespace.classBool)) {
 			items.push(...CompletionHelper.createBooleans(range));
 			items.push(CompletionHelper.createCast(range));
 			items.push(CompletionHelper.createCastable(range));
 			items.push(CompletionHelper.createTypeof(range));
-		}
+		//}
 		
-		if (!castable || castable.includes(ResolveNamespace.classBlock)) {
+		//if (!castable || castable.includes(ResolveNamespace.classBlock)) {
 			items.push(...CompletionHelper.createBlock(context, range));
-		}
+		//}
 		
-		if (!castable || castable.find(t => !t.isPrimitive)) {
+		//if (!castable || castable.find(t => !t.isPrimitive)) {
 			items.push(CompletionHelper.createNull(range));
-		}
+		//}
 		
 		return items;
 	}
