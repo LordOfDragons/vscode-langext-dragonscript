@@ -81,7 +81,7 @@ export function activate(context: ExtensionContext) {
 		serverOptions,
 		clientOptions
 	);
-		
+	
 	// Start the client. This will also launch the server
 	client.start();
 }

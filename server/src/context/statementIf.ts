@@ -178,7 +178,7 @@ export class ContextIf extends Context {
 		const tokBegin = ifbegin.if[0];
 		var posEnd: Position | undefined;
 		
-		const tokEnd = node.children.statementIfEnd[0].children.end?.at(0);
+		const tokEnd = node.children.statementIfEnd?.at(0)?.children.end?.at(0);
 		if (tokEnd) {
 			posEnd = Helpers.positionFrom(tokEnd, false);
 		}

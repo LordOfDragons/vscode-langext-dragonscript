@@ -13,7 +13,7 @@ export type StatementIfCstChildren = {
 	statementIfBegin: StatementIfBeginCstNode[];
 	statementElif?: StatementElifCstNode[];
 	statementElse?: StatementElseCstNode[];
-	statementIfEnd: StatementIfEndCstNode[];
+	statementIfEnd?: StatementIfEndCstNode[];
 };
 
 
