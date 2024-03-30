@@ -52,7 +52,8 @@ import {
 	WorkspaceEdit,
 	TextEdit,
 	DidChangeConfigurationParams,
-	DidChangeWatchedFilesParams} from 'vscode-languageserver/node'
+	DidChangeWatchedFilesParams,
+	FileChangeType} from 'vscode-languageserver/node'
 
 import {
 	TextDocument
@@ -390,13 +391,28 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 
 connection.onDidChangeWatchedFiles(
 	async (params: DidChangeWatchedFilesParams): Promise<void> => {
-		/*
-		change.changes.forEach(each => {
-			//if (each.type === FileChangeType.Changed) {
+		params.changes.forEach(each => {
+			switch (each.type) {
+			case FileChangeType.Created:
+				console.log(`file created (${each.uri}). reparse all workspace packages`);
+				for (const each of workspacePackages) {
+					each.reload();
+				}
+				break;
+				
+			case FileChangeType.Deleted:
+				console.log(`file deleted (${each.uri}). reparse all workspace packages`);
+				for (const each of workspacePackages) {
+					each.reload();
+				}
+				break;
+			}
+			/*
+			if (each.type === FileChangeType.Changed) {
 				console.log(`onDidChangeWatchedFiles ${each.uri}`);
-			//}
+			}
+			*/
 		});
-		*/
 	}
 );
 
