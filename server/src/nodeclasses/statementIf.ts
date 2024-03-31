@@ -49,7 +49,7 @@ export interface StatementElseCstNode extends CstNode {
 }
 
 export type StatementElseCstChildren = {
-	statements: StatementsCstNode[];
+	statements?: StatementsCstNode[];
 };
 
 

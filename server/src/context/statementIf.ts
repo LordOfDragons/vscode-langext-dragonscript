@@ -167,8 +167,9 @@ export class ContextIf extends Context {
 			}
 		}
 		
-		if (node.children.statementElse) {
-			this._elsestatements = new ContextStatements(node.children.statementElse[0].children.statements[0], this);
+		const staelse = node.children.statementElse?.at(0)?.children.statements?.at(0);
+		if (staelse) {
+			this._elsestatements = new ContextStatements(staelse, this);
 		}
 		
 		const tokBegin = ifbegin.if[0];
