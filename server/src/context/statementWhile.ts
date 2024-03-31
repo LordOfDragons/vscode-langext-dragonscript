@@ -36,7 +36,6 @@ import { CompletionHelper } from "../completionHelper";
 
 
 export class ContextWhile extends Context{
-	protected _node: StatementWhileCstNode;
 	protected _condition?: Context;
 	protected _statements: ContextStatements;
 	protected _posEnd?: Position;
@@ -44,7 +43,6 @@ export class ContextWhile extends Context{
 
 	constructor(node: StatementWhileCstNode, parent: Context) {
 		super(Context.ContextType.While, parent);
-		this._node = node;
 		
 		const whileBegin = node.children.statementWhileBegin[0].children;
 		if (whileBegin.condition) {
@@ -78,10 +76,6 @@ export class ContextWhile extends Context{
 		this._statements.dispose();
 	}
 
-
-	public get node(): StatementWhileCstNode {
-		return this._node;
-	}
 
 	public get condition(): Context | undefined {
 		return this._condition;

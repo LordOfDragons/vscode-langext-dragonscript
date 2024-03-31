@@ -40,7 +40,6 @@ import { CompletionHelper } from "../completionHelper";
 
 
 export class ContextBlock extends Context{
-	protected _node: ExpressionBlockCstNode;
 	protected _tokenBlock: IToken;
 	protected _posAfterBlock: Position;
 	protected _arguments: ContextFunctionArgument[];
@@ -56,7 +55,6 @@ export class ContextBlock extends Context{
 		
 		const children = node.children.expressionBlockBegin[0].children;
 		
-		this._node = node;
 		this._tokenBlock = children.block[0];
 		this._posAfterBlock = Helpers.positionFrom(this._tokenBlock, false);
 		this._arguments = [];
@@ -133,10 +131,6 @@ export class ContextBlock extends Context{
 		this._statements?.dispose();
 	}
 
-
-	public get node(): ExpressionBlockCstNode {
-		return this._node;
-	}
 
 	public get arguments(): ContextFunctionArgument[] {
 		return this._arguments;
@@ -310,7 +304,7 @@ export class ContextBlock extends Context{
 	}
 	
 	public definition(position: Position): Definition {
-		if (Helpers.isPositionInsideToken(this._node.children.expressionBlockBegin[0].children.block[0], position)) {
+		if (Helpers.isPositionInsideToken(this._tokenBlock, position)) {
 			return this.definitionSelf();
 		}
 		return super.definition(position);

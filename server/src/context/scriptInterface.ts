@@ -46,7 +46,6 @@ import { ContextDocumentationIterator } from "./documentation";
 
 
 export class ContextInterface extends Context{
-	protected _node: DeclareInterfaceCstNode;
 	protected _name: Identifier;
 	protected _typeModifiers: Context.TypeModifierSet;
 	protected _implements: TypeName[] = [];
@@ -63,7 +62,6 @@ export class ContextInterface extends Context{
 		let idecl = node.children;
 		let ideclBegin = idecl.interfaceBegin[0].children;
 
-		this._node = node;
 		this._name = new Identifier(ideclBegin.name[0]);
 		this._typeModifiers = new Context.TypeModifierSet(typemodNode, Context.TypeModifier.Public);
 
@@ -125,11 +123,7 @@ export class ContextInterface extends Context{
 		}
 	}
 
-
-	public get node(): DeclareInterfaceCstNode {
-		return this._node;
-	}
-
+	
 	public get name(): Identifier {
 		return this._name;
 	}

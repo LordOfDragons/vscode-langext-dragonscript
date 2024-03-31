@@ -41,7 +41,6 @@ import { TextDocument } from "vscode-languageserver-textdocument";
 
 
 export class ContextTryCatch extends Context {
-	protected _node: StatementCatchCstNode;
 	protected _typename: TypeName;
 	protected _variable?: Identifier;
 	protected _statements: ContextStatements;
@@ -53,7 +52,6 @@ export class ContextTryCatch extends Context {
 		
 		let c = node.children;
 		
-		this._node = node;
 		this._typename = new TypeName(c.type[0]);
 		if (c.variable) {
 			this._variable = new Identifier(c.variable[0]);
@@ -223,7 +221,6 @@ export class ContextTryCatch extends Context {
 
 
 export class ContextTry extends Context {
-	protected _node: StatementTryCstNode;
 	protected _statements: ContextStatements;
 	protected _catches: ContextTryCatch[];
 	protected _endBegin: Position;
@@ -231,7 +228,6 @@ export class ContextTry extends Context {
 	
 	constructor(node: StatementTryCstNode, parent: Context) {
 		super(Context.ContextType.Try, parent);
-		this._node = node;
 		this._catches = [];
 		
 		const tryBegin = node.children.statementTryBegin[0].children;
@@ -268,10 +264,6 @@ export class ContextTry extends Context {
 		}
 	}
 	
-	
-	public get node(): StatementTryCstNode {
-		return this._node;
-	}
 	
 	public get statements(): ContextStatements {
 		return this._statements;

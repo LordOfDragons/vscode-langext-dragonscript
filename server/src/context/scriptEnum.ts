@@ -46,7 +46,6 @@ import { TextDocument } from "vscode-languageserver-textdocument";
 
 
 export class ContextEnumEntry extends Context{
-	protected _node: EnumerationEntryCstNode;
 	protected _name: Identifier;
 	protected _resolveVariable?: ResolveVariable;
 	private static _typeModifiers?: Context.TypeModifierSet;
@@ -54,7 +53,6 @@ export class ContextEnumEntry extends Context{
 
 	constructor(node: EnumerationEntryCstNode, docTextExt: string | undefined, parent: Context) {
 		super(Context.ContextType.EnumerationEntry, parent)
-		this._node = node
 		this._name = new Identifier(node.children.name[0]);
 
 		const tokBegin = this._name.token;
@@ -73,10 +71,6 @@ export class ContextEnumEntry extends Context{
 		super.dispose()
 	}
 
-
-	public get node(): EnumerationEntryCstNode {
-		return this._node
-	}
 
 	public get name(): Identifier {
 		return this._name
@@ -189,7 +183,6 @@ export class ContextEnumEntry extends Context{
 
 
 export class ContextEnumeration extends Context{
-	protected _node: DeclareEnumerationCstNode;
 	protected _name: Identifier;
 	protected _typeModifiers: Context.TypeModifierSet;
 	protected _entries: ContextEnumEntry[] = [];
@@ -203,7 +196,6 @@ export class ContextEnumeration extends Context{
 		let edecl = node.children;
 		let edeclBegin = edecl.enumerationBegin[0].children;
 
-		this._node = node;
 		this._name = new Identifier(edeclBegin.name[0]);
 		this._typeModifiers = new Context.TypeModifierSet(typemodNode, Context.TypeModifier.Public);
 		
@@ -237,10 +229,6 @@ export class ContextEnumeration extends Context{
 		super.dispose();
 	}
 
-
-	public get node(): DeclareEnumerationCstNode {
-		return this._node;
-	}
 
 	public get name(): Identifier {
 		return this._name;

@@ -34,13 +34,11 @@ import { CompletionHelper } from "../completionHelper";
 
 
 export class ContextStatements extends Context{
-	protected _node?: StatementsCstNode;
 	protected _statements: Context[];
 
 
 	constructor(node: StatementsCstNode | undefined, parent: Context) {
 		super(Context.ContextType.Statements, parent);
-		this._node = node;
 		this._statements = [];
 
 		const stas = node?.children.statement;
@@ -73,11 +71,7 @@ export class ContextStatements extends Context{
 		}
 	}
 
-
-	public get node(): StatementsCstNode | undefined {
-		return this._node;
-	}
-
+	
 	public get statements(): Context[] {
 		return this._statements;
 	}

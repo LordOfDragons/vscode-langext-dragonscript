@@ -47,7 +47,6 @@ import { ContextDocumentationIterator } from "./documentation";
 
 
 export class ContextClass extends Context{
-	protected _node: DeclareClassCstNode;
 	protected _name?: Identifier;
 	protected _typeModifiers: Context.TypeModifierSet;
 	protected _extends?: TypeName;
@@ -66,7 +65,6 @@ export class ContextClass extends Context{
 		let cdecl = node.children;
 		let cdeclBegin = cdecl.classBegin[0].children;
 		
-		this._node = node;
 		if (cdeclBegin.name?.at(0)?.image) {
 			this._name = new Identifier(cdeclBegin.name[0]);
 		}
@@ -168,10 +166,6 @@ export class ContextClass extends Context{
 		this._resolveClass = undefined;
 	}
 
-
-	public get node(): DeclareClassCstNode {
-		return this._node;
-	}
 
 	public get name(): Identifier | undefined {
 		return this._name;
@@ -339,6 +333,8 @@ export class ContextClass extends Context{
 				each.resolveMembers(state);
 			}
 		});
+		
+		// TODO check for unimplemented interface methods and abstract base class methods
 	}
 
 	public resolveStatements(state: ResolveState): void {

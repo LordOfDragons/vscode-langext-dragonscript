@@ -45,7 +45,6 @@ import { CodeActionUnknownMember } from "../codeactions/unknownMember";
 
 
 export class ContextMember extends Context{
-	protected _node: ExpressionObjectCstNode | ExpressionMemberCstNode;
 	protected _tokenPeriod?: IToken;
 	protected _memberIndex: integer;
 	protected _object?: Context;
@@ -61,7 +60,6 @@ export class ContextMember extends Context{
 	protected constructor(node: ExpressionObjectCstNode | ExpressionMemberCstNode,
 			memberIndex: integer, parent: Context) {
 		super(Context.ContextType.Member, parent);
-		this._node = node;
 		this._memberIndex = memberIndex;
 	}
 
@@ -126,10 +124,6 @@ export class ContextMember extends Context{
 		this._resolveUsage = undefined;
 	}
 
-
-	public get node(): ExpressionObjectCstNode | ExpressionMemberCstNode {
-		return this._node;
-	}
 
 	public get memberIndex(): integer {
 		return this._memberIndex;

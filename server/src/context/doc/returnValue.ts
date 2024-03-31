@@ -31,21 +31,15 @@ import { ContextDocumentationDocState } from "./docState";
 
 
 export class ContextDocumentationReturnValue extends ContextDocBaseBlock{
-	protected _node: DocumentationReturnValueCstNode;
 	protected _value: string;
 	public description: string[] = [];
 	
 	
 	constructor(node: DocumentationReturnValueCstNode, parent: Context) {
 		super(Context.ContextType.DocumentationReturnValue, parent);
-		this._node = node;
 		this._value = node.children.value[0].image;
 	}
 	
-	
-	public get node(): DocumentationReturnValueCstNode {
-		return this._node;
-	}
 	
 	public get value(): string {
 		return this._value;

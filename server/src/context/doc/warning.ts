@@ -31,17 +31,8 @@ import { ContextDocumentationDocState } from "./docState";
 
 
 export class ContextDocumentationWarning extends ContextDocBaseBlock{
-	protected _node: DocumentationWarningCstNode;
-	
-	
 	constructor(node: DocumentationWarningCstNode, parent: Context) {
 		super(Context.ContextType.DocumentationWarning, parent);
-		this._node = node;
-	}
-	
-	
-	public get node(): DocumentationWarningCstNode {
-		return this._node;
 	}
 	
 	

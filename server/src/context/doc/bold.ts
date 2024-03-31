@@ -33,20 +33,14 @@ import { ContextDocumentationDocState } from "./docState";
 
 
 export class ContextDocumentationBold extends ContextDocBase{
-	protected _node: DocumentationBoldCstNode;
 	protected _word?: ContextDocBase;
 	
 	
 	constructor(node: DocumentationBoldCstNode, parent: Context) {
 		super(Context.ContextType.DocumentationBold, parent);
-		this._node = node;
 		this._word = ContextDocBuilder.createWord(node.children.docWord[0], this);
 	}
 	
-	
-	public get node(): DocumentationBoldCstNode {
-		return this._node;
-	}
 	
 	public get word(): ContextDocBase | undefined {
 		return this._word;

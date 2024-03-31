@@ -34,24 +34,17 @@ import { ContextDocumentationWord } from "./word";
 
 
 export class ContextDocumentationSee extends ContextDocBaseBlock{
-	protected _node: DocumentationSeeCstNode;
 	protected _resolved: (Resolved | undefined)[] = [];
 	
 	
 	constructor(node: DocumentationSeeCstNode, parent: Context) {
 		super(Context.ContextType.DocumentationSee, parent);
-		this._node = node;
 	}
 	
 	dispose(): void {
 		this._resolved.splice(0); // no dispose!
 		
 		super.dispose();
-	}
-	
-	
-	public get node(): DocumentationSeeCstNode {
-		return this._node;
 	}
 	
 	

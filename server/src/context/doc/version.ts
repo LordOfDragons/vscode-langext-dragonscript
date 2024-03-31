@@ -31,17 +31,8 @@ import { ContextDocumentationDocState } from "./docState";
 
 
 export class ContextDocumentationVersion extends ContextDocBaseBlock{
-	protected _node: DocumentationVersionCstNode;
-	
-	
 	constructor(node: DocumentationVersionCstNode, parent: Context) {
 		super(Context.ContextType.DocumentationVersion, parent);
-		this._node = node;
-	}
-	
-	
-	public get node(): DocumentationVersionCstNode {
-		return this._node;
 	}
 	
 	

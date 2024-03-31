@@ -41,7 +41,6 @@ import { ContextComment } from "./comment";
 
 /** Top level script context. */
 export class ContextScript extends Context{
-	protected _node: ScriptCstNode;
 	protected _statements: Context[] = [];
 	protected _documentations: ContextDocumentation[] = [];
 	protected _comments: ContextComment[] = [];
@@ -54,7 +53,7 @@ export class ContextScript extends Context{
 
 	constructor(document: ScriptDocument, textDocument?: TextDocument, lineCount?: number) {
 		super(Context.ContextType.Script);
-		this._node = document.node!;
+		const node = document.node!;
 		
 		let lastPosition = textDocument
 			? textDocument.positionAt(textDocument.getText().length)
@@ -64,8 +63,8 @@ export class ContextScript extends Context{
 		var statements = this._statements;
 		var parentContext: Context = this;
 
-		if (this._node.children.scriptStatement) {
-			for (const each of this._node.children.scriptStatement) {
+		if (node.children.scriptStatement) {
+			for (const each of node.children.scriptStatement) {
 				this.ignoreException(() => {
 					let c = each.children;
 
@@ -151,10 +150,6 @@ export class ContextScript extends Context{
 	
 	public get documentUri(): URI | undefined {
 		return this.uri;
-	}
-	
-	public get node(): ScriptCstNode{
-		return this._node;
 	}
 
 	public get requires(): ContextRequiresPackage[] {

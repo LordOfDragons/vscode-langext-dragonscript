@@ -31,17 +31,8 @@ import { ContextDocumentationDocState } from "./docState";
 
 
 export class ContextDocumentationDeprecated extends ContextDocBaseBlock{
-	protected _node: DocumentationDeprecatedCstNode;
-	
-	
 	constructor(node: DocumentationDeprecatedCstNode, parent: Context) {
 		super(Context.ContextType.DocumentationDeprecated, parent);
-		this._node = node;
-	}
-	
-	
-	public get node(): DocumentationDeprecatedCstNode {
-		return this._node;
 	}
 	
 	

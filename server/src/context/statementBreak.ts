@@ -28,20 +28,10 @@ import { StatementBreakCstNode } from "../nodeclasses/statementBreak";
 
 
 export class ContextBreak extends Context{
-	protected _node: StatementBreakCstNode;
-
-
 	constructor(node: StatementBreakCstNode, parent: Context) {
 		super(Context.ContextType.Break, parent);
-		this._node = node;
 	}
-
-
-	public get node(): StatementBreakCstNode {
-		return this._node;
-	}
-
-
+	
 	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
 		console.log(`${prefix}Break`);
 	}

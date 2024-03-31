@@ -29,20 +29,14 @@ import { LiteralString } from "./string";
 
 
 export class ContextRequiresPackage extends Context{
-	protected _node: RequiresPackageCstNode;
 	protected _name: LiteralString;
 
 
 	constructor(node: RequiresPackageCstNode, parent: Context) {
 		super(Context.ContextType.RequiresPackage, parent);
-		this._node = node;
 		this._name = new LiteralString(node.children.name[0]);
 	}
 
-
-	public get node(): RequiresPackageCstNode {
-		return this._node;
-	}
 
 	public get name(): LiteralString {
 		return this._name;

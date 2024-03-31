@@ -31,21 +31,15 @@ import { ContextDocumentationDocState } from "./docState";
 
 
 export class ContextDocumentationThrow extends ContextDocBaseBlock{
-	protected _node: DocumentationThrowCstNode;
 	protected _throwType: string;
 	public description: string[] = [];
 	
 	
 	constructor(node: DocumentationThrowCstNode, parent: Context) {
 		super(Context.ContextType.DocumentationThrow, parent);
-		this._node = node;
 		this._throwType = node.children.type[0].image;
 	}
 	
-	
-	public get node(): DocumentationThrowCstNode {
-		return this._node;
-	}
 	
 	public get throwType(): string {
 		return this._throwType;

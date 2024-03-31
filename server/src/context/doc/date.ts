@@ -31,17 +31,8 @@ import { ContextDocumentationDocState } from "./docState";
 
 
 export class ContextDocumentationDate extends ContextDocBaseBlock{
-	protected _node: DocumentationDateCstNode;
-	
-	
 	constructor(node: DocumentationDateCstNode, parent: Context) {
 		super(Context.ContextType.DocumentationDate, parent);
-		this._node = node;
-	}
-	
-	
-	public get node(): DocumentationDateCstNode {
-		return this._node;
 	}
 	
 	

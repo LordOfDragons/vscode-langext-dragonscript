@@ -36,7 +36,6 @@ import { CompletionHelper } from "../completionHelper";
 
 
 export class ContextConstant extends Context{
-	protected _node: ExpressionConstantCstNode;
 	protected _name: Identifier;
 	protected _constantType: ContextConstant.ConstantType = ContextConstant.ConstantType.null;
 	protected _constantValue?: number | string | boolean;
@@ -45,7 +44,6 @@ export class ContextConstant extends Context{
 
 	constructor(node: ExpressionConstantCstNode, parent: Context) {
 		super(Context.ContextType.Constant, parent);
-		this._node = node;
 
 		let c = node.children;
 
@@ -113,10 +111,6 @@ export class ContextConstant extends Context{
 		this.range = this._name.range;
 	}
 
-
-	public get node(): ExpressionConstantCstNode {
-		return this._node;
-	}
 	
 	public get name(): Identifier {
 		return this._name!;

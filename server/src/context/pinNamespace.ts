@@ -37,13 +37,11 @@ import { TextDocument } from "vscode-languageserver-textdocument";
 
 
 export class ContextPinNamespace extends Context{
-	protected _node: PinNamespaceCstNode;
 	protected _typename: TypeName;
 
 
 	constructor(node: PinNamespaceCstNode, parent: Context) {
 		super(Context.ContextType.PinNamespace, parent);
-		this._node = node;
 		this._typename = new TypeName(node.children.name[0]);
 
 		let tokPin = node.children.pin[0];
@@ -64,10 +62,6 @@ export class ContextPinNamespace extends Context{
 		this._typename?.dispose();
 	}
 
-
-	public get node(): PinNamespaceCstNode {
-		return this._node;
-	}
 
 	public get typename(): TypeName {
 		return this._typename;

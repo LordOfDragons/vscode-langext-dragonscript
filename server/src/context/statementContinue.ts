@@ -28,20 +28,10 @@ import { StatementContinueCstNode } from "../nodeclasses/statementContinue";
 
 
 export class ContextContinue extends Context{
-	protected _node: StatementContinueCstNode;
-
-
 	constructor(node: StatementContinueCstNode, parent: Context) {
 		super(Context.ContextType.Continue, parent);
-		this._node = node;
 	}
-
-
-	public get node(): StatementContinueCstNode {
-		return this._node;
-	}
-
-
+	
 	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
 		console.log(`${prefix}Continue`);
 	}

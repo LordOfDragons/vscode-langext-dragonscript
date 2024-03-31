@@ -36,7 +36,6 @@ import { CompletionHelper } from "../completionHelper";
 
 
 export class ContextIfElif extends Context {
-	protected _node: StatementElifCstNode;
 	protected _condition?: Context;
 	protected _statements: ContextStatements;
 	protected _endBegin?: Position;
@@ -44,7 +43,6 @@ export class ContextIfElif extends Context {
 	
 	constructor(node: StatementElifCstNode, parent: Context) {
 		super(Context.ContextType.IfElif, parent);
-		this._node = node;
 		
 		const valueCondition = node.children.condition?.at(0);
 		if (valueCondition) {
@@ -145,7 +143,6 @@ export class ContextIfElif extends Context {
 
 
 export class ContextIf extends Context {
-	protected _node: StatementIfCstNode;
 	protected _condition?: Context;
 	protected _ifstatements: ContextStatements;
 	protected _elif: ContextIfElif[];
@@ -155,7 +152,6 @@ export class ContextIf extends Context {
 	
 	constructor(node: StatementIfCstNode, parent: Context) {
 		super(Context.ContextType.If, parent);
-		this._node = node;
 		this._elif = [];
 		
 		let ifbegin = node.children.statementIfBegin[0].children;
@@ -201,10 +197,6 @@ export class ContextIf extends Context {
 		this._elsestatements?.dispose();
 	}
 	
-	
-	public get node(): StatementIfCstNode {
-		return this._node;
-	}
 	
 	public get condition(): Context | undefined {
 		return this._condition;

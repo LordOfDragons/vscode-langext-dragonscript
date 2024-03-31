@@ -36,7 +36,7 @@ export class ScriptDocument {
 	
 	public package?: any; // not type Package due to inheritence cycle
 	protected _settings: DSSettings;
-	protected _node?: ScriptCstNode;
+	public node?: ScriptCstNode;
 	protected _context?: ContextScript;
 	protected _documentationTokens: IToken[] = [];
 	protected _commentTokens: IToken[] = [];
@@ -81,15 +81,6 @@ export class ScriptDocument {
 	
 	public set settings(value: DSSettings) {
 		this._settings = value;
-		// TODO invalidate
-	}
-	
-	public get node(): ScriptCstNode | undefined {
-		return this._node;
-	}
-	
-	public set node(value: ScriptCstNode | undefined) {
-		this._node = value;
 		// TODO invalidate
 	}
 	

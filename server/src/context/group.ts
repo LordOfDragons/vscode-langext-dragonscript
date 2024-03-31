@@ -35,13 +35,11 @@ import { ResolveType } from "../resolve/type";
 
 
 export class ContextGroup extends Context{
-	protected _node: ExpressionGroupCstNode;
 	protected _expression: Context;
 	
 	
 	constructor(node: ExpressionGroupCstNode, parent: Context) {
 		super(Context.ContextType.Group, parent);
-		this._node = node;
 		this._expression = ContextBuilder.createExpression(node.children.expression[0], this);
 		
 		const tokLParan = node.children.leftParanthesis[0];
@@ -62,10 +60,6 @@ export class ContextGroup extends Context{
 	}
 	
 	
-	public get node(): ExpressionGroupCstNode {
-		return this._node;
-	}
-
 	public get expression(): Context | undefined {
 		return this._expression;
 	}

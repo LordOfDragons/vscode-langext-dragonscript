@@ -45,7 +45,6 @@ import { CompletionHelper } from "../completionHelper";
 
 
 export class ContextClassVariable extends Context{
-	protected _node?: ClassVariableCstNode;
 	protected _typeModifiers: Context.TypeModifierSet;
 	protected _name?: Identifier;
 	protected _typename: TypeName;
@@ -60,7 +59,6 @@ export class ContextClassVariable extends Context{
 				firstVar: ContextClassVariable | undefined,
 				endToken: IToken | undefined, parent: Context) {
 		super(Context.ContextType.ClassVariable, parent);
-		this._node = node;
 		const children = node?.children;
 		
 		this._typeModifiers = new Context.TypeModifierSet(typemodNode, Context.TypeModifier.Private);
@@ -99,10 +97,6 @@ export class ContextClassVariable extends Context{
 		this._value?.dispose;
 	}
 
-
-	public get node(): ClassVariableCstNode | undefined {
-		return this._node;
-	}
 
 	public get typeModifiers(): Context.TypeModifierSet {
 		return this._typeModifiers;

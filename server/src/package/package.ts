@@ -250,6 +250,7 @@ export class Package {
 		if (scriptDocument.node) {
 			let lineCount = (text.match(/\n/g) || '').length + 1;
 			try {
+				// the line below required scriptDocument.node, then it can be discarded
 				scriptDocument.context = new ContextScript(scriptDocument, undefined, lineCount);
 				scriptDocument.context.uri = uri;
 			} catch (error) {
@@ -264,8 +265,10 @@ export class Package {
 					this._console.error(`${error}`);
 				}
 				throw error;
+			} finally {
+				scriptDocument.node = undefined; // conserve memory
 			}
-
+			
 		} else {
 			scriptDocument.context = undefined;
 		}

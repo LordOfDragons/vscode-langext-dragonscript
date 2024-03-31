@@ -49,7 +49,6 @@ import { VisitorAllHasReturn } from "../visitor/allhasreturn";
 
 
 export class ContextFunction extends Context{
-	protected _node: InterfaceFunctionCstNode | ClassFunctionCstNode;
 	protected _typeModifiers: Context.TypeModifierSet;
 	protected _functionType: ContextFunction.Type;
 	protected _name?: Identifier;
@@ -69,7 +68,6 @@ export class ContextFunction extends Context{
 				typemodNode: TypeModifiersCstNode | undefined,
 				ownerTypeName: string | undefined, parent: Context) {
 		super(Context.ContextType.Function, parent);
-		this._node = node;
 		this._typeModifiers = new Context.TypeModifierSet(typemodNode, Context.TypeModifier.Public);
 
 		var tokBegin: IToken | undefined;
@@ -293,10 +291,6 @@ export class ContextFunction extends Context{
 		this._statements?.dispose();
 	}
 
-
-	public get node(): InterfaceFunctionCstNode | ClassFunctionCstNode {
-		return this._node;
-	}
 
 	public get typeModifiers(): Context.TypeModifierSet {
 		return this._typeModifiers;

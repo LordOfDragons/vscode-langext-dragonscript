@@ -35,7 +35,6 @@ import { CompletionHelper } from "../completionHelper";
 
 
 export class ContextFor extends Context{
-	protected _node: StatementForCstNode;
 	protected _variable?: Context;
 	protected _from?: Context;
 	protected _to?: Context;
@@ -50,7 +49,6 @@ export class ContextFor extends Context{
 
 	constructor(node: StatementForCstNode, parent: Context) {
 		super(Context.ContextType.For, parent);
-		this._node = node;
 		
 		const forBegin = node.children.statementForBegin[0].children;
 		const forTo = forBegin.statementForTo?.at(0)?.children;
@@ -107,10 +105,6 @@ export class ContextFor extends Context{
 		this._statements.dispose();
 	}
 
-
-	public get node(): StatementForCstNode {
-		return this._node;
-	}
 
 	public get variable(): Context | undefined {
 		return this._variable;

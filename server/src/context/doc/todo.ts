@@ -31,17 +31,8 @@ import { ContextDocumentationDocState } from "./docState";
 
 
 export class ContextDocumentationTodo extends ContextDocBaseBlock{
-	protected _node: DocumentationTodoCstNode;
-	
-	
 	constructor(node: DocumentationTodoCstNode, parent: Context) {
 		super(Context.ContextType.DocumentationTodo, parent);
-		this._node = node;
-	}
-	
-	
-	public get node(): DocumentationTodoCstNode {
-		return this._node;
 	}
 	
 	

@@ -36,7 +36,6 @@ import { IToken } from "chevrotain";
 
 
 export class ContextInlineIfElse extends Context{
-	protected _node: ExpressionInlineIfElseCstNode;
 	protected _condition: Context;
 	protected _ifvalue: Context;
 	protected _elsevalue?: Context;
@@ -46,7 +45,6 @@ export class ContextInlineIfElse extends Context{
 
 	constructor(node: ExpressionInlineIfElseCstNode, parent: Context) {
 		super(Context.ContextType.InlineIfElse, parent);
-		this._node = node;
 		
 		let c = node.children;
 		let m = c.more![0].children;
@@ -82,10 +80,6 @@ export class ContextInlineIfElse extends Context{
 		this._elsevalue?.dispose();
 	}
 
-
-	public get node(): ExpressionInlineIfElseCstNode {
-		return this._node;
-	}
 
 	public get condition(): Context {
 		return this._condition;

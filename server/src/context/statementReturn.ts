@@ -38,19 +38,20 @@ import { TextDocument } from "vscode-languageserver-textdocument";
 
 
 export class ContextReturn extends Context{
-	protected _node: StatementReturnCstNode;
-	private _value?: Context;
+	protected _value?: Context;
+	protected _rangeReturn?: Range;
 
 
 	constructor(node: StatementReturnCstNode, parent: Context) {
 		super(Context.ContextType.Return, parent);
-		this._node = node;
-
+		
 		if (node.children.value) {
 			this._value = ContextBuilder.createExpression(node.children.value[0], this);
 		}
-
+		
 		const tokBegin = node.children.return[0];
+		this._rangeReturn = Helpers.rangeFrom(tokBegin);
+		
 		const tokEnd = this._value?.range?.end;
 		if (tokBegin && tokEnd) {
 			this.range = Range.create(Helpers.rangeFrom(tokBegin).start, tokEnd);
@@ -62,10 +63,6 @@ export class ContextReturn extends Context{
 		this._value?.dispose();
 	}
 
-
-	public get node(): StatementReturnCstNode {
-		return this._node;
-	}
 
 	protected get value(): Context | undefined {
 		return this._value;
@@ -104,8 +101,7 @@ export class ContextReturn extends Context{
 					tv?.addReportInfo(ri, `Return Value Type: ${tv?.reportInfoText}`);
 					frt.addReportInfo(ri, `Function Return Type: ${frt.reportInfoText}`);
 					cbf.addReportInfo(ri, `Function ${cbf.reportInfoText}`);
-					const di = state.reportError(Helpers.rangeFrom(this.node.children.return[0]),
-						`Invalid cast from ${tv?.name} to ${frt.name}`, ri);
+					const di = state.reportError(this._rangeReturn, `Invalid cast from ${tv?.name} to ${frt.name}`, ri);
 					if (di && tv) {
 						this.codeActions.push(new CodeActionInsertCast(di, tv, frt, ov, ov.expressionAutoCast));
 					}
@@ -114,16 +110,14 @@ export class ContextReturn extends Context{
 			} else {
 				let ri: DiagnosticRelatedInformation[] = [];
 				cbf.addReportInfo(ri, `Function ${cbf.reportInfoText}`);
-				state.reportError(Helpers.rangeFrom(this.node.children.return[0]),
-					`Missing return value for function with return type ${frt.name}`, ri);
+				state.reportError(this._rangeReturn, `Missing return value for function with return type ${frt.name}`, ri);
 			}
 			
 		} else {
 			if (ov) {
 				let ri: DiagnosticRelatedInformation[] = [];
 				cbf.addReportInfo(ri, `Function ${cbf.reportInfoText}`);
-				const di = state.reportError(Helpers.rangeFrom(this.node.children.return[0]),
-					'Return value not allowed in function with void return type', ri);
+				const di = state.reportError(this._rangeReturn, 'Return value not allowed in function with void return type', ri);
 				if (di && this.range) {
 					this.codeActions.push(new CodeActionRemove(di, 'Remove return value',
 						Helpers.shrinkRange(this.range, 6, 0), this));

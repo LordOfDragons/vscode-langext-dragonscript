@@ -31,7 +31,6 @@ import { ContextDocumentationDocState } from "./docState";
 
 
 export class ContextDocumentationCode extends ContextDocBaseBlock{
-	protected _node: DocumentationCodeCstNode;
 	protected _language: string;
 	protected _codeSuffix: string;
 	protected _codeLines: string[];
@@ -39,7 +38,6 @@ export class ContextDocumentationCode extends ContextDocBaseBlock{
 	
 	constructor(node: DocumentationCodeCstNode, parent: Context) {
 		super(Context.ContextType.DocumentationCode, parent);
-		this._node = node;
 		this._canAppend = false;
 		
 		const token = node.children.code[0];
@@ -70,10 +68,6 @@ export class ContextDocumentationCode extends ContextDocBaseBlock{
 		this._codeLines = text.split('\n');
 	}
 	
-	
-	public get node(): DocumentationCodeCstNode {
-		return this._node;
-	}
 	
 	public get language(): string {
 		return this._language;

@@ -31,7 +31,6 @@ import { ContextDocumentationDocState } from "./docState";
 
 
 export class ContextDocumentationParam extends ContextDocBaseBlock{
-	protected _node: DocumentationParamCstNode;
 	protected _name: string;
 	public description: string[] = [];
 	public direction?: string;
@@ -39,7 +38,6 @@ export class ContextDocumentationParam extends ContextDocBaseBlock{
 	
 	constructor(node: DocumentationParamCstNode, parent: Context) {
 		super(Context.ContextType.DocumentationParam, parent);
-		this._node = node;
 		this._name = node.children.name[0].image;
 		
 		const p = node.children.param[0].image;
@@ -48,10 +46,6 @@ export class ContextDocumentationParam extends ContextDocBaseBlock{
 		}
 	}
 	
-	
-	public get node(): DocumentationParamCstNode {
-		return this._node;
-	}
 	
 	public get name(): string {
 		return this._name;

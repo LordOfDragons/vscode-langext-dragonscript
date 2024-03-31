@@ -30,18 +30,10 @@ import { ContextDocBaseBlock } from "./baseBlock";
 
 
 export class ContextDocumentationCopyDoc extends ContextDocBaseBlock{
-	protected _node: DocumentationCopyDocCstNode;
-	
-	
 	constructor(node: DocumentationCopyDocCstNode, parent: Context) {
 		super(Context.ContextType.DocumentationCopyDoc, parent);
-		this._node = node;
 	}
 	
-	
-	public get node(): DocumentationCopyDocCstNode {
-		return this._node;
-	}
 	
 	public contextAtPosition(position: Position): Context | undefined {
 		if (!Helpers.isPositionInsideRange(this.range, position)) {

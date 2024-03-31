@@ -38,7 +38,6 @@ import { ContextDocumentationIterator } from "./documentation";
 
 
 export class ContextNamespace extends Context{
-	protected _node: OpenNamespaceCstNode;
 	protected _typename: TypeName;
 	protected _statements: Context[];
 	protected _resolveNamespace?: ResolveNamespace;
@@ -47,7 +46,6 @@ export class ContextNamespace extends Context{
 
 	constructor(node: OpenNamespaceCstNode, parent: Context) {
 		super(Context.ContextType.Namespace, parent);
-		this._node = node;
 		this._typename = new TypeName(node.children.name[0]);
 		this._statements = [];
 		
@@ -77,10 +75,6 @@ export class ContextNamespace extends Context{
 		}
 	}
 
-
-	public get node(): OpenNamespaceCstNode {
-		return this._node;
-	}
 
 	public get typename(): TypeName {
 		return this._typename;

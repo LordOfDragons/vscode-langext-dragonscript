@@ -33,13 +33,11 @@ import { TextDocument } from "vscode-languageserver-textdocument";
 
 
 export class ContextThrow extends Context{
-	protected _node: StatementThrowCstNode;
 	protected _exception?: Context;
 	
 	
 	constructor(node: StatementThrowCstNode, parent: Context) {
 		super(Context.ContextType.Throw, parent);
-		this._node = node;
 		
 		if (node.children.exception) {
 			this._exception = ContextBuilder.createExpression(node.children.exception[0], this);
@@ -57,10 +55,6 @@ export class ContextThrow extends Context{
 		this._exception?.dispose();
 	}
 	
-	
-	public get node(): StatementThrowCstNode {
-		return this._node;
-	}
 	
 	public get exception(): Context | undefined {
 		return this._exception;

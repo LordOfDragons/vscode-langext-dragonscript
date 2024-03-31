@@ -96,7 +96,6 @@ export class TypeNamePart {
 
 
 export class TypeName {
-	protected _node?: FullyQualifiedClassNameCstNode
 	protected _parts: TypeNamePart[]
 	protected _name: string
 	public resolve?: ResolveUsage;
@@ -104,7 +103,6 @@ export class TypeName {
 
 
 	constructor(node?: FullyQualifiedClassNameCstNode) {
-		this._node = node
 		this._parts = []
 		
 		const children = node?.children;
@@ -163,10 +161,6 @@ export class TypeName {
 
 	public static get typeObject(): TypeName {
 		return this.typeNamed('Object');
-	}
-
-	public get node(): FullyQualifiedClassNameCstNode | undefined {
-		return this._node
 	}
 
 	public get name(): string {

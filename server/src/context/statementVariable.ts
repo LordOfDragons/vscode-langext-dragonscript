@@ -49,7 +49,6 @@ import { CodeActionInsertCast } from "../codeactions/insertCast";
 
 
 export class ContextVariable extends Context {
-	protected _node?: StatementVariableCstNode;
 	protected _name?: Identifier;
 	protected _typename: TypeName;
 	protected _value?: Context;
@@ -66,7 +65,6 @@ export class ContextVariable extends Context {
 				firstVar: ContextVariable | undefined,
 				endToken: IToken | undefined, varToken: IToken, parent: Context) {
 		super(Context.ContextType.Variable, parent);
-		this._node = node;
 		const children = node?.children;
 		
 		if (children) {
@@ -97,10 +95,6 @@ export class ContextVariable extends Context {
 		this._value?.dispose;
 	}
 
-
-	public get node(): StatementVariableCstNode | undefined {
-		return this._node;
-	}
 
 	public get name(): Identifier | undefined {
 		return this._name;

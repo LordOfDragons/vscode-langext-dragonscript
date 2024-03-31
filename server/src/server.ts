@@ -364,11 +364,14 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	
 	if (scriptDocument.node) {
 		try {
+			// the line below required scriptDocument.node, then it can be discarded
 			scriptDocument.context = new ContextScript(scriptDocument, textDocument);
 			scriptDocument.context.uri = textDocument.uri;
 		} catch (error) {
 			logError(error);
 			scriptDocument.context = undefined;
+		} finally {
+			scriptDocument.node = undefined; // converse memory
 		}
 	} else {
 		scriptDocument.context = undefined;

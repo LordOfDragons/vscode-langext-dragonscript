@@ -29,18 +29,18 @@ import { Context } from "./context";
 
 
 export class ContextComment extends Context{
-	protected _token: IToken;
+	protected _comment: string;
 	
 	
 	constructor(token: IToken, parent: Context) {
 		super(Context.ContextType.Comment, parent);
-		this._token = token;
+		this._comment = token.image;
 		this.range = Helpers.rangeFrom(token);
 	}
 	
 	
-	public get token(): IToken {
-		return this._token;
+	public get comment(): string {
+		return this._comment;
 	}
 	
 	

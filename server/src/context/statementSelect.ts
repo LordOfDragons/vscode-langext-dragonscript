@@ -36,14 +36,12 @@ import { ResolveType } from "../resolve/type";
 
 
 export class ContextSelectCase extends Context {
-	protected _node: StatementCaseCstNode;
 	protected _values: Context[];
 	protected _statements: ContextStatements;
 	
 	
 	constructor(node: StatementCaseCstNode, parent: ContextSelect) {
 		super(Context.ContextType.SelectCase, parent);
-		this._node = node;
 		this._values = [];
 		
 		var posEnd: Position | undefined;
@@ -156,7 +154,6 @@ export class ContextSelectCase extends Context {
 
 
 export class ContextSelect extends Context {
-	protected _node: StatementSelectCstNode;
 	protected _value?: Context;
 	protected _cases: ContextSelectCase[];
 	protected _elsestatements?: ContextStatements;
@@ -165,7 +162,6 @@ export class ContextSelect extends Context {
 	
 	constructor(node: StatementSelectCstNode, parent: Context) {
 		super(Context.ContextType.Select, parent);
-		this._node = node;
 		this._cases = [];
 		
 		const selbegin = node.children.statementSelectBegin[0].children;
@@ -222,10 +218,6 @@ export class ContextSelect extends Context {
 		this._elsestatements?.dispose();
 	}
 	
-	
-	public get node(): StatementSelectCstNode {
-		return this._node;
-	}
 	
 	public get value(): Context | undefined {
 		return this._value;

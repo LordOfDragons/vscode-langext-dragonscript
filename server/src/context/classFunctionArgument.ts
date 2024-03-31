@@ -36,7 +36,6 @@ import { TextDocument } from "vscode-languageserver-textdocument";
 
 
 export class ContextFunctionArgument extends Context{
-	protected _node: FunctionArgumentCstNode;
 	protected _name?: Identifier;
 	protected _typename: TypeName;
 	protected _resolveArgument?: ResolveArgument;
@@ -44,7 +43,6 @@ export class ContextFunctionArgument extends Context{
 	
 	constructor(node: FunctionArgumentCstNode, parent: Context) {
 		super(Context.ContextType.FunctionArgument, parent)
-		this._node = node
 		
 		const nodeName = node.children.name?.at(0);
 		if (nodeName) {
@@ -69,10 +67,6 @@ export class ContextFunctionArgument extends Context{
 		this._typename.dispose();
 	}
 	
-	
-	public get node(): FunctionArgumentCstNode {
-		return this._node
-	}
 	
 	public get name(): Identifier | undefined {
 		return this._name

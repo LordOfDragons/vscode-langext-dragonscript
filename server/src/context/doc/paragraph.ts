@@ -34,13 +34,11 @@ import { ContextDocumentationDocState } from "./docState";
 
 
 export class ContextDocumentationParagraph extends ContextDocBaseBlock{
-	protected _node: DocumentationParagraphCstNode;
 	protected _title: ContextDocBase[] = [];
 	
 	
 	constructor(node: DocumentationParagraphCstNode, parent: Context) {
 		super(Context.ContextType.DocumentationParagraph, parent);
-		this._node = node;
 		
 		const list = node.children.docWord;
 		if (list) {
@@ -57,11 +55,6 @@ export class ContextDocumentationParagraph extends ContextDocBaseBlock{
 		this._title.forEach(c => c.dispose());
 		this._title.splice(0);
 		super.dispose();
-	}
-	
-	
-	public get node(): DocumentationParagraphCstNode {
-		return this._node;
 	}
 	
 	

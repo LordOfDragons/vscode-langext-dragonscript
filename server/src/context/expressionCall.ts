@@ -59,12 +59,6 @@ import { CodeActionAssignmentNoEffect } from "../codeactions/assignNoEffect";
 
 
 export class ContextFunctionCall extends Context{
-	protected _node: ExpressionAdditionCstNode | ExpressionBitOperationCstNode
-		| ExpressionCompareCstNode | ExpressionLogicCstNode
-		| ExpressionMultiplyCstNode | ExpressionPostfixCstNode
-		| ExpressionUnaryCstNode | ExpressionObjectCstNode
-		| ExpressionAssignCstNode | ExpressionSpecialCstNode
-		| ExpressionMemberCstNode | FunctionCallCstNode;
 	protected _moreIndex: integer;
 	protected _object?: Context;
 	protected _operator: boolean;
@@ -89,7 +83,6 @@ export class ContextFunctionCall extends Context{
 			| ExpressionMemberCstNode | FunctionCallCstNode,
 			moreIndex: integer, parent: Context) {
 		super(Context.ContextType.FunctionCall, parent);
-		this._node = node;
 		this._moreIndex = moreIndex;
 		this._operator = false;
 		this._arguments = [];
@@ -499,15 +492,6 @@ export class ContextFunctionCall extends Context{
 		this._resolveUsage = undefined;
 	}
 
-
-	public get node(): ExpressionAdditionCstNode | ExpressionBitOperationCstNode
-	| ExpressionCompareCstNode | ExpressionLogicCstNode
-	| ExpressionMultiplyCstNode | ExpressionPostfixCstNode
-	| ExpressionUnaryCstNode | ExpressionObjectCstNode
-	| ExpressionAssignCstNode | ExpressionSpecialCstNode
-	| ExpressionMemberCstNode | FunctionCallCstNode {
-		return this._node;
-	}
 
 	public get moreIndex(): integer {
 		return this._moreIndex;

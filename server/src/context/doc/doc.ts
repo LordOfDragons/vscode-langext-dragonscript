@@ -54,12 +54,10 @@ import { ContextDocumentationWordIterator } from "./worditerator";
 import { ContextDocumentationDate } from "./date";
 import { ContextDocumentationAuthor } from "./author";
 import { DocumentationWhitespace } from "./whitespace";
-import { debugLogMessage } from "../../server";
 import { ContextDocumentationTable } from "./table";
 
 
 export class ContextDocumentationDoc extends Context{
-	protected _node: DocumentationDocCstNode;
 	protected _blocks: ContextDocBaseBlock[] = [];
 	
 	public brief: string[] = [];
@@ -85,7 +83,6 @@ export class ContextDocumentationDoc extends Context{
 	
 	constructor(node: DocumentationDocCstNode, parent: Context) {
 		super(Context.ContextType.DocumentationDoc, parent);
-		this._node = node;
 		
 		for (const each of node.children.docBlock) {
 			const ec = each.children;
@@ -188,10 +185,6 @@ export class ContextDocumentationDoc extends Context{
 		super.dispose();
 	}
 	
-	
-	public get node(): DocumentationDocCstNode {
-		return this._node;
-	}
 	
 	public get blocks(): ContextDocBaseBlock[] {
 		return this._blocks;
