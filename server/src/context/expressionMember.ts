@@ -42,6 +42,7 @@ import { CompletionHelper } from "../completionHelper";
 import { IToken } from "chevrotain";
 import { Resolved, ResolveUsage } from "../resolve/resolved";
 import { CodeActionUnknownMember } from "../codeactions/unknownMember";
+import { debugLogMessage } from "../server";
 
 
 export class ContextMember extends Context{

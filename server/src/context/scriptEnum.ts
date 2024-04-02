@@ -91,9 +91,11 @@ export class ContextEnumEntry extends Context{
 	
 	public static get typeModifiers(): Context.TypeModifierSet {
 		if (!ContextEnumEntry._typeModifiers) {
-			ContextEnumEntry._typeModifiers = new Context.TypeModifierSet(undefined, Context.TypeModifier.Public);
-			ContextEnumEntry._typeModifiers.add(Context.TypeModifier.Static);
-			ContextEnumEntry._typeModifiers.add(Context.TypeModifier.Fixed);
+			ContextEnumEntry._typeModifiers = new Context.TypeModifierSet(
+				undefined, Context.AccessLevel.Public, [
+					Context.TypeModifier.Public,
+					Context.TypeModifier.Static,
+					Context.TypeModifier.Fixed]);
 		}
 		return ContextEnumEntry._typeModifiers;
 	}
@@ -197,7 +199,9 @@ export class ContextEnumeration extends Context{
 		let edeclBegin = edecl.enumerationBegin[0].children;
 
 		this._name = new Identifier(edeclBegin.name[0]);
-		this._typeModifiers = new Context.TypeModifierSet(typemodNode, Context.TypeModifier.Public);
+		
+		this._typeModifiers = new Context.TypeModifierSet(typemodNode,
+			Context.AccessLevel.Public, [Context.TypeModifier.Public]);
 		
 		this._positionBeginEnd = Helpers.endOfCommandBegin(edeclBegin.endOfCommand);
 

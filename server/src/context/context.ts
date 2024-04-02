@@ -118,7 +118,8 @@ export class Context {
 	
 	public static get defaultTypeModifiers(): Context.TypeModifierSet {
 		if (!Context._defaultTypeModifiers) {
-			Context._defaultTypeModifiers = new Context.TypeModifierSet(undefined, Context.TypeModifier.Public);
+			Context._defaultTypeModifiers = new Context.TypeModifierSet(
+				undefined, Context.AccessLevel.Public, [Context.TypeModifier.Public]);
 		}
 		return Context._defaultTypeModifiers;
 	}
@@ -569,17 +570,22 @@ export namespace Context {
 	export class TypeModifierSet extends Set<Context.TypeModifier> {
 		protected _canonical?: Context.TypeModifier[];
 		protected _typestring?: string;
-		protected _accessLevel = AccessLevel.Public;
+		protected _accessLevel;
 		protected _abstract = false;
 		protected _fixed = false;
 		protected _static = false;
-
-		constructor(node: TypeModifiersCstNode | undefined, defaultModifier: Context.TypeModifier | undefined) {
+		
+		constructor(node: TypeModifiersCstNode | undefined, defaultAccessLevel: Context.AccessLevel,
+				defaultModifiers: Context.TypeModifier[] | undefined) {
 			super();
 			
+			this._accessLevel = defaultAccessLevel;
+			
 			if (!node || !node.children.typeModifier) {
-				if (defaultModifier) {
-					this.add(defaultModifier);
+				if (defaultModifiers) {
+					for (const each of defaultModifiers) {
+						this.add(each);
+					}
 				}
 				
 			} else {
@@ -639,39 +645,38 @@ export namespace Context {
 		public get accessLevel(): AccessLevel {
 			return this._accessLevel;
 		}
-
+		
 		public get isPublic(): boolean {
 			return this._accessLevel === AccessLevel.Public;
 		}
-
+		
 		public get isProtected(): boolean {
 			return this._accessLevel === AccessLevel.Protected;
 		}
-
+		
 		public get isPrivate(): boolean {
 			return this._accessLevel === AccessLevel.Private;
 		}
-
+		
 		public get isPublicOrProtected(): boolean {
 			return this._accessLevel <= AccessLevel.Protected;
 		}
-
+		
 		public get isProtectedOrPrivate(): boolean {
 			return this._accessLevel >= AccessLevel.Protected;
 		}
-
+		
 		public get isAbstract(): boolean {
 			return this._abstract;
 		}
-
+		
 		public get isFixed(): boolean {
 			return this._fixed;
 		}
-
+		
 		public get isStatic(): boolean {
 			return this._static;
 		}
-		
 		
 		public get canonical(): Context.TypeModifier[] {
 			if (!this._canonical) {
@@ -688,21 +693,42 @@ export namespace Context {
 				if (this.has(Context.TypeModifier.Abstract)) {
 					this._canonical.push(Context.TypeModifier.Abstract);
 				}
+				
+				var hasAccessModifier = false;
 				if (this.has(Context.TypeModifier.Public)) {
 					this._canonical.push(Context.TypeModifier.Public);
+					hasAccessModifier = true;
 				}
 				if (this.has(Context.TypeModifier.Protected)) {
 					this._canonical.push(Context.TypeModifier.Protected);
+					hasAccessModifier = true;
 				}
 				if (this.has(Context.TypeModifier.Private)) {
 					this._canonical.push(Context.TypeModifier.Private);
+					hasAccessModifier = true;
+				}
+				
+				if (!hasAccessModifier) {
+					switch (this._accessLevel) {
+					case Context.AccessLevel.Public:
+						this._canonical.push(Context.TypeModifier.Public);
+						break;
+						
+					case Context.AccessLevel.Protected:
+						this._canonical.push(Context.TypeModifier.Protected);
+						break;
+						
+					case Context.AccessLevel.Private:
+						this._canonical.push(Context.TypeModifier.Private);
+						break;
+					}
 				}
 			}
 			return this._canonical;
 		}
 		
 		public filter(modifiers: Set<Context.TypeModifier>): Context.TypeModifierSet {
-			let tm = new Context.TypeModifierSet(undefined, undefined);
+			let tm = new Context.TypeModifierSet(undefined, this._accessLevel, undefined);
 			for (const each of this) {
 				if (modifiers.has(each)) {
 					tm.add(each);
@@ -726,15 +752,37 @@ export namespace Context {
 				if (this.has(Context.TypeModifier.Abstract)) {
 					parts.push('abstract');
 				}
+				
+				var hasAccessModifier = false;
 				if (this.has(Context.TypeModifier.Public)) {
 					parts.push('public');
+					hasAccessModifier = true;
 				}
 				if (this.has(Context.TypeModifier.Protected)) {
 					parts.push('protected');
+					hasAccessModifier = true;
 				}
 				if (this.has(Context.TypeModifier.Private)) {
 					parts.push('private');
+					hasAccessModifier = true;
 				}
+				
+				if (!hasAccessModifier) {
+					switch (this._accessLevel) {
+					case Context.AccessLevel.Public:
+						parts.push('public');
+						break;
+						
+					case Context.AccessLevel.Protected:
+						parts.push('protected');
+						break;
+						
+					case Context.AccessLevel.Private:
+						parts.push('private');
+						break;
+					}
+				}
+				
 				this._typestring = parts.length > 0 ? parts.reduce((a, b) => `${a} ${b}`) : "";
 			}
 			return this._typestring;

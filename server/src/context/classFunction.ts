@@ -68,7 +68,9 @@ export class ContextFunction extends Context{
 				typemodNode: TypeModifiersCstNode | undefined,
 				ownerTypeName: string | undefined, parent: Context) {
 		super(Context.ContextType.Function, parent);
-		this._typeModifiers = new Context.TypeModifierSet(typemodNode, Context.TypeModifier.Public);
+		
+		this._typeModifiers = new Context.TypeModifierSet(typemodNode,
+			Context.AccessLevel.Public, [Context.TypeModifier.Public]);
 
 		var tokBegin: IToken | undefined;
 		let typeMods = typemodNode?.children.typeModifier;
