@@ -43,6 +43,7 @@ import { Resolved, ResolveUsage } from "../resolve/resolved";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { CompletionHelper } from "../completionHelper";
 import { ContextDocumentationIterator } from "./documentation";
+import { debugLogMessage } from "../server";
 
 
 export class ContextInterface extends Context{
@@ -66,7 +67,8 @@ export class ContextInterface extends Context{
 		this._typeModifiers = new Context.TypeModifierSet(typemodNode, Context.TypeModifier.Public);
 
 		let tokIf = ideclBegin.interface[0];
-		let tokEnd = idecl.interfaceEnd[0].children.end[0];
+		let tokEnd = idecl.interfaceEnd?.at(0)?.children.end?.at(0);
+		this.blockClosed = tokEnd !== undefined;
 		this.range = Helpers.rangeFrom(tokIf, tokEnd, true, false);
 		this.documentSymbol = DocumentSymbol.create(this._name.name, undefined,
 			SymbolKind.Interface, this.range, Helpers.rangeFrom(ideclBegin.name[0], tokEnd, true, true));
@@ -102,6 +104,7 @@ export class ContextInterface extends Context{
 				} else if (each.children.interfaceFunction) {
 					var f = new ContextFunction(each.children.interfaceFunction[0], typemod, this._name.name, this);
 					f.typeModifiers.add(Context.TypeModifier.Abstract);
+					f.blockClosed = true;
 					this._declarations.push(f);
 				}
 			}
@@ -334,38 +337,40 @@ export class ContextInterface extends Context{
 	}
 	
 	public completion(document: TextDocument, position: Position): CompletionItem[] {
-		for (const each of this._implements) {
-			if (Helpers.isPositionInsideRange(each.range, position)) {
-				return each.completion(document, position, this);
-			}
-		}
-		
-		if (!this._positionBeginEnd || Helpers.isPositionBefore(position, this._positionBeginEnd)) {
-			// TODO propose class names
-			return [];
-		}
-		
-		const declaration = this.declarationBefore(position);
-		if (declaration) {
-			return declaration.completion(document, position);
-		}
-		
-		const range = Range.create(position, position);
-		let items: CompletionItem[] = [];
-		
 		if (this._positionBeginEnd && Helpers.isPositionAfter(position, this._positionBeginEnd)) {
+			const declaration = this.declarationBefore(position);
+			if (declaration && (Helpers.isPositionInsideRange(declaration.range, position) || !declaration.blockClosed)) {
+				return declaration.completion(document, position);
+			}
+			
+			const range = Range.create(position, position);
+			let items: CompletionItem[] = [];
+			
 			items.push(...CompletionHelper.createClass(this, range));
 			items.push(...CompletionHelper.createInterface(this, range));
 			items.push(...CompletionHelper.createEnum(this, range));
 			items.push(...CompletionHelper.createFunctionInterface(this, range));
 			
-		} else if (this._tokenImplements && Helpers.isPositionAfter(position, this._tokenImplements.end)) {
-			const implement = this._implements.find(c => c.isPositionInside(position));
-			if (implement) {
-				items.push(...implement.completion(document, position, this,
-					[Resolved.Type.Interface, Resolved.Type.Namespace]));
-			}
+			return items;
 		}
+		
+		if (this._tokenImplements && Helpers.isPositionAfter(position, this._tokenImplements.end)) {
+			const implement = this._implements.find(c => c.isPositionInside(position));
+			const restype = [Resolved.Type.Interface, Resolved.Type.Namespace];
+			const range = Range.create(position, position);
+			
+			return implement?.completion(document, position, this, restype)
+				?? CompletionHelper.createType(range, this, undefined, restype);
+		}
+		
+		let items: CompletionItem[] = [];
+		const range = Range.create(position, position);
+		
+		if (!this._tokenImplements) {
+			items.push(...CompletionHelper.createImplements(this, range));
+		}
+		
+		// TODO propose class names
 		
 		return items;
 	}

@@ -178,6 +178,7 @@ export class ContextIf extends Context {
 		const tokEnd = node.children.statementIfEnd?.at(0)?.children.end?.at(0);
 		if (tokEnd) {
 			posEnd = Helpers.positionFrom(tokEnd, false);
+			this.blockClosed = true;
 		}
 		
 		posEnd = posEnd ?? this._elsestatements?.range?.end

@@ -201,7 +201,8 @@ export class ContextEnumeration extends Context{
 		
 		this._positionBeginEnd = Helpers.endOfCommandBegin(edeclBegin.endOfCommand);
 
-		let tokEnd = edecl.enumerationEnd[0].children.end[0];
+		let tokEnd = edecl.enumerationEnd?.at(0)?.children.end[0];
+		this.blockClosed = tokEnd !== undefined;
 		let tokEnum = edeclBegin.enum[0];
 		this.range = Helpers.rangeFrom(tokEnum, tokEnd, true, false);
 		this.documentSymbol = DocumentSymbol.create(this._name.name, undefined,
@@ -404,17 +405,21 @@ export class ContextEnumeration extends Context{
 	}
 	
 	public completion(document: TextDocument, position: Position): CompletionItem[] {
-		if (!this._positionBeginEnd || Helpers.isPositionBefore(position, this._positionBeginEnd)) {
-			// TODO propose class names
-			return [];
+		if (this._positionBeginEnd && Helpers.isPositionAfter(position, this._positionBeginEnd)) {
+			const entry = this.entryBefore(position);
+			if (entry) {
+				return entry.completion(document, position);
+			}
+			
+			//const range = Range.create(position, position);
+			let items: CompletionItem[] = [];
+			
+			// TODO propose names?
+			
+			return items;
 		}
 		
-		const entry = this.entryBefore(position);
-		if (entry) {
-			return entry.completion(document, position);
-		}
-		
-		// TODO add completion items for adding enumeration entries
+		// TODO propose class names
 		return [];
 	}
 	

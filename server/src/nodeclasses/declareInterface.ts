@@ -15,7 +15,7 @@ export interface DeclareInterfaceCstNode extends CstNode {
 export type DeclareInterfaceCstChildren = {
 	interfaceBegin: InterfaceBeginCstNode[];
 	interfaceBody: InterfaceBodyCstNode[];
-	interfaceEnd: InterfaceEndCstNode[];
+	interfaceEnd?: InterfaceEndCstNode[];
 };
 
 
@@ -84,5 +84,5 @@ export interface InterfaceEndCstNode extends CstNode {
 }
 
 export type InterfaceEndCstChildren = {
-	end: IToken[];
+	end?: IToken[];
 };

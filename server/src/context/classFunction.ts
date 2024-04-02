@@ -234,6 +234,7 @@ export class ContextFunction extends Context{
 				if (tokEnd) {
 					posEndInner = Helpers.positionFrom(tokEnd);
 					posEnd = Helpers.positionFrom(tokEnd, false);
+					this.blockClosed = true;
 				}
 			}
 			
@@ -241,6 +242,10 @@ export class ContextFunction extends Context{
 			if (!posEnd) {
 				posEndInner = posEnd = this._statements.range?.end;
 			}
+		}
+		
+		if (this.typeModifiers.isAbstract) {
+			this.blockClosed = true;
 		}
 		
 		if (!posEnd) {

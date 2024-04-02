@@ -60,6 +60,7 @@ export class ContextWhile extends Context{
 		const whileEnd = node.children.statementWhileEnd?.at(0)?.children;
 		if (whileEnd) {
 			posEnd = Helpers.positionFrom(whileEnd.end[0], false);
+			this.blockClosed = true;
 		}
 		
 		posEnd = posEnd ?? this._statements.range?.end

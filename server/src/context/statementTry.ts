@@ -250,6 +250,7 @@ export class ContextTry extends Context {
 		const tryEnd = node.children.statementTryEnd?.at(0)?.children;
 		if (tryEnd) {
 			posEnd = Helpers.positionFrom(tryEnd.end[0], false);
+			this.blockClosed = true;
 		}
 		posEnd = posEnd ?? this._catches.at(this._catches.length - 1)?.range?.end ?? this._endBegin;
 		

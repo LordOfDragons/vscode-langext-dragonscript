@@ -193,6 +193,7 @@ export class ContextSelect extends Context {
 		if (selEnd) {
 			if (selEnd.end) {
 				posEnd = Helpers.positionFrom(selEnd.end[0], false);
+				this.blockClosed = true;
 			} else {
 				posEnd = Helpers.endOfCommandEnd(selEnd.endOfCommand);
 			}

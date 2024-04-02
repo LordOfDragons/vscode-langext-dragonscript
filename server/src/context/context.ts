@@ -54,6 +54,7 @@ export class Context {
 	private static _defaultTypeModifiers?: Context.TypeModifierSet;
 	public documentation?: ContextDocumentation;
 	protected _codeActions: BaseCodeAction[] = [];
+	public blockClosed = false;
 	
 
 	constructor(type: Context.ContextType, parent?: Context) {
@@ -566,7 +567,6 @@ export namespace Context {
 	
 	/** Type modifier set. */
 	export class TypeModifierSet extends Set<Context.TypeModifier> {
-		
 		protected _canonical?: Context.TypeModifier[];
 		protected _typestring?: string;
 		protected _accessLevel = AccessLevel.Public;

@@ -86,6 +86,7 @@ export class ContextBlock extends Context{
 		let tokEnd = node.children.expressionBlockEnd?.at(0)?.children.end[0];
 		if (tokEnd) {
 			posEnd = Helpers.positionFrom(tokEnd, false);
+			this.blockClosed = true;
 		}
 		if (!posEnd) {
 			posEnd = this._statements.range?.end;

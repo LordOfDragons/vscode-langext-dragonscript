@@ -80,6 +80,7 @@ export class ContextFor extends Context{
 		
 		const tokBegin = node.children.statementForBegin[0].children.for[0];
 		let tokEnd = node.children.statementForEnd[0].children.end?.at(0);
+		this.blockClosed = tokEnd !== undefined;
 		
 		const tokAssign = forBegin.statementForFrom?.at(0)?.children.assign?.at(0);
 		if (tokAssign) {

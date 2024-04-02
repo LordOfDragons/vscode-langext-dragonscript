@@ -44,6 +44,7 @@ import { Resolved, ResolveUsage } from "../resolve/resolved";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { CompletionHelper } from "../completionHelper";
 import { ContextDocumentationIterator } from "./documentation";
+import { debugLogMessage } from "../server";
 
 
 export class ContextClass extends Context{
@@ -71,6 +72,7 @@ export class ContextClass extends Context{
 		this._typeModifiers = new Context.TypeModifierSet(typemodNode, Context.TypeModifier.Public);
 		
 		let tokEnd = cdecl.classEnd[0].children.end?.at(0);
+		this.blockClosed = tokEnd !== undefined;
 		let tokClass = cdeclBegin.class[0];
 		this.range = Helpers.rangeFrom(tokClass, tokEnd, true, false);
 		if (this._name?.token) {
@@ -444,30 +446,15 @@ export class ContextClass extends Context{
 	}
 	
 	public completion(document: TextDocument, position: Position): CompletionItem[] {
-		if (this._extends && Helpers.isPositionInsideRange(this._extends?.range, position)) {
-			return this._extends.completion(document, position, this);
-		}
-		
-		for (const each of this._implements) {
-			if (Helpers.isPositionInsideRange(each.range, position)) {
-				return each.completion(document, position, this);
-			}
-		}
-		
-		if (!this._positionBeginEnd || Helpers.isPositionBefore(position, this._positionBeginEnd)) {
-			// TODO propose class names
-			return [];
-		}
-		
-		const declaration = this.declarationBefore(position);
-		if (declaration) {
-			return declaration.completion(document, position);
-		}
-		
-		const range = Range.create(position, position);
-		let items: CompletionItem[] = [];
-		
 		if (this._positionBeginEnd && Helpers.isPositionAfter(position, this._positionBeginEnd)) {
+			const declaration = this.declarationBefore(position);
+			if (declaration && (Helpers.isPositionInsideRange(declaration.range, position) || !declaration.blockClosed)) {
+				return declaration.completion(document, position);
+			}
+			
+			const range = Range.create(position, position);
+			let items: CompletionItem[] = [];
+			
 			items.push(...CompletionHelper.createClass(this, range));
 			items.push(...CompletionHelper.createInterface(this, range));
 			items.push(...CompletionHelper.createEnum(this, range));
@@ -475,19 +462,39 @@ export class ContextClass extends Context{
 			items.push(...CompletionHelper.createFunction(this, range));
 			items.push(...CompletionHelper.createFunctionOverrides(this, range));
 			
-		} else if (this._tokenImplements && Helpers.isPositionAfter(position, this._tokenImplements.end)) {
+			return items;
+		}
+		
+		if (this._tokenImplements && Helpers.isPositionAfter(position, this._tokenImplements.end)) {
 			const implement = this._implements.find(c => c.isPositionInside(position));
-			if (implement) {
-				items.push(...implement.completion(document, position, this,
-					[Resolved.Type.Interface, Resolved.Type.Namespace]));
+			const restype = [Resolved.Type.Interface, Resolved.Type.Namespace];
+			const range = Range.create(position, position);
+			
+			return implement?.completion(document, position, this, restype)
+				?? CompletionHelper.createType(range, this, undefined, restype);
+		}
+		
+		if (this._tokenExtends && Helpers.isPositionAfter(position, this._tokenExtends.end)) {
+			const restype = [Resolved.Type.Class, Resolved.Type.Namespace];
+			const range = Range.create(position, position);
+			
+			if (!this._tokenImplements && this._extends?.range
+			&& Helpers.isPositionAfter(position, this._extends.range?.end)) {
+				return CompletionHelper.createImplements(this, range);
 			}
 			
-		} else if (this._tokenExtends && Helpers.isPositionAfter(position, this._tokenExtends.start)) {
-			if (this._extends) {
-				items.push(...this._extends?.completion(document, position, this,
-					[Resolved.Type.Class, Resolved.Type.Namespace]));
-			}
+			return this._extends?.completion(document, position, this, restype)
+				?? CompletionHelper.createType(range, this, undefined, restype);
 		}
+		
+		let items: CompletionItem[] = [];
+		const range = Range.create(position, position);
+		
+		if (!this._tokenExtends) {
+			items.push(...CompletionHelper.createExtends(this, range));
+		}
+		
+		// TODO propose class names
 		
 		return items;
 	}

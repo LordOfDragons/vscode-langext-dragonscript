@@ -364,6 +364,17 @@ export class CompletionHelper {
 			textEdit: TextEdit.replace(range, 'continue\n\${0}')};
 	}
 	
+	/** Create completion item for 'end' keyword. */
+	public static createEnd(range: Range): CompletionItem {
+		range = Range.create(Position.create(range.start.line, Math.max(range.start.character - 1, 0)), range.end);
+		
+		return {label: 'end',
+			sortText: `${CompletionHelper.sortPrefixSnippet}end`,
+			kind: CompletionItemKind.Snippet,
+			insertTextFormat: InsertTextFormat.Snippet,
+			textEdit: TextEdit.replace(range, 'end\n\${0}')};
+	}
+	
 	/** Create completion items for 'class' keyword. */
 	public static createClass(context: Context, range: Range): CompletionItem[] {
 		let items: CompletionItem[] = [];
@@ -420,6 +431,34 @@ export class CompletionHelper {
 				'\tend\n' +
 				'\t\${0}\n' +
 				'end')});
+		
+		return items;
+	}
+	
+	/** Create completion items for 'extends' keyword. */
+	public static createExtends(context: Context, range: Range): CompletionItem[] {
+		let items: CompletionItem[] = [];
+		
+		items.push({label: 'extends',
+			sortText: `${CompletionHelper.sortPrefixSnippet}extends`,
+			filterText: 'extends',
+			kind: CompletionItemKind.Snippet,
+			insertTextFormat: InsertTextFormat.Snippet,
+			textEdit: TextEdit.replace(range, 'extends \${0}')});
+		
+		return items;
+	}
+	
+	/** Create completion items for 'implements' keyword. */
+	public static createImplements(context: Context, range: Range): CompletionItem[] {
+		let items: CompletionItem[] = [];
+		
+		items.push({label: 'implements',
+			sortText: `${CompletionHelper.sortPrefixSnippet}implements`,
+			filterText: 'implements',
+			kind: CompletionItemKind.Snippet,
+			insertTextFormat: InsertTextFormat.Snippet,
+			textEdit: TextEdit.replace(range, 'implements \${0}')});
 		
 		return items;
 	}
@@ -781,6 +820,8 @@ export class CompletionHelper {
 		|| context.selfOrParentWithType(Context.ContextType.SelectCase)) {
 			items.push(CompletionHelper.createBreak(range));
 		}
+		
+		items.push(CompletionHelper.createEnd(range));
 		
 		return items;
 	}

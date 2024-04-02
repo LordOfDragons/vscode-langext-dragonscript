@@ -10,7 +10,7 @@ export interface DeclareEnumerationCstNode extends CstNode {
 export type DeclareEnumerationCstChildren = {
 	enumerationBegin: EnumerationBeginCstNode[];
 	enumerationBody: EnumerationBodyCstNode[];
-	enumerationEnd: EnumerationEndCstNode[];
+	enumerationEnd?: EnumerationEndCstNode[];
 };
 
 
