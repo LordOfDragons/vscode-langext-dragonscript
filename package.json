@@ -26,7 +26,8 @@
 		"Programming Languages"
 	],
 	"activationEvents": [
-		"onLanguage:dragonscript"
+		"onLanguage:dragonscript",
+		"workspaceContains:**/*.ds"
 	],
 	"main": "./client/out/extension",
 	"contributes": {
