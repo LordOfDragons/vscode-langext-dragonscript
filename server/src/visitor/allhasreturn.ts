@@ -69,7 +69,11 @@ export class VisitorAllHasReturn {
 	}
 	
 	protected checkFor(context: ContextFor): boolean {
-		return this.checkStatementsLoop(context.statements);
+		if (context.statements) {
+			return this.checkStatementsLoop(context.statements);
+		} else {
+			return false;
+		}
 	}
 	
 	protected checkIf(context: ContextIf): boolean {

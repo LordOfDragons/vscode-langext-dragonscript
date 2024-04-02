@@ -12,8 +12,8 @@ export interface StatementForCstNode extends CstNode {
 
 export type StatementForCstChildren = {
 	statementForBegin: StatementForBeginCstNode[];
-	statements: StatementsCstNode[];
-	statementForEnd: StatementForEndCstNode[];
+	statements?: StatementsCstNode[];
+	statementForEnd?: StatementForEndCstNode[];
 };
 
 
@@ -71,6 +71,7 @@ export interface StatementForStepCstNode extends CstNode {
 }
 
 export type StatementForStepCstChildren = {
+	step: IToken[];
 	value: ExpressionCstNode[];
 };
 

@@ -40,7 +40,7 @@ export class ContextFor extends Context{
 	protected _to?: Context;
 	protected _downto: boolean;
 	protected _step?: Context | undefined;
-	protected _statements: ContextStatements;
+	protected _statements?: ContextStatements;
 	protected _posFrom?: Position;
 	protected _posTo?: Position;
 	protected _posStep?: Position;
@@ -76,23 +76,41 @@ export class ContextFor extends Context{
 			this._step = ContextBuilder.createExpression(forStep.value[0], this);
 		}
 		
-		this._statements = new ContextStatements(node.children.statements[0], this);
+		if (node.children.statements) {
+			this._statements = new ContextStatements(node.children.statements[0], this);
+		}
 		
-		const tokBegin = node.children.statementForBegin[0].children.for[0];
-		let tokEnd = node.children.statementForEnd[0].children.end?.at(0);
-		this.blockClosed = tokEnd !== undefined;
+		const tokBegin = forBegin.for[0];
 		
-		const tokAssign = forBegin.statementForFrom?.at(0)?.children.assign?.at(0);
+		var positionEnd: Position | undefined;
+		
+		const tokAssign = forFrom?.assign?.at(0);
 		if (tokAssign) {
 			this._posFrom = Helpers.positionFrom(tokAssign);
 		}
 		
-		const tokTo = forTo?.to?.at(0) ?? forTo?.downto?.at(0);
+		const tokTo = (forTo?.to ?? forTo?.downto)?.at(0);
 		if (tokTo) {
 			this._posTo = Helpers.positionFrom(tokTo);
 		}
 		
-		this._posEnd = Helpers.endOfCommandBegin(forBegin.endOfCommand);
+		this._posEnd = Helpers.endOfCommandBegin(forBegin.endOfCommand) ?? this._step?.range?.end;
+		if (!this._posEnd && forStep?.step) {
+			this._posEnd = Helpers.positionFrom(forStep.step[0], false);
+		}
+		this._posEnd = this._posEnd
+			?? this._to?.range?.end ?? this._posTo
+			?? this._from?.range?.end ?? this._posFrom
+			?? this._variable?.range?.end
+			?? Helpers.positionFrom(forBegin.for[0], false);
+		
+		const tokEnd = node.children.statementForEnd?.at(0)?.children.end?.at(0);
+		if (tokEnd) {
+			positionEnd = Helpers.positionFrom(tokEnd, false);
+		}
+		positionEnd = positionEnd ?? this._statements?.range?.end ?? this._posEnd;
+		
+		this.blockClosed = tokEnd !== undefined;
 		
 		this.range = Helpers.rangeFrom(tokBegin, tokEnd, true, false);
 	}
@@ -103,7 +121,7 @@ export class ContextFor extends Context{
 		this._from?.dispose();
 		this._to?.dispose();
 		this._step?.dispose();
-		this._statements.dispose();
+		this._statements?.dispose();
 	}
 
 
@@ -127,7 +145,7 @@ export class ContextFor extends Context{
 		return this._step;
 	}
 
-	public get statements(): ContextStatements {
+	public get statements(): ContextStatements | undefined {
 		return this._statements;
 	}
 	
@@ -141,7 +159,7 @@ export class ContextFor extends Context{
 		this._step?.resolveMembers(state);
 		
 		state.withScopeContext(this, () => {
-			this._statements.resolveMembers(state);
+			this._statements?.resolveMembers(state);
 		});
 	}
 	
@@ -152,7 +170,7 @@ export class ContextFor extends Context{
 		this._step?.resolveStatements(state);
 		
 		state.withScopeContext(this, () => {
-			this._statements.resolveStatements(state);
+			this._statements?.resolveStatements(state);
 		});
 		
 		this.requireCastable(state, this._variable, ResolveNamespace.classInt, 'From');
@@ -180,7 +198,7 @@ export class ContextFor extends Context{
 			?? this._from?.contextAtPosition(position)
 			?? this._to?.contextAtPosition(position)
 			?? this._step?.contextAtPosition(position)
-			?? this._statements.contextAtPosition(position)
+			?? this._statements?.contextAtPosition(position)
 			?? this;
 	}
 	
@@ -192,7 +210,7 @@ export class ContextFor extends Context{
 			?? this._from?.contextAtRange(range)
 			?? this._to?.contextAtRange(range)
 			?? this._step?.contextAtRange(range)
-			?? this._statements.contextAtRange(range)
+			?? this._statements?.contextAtRange(range)
 			?? this;
 	}
 	
@@ -202,7 +220,7 @@ export class ContextFor extends Context{
 		this._from?.collectChildDocSymbols(list);
 		this._to?.collectChildDocSymbols(list);
 		this._step?.collectChildDocSymbols(list);
-		this._statements.collectChildDocSymbols(list);
+		this._statements?.collectChildDocSymbols(list);
 	}
 	
 	public completion(document: TextDocument, position: Position): CompletionItem[] {
