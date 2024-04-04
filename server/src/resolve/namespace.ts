@@ -257,6 +257,10 @@ export class ResolveNamespace extends ResolveType {
 	public get documentation(): ContextDocumentation | undefined {
 		return this._contexts.find(c => c.documentation !== undefined)?.documentation;
 	}
+	
+	protected updateResolveTextLong(): string[] {
+		return [`**${this._resolveTextType}** ${this.fullyQualifiedName || '(root)'}`];
+	}
 }
 
 const rootNamespace: ResolveNamespace = new ResolveNamespace("");

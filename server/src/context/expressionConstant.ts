@@ -229,7 +229,7 @@ export class ContextConstant extends Context{
 		}
 		
 		if (this._resolveType) {
-			content.push(` *${this._resolveType.fullyQualifiedName}* `);
+			content.push(` *${this._resolveType.simpleNameLink}* `);
 		}
 		
 		switch (this._constantType) {

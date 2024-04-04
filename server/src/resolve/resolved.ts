@@ -152,6 +152,10 @@ export class Resolved{
 		return this._linkName;
 	}
 	
+	public get simpleName(): string {
+		return this._name;
+	}
+	
 	public get resolveTextShort(): string {
 		if (!this._resolveTextShort) {
 			this._resolveTextShort = this.updateResolveTextShort();

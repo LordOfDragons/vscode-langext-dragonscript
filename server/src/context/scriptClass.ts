@@ -354,20 +354,23 @@ export class ContextClass extends Context{
 	protected updateHover(position: Position): Hover | null {
 		if (this._name?.isPositionInside(position)) {
 			let content = [];
-			//content.push("```dragonscript");
-			content.push(`${this._typeModifiers.typestring} **class** `);
-			if (this.parent) {
-				content.push(`*${this.parent.fullyQualifiedName}*.`);
+			
+			content.push(`${this._typeModifiers.typestring} **class** ${this.simpleNameLink}`);
+			
+			if (this._extends && this._extends.resolve?.resolved !== ResolveNamespace.classObject) {
+				content.push(`*extends*: ${this._extends.resolve?.resolved?.resolveTextLong.at(0) ?? this._extends.simpleNameLink}`);
 			}
-			content.push(`**${this.name}**`);
+			
+			for (const each of this._implements) {
+				content.push(`*implements*: ${each.resolve?.resolved?.resolveTextLong.at(0) ?? each.simpleNameLink}`);
+			}
+			
+			this.addHoverParent(content);
+			
 			if (this.documentation) {
 				content.push('___');
 				content.push(...this.documentation.resolveTextLong);
 			}
-			//content.push("```");
-			/*content.push(...[
-				"___",
-				"This is a test"]);*/
 			return new HoverInfo(content, this._name.range);
 
 		} else if (this._extends?.isPositionInside(position)) {
@@ -383,7 +386,18 @@ export class ContextClass extends Context{
 
 		return null;
 	}
-
+	
+	protected updateResolveTextShort(): string {
+		return `${this._typeModifiers.typestring} class ${this._name}`;
+	}
+	
+	protected updateResolveTextLong(): string[] {
+		let lines = [];
+		lines.push(`${this._typeModifiers.typestring} **class** ${this.simpleNameLink}`);
+		this.addHoverParent(lines);
+		return lines;
+	}
+	
 	public search(search: ResolveSearch, before?: Context): void {
 		this._resolveClass?.search(search);
 	}

@@ -173,6 +173,35 @@ export class Context {
 		return null;
 	}
 	
+	protected addHoverParent(content: string[]): void {
+		if (!this.parent) {
+			return;
+		}
+		
+		switch (this.parent._type) {
+		case Context.ContextType.Script:
+			content.push('*parent*: **namespace** (root)');
+			return;
+		}
+		
+		const pc = this.parent.resolveTextLong;
+		if (!pc || pc.length == 0) {
+			return;
+		}
+		
+		content.push(`*parent*: ${pc[0]}`);
+		content.push(...pc.slice(1));
+	}
+	
+	/**
+	 * Create hover link if this.resolveLocationSelf exists using this.simplename as text.
+	 * If this.resolveLocationSelf does not exists returns just this.simplename.
+	 */
+	public get simpleNameLink(): string {
+		const l = this.resolveLocationSelf;
+		return l ? `[${this.simpleName}](${encodeURI(l.uri)}#L${l.range.start.line + 1})` : this.simpleName;
+	}
+	
 	public definition(position: Position): Definition {
 		return [];
 	}

@@ -208,15 +208,15 @@ export class ContextNamespace extends Context{
 		}
 		
 		let content = [];
-
+		
 		while (plen > 1) {
 			plen--;
 			let tok = parts[plen].name.token;
-
+			
 			if (!tok || !Helpers.isPositionInsideToken(tok, position)) {
 				continue;
 			}
-
+			
 			let pn = parts.slice(0, plen).map(x => x.name.name).reduce((a, b) => `${a}.${b}`);
 			content.push(`**namespace** *${pn}*.**${parts[plen].name}**`);
 			if (plen == parts.length - 1 && this.documentation) {
@@ -235,10 +235,18 @@ export class ContextNamespace extends Context{
 			}
 			return new HoverInfo(content, Helpers.rangeFrom(tok));
 		}
-
+		
 		return null;
 	}
-
+	
+	protected updateResolveTextShort(): string {
+		return `namespace ${this._typename.lastPart?.name}`;
+	}
+	
+	protected updateResolveTextLong(): string[] {
+		return [`**namespace** ${this._typename.name || '(root)'}`];
+	}
+	
 	public search(search: ResolveSearch, before?: Context): void {
 		this._resolveNamespace?.search(search);
 	}

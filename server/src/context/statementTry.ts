@@ -160,7 +160,7 @@ export class ContextTryCatch extends Context {
 	}
 	
 	protected updateResolveTextLong(): string[] {
-		return [`**argument** *${this._typename}* **${this._variable}**`];
+		return [`**argument** *${this._typename.simpleNameLink}* **${this._variable}**`];
 	}
 	
 	protected updateReportInfoText(): string {

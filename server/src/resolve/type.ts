@@ -92,6 +92,15 @@ export class ResolveType extends Resolved{
 		return `${this._resolveTextType} ${this._name}`;
 	}
 	
+	/**
+	 * Create hover link if this.resolveLocationSelf exists using this.simplename as text.
+	 * If this.resolveLocationSelf does not exists returns just this.simplename.
+	 */
+	public get simpleNameLink(): string {
+		const l = this.resolveLocation.at(0);
+		return l ? `[${this.simpleName}](${encodeURI(l.uri)}#L${l.range.start.line + 1})` : this.simpleName;
+	}
+	
 	
 	public createCompletionItem(range: Range, withPin?: Position): CompletionItem {
 		var documentation: string[] = [];

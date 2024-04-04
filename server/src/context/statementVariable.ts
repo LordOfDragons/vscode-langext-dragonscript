@@ -322,7 +322,7 @@ export class ContextVariable extends Context {
 	}
 
 	protected updateResolveTextLong(): string[] {
-		return [`**local variable** *${this._typename}* **${this._name}**`];
+		return [`**local variable** _${this._typename.simpleNameLink}_ ${this.simpleNameLink}`];
 	}
 
 	protected updateReportInfoText(): string {

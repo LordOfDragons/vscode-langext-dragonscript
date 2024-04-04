@@ -529,7 +529,7 @@ export class ContextFunction extends Context{
 			parts.push(args.join(", "));
 		}
 		parts.push(")");
-
+		
 		return parts.join("");
 	}
 
@@ -544,34 +544,29 @@ export class ContextFunction extends Context{
 				parts.push(" **destructor** ");
 				break;
 			case ContextFunction.Type.Operator:
-				parts.push(` **operator** *${this._returnType}* `);
+				parts.push(` **operator** *${this._returnType?.simpleNameLink}* `);
 				break;
 			case ContextFunction.Type.Regular:
 			default:
-				parts.push(` **function** *${this._returnType}* `);
+				parts.push(` **function** *${this._returnType?.simpleNameLink}* `);
 		}
-		parts.push(`*${this.parent!.fullyQualifiedName}*.`);
 		
-		if (this._name?.name.startsWith('*') || this._name?.name.endsWith('*')) {
-			parts.push(`__${this._name}__`);
-		} else {
-			parts.push(`**${this._name}**`);
-		}
+		parts.push(`${this.simpleNameLink}`);
 		parts.push(`(`);
 
 		var args = [];
 		for (const each of this._arguments) {
-			args.push(`*${each.typename}* ${each.name}`);
+			args.push(`*${each.typename.simpleNameLink}* ${each.name}`);
 		}
 		if (args.length > 0) {
 			parts.push(args.join(", "));
 		}
 		parts.push(")");
-
-		let content = [];
-		content.push(parts.join(""));
-
-		return content;
+		
+		let lines = [];
+		lines.push(parts.join(""));
+		this.addHoverParent(lines);
+		return lines;
 	}
 
 	protected updateReportInfoText(): string {

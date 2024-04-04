@@ -65,6 +65,10 @@ export class ResolveVariable extends Resolved{
 	}
 	
 	protected updateResolveTextLong(): string[] {
+		if (this._context) {
+			return this._context.resolveTextLong;
+		}
+		
 		const typemods = this.typeModifiers?.typestring ?? "public";
 		const typename = this._variableType?.name;
 		const fqn = this.parent?.fullyQualifiedName;

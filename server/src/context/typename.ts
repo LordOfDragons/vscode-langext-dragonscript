@@ -568,25 +568,30 @@ export class TypeName {
 				const pr = part.resolve?.resolved;
 				
 				if (pr) {
-					if (pr.type === ResolveType.Type.Class) {
+					switch (pr.type) {
+					case ResolveType.Type.Class: {
 						const c = pr as ResolveClass;
-						content.push(`**class ${c.name}**`);
+						content.push(`**class** ${c.context?.simpleNameLink ?? c.name}`);
 						this.hoverAddParent(content, c.parent as ResolveType);
+						} break;
 						
-					} else if (pr.type === ResolveType.Type.Interface) {
+					case ResolveType.Type.Interface: {
 						const i = pr as ResolveInterface;
-						content.push(`**interface ${i.name}**`);
+						content.push(`**interface** ${i.context?.simpleNameLink ?? i.name}`);
 						this.hoverAddParent(content, i.parent as ResolveType);
+						} break;
 						
-					} else if (pr.type === ResolveType.Type.Enumeration) {
+					case ResolveType.Type.Enumeration: {
 						const e = pr as ResolveEnumeration;
-						content.push(`**enumeration ${e.name}**`);
+						content.push(`**enumeration** ${e.context?.simpleNameLink ?? e.name}`);
 						this.hoverAddParent(content, e.parent as ResolveType);
+						} break;
 						
-					} else if (pr.type === ResolveType.Type.Namespace) {
+					case ResolveType.Type.Namespace: {
 						const ns = pr as ResolveNamespace;
-						content.push(`**namespace ${ns.name}**`);
+						content.push(`**namespace** ${ns.name}`);
 						this.hoverAddParent(content, ns);
+						} break;
 					}
 					
 					const doc = pr.documentation;
@@ -596,7 +601,7 @@ export class TypeName {
 					}
 					
 				} else {
-					content.push(`**type** **${part.name}**`);
+					content.push(`**type** ${part.resolve?.context?.simpleName ?? part.name}`);
 				}
 				
 				return new HoverInfo(content, part.name.range);
@@ -605,11 +610,15 @@ export class TypeName {
 
 		return null;
 	}
-
+	
 	protected hoverAddParent(content: string[], type?: ResolveType) {
-		if (type) {
-			content.push(`parent class *${type.displayName}*`);
+		const pc = type?.resolveTextLong;
+		if (!pc || pc.length == 0) {
+			return;
 		}
+		
+		content.push(`parent: ${pc[0]}`);
+		content.push(...pc.slice(1));
 	}
 	
 	public definition(position: Position): Definition {
@@ -663,6 +672,15 @@ export class TypeName {
 		};
 		
 		return CompletionHelper.createType(Range.create(position, position), context, undefined, restrictType);
+	}
+	
+	/**
+	 * Create hover link if resolved context resolveLocationSelf exists using name as text.
+	 * If resolved context resolveLocationSelf does not exists returns just name.
+	 */
+	public get simpleNameLink(): string {
+		const l = this.resolve?.resolved?.resolveLocation.at(0);
+		return l ? `[${this._name}](${encodeURI(l.uri)}#L${l.range.start.line + 1})` : this._name;
 	}
 	
 	toString() : string {

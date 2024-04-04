@@ -231,7 +231,10 @@ export class ContextClassVariable extends Context{
 	}
 
 	protected updateResolveTextLong(): string[] {
-		return [`${this._typeModifiers.typestring} **variable** *${this._typename}* *${this.parent?.fullyQualifiedName}*.**${this._name}**`];
+		const lines: string[] = [];
+		lines.push(`${this._typeModifiers.typestring} **variable** *${this._typename.simpleNameLink}* ${this.simpleNameLink}`);
+		this.addHoverParent(lines);
+		return lines;
 	}
 
 	protected updateReportInfoText(): string {

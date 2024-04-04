@@ -128,7 +128,7 @@ export class ContextFunctionArgument extends Context{
 	
 	protected updateResolveTextLong(): string[] {
 		let content = [];
-		content.push(`**argument** *${this._typename}* **${this._name}**`);
+		content.push(`**argument** *${this._typename.simpleNameLink}* ${this.simpleNameLink}`);
 		return content;
 	}
 	

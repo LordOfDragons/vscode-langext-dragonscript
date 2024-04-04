@@ -109,4 +109,8 @@ export class ResolveEnumeration extends ResolveType {
 	public get documentation(): ContextDocumentation | undefined {
 		return this._context?.documentation;
 	}
+	
+	protected updateResolveTextLong(): string[] {
+		return this._context?.resolveTextLong ?? super.updateResolveTextLong();
+	}
 }

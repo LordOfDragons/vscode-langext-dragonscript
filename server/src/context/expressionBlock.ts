@@ -271,11 +271,11 @@ export class ContextBlock extends Context{
 	
 	protected updateResolveTextLong(): string[] {
 		let parts = [];
-		parts.push('public **function** Object **block** (');
+		parts.push(`public **function** ${ResolveNamespace.classObject.simpleNameLink} **block** (`);
 		
 		var args = [];
 		for (const each of this._arguments) {
-			args.push(`*${each.typename}* ${each.name}`);
+			args.push(`*${each.typename.simpleNameLink}* ${each.name}`);
 		}
 		if (args.length > 0) {
 			parts.push(args.join(", "));

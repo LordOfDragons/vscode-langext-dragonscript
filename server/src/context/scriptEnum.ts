@@ -105,9 +105,12 @@ export class ContextEnumEntry extends Context{
 	}
 
 	protected updateResolveTextLong(): string[] {
-		return [`${ContextEnumEntry.typeModifiers.typestring} **variable** *${this.parent?.simpleName}* *${this.parent!.fullyQualifiedName}*.**${this._name}**`];
+		const lines: string[] = [];
+		lines.push(`${ContextEnumEntry.typeModifiers.typestring} **constant** ${this.simpleNameLink}`);
+		this.addHoverParent(lines);
+		return lines;
 	}
-
+	
 	protected updateReportInfoText(): string {
 		return `${ContextEnumEntry.typeModifiers.typestring} ${this.parent?.simpleName} ${this.parent!.simpleName}.${this._name}`;
 	}
@@ -366,16 +369,27 @@ export class ContextEnumeration extends Context{
 		if (!this._name.isPositionInside(position)) {
 			return null;
 		}
-
+		
 		let content = [];
-		content.push(`${this._typeModifiers.typestring} **enumeration** ${this.parent!.fullyQualifiedName}.**${this.name}**`);
+		content.push(...this.resolveTextLong);
 		if (this.documentation) {
 			content.push('___');
 			content.push(...this.documentation.resolveTextLong);
 		}
 		return new HoverInfo(content, this._name.range);
 	}
-
+	
+	protected updateResolveTextShort(): string {
+		return `${this._typeModifiers.typestring} enumeration ${this._name}`;
+	}
+	
+	protected updateResolveTextLong(): string[] {
+		let lines = [];
+		lines.push(`${this._typeModifiers.typestring} **enumeration** ${this.simpleNameLink}`);
+		this.addHoverParent(lines);
+		return lines;
+	}
+	
 	public search(search: ResolveSearch, before?: Context): void {
 		this._resolveEnum?.search(search);
 	}

@@ -316,8 +316,13 @@ export class Package {
 	}
 	
 	protected async scanPackage(list: string[], path: string, exclude: Minimatch[] = []): Promise<void> {
-		let files = await readdir(path);
 		let directories: string[] = []
+		var files: string[] = [];
+		try {
+			files = await readdir(path);
+		} catch {
+			this._console.log(`Package '${this._id}': Failed reading directory '${path}'`);
+		}
 		
 		for (const each of files) {
 			let childpath = join(path, each);

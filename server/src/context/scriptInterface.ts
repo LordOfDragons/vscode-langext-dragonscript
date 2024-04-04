@@ -272,11 +272,15 @@ export class ContextInterface extends Context{
 	protected updateHover(position: Position): Hover | null {
 		if (this._name.isPositionInside(position)) {
 			let content = [];
-			content.push(`${this._typeModifiers.typestring} **interface** `);
-			if (this.parent) {
-				content.push(`*${this.parent.fullyQualifiedName}*.`);
+			
+			content.push(`${this._typeModifiers.typestring} **interface** ${this.simpleNameLink}`);
+			
+			for (const each of this._implements) {
+				content.push(`*implements*: ${each.resolve?.resolved?.resolveTextLong.at(0) ?? each.simpleNameLink}`);
 			}
-			content.push(`**${this.name}**`);
+			
+			this.addHoverParent(content);
+			
 			if (this.documentation) {
 				content.push('___');
 				content.push(...this.documentation.resolveTextLong);
@@ -293,7 +297,18 @@ export class ContextInterface extends Context{
 
 		return null;
 	}
-
+	
+	protected updateResolveTextShort(): string {
+		return `${this._typeModifiers.typestring} interface ${this._name}`;
+	}
+	
+	protected updateResolveTextLong(): string[] {
+		let lines = [];
+		lines.push(`${this._typeModifiers.typestring} **interface** ${this.simpleNameLink}`);
+		this.addHoverParent(lines);
+		return lines;
+	}
+	
 	public search(search: ResolveSearch, before?: Context): void {
 		this._resolveInterface?.search(search);
 	}
