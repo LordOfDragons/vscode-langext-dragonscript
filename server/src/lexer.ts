@@ -516,25 +516,13 @@ export class DSLexer extends Lexer{
 	// comments
 	public static readonly tokenCommentSingleline = createToken({
 		name: "commentSingleline",
-		pattern: new RegExp("//"
-			+ "("
-				+ "\\\\(\\n|\\r|\\r\\n)"  // line splicing
-				+ "|"
-				+ "[^\\r\\n]"  // comment
-			+ ")*"
-			),
+		pattern: new RegExp("//[^\\r\\n]*"),
 		group: "comments"
 	})
 
 	public static readonly tokenCommentDocSingleline = createToken({
 		name: "commentDocSingleline",
-		pattern: new RegExp("//<<!"
-			+ "("
-				+ "\\\\(\\n|\\r|\\r\\n)"  // line splicing
-				+ "|"
-				+ "[^\\r\\n]"  // comment
-			+ ")*"
-			),
+		pattern: new RegExp("//!<[^\\r\\n]*"),
 		group: "documentation"
 	})
 
