@@ -426,9 +426,9 @@ export class ResolveFunction extends Resolved{
 		}
 		parts.push(' */\n');
 		
-		const tms = this.typeModifiers?.filter(ResolveFunction.filterTypemodOverride).typestring;
-		if (tms) {
-			parts.push(`${tms} `);
+		const tms = this.typeModifiers?.filter(ResolveFunction.filterTypemodOverride);
+		if (tms && tms.size > 0) {
+			parts.push(`${tms.typestring} `);
 		}
 		
 		parts.push(`func ${this._returnType?.name ?? 'void'} ${this.name}(`);

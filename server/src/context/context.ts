@@ -757,7 +757,7 @@ export namespace Context {
 		}
 		
 		public filter(modifiers: Set<Context.TypeModifier>): Context.TypeModifierSet {
-			let tm = new Context.TypeModifierSet(undefined, this._accessLevel, undefined);
+			let tm = new Context.TypeModifierSet(undefined, this._accessLevel, []);
 			for (const each of this) {
 				if (modifiers.has(each)) {
 					tm.add(each);
