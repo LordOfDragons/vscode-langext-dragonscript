@@ -26,33 +26,20 @@ import { Position } from "vscode-languageserver"
 import { Context } from "./context/context";
 import { ContextNamespace } from "./context/namespace";
 import { ContextScript } from "./context/script";
+import { debugLogMessage } from "./server";
 
 
 export class RefactoringHelper {
 	public static insertPinPosition(before: Context): Position {
-		var ns: ContextNamespace = before.selfOrParentWithType(Context.ContextType.Namespace) as ContextNamespace;
-		var pin: Context | undefined;
+		var position: Position | undefined;
 		
-		while (ns) {
-			for (const each of ns.statements) {
-				if (each === before) {
-					break;
-				}
-				if (each.type === Context.ContextType.PinNamespace) {
-					pin = each;
-				}
-			}
-			if (pin) {
-				break;
-			}
-			before = ns;
-			ns = ns.selfOrParentWithType(Context.ContextType.Namespace) as ContextNamespace;
-		}
-		
-		if (!pin) {
-			const script = before.selfOrParentWithType(Context.ContextType.Script) as ContextScript;
-			if (script) {
-				for (const each of script.statements) {
+		while (before.parent) {
+			const p = before.parent;
+			
+			if (p.type === Context.ContextType.Namespace || p.type === Context.ContextType.Script) {
+				var pin: Context | undefined;
+				
+				for (const each of (p as (ContextNamespace | ContextScript)).statements) {
 					if (each === before) {
 						break;
 					}
@@ -60,9 +47,22 @@ export class RefactoringHelper {
 						pin = each;
 					}
 				}
+				
+				if (pin?.range) {
+					position = pin.range.end;
+					break;
+				}
+				
+				if (p.type === Context.ContextType.Namespace) {
+					position = (p as ContextNamespace).positionBeginEnd;
+				} else {
+					position = (p as ContextScript).documentations.at(0)?.range?.end;
+				}
+				break;
 			}
+			before = p;
 		}
 		
-		return pin?.range?.end ?? Position.create(0, 0);
+		return position ?? Position.create(0, 0);
 	}
 }

@@ -83,6 +83,10 @@ export class ContextNamespace extends Context{
 	public get statements(): Context[] {
 		return this._statements;
 	}
+	
+	public get positionBeginEnd(): Position | undefined {
+		return this._positionBeginEnd;
+	}
 
 	public get parentNamespace(): ContextNamespace | undefined {
 		return this;

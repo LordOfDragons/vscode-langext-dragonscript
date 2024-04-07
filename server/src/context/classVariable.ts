@@ -41,7 +41,6 @@ import { Helpers } from "../helpers";
 import { ResolveClass } from "../resolve/class";
 import { Resolved, ResolveUsage } from "../resolve/resolved";
 import { TextDocument } from "vscode-languageserver-textdocument";
-import { CompletionHelper } from "../completionHelper";
 
 
 export class ContextClassVariable extends Context{
