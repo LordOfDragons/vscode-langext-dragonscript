@@ -14,22 +14,14 @@
 				{"include": "#endofcommand"},
 				{
 					"match": "\\b(public|protected|private|native|abstract|fixed|static)\\b",
-					"name": "keyword.control.modifier.dragonscript"
+					"name": "storage.modifier.dragonscript"
 				},
 				{"include": "#namespace.pin"},
 				{"include": "#requires"},
 				{"include": "#interface"},
 				{"include": "#class"},
 				{"include": "#enumeration"},
-				
-				
-				{"include": "#class.function"},
-				{"include": "#variable"},
-				{"include": "#type.language"},
-				{"include": "#identifier"},
-				{"include": "#comma"},
-				{"include": "#member.selector"},
-				{"include": "#expression"}
+				{"include": "#invalid"}
 			]
 		},
 		
@@ -54,7 +46,7 @@
 				{"include": "#invalid"}
 			]
 		},
-		
+
 		"requires": {
 			"name": "meta.structure.requires.dragonscript",
 			"begin": "\\b(requires)\\b",
@@ -75,7 +67,7 @@
 				{"include": "#invalid"}
 			]
 		},
-		
+
 		"interface": {
 			"name": "meta.structure.interface.dragonscript",
 			"begin": "\\b(interface)\\b",
@@ -94,7 +86,7 @@
 				{"include": "#endofcommand"},
 				{
 					"match": "\\b(implements|public|protected|private|native)\\b",
-					"name": "keyword.control.modifier.dragonscript"
+					"name": "keyword.control.dragonscript"
 				},
 				{"include": "#interface"},
 				{"include": "#enumeration"},
@@ -106,7 +98,7 @@
 				{"include": "#invalid"}
 			]
 		},
-		
+
 		"interface.function": {
 			"name": "meta.structure.interface.function.dragonscript",
 			"begin": "\\b(func)\\b",
@@ -129,7 +121,7 @@
 				{"include": "#invalid"}
 			]
 		},
-		
+
 		"enumeration": {
 			"name": "meta.structure.enumeration.dragonscript",
 			"begin": "\\b(enum)\\b",
@@ -150,7 +142,7 @@
 				{"include": "#invalid"}
 			]
 		},
-		
+
 		"function.parameters": {
 			"name": "meta.structure.function.parameters.dragonscript",
 			"begin": "\\(",
@@ -172,7 +164,7 @@
 				{"include": "#invalid"}
 			]
 		},
-		
+
 		"class": {
 			"name": "meta.structure.class.dragonscript",
 			"begin": "\\b(class)\\b",
@@ -191,13 +183,13 @@
 				{"include": "#endofcommand"},
 				{
 					"match": "\\b(extends|implements|public|protected|private|native|abstract|fixed|static)\\b",
-					"name": "keyword.control.modifier.dragonscript"
+					"name": "keyword.control.dragonscript"
 				},
 				{"include": "#interface"},
 				{"include": "#class"},
 				{"include": "#enumeration"},
 				{"include": "#class.function"},
-				{"include": "#variable"},
+				{"include": "#class.variable"},
 				{"include": "#type.language"},
 				{"include": "#identifier"},
 				{"include": "#comma"},
@@ -221,9 +213,9 @@
 				{"include": "#function.code"}
 			]
 		},
-		
-		"variable": {
-			"name": "meta.structure.variable.dragonscript",
+
+		"class.variable": {
+			"name": "meta.structure.class.variable.dragonscript",
 			"begin": "\\b(var)\\b",
 			"beginCaptures": {
 				"1": {"name": "keyword.control.variable.dragonscript"}
@@ -241,7 +233,7 @@
 				{"include": "#expression"}
 			]
 		},
-		
+
 		"function.code": {
 			"patterns": [
 				{"include": "#comment.singleline"},
@@ -250,28 +242,27 @@
 				{"include": "#select"},
 				{"include": "#if"},
 				{"include": "#try"},
-				{"include": "#variable"},
 				{
-					"match": "\\b(var|if|elif|else|select|case|while|for|to|downto|step|break|continue|throw|return|try|catch)\\b",
+					"match": "\\b(var|if|elif|else|select|case|while|for|to|downto|step|break|continue|throw|block|return|try|catch|not|isnull|cast|castable|typeof|and|or)\\b",
 					"name": "keyword.control.dragonscript"
 				},
 				{"include": "#expression"}
 			]
 		},
-		
+
 		"expression": {
 			"patterns": [
 				{"include": "#whitespace"},
 				{"include": "#comment.multiline"},
-				{"include": "#block"},
 				{
-					"match": "\\b(if|else|not|isnull|cast|castable|typeof|and|or|block)\\b",
+					"match": "\\b(if|else|not|isnull|cast|castable|typeof|and|or)\\b",
 					"name": "keyword.control.dragonscript"
 				},
 				{"include": "#type.language"},
 				{"include": "#variable.language"},
 				{"include": "#linesplice"},
 				{"include": "#endofcommand"},
+				{"include": "#block"},
 				{"include": "#string"},
 				{"include": "#character"},
 				{"include": "#number"},
@@ -283,7 +274,7 @@
 				{"include": "#invalid"}
 			]
 		},
-		
+
 		"function.call": {
 			"name": "meta.structure.function.call.dragonscript",
 			"begin": "\\(",
@@ -298,7 +289,7 @@
 				{"include": "#expression"}
 			]
 		},
-		
+
 		"block": {
 			"name": "meta.structure.block.dragonscript",
 			"begin": "\\b(block)\\b",
@@ -313,7 +304,7 @@
 				{"include": "#function.code"}
 			]
 		},
-		
+
 		"while": {
 			"name": "meta.structure.while.dragonscript",
 			"begin": "\\b(while)\\b",
@@ -328,7 +319,7 @@
 				{"include": "#function.code"}
 			]
 		},
-		
+
 		"for": {
 			"name": "meta.structure.for.dragonscript",
 			"begin": "\\b(for)\\b",
@@ -343,7 +334,7 @@
 				{"include": "#function.code"}
 			]
 		},
-		
+
 		"select": {
 			"name": "meta.structure.select.dragonscript",
 			"begin": "\\b(select)\\b",
@@ -360,7 +351,7 @@
 				{"include": "#function.code"}
 			]
 		},
-		
+
 		"select.case": {
 			"name": "meta.structure.select.case.dragonscript",
 			"begin": "\\b(case)\\b",
@@ -372,7 +363,7 @@
 				{"include": "#function.code"}
 			]
 		},
-		
+
 		"select.else": {
 			"name": "meta.structure.select.else.dragonscript",
 			"begin": "\\b(else)\\b",
@@ -384,7 +375,7 @@
 				{"include": "#function.code"}
 			]
 		},
-		
+
 		"if": {
 			"name": "meta.structure.if.dragonscript",
 			"begin": "\\b(if)\\b",
@@ -401,7 +392,7 @@
 				{"include": "#function.code"}
 			]
 		},
-		
+
 		"if.elif": {
 			"name": "meta.structure.if.elif.dragonscript",
 			"begin": "\\b(elif)\\b",
@@ -413,7 +404,7 @@
 				{"include": "#function.code"}
 			]
 		},
-		
+
 		"if.else": {
 			"name": "meta.structure.if.else.dragonscript",
 			"begin": "\\b(else)\\b",
@@ -458,7 +449,7 @@
 		
 		"type.language": {
 			"match": "\\b(void|bool|byte|int|float|Object|Boolean|Byte|Integer|Float|String|Array|Set|Dictionary|Block|WeakReference|ObjectReference|Exception)\\b",
-			"name": "variable.name.dragonscript"
+			"name": "support.class.dragonscript"
 		},
 		
 		"variable.language": {
