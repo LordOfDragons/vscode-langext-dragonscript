@@ -79,12 +79,12 @@ export class VisitorAllHasReturn {
 	protected checkIf(context: ContextIf): boolean {
 		return this.checkStatements(context.ifstatements)
 			&& !context.elif.find(e => !this.checkStatements(e.statements))
-			&& (!context.elsestatements || this.checkStatements(context.elsestatements));
+			&& (context.elsestatements !== undefined && this.checkStatements(context.elsestatements));
 	}
 	
 	protected checkSelect(context: ContextSelect): boolean {
 		return !context.cases.find(c => !this.checkSelectCase(c))
-			&& (!context.elsestatements || this.checkStatements(context.elsestatements));
+			&& (context.elsestatements !== undefined && this.checkStatements(context.elsestatements));
 	}
 	
 	protected checkSelectCase(context: ContextSelectCase): boolean {
