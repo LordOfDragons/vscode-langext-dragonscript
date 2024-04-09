@@ -182,16 +182,14 @@ export class ResolveFunction extends Resolved{
 		const usages: Set<ResolveUsage> = new Set();
 		for (const each of this.usage) {
 			usages.add(each);
-			/*
-			if (each.inherited) {
-				const u = each.resolved?.allUsages;
+			if (each.inherited && each.context?.type === Context.ContextType.Function) {
+				const u = (each.context as ContextFunction).resolveFunction?.allUsages;
 				if (u) {
 					for (const each2 of u) {
 						usages.add(each2);
 					}
 				}
 			}
-			*/
 		}
 		return usages;
 	}

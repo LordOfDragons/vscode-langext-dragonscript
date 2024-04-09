@@ -73,6 +73,7 @@ import { PackageWorkspace } from './package/workspacepackage';
 import { Context } from './context/context';
 import { DocumentationValidator } from './documentationValidator';
 import { Package } from './package/package';
+import { Helpers } from './helpers';
 
 // Create a connection for the server, using Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -520,19 +521,22 @@ connection.onReferences(
 		
 		const references: Location[] = [];
 		
+		/*
 		var usages = [...resolved.usage];
 		if (params.context.includeDeclaration) {
 			references.push(...resolved.references);
 		} else {
 			usages = usages.filter(u => !u.inherited);
 		}
+		*/
 		
-		/*
-		var usages = [...resolved.topInherited.allUsages];
-		if (!params.context.includeDeclaration) {
+		const ti = resolved.topInherited;
+		var usages = [...ti.allUsages];
+		if (params.context.includeDeclaration) {
+			references.push(...ti.references);
+		} else {
 			usages = usages.filter(u => !u.inherited);
 		}
-		*/
 		
 		for (const each of usages) {
 			const r = each.reference;

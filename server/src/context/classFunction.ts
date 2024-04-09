@@ -27,7 +27,7 @@ import { FunctionArgumentsCstNode, FunctionBeginCstNode } from "../nodeclasses/d
 import { InterfaceFunctionCstNode } from "../nodeclasses/declareInterface";
 import { ClassFunctionCstNode } from "../nodeclasses/declareClass";
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
-import { CompletionItem, Definition, DocumentSymbol, Hover, Location, Position, Range, RemoteConsole, SymbolKind, integer } from "vscode-languageserver";
+import { CompletionItem, DocumentSymbol, Hover, Location, Position, Range, RemoteConsole, SymbolKind, integer } from "vscode-languageserver";
 import { TypeName } from "./typename";
 import { ContextFunctionArgument } from "./classFunctionArgument";
 import { Identifier } from "./identifier";
@@ -682,7 +682,10 @@ export class ContextFunction extends Context{
 	public get allInheritedReferences(): Location[] {
 		const locations: Location[] = [];
 		
-		locations.push(...this.definitionSelf());
+		const l = this.referenceSelf;
+		if (l) {
+			locations.push(l);
+		}
 		
 		const usages = this.resolveFunction?.usage;
 		if (usages) {
@@ -698,22 +701,22 @@ export class ContextFunction extends Context{
 	
 	public definition(position: Position): Location[] {
 		if (this._name?.isPositionInside(position)) {
+			const tif = this.topInheritedFunction;
 			const locations: Location[] = [];
-			if (this._inheritUsage?.context?.type === Context.ContextType.Function) {
-				locations.push(...(this.inheritUsage?.context as ContextFunction)
-					.topInheritedFunction.allInheritedReferences);
-			} else {
-				locations.push(...this.definitionSelf());
-				if (this.resolveFunction) {
-					for (const each of this.resolveFunction?.usage) {
-						if (each.inherited && each.reference) {
-							locations.push(each.reference);
-						}
+			locations.push(...tif.definitionSelf());
+			
+			const usages = tif.resolveFunction?.allUsages;
+			if (usages) {
+				for (const each of usages) {
+					if (each.inherited && each.reference) {
+						locations.push(each.reference);
 					}
 				}
 			}
+			
 			return locations;
 		}
+		
 		if (this._returnType?.isPositionInside(position)) {
 			return this._returnType.definition(position);
 		}
@@ -730,7 +733,7 @@ export class ContextFunction extends Context{
 	}
 	
 	public referenceFor(usage: ResolveUsage): Location | undefined {
-		if (this._inheritUsage == usage) {
+		if (this._inheritUsage === usage) {
 			return this._inheritUsage.context?.referenceSelf;
 		}
 		return this._returnType?.location(this)
