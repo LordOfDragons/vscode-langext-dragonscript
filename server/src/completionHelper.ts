@@ -395,7 +395,7 @@ export class CompletionHelper {
 				'\tfunc new()\n' +
 				'\tend\n' +
 				'\t\${0}\n' +
-				'end')});
+				'end\n')});
 		
 		items.push({label: 'class extends',
 			sortText: `${CompletionHelper.sortPrefixSnippet}class`,
@@ -413,7 +413,7 @@ export class CompletionHelper {
 				'\tfunc new()\n' +
 				'\tend\n' +
 				'\t\${0}\n' +
-				'end')});
+				'end\n')});
 		
 		items.push({label: 'class extends implements',
 			sortText: `${CompletionHelper.sortPrefixSnippet}class`,
@@ -431,7 +431,7 @@ export class CompletionHelper {
 				'\tfunc new()\n' +
 				'\tend\n' +
 				'\t\${0}\n' +
-				'end')});
+				'end\n')});
 		
 		return items;
 	}
@@ -478,7 +478,7 @@ export class CompletionHelper {
 				' */\n' +
 				'interface \${1:Name}\n' +
 				'\t\${0}\n' +
-				'end')});
+				'end\n')});
 		
 		items.push({label: 'interface implements',
 			sortText: `${CompletionHelper.sortPrefixSnippet}interface`,
@@ -491,7 +491,7 @@ export class CompletionHelper {
 				' */\n' +
 				'interface \${1:Name} implements \${2:Interface}\n' +
 				'\t\${0}\n' +
-				'end')});
+				'end\n')});
 		
 		return items;
 	}
@@ -510,7 +510,7 @@ export class CompletionHelper {
 				' */\n' +
 				'enum \${1:Name}\n' +
 				'\t\${0}\n' +
-				'end')});
+				'end\n')});
 		
 		return items;
 	}
@@ -529,7 +529,7 @@ export class CompletionHelper {
 				' */\n' +
 				'func \${1:void} \${2:Name}()\n' +
 				'\t\${0}\n' +
-				'end')});
+				'end\n')});
 		
 		items.push({label: 'func(arg)',
 			sortText: `${CompletionHelper.sortPrefixSnippet}func`,
@@ -542,7 +542,7 @@ export class CompletionHelper {
 				' */\n' +
 				'func \${1:void} \${2:Name}(\${3:int} \${4:arg})\n' +
 				'\t\${0}\n' +
-				'end')});
+				'end\n')});
 		
 		items.push({label: 'func(arg1, arg2)',
 			sortText: `${CompletionHelper.sortPrefixSnippet}func`,
@@ -556,7 +556,7 @@ export class CompletionHelper {
 				' */\n' +
 				'func \${1:void} \${2:Name}(\${3:int} \${4:arg1}, \${5:int} \${6:arg2})\n' +
 				'\t\${0}\n' +
-				'end')});
+				'end\n')});
 		
 		return items;
 	}
