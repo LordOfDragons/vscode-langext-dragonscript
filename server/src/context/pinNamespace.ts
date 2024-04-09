@@ -160,7 +160,7 @@ export class ContextPinNamespace extends Context{
 		return null;
 	}
 	
-	public definition(position: Position): Definition {
+	public definition(position: Position): Location[] {
 		return this._typename.definition(position);
 	}
 	

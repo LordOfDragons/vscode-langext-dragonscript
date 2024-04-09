@@ -34,6 +34,7 @@ export class ResolveUsage{
 	protected _target: any;
 	public range?: Range;
 	public write: boolean = false;
+	public inherited: boolean = false;
 	
 	
 	constructor (resolved: Resolved, context: Context, target?: any) {
@@ -222,6 +223,14 @@ export class Resolved{
 	
 	public get usage(): Set<ResolveUsage> {
 		return this._usage;
+	}
+	
+	public get allUsages(): Set<ResolveUsage> {
+		return this.usage;
+	}
+	
+	public get topInherited(): Resolved {
+		return this;
 	}
 	
 	/** For use by ResolveUsage only. */

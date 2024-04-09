@@ -520,11 +520,21 @@ connection.onReferences(
 		
 		const references: Location[] = [];
 		
+		var usages = [...resolved.usage];
 		if (params.context.includeDeclaration) {
 			references.push(...resolved.references);
+		} else {
+			usages = usages.filter(u => !u.inherited);
 		}
 		
-		for (const each of resolved.usage) {
+		/*
+		var usages = [...resolved.topInherited.allUsages];
+		if (!params.context.includeDeclaration) {
+			usages = usages.filter(u => !u.inherited);
+		}
+		*/
+		
+		for (const each of usages) {
 			const r = each.reference;
 			if (r) {
 				references.push(r);

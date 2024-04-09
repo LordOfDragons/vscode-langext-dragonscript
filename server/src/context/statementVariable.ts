@@ -37,7 +37,6 @@ import { FullyQualifiedClassNameCstNode } from "../nodeclasses/fullyQualifiedCla
 import { Resolved, ResolveUsage } from "../resolve/resolved";
 import { ResolveLocalVariable } from "../resolve/localVariable";
 import { TextDocument } from "vscode-languageserver-textdocument";
-import { CompletionHelper } from "../completionHelper";
 import { ContextClass } from "./scriptClass";
 import { ResolveVariable } from "../resolve/variable";
 import { ResolveFunction } from "../resolve/function";
@@ -348,7 +347,7 @@ export class ContextVariable extends Context {
 		}
 	}
 	
-	public definition(position: Position): Definition {
+	public definition(position: Position): Location[] {
 		if (this._name?.isPositionInside(position)) {
 			return this.definitionSelf();
 		}
@@ -385,7 +384,6 @@ export class ContextVariable extends Context {
 	
 	public referenceFor(usage: ResolveUsage): Location | undefined {
 		return this._typename?.location(this)
-			?? this._name?.location(this)
 			?? super.referenceFor(usage);
 	}
 	

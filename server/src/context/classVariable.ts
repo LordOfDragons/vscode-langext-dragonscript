@@ -240,7 +240,7 @@ export class ContextClassVariable extends Context{
 		return `${this._typeModifiers.typestring} ${this._typename} ${this.parent?.simpleName}.${this._name}`;
 	}
 	
-	public definition(position: Position): Definition {
+	public definition(position: Position): Location[] {
 		if (this._name?.isPositionInside(position)) {
 			return this.definitionSelf();
 		}
@@ -261,6 +261,7 @@ export class ContextClassVariable extends Context{
 	
 	public referenceFor(usage: ResolveUsage): Location | undefined {
 		return (!this._firstVariable ? this._typename?.location(this) : undefined)
+			?? this._name?.location(this)
 			?? super.referenceFor(usage);
 	}
 	

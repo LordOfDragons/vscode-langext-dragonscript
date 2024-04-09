@@ -202,7 +202,7 @@ export class Context {
 		return l ? `[${this.simpleName}](${encodeURI(l.uri)}#L${l.range.start.line + 1})` : this.simpleName;
 	}
 	
-	public definition(position: Position): Definition {
+	public definition(position: Position): Location[] {
 		return [];
 	}
 	
@@ -210,7 +210,7 @@ export class Context {
 		return [];
 	}
 	
-	protected definitionSelf(): Definition {
+	protected definitionSelf(): Location[] {
 		const l = this.resolveLocationSelf;
 		return l ? [l] : [];
 	}

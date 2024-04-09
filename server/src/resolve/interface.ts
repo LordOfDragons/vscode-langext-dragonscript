@@ -66,6 +66,10 @@ export class ResolveInterface extends ResolveType {
 	
 	public search(search: ResolveSearch): void {
 		super.search(search);
+		this.searchInherited(search);
+	}
+	
+	public searchInherited(search: ResolveSearch): void {
 		if (search.stopSearching) {
 			return;
 		}

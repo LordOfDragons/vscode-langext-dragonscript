@@ -304,7 +304,7 @@ export class ContextBlock extends Context{
 		return parts.join("");
 	}
 	
-	public definition(position: Position): Definition {
+	public definition(position: Position): Location[] {
 		if (Helpers.isPositionInsideToken(this._tokenBlock, position)) {
 			return this.definitionSelf();
 		}

@@ -621,7 +621,7 @@ export class TypeName {
 		content.push(...pc.slice(1));
 	}
 	
-	public definition(position: Position): Definition {
+	public definition(position: Position): Location[] {
 		let i, plen = this._parts.length;
 		for (i=0; i<plen; i++) {
 			let part = this._parts[i];

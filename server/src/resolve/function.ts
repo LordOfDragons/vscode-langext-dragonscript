@@ -31,7 +31,7 @@ import { RefactoringHelper } from '../refactoringHelper';
 import { ResolveClass } from './class';
 import { ResolveFunctionGroup } from './functionGroup';
 import { ResolveNamespace } from './namespace';
-import { Resolved } from './resolved';
+import { Resolved, ResolveUsage } from './resolved';
 import { ResolveSignature } from './signature';
 import { ResolveType } from './type';
 
@@ -169,6 +169,31 @@ export class ResolveFunction extends Resolved{
 	public get resolveLocation(): Location[] {
 		const l = this._context?.resolveLocationSelf;
 		return l ? [l] : [];
+	}
+	
+	public get topInherited(): Resolved {
+		if (this.context?.type === Context.ContextType.Function) {
+			return (this.context as ContextFunction).topInheritedFunction.resolveFunction ?? this;
+		}
+		return this;
+	}
+	
+	public get allUsages(): Set<ResolveUsage> {
+		const usages: Set<ResolveUsage> = new Set();
+		for (const each of this.usage) {
+			usages.add(each);
+			/*
+			if (each.inherited) {
+				const u = each.resolved?.allUsages;
+				if (u) {
+					for (const each2 of u) {
+						usages.add(each2);
+					}
+				}
+			}
+			*/
+		}
+		return usages;
 	}
 	
 	public get references(): Location[] {

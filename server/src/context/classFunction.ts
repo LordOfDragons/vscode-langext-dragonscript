@@ -62,6 +62,7 @@ export class ContextFunction extends Context{
 	protected _superCall?: ContextFunctionCall;
 	protected _statements?: ContextStatements;
 	protected _resolveFunction?: ResolveFunction;
+	protected _inheritUsage?: ResolveUsage;
 
 
 	constructor(node: InterfaceFunctionCstNode | ClassFunctionCstNode,
@@ -285,9 +286,12 @@ export class ContextFunction extends Context{
 	}
 
 	dispose(): void {
+		this._inheritUsage?.dispose();
+		this._inheritUsage = undefined;
+		
 		this._resolveFunction?.dispose();
 		this._resolveFunction = undefined;
-
+		
 		super.dispose()
 		this._realReturnType?.dispose();
 		this._returnType = undefined;
@@ -346,6 +350,10 @@ export class ContextFunction extends Context{
 	
 	public get resolveFunction(): ResolveFunction | undefined {
 		return this._resolveFunction;
+	}
+	
+	public get inheritUsage(): ResolveUsage | undefined {
+		return this._inheritUsage;
 	}
 	
 	protected _processFuncArgs(nodes: FunctionArgumentsCstNode[]): void {
@@ -469,6 +477,38 @@ export class ContextFunction extends Context{
 		});
 		
 		this.documentation?.resolveStatements(state);
+		
+		if (this._name && this._resolveFunction && this.parent) {
+			switch (this._functionType) {
+			case ContextFunction.Type.Operator:
+			case ContextFunction.Type.Regular:{
+				const search = new ResolveSearch();
+				search.name = this._name.name;
+				search.onlyFunctions = true;
+				search.ignoreNamespaceParents = true;
+				search.signature = this._resolveFunction.signature;
+				search.allowPartialMatch = false;
+				search.allowWildcardMatch = false;
+				search.ignoreConstructors = true;
+				
+				switch (this.parent.type) {
+				case Context.ContextType.Class:
+					(this.parent as ContextClass).resolveClass?.searchInherited(search);
+					break;
+					
+				case Context.ContextType.Interface:
+					(this.parent as ContextInterface).resolveInterface?.searchInherited(search);
+					break;
+				}
+				
+				const f = search.functionsFull.at(0);
+				if (f) {
+					this._inheritUsage = new ResolveUsage(f, this);
+					this._inheritUsage.inherited = true;
+				}
+				}break;
+			}
+		}
 		
 		// check for problems
 		if (this._name
@@ -629,9 +669,50 @@ export class ContextFunction extends Context{
 		}
 	}
 	
-	public definition(position: Position): Definition {
+	public get topInheritedFunction(): ContextFunction {
+		if (this.inheritUsage?.resolved?.type === Resolved.Type.Function) {
+			const resfun = this.inheritUsage?.resolved as ResolveFunction;
+			if (resfun.context?.type === Context.ContextType.Function) {
+				return (resfun.context as ContextFunction).topInheritedFunction;
+			}
+		}
+		return this;
+	}
+	
+	public get allInheritedReferences(): Location[] {
+		const locations: Location[] = [];
+		
+		locations.push(...this.definitionSelf());
+		
+		const usages = this.resolveFunction?.usage;
+		if (usages) {
+			for (const each of usages) {
+				if (each.inherited && each.context?.type === Context.ContextType.Function) {
+					locations.push(...(each.context as ContextFunction).allInheritedReferences);
+				}
+			}
+		}
+		
+		return locations;
+	}
+	
+	public definition(position: Position): Location[] {
 		if (this._name?.isPositionInside(position)) {
-			return this.definitionSelf();
+			const locations: Location[] = [];
+			if (this._inheritUsage?.context?.type === Context.ContextType.Function) {
+				locations.push(...(this.inheritUsage?.context as ContextFunction)
+					.topInheritedFunction.allInheritedReferences);
+			} else {
+				locations.push(...this.definitionSelf());
+				if (this.resolveFunction) {
+					for (const each of this.resolveFunction?.usage) {
+						if (each.inherited && each.reference) {
+							locations.push(each.reference);
+						}
+					}
+				}
+			}
+			return locations;
 		}
 		if (this._returnType?.isPositionInside(position)) {
 			return this._returnType.definition(position);
@@ -649,6 +730,9 @@ export class ContextFunction extends Context{
 	}
 	
 	public referenceFor(usage: ResolveUsage): Location | undefined {
+		if (this._inheritUsage == usage) {
+			return this._inheritUsage.context?.referenceSelf;
+		}
 		return this._returnType?.location(this)
 			?? super.referenceFor(usage);
 	}

@@ -166,7 +166,7 @@ export class ContextEnumEntry extends Context{
 		return new HoverInfo(content, this._name.range);
 	}
 	
-	public definition(position: Position): Definition {
+	public definition(position: Position): Location[] {
 		if (this._name.isPositionInside(position)) {
 			return this.definitionSelf();
 		}
@@ -394,7 +394,7 @@ export class ContextEnumeration extends Context{
 		this._resolveEnum?.search(search);
 	}
 	
-	public definition(position: Position): Definition {
+	public definition(position: Position): Location[] {
 		if (this._name.isPositionInside(position)) {
 			return this.definitionSelf();
 		}

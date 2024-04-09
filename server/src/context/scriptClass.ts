@@ -44,7 +44,6 @@ import { Resolved, ResolveUsage } from "../resolve/resolved";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { CompletionHelper } from "../completionHelper";
 import { ContextDocumentationIterator } from "./documentation";
-import { debugLogMessage } from "../server";
 
 
 export class ContextClass extends Context{
@@ -154,15 +153,17 @@ export class ContextClass extends Context{
 	}
 
 	public dispose(): void {
-		this._extends?.dispose();
-		if (this._implements) {
-			for (const each of this._implements) {
-				each.dispose();
-			}
-		}
 		for (const each of this._declarations) {
 			each.dispose();
 		}
+		
+		this._extends?.dispose();
+		this._extends = undefined;
+		
+		for (const each of this._implements) {
+			each.dispose();
+		}
+		this._implements.splice(0);
 		
 		super.dispose()
 		
@@ -178,11 +179,11 @@ export class ContextClass extends Context{
 	public get typeModifiers(): Context.TypeModifierSet {
 		return this._typeModifiers;
 	}
-
+	
 	public get extends(): TypeName | undefined {
 		return this._extends;
 	}
-
+	
 	public get implements(): TypeName[] {
 		return this._implements;
 	}
@@ -302,10 +303,14 @@ export class ContextClass extends Context{
 
 	public resolveInheritance(state: ResolveState): void {
 		this._inheritanceResolved = true;
-
+		
 		if (this._extends) {
 			const t = this._extends.resolveType(state, this);
-			if (t?.resolved?.type !== ResolveType.Type.Class) {
+			if (t?.resolved?.type === ResolveType.Type.Class) {
+				if (this._extends?.resolve) {
+					this._extends.resolve.inherited = true;
+				}
+			} else {
 				const r = this._extends.range;
 				if (r) {
 					state.reportError(r, `${this._extends.name} is not a class.`);
@@ -315,7 +320,11 @@ export class ContextClass extends Context{
 		
 		for (const each of this._implements) {
 			const t = each.resolveType(state, this);
-			if (t?.resolved?.type !== ResolveType.Type.Interface) {
+			if (t?.resolved?.type === ResolveType.Type.Interface) {
+				if (each.resolve) {
+					each.resolve.inherited = true;
+				}
+			} else {
 				const r = each.range;
 				if (r) {
 					state.reportError(r, `${each.name} is not an interface.`);
@@ -402,7 +411,7 @@ export class ContextClass extends Context{
 		this._resolveClass?.search(search);
 	}
 	
-	public definition(position: Position): Definition {
+	public definition(position: Position): Location[] {
 		if (this._name?.isPositionInside(position)) {
 			return this.definitionSelf();
 		} else if (this._extends?.isPositionInside(position)) {

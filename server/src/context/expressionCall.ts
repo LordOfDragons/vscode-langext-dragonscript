@@ -56,6 +56,7 @@ import { CodeActionInsertCast } from "../codeactions/insertCast";
 import { CodeActionDisambiguate as CodeActionFixFunctionArgs } from "../codeactions/fixFunctionArgs";
 import { CodeActionReplace } from "../codeactions/replace";
 import { CodeActionAssignmentNoEffect } from "../codeactions/assignNoEffect";
+import { ContextFunction } from "./classFunction";
 
 
 export class ContextFunctionCall extends Context{
@@ -1120,7 +1121,7 @@ export class ContextFunctionCall extends Context{
 		return null;
 	}
 	
-	public definition(position: Position): Definition {
+	public definition(position: Position): Location[] {
 		if (this._name?.isPositionInside(position)) {
 			switch (this._functionType) {
 				case ContextFunctionCall.FunctionType.cast:
@@ -1133,13 +1134,15 @@ export class ContextFunctionCall extends Context{
 					
 				default:
 					if (this._matches) {
-						var definitions: Definition = [];
+						var resfun: ResolveFunction | undefined;
+						var definitions: Location[] = [];
 						
 						if (this._matches.functionsFull.length > 0) {
 							if (this._matches.functionsFull.length == 1) {
 								const l = this._matches.functionsFull[0].context?.resolveLocationSelf;
 								if (l) {
 									definitions.push(l);
+									resfun = this._matches.functionsFull[0];
 								}
 							}
 						} else if (this._matches.functionsPartial.length > 0) {
@@ -1147,6 +1150,7 @@ export class ContextFunctionCall extends Context{
 								const l = each.context?.resolveLocationSelf;
 								if (l) {
 									definitions.push(l);
+									resfun = each
 								}
 							}
 						} else if (this._matches.functionsWildcard.length > 0) {
@@ -1154,8 +1158,15 @@ export class ContextFunctionCall extends Context{
 								const l = each.context?.resolveLocationSelf;
 								if (l) {
 									definitions.push(l);
+									resfun = each;
 								}
 							}
+						}
+						
+						if (resfun?.context?.type === Context.ContextType.Function) {
+							definitions.splice(0);
+							definitions.push(...(resfun.context as ContextFunction)
+								.topInheritedFunction.allInheritedReferences);
 						}
 						
 						return definitions;

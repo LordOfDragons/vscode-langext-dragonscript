@@ -346,7 +346,7 @@ export class ContextMember extends Context{
 		return new HoverInfo(content, this._name.range);
 	}
 	
-	public definition(_position: Position): Definition {
+	public definition(_position: Position): Location[] {
 		if (!this._name?.range) {
 			return this.definitionSelf();
 		}

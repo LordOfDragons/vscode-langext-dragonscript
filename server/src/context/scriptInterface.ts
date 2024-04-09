@@ -313,7 +313,7 @@ export class ContextInterface extends Context{
 		this._resolveInterface?.search(search);
 	}
 	
-	public definition(position: Position): Definition {
+	public definition(position: Position): Location[] {
 		if (this._name.isPositionInside(position)) {
 			return this.definitionSelf();
 		} else {

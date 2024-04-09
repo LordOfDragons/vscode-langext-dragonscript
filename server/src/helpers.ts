@@ -23,8 +23,12 @@
  */
 
 import { IToken } from "chevrotain";
-import { integer, Position, Range } from "vscode-languageserver"
+import { integer, Location, Position, Range } from "vscode-languageserver"
+import { ContextFunction } from "./context/classFunction";
+import { Context } from "./context/context";
 import { EndOfCommandCstNode } from "./nodeclasses/endOfCommand";
+import { ResolveFunction } from "./resolve/function";
+import { Resolved, ResolveUsage } from "./resolve/resolved";
 
 
 export class Helpers {

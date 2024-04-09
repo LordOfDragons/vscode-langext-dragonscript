@@ -136,7 +136,7 @@ export class ContextFunctionArgument extends Context{
 		return `argument ${this._typename} ${this._name}`;
 	}
 	
-	public definition(position: Position): Definition {
+	public definition(position: Position): Location[] {
 		if (this._name?.isPositionInside(position)) {
 			return this.definitionSelf();
 		}
