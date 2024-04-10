@@ -5,6 +5,7 @@ import { ContextClass } from "../context/scriptClass";
 import { RefactoringHelper } from "../refactoringHelper";
 import { ResolveFunction } from "../resolve/function";
 import { BaseCodeAction } from "./base";
+import { debugLogMessage, documents } from "../server";
 
 export class CodeActionImplementAbstractFunctions extends BaseCodeAction {
 	protected _contextClass: ContextClass;
@@ -31,6 +32,11 @@ export class CodeActionImplementAbstractFunctions extends BaseCodeAction {
 			return [];
 		}
 		
+		const document = documents.get(uri);
+		if (!document) {
+			return [];
+		}
+		
 		var position: Position | undefined;
 		
 		const lastDecl = this._contextClass.declarations.at(this._contextClass.declarations.length - 1);
@@ -41,6 +47,8 @@ export class CodeActionImplementAbstractFunctions extends BaseCodeAction {
 		if (!position) {
 			return [];
 		}
+		
+		const indent = RefactoringHelper.lineIndent(document, position);
 		
 		const visibleTypes = new Set(CompletionHelper.searchExpressionType(this._contextClass).types);
 		const initialRange = Range.create(position, position);
@@ -54,7 +62,7 @@ export class CodeActionImplementAbstractFunctions extends BaseCodeAction {
 			}
 			
 			const edit = ci?.textEdit as TextEdit;
-			edit.newText = edit.newText.replace(/\$\{[0-9]+:?([^}]*)\}/i, '$1');
+			RefactoringHelper.editRemovePlaceholder(edit);
 			edits.push(edit);
 			
 			if (ci?.additionalTextEdits) {
@@ -73,9 +81,10 @@ export class CodeActionImplementAbstractFunctions extends BaseCodeAction {
 			pins.push(TextEdit.insert(pinPosition, pinText));
 		}
 		
-		const editText = edits.map(p => p.newText).join('\n');
+		var editText = edits.map(p => p.newText).join('\n');
+		editText = RefactoringHelper.indentText(editText, indent);
 		edits.splice(0);
-		edits.push(TextEdit.insert(position, '\n' + editText));
+		edits.push(TextEdit.insert(position, '\n\n' + editText));
 		
 		if (pins.length > 0) {
 			edits.push(...pins);

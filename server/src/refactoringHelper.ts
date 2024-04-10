@@ -22,11 +22,11 @@
  * SOFTWARE.
  */
 
-import { Position } from "vscode-languageserver"
+import { Position, Range, TextEdit } from "vscode-languageserver"
 import { Context } from "./context/context";
 import { ContextNamespace } from "./context/namespace";
 import { ContextScript } from "./context/script";
-import { debugLogMessage } from "./server";
+import { TextDocument } from "vscode-languageserver-textdocument";
 
 
 export class RefactoringHelper {
@@ -64,5 +64,23 @@ export class RefactoringHelper {
 		}
 		
 		return position ?? Position.create(0, 0);
+	}
+	
+	public static editRemovePlaceholder(edit: TextEdit): void {
+		edit.newText = edit.newText.replace(/\$\{[0-9]+:?([^}]*)\}/i, '$1');
+	}
+	
+	public static lineIndent(document: TextDocument, position: Position): string {
+		const text = document.getText(Range.create(position.line, 0, position.line, position.character));
+		const trimmed = text.trimStart();
+		return text.substring(0, text.length - trimmed.length);
+	}
+	
+	public static indentEdit(edit: TextEdit, indent: string): void {
+		edit.newText = this.indentText(edit.newText, indent);
+	}
+	
+	public static indentText(text: string, indent: string): string {
+		return text.split('\n').map(l => indent + l).join('\n');
 	}
 }
