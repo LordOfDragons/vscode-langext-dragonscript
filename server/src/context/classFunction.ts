@@ -46,6 +46,7 @@ import { Resolved, ResolveUsage } from "../resolve/resolved";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { CodeActionRemove } from "../codeactions/remove";
 import { VisitorAllHasReturn } from "../visitor/allhasreturn";
+import { ResolveClass } from "../resolve/class";
 
 
 export class ContextFunction extends Context{
@@ -397,11 +398,12 @@ export class ContextFunction extends Context{
 		});
 		
 		this._resolveFunction = new ResolveFunction(this);
+		var containerClass: ResolveClass | undefined;
 		if (this.parent) {
 			var container: ResolveType | undefined;
 			switch (this.parent.type) {
 			case Context.ContextType.Class:
-				container = (this.parent as ContextClass).resolveClass;
+				container = containerClass = (this.parent as ContextClass).resolveClass;
 				break;
 				
 			case Context.ContextType.Interface:
@@ -432,6 +434,7 @@ export class ContextFunction extends Context{
 						this._codeActions.push(ca);
 					}
 				}
+				//if (this._typeModifiers.is)
 				break;
 				
 			case ContextFunction.Type.Regular:
@@ -462,6 +465,17 @@ export class ContextFunction extends Context{
 					ca.extendBegin = true;
 					ca.extendEnd = true;
 					this._codeActions.push(ca);
+				}
+			}
+			
+			if (this._typeModifiers.isAbstract
+			&& containerClass?.context?.typeModifiers.isAbstract === false) {
+				switch (this._functionType){
+				case ContextFunction.Type.Regular:
+				case ContextFunction.Type.Operator:
+					state.reportError(this._name.range,
+						`${ResolveFunction.functionTypeTitle(this._functionType)} is abstract in a class that is not abstract`);
+					break;
 				}
 			}
 		}

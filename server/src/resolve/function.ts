@@ -408,7 +408,8 @@ export class ResolveFunction extends Resolved{
 	]);
 	
 	public createCompletionOverride(range: Range, sortPrefix: string,
-			visibleTypes: Set<ResolveType> | undefined, beforeContext: Context): CompletionItem | undefined {
+			visibleTypes: Set<ResolveType> | undefined, beforeContext: Context,
+			snippetPrefix: string = ''): CompletionItem | undefined {
 		if (!this._context || this._context.type != Context.ContextType.Function ) {
 			return undefined;
 		}
@@ -441,6 +442,9 @@ export class ResolveFunction extends Resolved{
 			break;
 		}
 		
+		if (snippetPrefix) {
+			parts.push(snippetPrefix);
+		}
 		parts.push('/**\n');
 		if (implement) {
 			parts.push(` * Implement ${parent.fullyQualifiedName}.${this.name}().\n`);
@@ -503,17 +507,17 @@ export class ResolveFunction extends Resolved{
 		let extraEdits: TextEdit[] = [];
 		
 		if (pinTypes.size > 0) {
-			let parts: string[] = [];
+			let parts2: string[] = [];
 			
 			documentation.push('Requires:');
 			for (const each of pinTypes) {
 				if (each.pinNamespace) {
 					documentation.push('```dragonscript\n' + `pin ${each.pinNamespace}\n` + '```');
-					parts.push(`\npin ${each.pinNamespace}`);
+					parts2.push(`\npin ${each.pinNamespace}`);
 				}
 			}
 			
-			extraEdits.push(TextEdit.insert(RefactoringHelper.insertPinPosition(beforeContext), parts.join('\n')));
+			extraEdits.push(TextEdit.insert(RefactoringHelper.insertPinPosition(beforeContext), parts2.join('\n')));
 		}
 		
 		// ↶ ⎇ ⏎ ✎ ✏ 🔀 ➥ ⌥ ⏎ ↪️

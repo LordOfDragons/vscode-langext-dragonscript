@@ -51,10 +51,11 @@ export class Context {
 	protected _resolveTextShort?: string;
 	protected _resolveTextLong?: string[];
 	protected _reportInfoText?: string;
-	private static _defaultTypeModifiers?: Context.TypeModifierSet;
 	public documentation?: ContextDocumentation;
 	protected _codeActions: BaseCodeAction[] = [];
 	public blockClosed = false;
+	
+	private static _defaultTypeModifiers?: Context.TypeModifierSet;
 	
 
 	constructor(type: Context.ContextType, parent?: Context) {

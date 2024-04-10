@@ -126,6 +126,8 @@ export class CodeActionHelpers {
 		};
 	}
 	
+	//public static invalidTypeModifier(context: Context, typeModifier)
+	
 	/**
 	 * Calculate name difference vector. For each character in the first string
 	 * the difference vector stores an integer with the count of characters to

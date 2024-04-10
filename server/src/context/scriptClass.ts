@@ -25,7 +25,7 @@
 import { Context } from "./context"
 import { DeclareClassCstNode } from "../nodeclasses/declareClass";
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
-import { CompletionItem, Definition, DocumentSymbol, Hover, Location, Position, Range, RemoteConsole, SymbolInformation, SymbolKind } from "vscode-languageserver"
+import { CompletionItem, Definition, DiagnosticRelatedInformation, DocumentSymbol, Hover, Location, Position, Range, RemoteConsole, SymbolInformation, SymbolKind } from "vscode-languageserver"
 import { TypeName } from "./typename"
 import { ContextInterface } from "./scriptInterface";
 import { ContextEnumeration } from "./scriptEnum";
@@ -44,6 +44,8 @@ import { Resolved, ResolveUsage } from "../resolve/resolved";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { CompletionHelper } from "../completionHelper";
 import { ContextDocumentationIterator } from "./documentation";
+import { ResolveFunction } from "../resolve/function";
+import { CodeActionImplementAbstractFunctions } from "../codeactions/implementAbstractFunctions";
 
 
 export class ContextClass extends Context{
@@ -346,8 +348,6 @@ export class ContextClass extends Context{
 				each.resolveMembers(state);
 			}
 		});
-		
-		// TODO check for unimplemented interface methods and abstract base class methods
 	}
 
 	public resolveStatements(state: ResolveState): void {
@@ -358,6 +358,39 @@ export class ContextClass extends Context{
 		});
 		
 		this.documentation?.resolveStatements(state);
+		
+		// check for unimplemented interface methods and abstract base class methods.
+		// only done if this class is not abstract
+		if (!this._typeModifiers.isAbstract && this.resolveClass) {
+			const search = new ResolveSearch();
+			search.onlyFunctions = true;
+			search.ignoreShadowedFunctions = true;
+			search.ignoreNamespaceParents = true;
+			search.ignoreStatic = true;
+			search.stopAfterFirstFullMatch = false;
+			search.ignoreConstructors = true;
+			this.resolveClass.search(search);
+			
+			const functions: ResolveFunction[] = [];
+			for (const each of search.functionsAll) {
+				if (each.typeModifiers?.isAbstract && each.parent !== this.resolveClass) {
+					functions.push(each);
+				}
+			}
+			
+			if (functions.length > 0) {
+				const ri: DiagnosticRelatedInformation[] = [];
+				for (const each of functions) {
+					each.addReportInfo(ri, `Function ${each.reportInfoText}`);
+				}
+				
+				const di = state.reportError(this._name?.range,
+					'Missing implementation of abstract functions', ri);
+				if (di && this.name?.range) {
+					this._codeActions.push(new CodeActionImplementAbstractFunctions(di, this, functions));
+				}
+			}
+		}
 	}
 
 	protected updateHover(position: Position): Hover | null {
