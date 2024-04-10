@@ -53,7 +53,8 @@ import {
 	TextEdit,
 	DidChangeConfigurationParams,
 	DidChangeWatchedFilesParams,
-	FileChangeType} from 'vscode-languageserver/node'
+	FileChangeType,
+	DefinitionParams} from 'vscode-languageserver/node'
 
 import {
 	TextDocument
@@ -421,30 +422,35 @@ connection.onDidChangeWatchedFiles(
 );
 
 connection.onDocumentSymbol(
-	async (params: DocumentSymbolParams): Promise<DocumentSymbol[]> => {
+	async (params: DocumentSymbolParams): Promise<DocumentSymbol[] | undefined> => {
 		const sd = await ensureDocument(params.textDocument.uri);
-		return sd.context?.documentSymbols ?? [];
+		return sd.context?.documentSymbols;
 	}
 );
 
 connection.onWorkspaceSymbol(
-	async (_params: WorkspaceSymbolParams): Promise<SymbolInformation[]> => {
-		await ensureWorkspaceDocuments();
-		
-		const symbols: SymbolInformation[] = [];
-		for (const pkg of workspacePackages) {
-			for (const scrdoc of pkg.scriptDocuments) {
-				scrdoc.context?.collectWorkspaceSymbols(symbols);
+	async (_params: WorkspaceSymbolParams): Promise<SymbolInformation[] | undefined> => {
+		try {
+			await ensureWorkspaceDocuments();
+			
+			const symbols: SymbolInformation[] = [];
+			for (const pkg of workspacePackages) {
+				for (const scrdoc of pkg.scriptDocuments) {
+					scrdoc.context?.collectWorkspaceSymbols(symbols);
+				}
 			}
+			return symbols;
+		} catch (error) {
+			logError(error);
+			return undefined;
 		}
-		return symbols;
 	}
 )
 
 connection.onHover(
 	async (params: TextDocumentPositionParams): Promise<Hover | null> => {
-		const sd = await ensureDocument(params.textDocument.uri);
 		try {
+			const sd = await ensureDocument(params.textDocument.uri);
 			return sd.context?.
 				contextAtPosition(params.position)?.
 				hover(params.position) ?? null;
@@ -456,192 +462,189 @@ connection.onHover(
 );
 
 connection.onCompletion(
-	async (params: TextDocumentPositionParams): Promise<CompletionItem[]> => {
-		const sd = await ensureDocument(params.textDocument.uri);
-		
-		const document = documents.get(params.textDocument.uri);
-		if (!document || !sd.context) {
-			return [];
-		}
-		
+	async (params: TextDocumentPositionParams): Promise<CompletionItem[] | undefined> => {
 		try {
+			const sd = await ensureDocument(params.textDocument.uri);
+			const document = documents.get(params.textDocument.uri);
+			if (!document || !sd.context) {
+				return undefined;
+			}
+			
 			// console.log(`onCompletion ${Helpers.logPosition(params.position)}: ${sd.context.contextAtPosition(params.position)?.constructor.name}`);
 			// debugLogContext(sd.context.contextAtPosition(params.position));
 			return sd.context.
 				contextAtPosition(params.position)?.
-				completion(document, params.position) ?? [];
-			
+				completion(document, params.position);
 		} catch (error) {
 			logError(error);
-			return [];
+			return undefined;
 		}
 	}
 );
-
-/*
-connection.onCompletionResolve(
-	(item: CompletionItem): CompletionItem => {
-		if (item.data === 1) {
-			item.detail = 'TypeScript details';
-			item.documentation = 'TypeScript documentation';
-		} else if (item.data === 2) {
-			item.detail = 'JavaScript details';
-			item.documentation = 'JavaScript documentation';
-		}
-		return item;
-	}
-);
-*/
 
 connection.onDefinition(
-	async (params: TextDocumentPositionParams): Promise<Definition> => {
-		const sd = await ensureDocument(params.textDocument.uri);
+	async (params: DefinitionParams): Promise<Definition | undefined> => {
 		try {
+			const sd = await ensureDocument(params.textDocument.uri);
 			return sd.context?.
 				contextAtPosition(params.position)?.
-				definition(params.position) ?? [];
+				definition(params.position);
 		} catch (error) {
 			logError(error);
-			return [];
+			return undefined;
 		}
 	}
 );
 
 connection.onReferences(
-	async (params: ReferenceParams): Promise<Location[]> => {
-		const sd = await ensureDocument(params.textDocument.uri);
-		
-		const resolved = sd.context?.
-			contextAtPosition(params.position)?.
-			resolvedAtPosition(params.position);
-		
-		if (!resolved) {
-			return [];
-		}
-		
-		const references: Location[] = [];
-		
-		/*
-		var usages = [...resolved.usage];
-		if (params.context.includeDeclaration) {
-			references.push(...resolved.references);
-		} else {
-			usages = usages.filter(u => !u.inherited);
-		}
-		*/
-		
-		const ti = resolved.topInherited;
-		var usages = [...ti.allUsages];
-		if (params.context.includeDeclaration) {
-			references.push(...ti.references);
-		} else {
-			usages = usages.filter(u => !u.inherited);
-		}
-		
-		for (const each of usages) {
-			const r = each.reference;
-			if (r) {
-				references.push(r);
+	async (params: ReferenceParams): Promise<Location[] | undefined> => {
+		try {
+			const sd = await ensureDocument(params.textDocument.uri);
+			
+			const resolved = sd.context?.
+				contextAtPosition(params.position)?.
+				resolvedAtPosition(params.position);
+			
+			if (!resolved) {
+				return undefined;
 			}
+			
+			const references: Location[] = [];
+			
+			const ti = resolved.topInherited;
+			var usages = [...ti.allUsages];
+			if (params.context.includeDeclaration) {
+				references.push(...ti.references);
+			} else {
+				usages = usages.filter(u => !u.inherited);
+			}
+			
+			for (const each of usages) {
+				const r = each.reference;
+				if (r) {
+					references.push(r);
+				}
+			}
+			
+			return references;
+		} catch (error) {
+			logError(error);
+			return undefined;
 		}
-		
-		return references;
 	}
 )
 
 connection.onDocumentHighlight(
-	async (params: DocumentHighlightParams): Promise<DocumentHighlight[]> => {
-		const uri = params.textDocument.uri;
-		const sd = await ensureDocument(uri);
-		
-		const resolved = sd.context?.
-			contextAtPosition(params.position)?.
-			resolvedAtPosition(params.position);
-		
-		if (!resolved) {
-			return [];
-		}
-		
-		const hilight: DocumentHighlight[] = [];
-		
-		for (const each of resolved.references) {
-			if (each.uri == uri) {
-				hilight.push({
-					range: each.range,
-					kind: DocumentHighlightKind.Text
-				});
+	async (params: DocumentHighlightParams): Promise<DocumentHighlight[] | undefined> => {
+		try {
+			const uri = params.textDocument.uri;
+			const sd = await ensureDocument(uri);
+			
+			const resolved = sd.context?.
+				contextAtPosition(params.position)?.
+				resolvedAtPosition(params.position);
+			
+			if (!resolved) {
+				return undefined;
 			}
-		}
-		
-		for (const each of resolved.usage) {
-			if (each.context?.documentUri == uri && each.range) {
-				hilight.push({
-					range: each.range,
-					kind: each.write ? DocumentHighlightKind.Write : DocumentHighlightKind.Read
-				});
+			
+			const hilight: DocumentHighlight[] = [];
+			
+			for (const each of resolved.references) {
+				if (each.uri == uri) {
+					hilight.push({
+						range: each.range,
+						kind: DocumentHighlightKind.Text
+					});
+				}
 			}
+			
+			for (const each of resolved.usage) {
+				if (each.context?.documentUri == uri && each.range) {
+					hilight.push({
+						range: each.range,
+						kind: each.write ? DocumentHighlightKind.Write : DocumentHighlightKind.Read
+					});
+				}
+			}
+			
+			return hilight;
+		} catch (error) {
+			logError(error);
+			return undefined;
 		}
-		
-		return hilight;
 	}
 )
 
 connection.onSignatureHelp(
 	async (params: SignatureHelpParams): Promise<SignatureHelp | undefined> => {
-		const sd = await ensureDocument(params.textDocument.uri);
-		
-		return sd.context?.
-			contextAtPosition(params.position)?.
-			signatureHelpAtPosition(params.position);
+		try {
+			const sd = await ensureDocument(params.textDocument.uri);
+			return sd.context?.
+				contextAtPosition(params.position)?.
+				signatureHelpAtPosition(params.position);
+		} catch (error) {
+			logError(error);
+			return undefined;
+		}
 	}
 )
 
 connection.onCodeAction(
-	async (params: CodeActionParams): Promise<CodeAction[]> => {
-		const sd = await ensureDocument(params.textDocument.uri);
-		
-		return sd.context?.
-			contextAtRange(params.range)?.
-			codeAction(params.range) ?? [];
+	async (params: CodeActionParams): Promise<CodeAction[] | undefined> => {
+		try {
+			const sd = await ensureDocument(params.textDocument.uri);
+			return sd.context?.
+				contextAtRange(params.range)?.
+				codeAction(params.range);
+		} catch (error) {
+			logError(error);
+			return undefined;
+		}
 	}
 )
 
 connection.onRenameRequest(
 	async (params: RenameParams): Promise<WorkspaceEdit | undefined> => {
-		const sd = await ensureDocument(params.textDocument.uri);
-		
-		const resolved = sd.context?.
-			contextAtPosition(params.position)?.
-			resolvedAtPosition(params.position);
-		
-		if (!resolved) {
+		try {
+			const sd = await ensureDocument(params.textDocument.uri);
+			
+			const resolved = sd.context?.
+				contextAtPosition(params.position)?.
+				resolvedAtPosition(params.position);
+			
+			if (!resolved) {
+				return undefined;
+			}
+			
+			let references: Location[] = [];
+			references.push(...resolved.references);
+			
+			for (const each of resolved.usage) {
+				const r = each.reference;
+				if (r) {
+					references.push(r);
+				}
+			}
+			
+			if (references.length == 0) {
+				return undefined;
+			}
+			
+			let changes: {[uri: string]: TextEdit[]} = {};
+			
+			for (const each of references) {
+				if (!changes[each.uri]) {
+					changes[each.uri] = [];
+				}
+				changes[each.uri].push(TextEdit.replace(each.range, params.newName));
+			}
+			
+			return {changes: changes};
+		} catch (error) {
+			logError(error);
 			return undefined;
 		}
-		
-		let references: Location[] = [];
-		references.push(...resolved.references);
-		
-		for (const each of resolved.usage) {
-			const r = each.reference;
-			if (r) {
-				references.push(r);
-			}
-		}
-		
-		if (references.length == 0) {
-			return undefined;
-		}
-		
-		let changes: {[uri: string]: TextEdit[]} = {};
-		
-		for (const each of references) {
-			if (!changes[each.uri]) {
-				changes[each.uri] = [];
-			}
-			changes[each.uri].push(TextEdit.replace(each.range, params.newName));
-		}
-		
-		return {changes: changes};
 	}
 )
 
