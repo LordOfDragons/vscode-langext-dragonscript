@@ -161,11 +161,10 @@ connection.onInitialize((params: InitializeParams) => {
 		capabilities: {
 			textDocumentSync: TextDocumentSyncKind.Incremental,
 			completionProvider: {
-				//resolveProvider: true,
 				triggerCharacters: ['.']
 			},
 			documentSymbolProvider: {
-				label: "DragonScript"
+				label: 'DragonScript'
 			},
 			hoverProvider: true,
 			definitionProvider: true,
@@ -178,6 +177,23 @@ connection.onInitialize((params: InitializeParams) => {
 			},
 			codeActionProvider: true,
 			renameProvider: true
+			
+			/*
+			- typeDefinitionProvider
+			- implementationProvider
+			- codeLensProvider
+			- documentLinkProvider
+			- colorProvider
+			- documentFormattingProvider
+			- documentRangeFormattingProvider
+			- documentOnTypeFormattingProvider
+			- foldingRangeProvider
+			- selectionRangeProvider
+			- executeCommandProvider
+			- callHierarchyProvider
+			- linkedEditingRangeProvider
+			- semanticTokensProvider
+			*/
 		}
 	};
 	
