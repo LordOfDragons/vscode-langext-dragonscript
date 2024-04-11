@@ -1,4 +1,5 @@
 import { CodeAction, CodeActionKind, Diagnostic, TextEdit } from "vscode-languageserver";
+import { ContextFunction } from "../context/classFunction";
 import { Context } from "../context/context";
 import { ContextFunctionCall } from "../context/expressionCall";
 import { ContextMember } from "../context/expressionMember";
@@ -39,6 +40,12 @@ export class CodeActionAssignmentNoEffect extends BaseCodeAction {
 		let matches = new ResolveSearch();
 		matches.name = m.resolveArgument.simpleName;
 		matches.onlyVariables = true;
+		
+		const topFunc = this._context.selfOrParentWithType(Context.ContextType.Function);
+		if ((topFunc as ContextFunction | undefined)?.isBodyStatic) {
+			matches.onlyStatic = true;
+		}
+		
 		ContextClass.thisContext(this._context)?.search(matches);
 		if (matches.variables.length == 0) {
 			return [];

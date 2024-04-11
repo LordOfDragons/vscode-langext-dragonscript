@@ -52,6 +52,7 @@ import { ResolveClass } from "../resolve/class";
 export class ContextFunction extends Context{
 	protected _typeModifiers: Context.TypeModifierSet;
 	protected _functionType: ContextFunction.Type;
+	protected _isBodyStatic = false;
 	protected _name?: Identifier;
 	protected _returnType?: TypeName;
 	protected _realReturnType?: TypeName;
@@ -252,6 +253,15 @@ export class ContextFunction extends Context{
 			this.blockClosed = true;
 		}
 		
+		if (this.typeModifiers.isStatic) {
+			switch (this._functionType) {
+			case ContextFunction.Type.Destructor:
+			case ContextFunction.Type.Operator:
+			case ContextFunction.Type.Regular:
+				this._isBodyStatic = true;
+			}
+		}
+		
 		if (!posEnd) {
 			const tokEnd = Helpers.endOfCommandToken(fdecl2.endOfCommand);
 			if (tokEnd) {
@@ -306,6 +316,10 @@ export class ContextFunction extends Context{
 
 	public get typeModifiers(): Context.TypeModifierSet {
 		return this._typeModifiers;
+	}
+	
+	public get isBodyStatic(): boolean {
+		return this._isBodyStatic;
 	}
 
 	public get functionType(): ContextFunction.Type {

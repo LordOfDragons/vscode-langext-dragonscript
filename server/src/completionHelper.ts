@@ -23,6 +23,7 @@
  */
 
 import { CompletionItem, CompletionItemKind, InsertTextFormat, Position, Range, TextEdit } from "vscode-languageserver"
+import { ContextFunction } from "./context/classFunction";
 import { ContextFunctionArgument } from "./context/classFunctionArgument";
 import { Context } from "./context/context";
 import { ContextClass } from "./context/scriptClass";
@@ -978,9 +979,15 @@ export class CompletionHelper {
 			search.onlyCastable = castable;
 		}
 		
+		const topFunc = context.selfOrParentWithType(Context.ContextType.Function);
+		if ((topFunc as ContextFunction | undefined)?.isBodyStatic) {
+			search.onlyStatic = true;
+		}
+		
 		context.searchExpression(search, true, context);
 		
 		search.onlyTypes = true;
+		search.onlyStatic = false;
 		
 		const objtype = ContextClass.thisContext(context)?.resolveClass;
 		if (objtype) {
@@ -998,11 +1005,17 @@ export class CompletionHelper {
 			search.onlyCastable = castable;
 		}
 		
+		const topFunc = context.selfOrParentWithType(Context.ContextType.Function);
+		if ((topFunc as ContextFunction | undefined)?.isBodyStatic) {
+			search.onlyStatic = true;
+		}
+		
 		context.searchExpression(search, true, context);
 		
 		/*
 		search.onlyVariables = false;
 		search.onlyTypes = true;
+		search.onlyStatic = false;
 		
 		const objtype = ContextClass.thisContext(context)?.resolveClass;
 		if (objtype) {
@@ -1023,7 +1036,14 @@ export class CompletionHelper {
 			search.onlyCastable = castable;
 		}
 		
+		const topFunc = context.selfOrParentWithType(Context.ContextType.Function);
+		if ((topFunc as ContextFunction | undefined)?.isBodyStatic) {
+			search.onlyStatic = true;
+		}
+		
 		context.searchExpression(search, true, context);
+		
+		search.onlyStatic = false;
 		
 		const objtype = ContextClass.thisContext(context)?.resolveClass;
 		if (objtype) {
@@ -1035,8 +1055,6 @@ export class CompletionHelper {
 	
 	/** Create object completions. */
 	public static createObject(range: Range, context: Context, object: Context): CompletionItem[] {
-		let items: CompletionItem[] = [];
-		
 		let search = new ResolveSearch();
 		search.allMatchingTypes = true;
 		search.ignoreShadowedFunctions = true;
@@ -1061,9 +1079,7 @@ export class CompletionHelper {
 			search.removeType(objtype);
 		}
 		
-		items.push(...CompletionHelper.createFromSearch(range, context, search, undefined));
-		
-		return items;
+		return CompletionHelper.createFromSearch(range, context, search, undefined);
 	}
 	
 	/** Create sub type completions. */

@@ -210,6 +210,10 @@ export class ContextMember extends Context{
 		this._matches.addToAllList = true;
 		this._matches.stopAfterFirstMatch = true;
 		
+		if (!this._object && state.topScopeFunction?.isBodyStatic) {
+			this._matches.onlyStatic = true;
+		}
+		
 		if (this._matches.name) {
 			if (objtype) {
 				objtype.search(this._matches);

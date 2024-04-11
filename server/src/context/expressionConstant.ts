@@ -186,6 +186,19 @@ export class ContextConstant extends Context{
 
 		this.expressionType = this._resolveType;
 		this.expressionTypeType = Context.ExpressionType.Object;
+		
+		// find problems
+		switch (this._constantType) {
+		case ContextConstant.ConstantType.this:
+		case ContextConstant.ConstantType.super:
+			if (state.topScopeFunction?.isBodyStatic) {
+				this._resolveType = undefined;
+				this.expressionType = undefined;
+				this.expressionTypeType = Context.ExpressionType.Void;
+				state.reportError(this._name.range, 'Can not use this/super in static function');
+			}
+			break;
+		}
 	}
 	
 	

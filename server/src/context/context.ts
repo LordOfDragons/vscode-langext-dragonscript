@@ -383,6 +383,10 @@ export class Context {
 		return this._type === type ? this : this.parent?.selfOrParentWithType(type);
 	}
 	
+	public selfOrParentWithTypes(types: Context.ContextType[]): Context | undefined {
+		return types.includes(this._type) ? this : this.parent?.selfOrParentWithTypes(types);
+	}
+	
 	public expectTypes(context: Context): ResolveType[] | undefined {
 		return undefined;
 	}

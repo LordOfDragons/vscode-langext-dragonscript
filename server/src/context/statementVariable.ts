@@ -140,6 +140,11 @@ export class ContextVariable extends Context {
 			search.name = this._name.name;
 			search.addToAllList = true;
 			search.stopAfterFirstMatch = true;
+			
+			if (state.topScopeFunction?.isBodyStatic) {
+				search.onlyStatic = true;
+			}
+			
 			state.search(search, this);
 			
 			if (search.all.length > 0) {

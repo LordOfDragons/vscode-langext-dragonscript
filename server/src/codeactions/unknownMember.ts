@@ -70,6 +70,13 @@ export class CodeActionUnknownMember extends BaseCodeAction {
 			matches.ignoreTypes = true;
 		}
 		
+		if (!this.objectType) {
+			const topFunc = this._context.selfOrParentWithType(Context.ContextType.Function);
+			if ((topFunc as ContextFunction | undefined)?.isBodyStatic) {
+				matches.onlyStatic = true;
+			}
+		}
+		
 		(this.objectType ?? ContextClass.thisContext(this._context)?.resolveClass)?.search(matches);
 		
 		if (this.objectType) {

@@ -578,6 +578,10 @@ export class ContextFunctionCall extends Context{
 		}
 		this._matches.signature = this._resolveSignature;
 		
+		if (!this._object && state.topScopeFunction?.isBodyStatic) {
+			this._matches.onlyStatic = true;
+		}
+		
 		if (this._matches.name) {
 			if (objtype) {
 				objtype.search(this._matches);
@@ -1314,6 +1318,13 @@ export class ContextFunctionCall extends Context{
 		matches.onlyFunctions = true;
 		matches.ignoreShadowedFunctions = true;
 		matches.stopAfterFirstFullMatch = false;
+		
+		if (!this._object) {
+			const topFunc = this.selfOrParentWithType(Context.ContextType.Function);
+			if ((topFunc as ContextFunction | undefined)?.isBodyStatic) {
+				matches.onlyStatic = true;
+			}
+		}
 		
 		switch (this._functionType) {
 			case ContextFunctionCall.FunctionType.function:
