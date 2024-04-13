@@ -36,7 +36,6 @@ import { ResolveNamespace } from "./resolve/namespace";
 import { Resolved } from "./resolve/resolved";
 import { ResolveSearch } from "./resolve/search";
 import { ResolveType } from "./resolve/type";
-import { debugLogMessage } from "./server";
 
 
 export class CompletionHelper {

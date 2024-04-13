@@ -1,11 +1,10 @@
 import { CodeAction, CodeActionKind, Diagnostic, Position, Range, TextEdit } from "vscode-languageserver";
 import { CompletionHelper } from "../completionHelper";
-import { Context } from "../context/context";
 import { ContextClass } from "../context/scriptClass";
 import { RefactoringHelper } from "../refactoringHelper";
 import { ResolveFunction } from "../resolve/function";
 import { BaseCodeAction } from "./base";
-import { debugLogMessage, documents } from "../server";
+import { documents } from "../server";
 
 export class CodeActionImplementAbstractFunctions extends BaseCodeAction {
 	protected _contextClass: ContextClass;

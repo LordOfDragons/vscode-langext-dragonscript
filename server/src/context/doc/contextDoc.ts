@@ -57,6 +57,11 @@ export class ContextDocBase extends Context{
 	
 	
 	protected parseSymbol(word: string): ContextDocBaseSymbol | undefined {
+		// tokens can end with phrase punctiations. remove them
+		if (word.endsWith('.')) {
+			word = word.substring(0, word.length - 1);
+		}
+		
 		const deliHash = word.indexOf('#');
 		const deliLParam = word.indexOf('(');
 		const deliRParam = word.indexOf(')');
