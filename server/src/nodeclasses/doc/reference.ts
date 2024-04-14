@@ -8,5 +8,5 @@ export interface DocumentationReferenceCstNode extends CstNode {
 
 export type DocumentationReferenceCstChildren = {
 	reference: IToken[];
-	target: IToken[];
+	target?: IToken[];
 };

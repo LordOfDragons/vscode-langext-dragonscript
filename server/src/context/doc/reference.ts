@@ -33,13 +33,13 @@ import { ContextDocumentationDocState } from "./docState";
 
 
 export class ContextDocumentationReference extends ContextDocBase{
-	protected _target: string;
+	protected _target?: string;
 	protected _resolved?: Resolved;
 	
 	
 	constructor(node: DocumentationReferenceCstNode, parent: Context) {
 		super(Context.ContextType.DocumentationReference, parent);
-		this._target = node.children.target[0].image;
+		this._target = node.children.target?.at(0)?.image;
 	}
 	
 	dispose(): void {
@@ -49,7 +49,7 @@ export class ContextDocumentationReference extends ContextDocBase{
 	}
 	
 	
-	public get target(): string {
+	public get target(): string | undefined {
 		return this._target;
 	}
 	
@@ -64,6 +64,10 @@ export class ContextDocumentationReference extends ContextDocBase{
 	
 	
 	public buildDoc(state: ContextDocumentationDocState): void {
+		if (!this._target) {
+			return;
+		}
+		
 		if (this._resolved) {
 			const l = this._resolved.resolveLocation.at(0);
 			if (l) {
