@@ -35,5 +35,5 @@ export interface ExpressionBlockEndCstNode extends CstNode {
 }
 
 export type ExpressionBlockEndCstChildren = {
-	end: IToken[];
+	end?: IToken[];
 };

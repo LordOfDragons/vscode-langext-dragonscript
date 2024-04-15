@@ -83,7 +83,7 @@ export class ContextBlock extends Context{
 		
 		var posEnd: Position | undefined;
 		
-		let tokEnd = node.children.expressionBlockEnd?.at(0)?.children.end[0];
+		let tokEnd = node.children.expressionBlockEnd?.at(0)?.children.end?.at(0);
 		if (tokEnd) {
 			posEnd = Helpers.positionFrom(tokEnd, false);
 			this.blockClosed = true;
