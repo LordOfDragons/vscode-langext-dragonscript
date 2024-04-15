@@ -26,7 +26,7 @@ import { Context } from "./context";
 import { ClassVariableCstNode } from "../nodeclasses/declareClass";
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
 import { FullyQualifiedClassNameCstNode } from "../nodeclasses/fullyQualifiedClassName";
-import { CompletionItem, Definition, DiagnosticRelatedInformation, DocumentSymbol, Hover, Location, Position, Range, RemoteConsole, SymbolKind } from "vscode-languageserver";
+import { CompletionItem, DiagnosticRelatedInformation, DocumentSymbol, Hover, Location, Position, Range, RemoteConsole, SymbolKind } from "vscode-languageserver";
 import { TypeName } from "./typename";
 import { ContextBuilder } from "./contextBuilder";
 import { Identifier } from "./identifier";
@@ -69,6 +69,7 @@ export class ContextClassVariable extends Context{
 		
 		this._typename = new TypeName(typeNode);
 		this._firstVariable = firstVar;
+		this.blockClosed = true;
 		
 		if (children?.value) {
 			this._value = ContextBuilder.createExpression(children.value[0], this);
