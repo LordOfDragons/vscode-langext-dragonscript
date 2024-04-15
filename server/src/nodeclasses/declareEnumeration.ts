@@ -53,5 +53,5 @@ export interface EnumerationEndCstNode extends CstNode {
 }
 
 export type EnumerationEndCstChildren = {
-	end: IToken[];
+	end?: IToken[];
 };

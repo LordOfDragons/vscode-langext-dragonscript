@@ -208,7 +208,7 @@ export class ContextEnumeration extends Context{
 		
 		this._positionBeginEnd = Helpers.endOfCommandBegin(edeclBegin.endOfCommand);
 
-		let tokEnd = edecl.enumerationEnd?.at(0)?.children.end[0];
+		const tokEnd = edecl.enumerationEnd?.at(0)?.children.end?.at(0);
 		this.blockClosed = tokEnd !== undefined;
 		let tokEnum = edeclBegin.enum[0];
 		this.range = Helpers.rangeFrom(tokEnum, tokEnd, true, false);
