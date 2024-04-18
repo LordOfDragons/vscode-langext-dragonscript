@@ -66,8 +66,9 @@ export class ContextVariable extends Context {
 		super(Context.ContextType.Variable, parent);
 		const children = node?.children;
 		
-		if (children) {
-			this._name = new Identifier(children.name[0]);
+		const nodeName = children?.name?.at(0);
+		if (nodeName) {
+			this._name = new Identifier(nodeName);
 		}
 		this._typename = new TypeName(typeNode);
 		this._firstVariable = firstVar;
