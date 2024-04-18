@@ -34,6 +34,6 @@ export interface StatementWhileEndCstNode extends CstNode {
 }
 
 export type StatementWhileEndCstChildren = {
-	end: IToken[];
+	end?: IToken[];
 };
 

@@ -47,5 +47,5 @@ export interface StatementTryEndCstNode extends CstNode {
 }
 
 export type StatementTryEndCstChildren = {
-	end: IToken[];
+	end?: IToken[];
 };

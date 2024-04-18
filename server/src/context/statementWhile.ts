@@ -58,7 +58,7 @@ export class ContextWhile extends Context{
 		var posEnd: Position | undefined;
 		
 		const whileEnd = node.children.statementWhileEnd?.at(0)?.children;
-		if (whileEnd) {
+		if (whileEnd?.end?.at(0)) {
 			posEnd = Helpers.positionFrom(whileEnd.end[0], false);
 			this.blockClosed = true;
 		}
