@@ -444,6 +444,26 @@ export class ContextClass extends Context{
 		this._resolveClass?.search(search);
 	}
 	
+	public searchExpression(search: ResolveSearch, moveUp: boolean, before: Context): void {
+		if (search.stopSearching) {
+			return;
+		}
+		
+		if (moveUp) {
+			// in parent classes only static members can be found
+			const onlyStatic = search.onlyStatic;
+			search.onlyStatic = true;
+			this.parent?.searchExpression(search, true, this);
+			search.onlyStatic = onlyStatic;
+			
+			if (search.stopSearching) {
+				return;
+			}
+		}
+		
+		this.search(search, before);
+	}
+	
 	public definition(position: Position): Location[] {
 		if (this._name?.isPositionInside(position)) {
 			return this.definitionSelf();

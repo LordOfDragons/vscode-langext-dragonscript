@@ -23,7 +23,7 @@
  */
 
 import { Context } from "./context";
-import { CompletionItem, Definition, DiagnosticRelatedInformation, Hover, integer, Location, Position, Range, RemoteConsole, SignatureHelp } from "vscode-languageserver";
+import { CompletionItem, DiagnosticRelatedInformation, Hover, integer, Location, Position, Range, RemoteConsole, SignatureHelp } from "vscode-languageserver";
 import { ContextBuilder } from "./contextBuilder";
 import { Identifier } from "./identifier";
 import { ExpressionMemberCstNode, ExpressionObjectCstNode } from "../nodeclasses/expressionObject";
@@ -42,7 +42,6 @@ import { CompletionHelper } from "../completionHelper";
 import { IToken } from "chevrotain";
 import { Resolved, ResolveUsage } from "../resolve/resolved";
 import { CodeActionUnknownMember } from "../codeactions/unknownMember";
-import { debugLogMessage } from "../server";
 
 
 export class ContextMember extends Context{
