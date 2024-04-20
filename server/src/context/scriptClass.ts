@@ -74,7 +74,7 @@ export class ContextClass extends Context{
 		this._typeModifiers = new Context.TypeModifierSet(typemodNode,
 			Context.AccessLevel.Public, [Context.TypeModifier.Public]);
 		
-		let tokEnd = cdecl.classEnd[0].children.end?.at(0);
+		let tokEnd = cdecl.classEnd?.at(0)?.children.end?.at(0);
 		this.blockClosed = tokEnd !== undefined;
 		let tokClass = cdeclBegin.class[0];
 		this.range = Helpers.rangeFrom(tokClass, tokEnd, true, false);

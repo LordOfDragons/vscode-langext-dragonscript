@@ -17,7 +17,7 @@ export interface DeclareClassCstNode extends CstNode {
 export type DeclareClassCstChildren = {
 	classBegin: ClassBeginCstNode[];
 	classBody: ClassBodyCstNode[];
-	classEnd: ClassEndCstNode[];
+	classEnd?: ClassEndCstNode[];
 };
 
 
