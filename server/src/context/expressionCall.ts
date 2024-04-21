@@ -57,6 +57,7 @@ import { CodeActionDisambiguate as CodeActionFixFunctionArgs } from "../codeacti
 import { CodeActionReplace } from "../codeactions/replace";
 import { CodeActionAssignmentNoEffect } from "../codeactions/assignNoEffect";
 import { ContextFunction } from "./classFunction";
+import { ResolveClass } from "../resolve/class";
 
 
 export class ContextFunctionCall extends Context{
@@ -1059,27 +1060,36 @@ export class ContextFunctionCall extends Context{
 					const o2 = this._object;
 					if (o1 && o2) {
 						var opname: string;
-						switch (this._functionType) {
-							case ContextFunctionCall.FunctionType.assign:
-								opname = "="
-								break;
-								
-							case ContextFunctionCall.FunctionType.equals:
-								opname = "==";
-								break;
-								
-							case ContextFunctionCall.FunctionType.notEquals:
-								opname = "!=";
-								break;
-						}
+						var rettype: ResolveType | undefined;
 						
 						const at1 = o1.expressionType;
 						const at2 = o2.expressionType;
 						
+						switch (this._functionType) {
+							case ContextFunctionCall.FunctionType.assign:
+								opname = "="
+								rettype = at2;
+								break;
+								
+							case ContextFunctionCall.FunctionType.equals:
+								opname = "==";
+								rettype = ResolveNamespace.classBool;
+								break;
+								
+							case ContextFunctionCall.FunctionType.notEquals:
+								opname = "!=";
+								rettype = ResolveNamespace.classBool;
+								break;
+						}
+						
+						const text1 = `public ${rettype?.simpleNameLink} **operator** **${opname}**`;
 						if (o1.expressionAutoCast === Context.AutoCast.KeywordNull) {
-							content.push(`${at2?.resolveTextLong} **${opname}** **null**`);
+							content.push(`${text1} null`);
 						} else {
-							content.push(`${at2?.resolveTextLong} **${opname}** ${at1?.resolveTextLong}`);
+							content.push(`${text1} ${at1?.simpleNameLink}`);
+						}
+						if (at2?.type === Resolved.Type.Class) {
+							(at2 as ResolveClass).context?.addHoverParentSelf(content);
 						}
 					}
 					break;

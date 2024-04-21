@@ -174,7 +174,7 @@ export class Context {
 		return null;
 	}
 	
-	protected addHoverParent(content: string[]): void {
+	public addHoverParent(content: string[]): void {
 		if (!this.parent) {
 			return;
 		}
@@ -186,6 +186,22 @@ export class Context {
 		}
 		
 		const pc = this.parent.resolveTextLong;
+		if (!pc || pc.length == 0) {
+			return;
+		}
+		
+		content.push(`*parent*: ${pc[0]}`);
+		content.push(...pc.slice(1));
+	}
+	
+	public addHoverParentSelf(content: string[]): void {
+		switch (this._type) {
+		case Context.ContextType.Script:
+			content.push('*parent*: **namespace** (root)');
+			return;
+		}
+		
+		const pc = this.resolveTextLong;
 		if (!pc || pc.length == 0) {
 			return;
 		}
