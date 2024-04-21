@@ -488,9 +488,10 @@ connection.onCompletion(
 			
 			// console.log(`onCompletion ${Helpers.logPosition(params.position)}: ${sd.context.contextAtPosition(params.position)?.constructor.name}`);
 			// debugLogContext(sd.context.contextAtPosition(params.position));
-			return sd.context.
+			const items = sd.context.
 				contextAtPosition(params.position)?.
 				completion(document, params.position);
+			return items && items.length > 0 ? items : undefined;
 		} catch (error) {
 			logError(error);
 			return undefined;
