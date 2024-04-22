@@ -43,6 +43,8 @@ import { ResolveFunction } from "../resolve/function";
 import { Resolved } from "../resolve/resolved";
 import { ContextDocumentationIterator } from "./documentation";
 import { TextDocument } from "vscode-languageserver-textdocument";
+import { DebugSettings } from "../debugSettings";
+import { debugLogMessage } from "../server";
 
 
 export class ContextEnumEntry extends Context{
@@ -423,13 +425,17 @@ export class ContextEnumeration extends Context{
 	}
 	
 	public completion(document: TextDocument, position: Position): CompletionItem[] {
+		if (DebugSettings.debugCompletion) {
+			debugLogMessage('ContextEnum.completion');
+		}
+		
 		if (this._positionBeginEnd && Helpers.isPositionAfter(position, this._positionBeginEnd)) {
 			const entry = this.entryBefore(position);
 			if (entry) {
 				return entry.completion(document, position);
 			}
 			
-			//const range = Range.create(position, position);
+			//const range = CompletionHelper.wordRange(document, position);
 			let items: CompletionItem[] = [];
 			
 			// TODO propose names?

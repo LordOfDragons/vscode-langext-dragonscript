@@ -42,6 +42,8 @@ import { Resolved, ResolveUsage } from "../resolve/resolved";
 import { CompletionHelper } from "../completionHelper";
 import { CodeActionUnknownMember } from "../codeactions/unknownMember";
 import { TextDocument } from "vscode-languageserver-textdocument";
+import { DebugSettings } from "../debugSettings";
+import { debugLogMessage } from "../server";
 
 
 export class TypeNamePart {
@@ -632,8 +634,12 @@ export class TypeName {
 		return [];
 	}
 	
-	public completion(_document: TextDocument, position: Position, context: Context,
+	public completion(document: TextDocument, position: Position, context: Context,
 			restrictType?: Resolved.Type[], castable?: ResolveType[]): CompletionItem[] {
+		if (DebugSettings.debugCompletion) {
+			debugLogMessage('typename.completion');
+		}
+		
 		let i, plen = this._parts.length;
 		var parentType: ResolveType | undefined;
 		
@@ -641,7 +647,7 @@ export class TypeName {
 			let part = this._parts[i];
 			//debugLogMessage(`typename.completion: i=${i}/${plen} part=${part.name.name}${Helpers.logRange(part.name.range)} | ${restrictType}`);
 			if (part.name.isPositionInside(position) || i == plen - 1) {
-				const range = part.name.range ?? Range.create(position, position);
+				const range = part.name.range ?? CompletionHelper.wordRange(document, position);
 				if (parentType) {
 					return CompletionHelper.createSubType(range, context, parentType, restrictType, castable);
 				} else {

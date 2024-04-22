@@ -23,7 +23,6 @@
  */
 
 import { Context } from "./context";
-import { ScriptCstNode } from "../nodeclasses/script";
 import { CompletionItem, DocumentSymbol, Position, Range, RemoteConsole, SymbolInformation, URI } from "vscode-languageserver";
 import { ContextPinNamespace } from "./pinNamespace";
 import { ContextNamespace } from "./namespace";
@@ -37,10 +36,14 @@ import { CompletionHelper } from "../completionHelper";
 import { ContextDocumentation, ContextDocumentationIterator } from "./documentation";
 import { ScriptDocument } from "../scriptDocument";
 import { ContextComment } from "./comment";
+import { DSSettings } from "../settings";
+import { DebugSettings } from "../debugSettings";
+import { debugLogMessage } from "../server";
 
 
 /** Top level script context. */
 export class ContextScript extends Context{
+	protected _settings: DSSettings;
 	protected _statements: Context[] = [];
 	protected _documentations: ContextDocumentation[] = [];
 	protected _comments: ContextComment[] = [];
@@ -54,6 +57,8 @@ export class ContextScript extends Context{
 	constructor(document: ScriptDocument, textDocument?: TextDocument, lineCount?: number) {
 		super(Context.ContextType.Script);
 		const node = document.node!;
+		
+		this._settings = document.settings;
 		
 		let lastPosition = textDocument
 			? textDocument.positionAt(textDocument.getText().length)
@@ -147,6 +152,9 @@ export class ContextScript extends Context{
 	}
 
 
+	public get settings(): DSSettings {
+		return this._settings;
+	}
 	
 	public get documentUri(): URI | undefined {
 		return this.uri;
@@ -229,7 +237,11 @@ export class ContextScript extends Context{
 	}
 	
 	public completion(document: TextDocument, position: Position): CompletionItem[] {
-		const range = Range.create(position, position);
+		if (DebugSettings.debugCompletion) {
+			debugLogMessage('ContextScript.completion');
+		}
+		
+		const range = CompletionHelper.wordRange(document, position);
 		let items: CompletionItem[] = [];
 		
 		items.push(...CompletionHelper.createNamespace(this, range));

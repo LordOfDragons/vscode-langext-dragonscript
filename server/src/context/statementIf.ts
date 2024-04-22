@@ -33,6 +33,8 @@ import { ResolveNamespace } from "../resolve/namespace";
 import { ResolveType } from "../resolve/type";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { CompletionHelper } from "../completionHelper";
+import { DebugSettings } from "../debugSettings";
+import { debugLogMessage } from "../server";
 
 
 export class ContextIfElif extends Context {
@@ -124,6 +126,10 @@ export class ContextIfElif extends Context {
 	}
 	
 	public completion(document: TextDocument, position: Position): CompletionItem[] {
+		if (DebugSettings.debugCompletion) {
+			debugLogMessage('ContextIfElif.completion');
+		}
+		
 		if (this._endBegin && Helpers.isPositionAfter(position, this._endBegin)) {
 			return this._statements.completion(document, position);
 			
@@ -306,6 +312,10 @@ export class ContextIf extends Context {
 	}
 	
 	public completion(document: TextDocument, position: Position): CompletionItem[] {
+		if (DebugSettings.debugCompletion) {
+			debugLogMessage('ContextIf.completion');
+		}
+		
 		if (this._endBegin && Helpers.isPositionAfter(position, this._endBegin)) {
 			const posElse = this._elsestatements?.range?.start;
 			if (posElse && Helpers.isPositionAfter(position, posElse)) {

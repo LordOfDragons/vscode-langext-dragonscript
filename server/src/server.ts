@@ -75,6 +75,7 @@ import { Context } from './context/context';
 import { DocumentationValidator } from './documentationValidator';
 import { Package } from './package/package';
 import { Helpers } from './helpers';
+import { DebugSettings } from './debugSettings';
 
 // Create a connection for the server, using Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -486,8 +487,11 @@ connection.onCompletion(
 				return undefined;
 			}
 			
-			// console.log(`onCompletion ${Helpers.logPosition(params.position)}: ${sd.context.contextAtPosition(params.position)?.constructor.name}`);
-			// debugLogContext(sd.context.contextAtPosition(params.position));
+			if (DebugSettings.debugCompletion) {
+				console.log(`onCompletion ${Helpers.logPosition(params.position)}: ${sd.context.contextAtPosition(params.position)?.constructor.name}`);
+				// debugLogContext(sd.context.contextAtPosition(params.position));
+			}
+			
 			const items = sd.context.
 				contextAtPosition(params.position)?.
 				completion(document, params.position);

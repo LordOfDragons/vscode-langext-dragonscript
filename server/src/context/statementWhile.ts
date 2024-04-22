@@ -33,6 +33,8 @@ import { Helpers } from "../helpers";
 import { ResolveType } from "../resolve/type";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { CompletionHelper } from "../completionHelper";
+import { DebugSettings } from "../debugSettings";
+import { debugLogMessage } from "../server";
 
 
 export class ContextWhile extends Context{
@@ -139,10 +141,14 @@ export class ContextWhile extends Context{
 	}
 	
 	public completion(document: TextDocument, position: Position): CompletionItem[] {
+		if (DebugSettings.debugCompletion) {
+			debugLogMessage('ContextWhile.completion');
+		}
+		
 		if (this._posEnd && Helpers.isPositionAfter(position, this._posEnd)) {
 			return this._statements.completion(document, position);
 		} else {
-			const range = Range.create(position, position);
+			const range = CompletionHelper.wordRange(document, position);
 			return CompletionHelper.createExpression(range, this);
 		}
 	}

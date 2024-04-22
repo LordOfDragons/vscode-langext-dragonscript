@@ -38,6 +38,8 @@ import { ResolveSearch } from "../resolve/search";
 import { Resolved, ResolveUsage } from "../resolve/resolved";
 import { ResolveArgument } from "../resolve/argument";
 import { TextDocument } from "vscode-languageserver-textdocument";
+import { DebugSettings } from "../debugSettings";
+import { debugLogMessage } from "../server";
 
 
 export class ContextTryCatch extends Context {
@@ -201,6 +203,10 @@ export class ContextTryCatch extends Context {
 	}
 	
 	public completion(document: TextDocument, position: Position): CompletionItem[] {
+		if (DebugSettings.debugCompletion) {
+			debugLogMessage('ContextTryCatch.completion');
+		}
+		
 		const npos = this._variable?.range?.start;
 		if (!npos || Helpers.isPositionBefore(position, npos)) {
 			if (this._typename) {
@@ -336,6 +342,10 @@ export class ContextTry extends Context {
 	}
 	
 	public completion(document: TextDocument, position: Position): CompletionItem[] {
+		if (DebugSettings.debugCompletion) {
+			debugLogMessage('ContextTry.completion');
+		}
+		
 		if (Helpers.isPositionAfter(position, this._endBegin)) {
 			const context = this.catchBefore(position);
 			if (context) {

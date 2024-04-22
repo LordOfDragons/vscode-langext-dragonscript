@@ -31,6 +31,8 @@ import { Helpers } from "../helpers";
 import { ResolveSearch } from "../resolve/search";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { CompletionHelper } from "../completionHelper";
+import { DebugSettings } from "../debugSettings";
+import { debugLogMessage } from "../server";
 
 
 export class ContextStatements extends Context{
@@ -144,6 +146,9 @@ export class ContextStatements extends Context{
 	}
 	
 	public completion(document: TextDocument, position: Position): CompletionItem[] {
+		if (DebugSettings.debugCompletion) {
+			debugLogMessage('ContextStatements.completion');
+		}
 		return CompletionHelper.createStatement(Range.create(position, position), this);
 	}
 	

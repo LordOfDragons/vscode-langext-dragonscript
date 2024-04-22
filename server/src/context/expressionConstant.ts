@@ -281,8 +281,8 @@ export class ContextConstant extends Context{
 		return new HoverInfo([content.join('')], this._name.range);
 	}
 	
-	public completion(_document: TextDocument, position: Position): CompletionItem[] {
-		const range = this._name?.range ?? Range.create(position, position);
+	public completion(document: TextDocument, position: Position): CompletionItem[] {
+		const range = this._name?.range ?? CompletionHelper.wordRange(document, position);
 		return CompletionHelper.createStatementOrExpression(range, this);
 	}
 	

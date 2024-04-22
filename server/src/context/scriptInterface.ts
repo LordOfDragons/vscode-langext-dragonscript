@@ -44,6 +44,7 @@ import { TextDocument } from "vscode-languageserver-textdocument";
 import { CompletionHelper } from "../completionHelper";
 import { ContextDocumentationIterator } from "./documentation";
 import { debugLogMessage } from "../server";
+import { DebugSettings } from "../debugSettings";
 
 
 export class ContextInterface extends Context{
@@ -354,13 +355,17 @@ export class ContextInterface extends Context{
 	}
 	
 	public completion(document: TextDocument, position: Position): CompletionItem[] {
+		if (DebugSettings.debugCompletion) {
+			debugLogMessage('ContextInterface.completion');
+		}
+		
 		if (this._positionBeginEnd && Helpers.isPositionAfter(position, this._positionBeginEnd)) {
 			const declaration = this.declarationBefore(position);
 			if (declaration && (Helpers.isPositionInsideRange(declaration.range, position) || !declaration.blockClosed)) {
 				return declaration.completion(document, position);
 			}
 			
-			const range = Range.create(position, position);
+			const range = CompletionHelper.wordRange(document, position);
 			let items: CompletionItem[] = [];
 			
 			items.push(...CompletionHelper.createClass(this, range));
@@ -374,14 +379,14 @@ export class ContextInterface extends Context{
 		if (this._tokenImplements && Helpers.isPositionAfter(position, this._tokenImplements.end)) {
 			const implement = this._implements.find(c => c.isPositionInside(position));
 			const restype = [Resolved.Type.Interface, Resolved.Type.Namespace];
-			const range = Range.create(position, position);
+			const range = CompletionHelper.wordRange(document, position);
 			
 			return implement?.completion(document, position, this, restype)
 				?? CompletionHelper.createType(range, this, undefined, restype);
 		}
 		
 		let items: CompletionItem[] = [];
-		const range = Range.create(position, position);
+		const range = CompletionHelper.wordRange(document, position);
 		
 		if (!this._tokenImplements) {
 			items.push(...CompletionHelper.createImplements(this, range));

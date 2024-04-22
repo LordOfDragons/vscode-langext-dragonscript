@@ -46,6 +46,8 @@ import { CompletionHelper } from "../completionHelper";
 import { ContextDocumentationIterator } from "./documentation";
 import { ResolveFunction } from "../resolve/function";
 import { CodeActionImplementAbstractFunctions } from "../codeactions/implementAbstractFunctions";
+import { DebugSettings } from "../debugSettings";
+import { debugLogMessage } from "../server";
 
 
 export class ContextClass extends Context{
@@ -524,13 +526,17 @@ export class ContextClass extends Context{
 	}
 	
 	public completion(document: TextDocument, position: Position): CompletionItem[] {
+		if (DebugSettings.debugCompletion) {
+			debugLogMessage('ContextClass.completion');
+		}
+		
 		if (this._positionBeginEnd && Helpers.isPositionAfter(position, this._positionBeginEnd)) {
 			const declaration = this.declarationBefore(position);
 			if (declaration && (Helpers.isPositionInsideRange(declaration.range, position) || !declaration.blockClosed)) {
 				return declaration.completion(document, position);
 			}
 			
-			const range = Range.create(position, position);
+			const range = CompletionHelper.wordRange(document, position);
 			let items: CompletionItem[] = [];
 			
 			items.push(...CompletionHelper.createClass(this, range));
@@ -546,7 +552,7 @@ export class ContextClass extends Context{
 		if (this._tokenImplements && Helpers.isPositionAfter(position, this._tokenImplements.end)) {
 			const implement = this._implements.find(c => c.isPositionInside(position));
 			const restype = [Resolved.Type.Interface, Resolved.Type.Namespace];
-			const range = Range.create(position, position);
+			const range = CompletionHelper.wordRange(document, position);
 			
 			return implement?.completion(document, position, this, restype)
 				?? CompletionHelper.createType(range, this, undefined, restype);
@@ -554,7 +560,7 @@ export class ContextClass extends Context{
 		
 		if (this._tokenExtends && Helpers.isPositionAfter(position, this._tokenExtends.end)) {
 			const restype = [Resolved.Type.Class, Resolved.Type.Namespace];
-			const range = Range.create(position, position);
+			const range = CompletionHelper.wordRange(document, position);
 			
 			if (!this._tokenImplements && this._extends?.range
 			&& Helpers.isPositionAfter(position, this._extends.range?.end)) {
@@ -566,7 +572,7 @@ export class ContextClass extends Context{
 		}
 		
 		let items: CompletionItem[] = [];
-		const range = Range.create(position, position);
+		const range = CompletionHelper.wordRange(document, position);
 		
 		if (!this._tokenExtends) {
 			items.push(...CompletionHelper.createExtends(this, range));

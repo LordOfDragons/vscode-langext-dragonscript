@@ -367,8 +367,8 @@ export class ContextMember extends Context{
 		return location ? [location] : [];
 	}
 	
-	public completion(_document: TextDocument, position: Position): CompletionItem[] {
-		const range = this._name?.range ?? Range.create(position, position);
+	public completion(document: TextDocument, position: Position): CompletionItem[] {
+		const range = this._name?.range ?? CompletionHelper.wordRange(document, position);
 		
 		if (this._object && this._tokenPeriod) {
 			return CompletionHelper.createObject(range, this, this._object);

@@ -33,6 +33,8 @@ import { TextDocument } from "vscode-languageserver-textdocument";
 import { CompletionHelper } from "../completionHelper";
 import { ResolveNamespace } from "../resolve/namespace";
 import { ResolveType } from "../resolve/type";
+import { DebugSettings } from "../debugSettings";
+import { debugLogMessage } from "../server";
 
 
 export class ContextSelectCase extends Context {
@@ -129,6 +131,10 @@ export class ContextSelectCase extends Context {
 	}
 	
 	public completion(document: TextDocument, position: Position): CompletionItem[] {
+		if (DebugSettings.debugCompletion) {
+			debugLogMessage('ContextSelectCase.completion');
+		}
+		
 		const vt = this.parent?.expectTypes(this);
 		if (!vt) {
 			return [];
@@ -293,7 +299,11 @@ export class ContextSelect extends Context {
 	}
 	
 	public completion(document: TextDocument, position: Position): CompletionItem[] {
-		const range = Range.create(position, position);
+		if (DebugSettings.debugCompletion) {
+			debugLogMessage('ContextSelect.completion');
+		}
+		
+		const range = CompletionHelper.wordRange(document, position);
 		let items: CompletionItem[] = [];
 		
 		if (Helpers.isPositionAfter(position, this._endBegin)) {

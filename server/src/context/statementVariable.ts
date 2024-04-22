@@ -45,6 +45,8 @@ import { CodeActionCommentOut } from "../codeactions/commentout";
 import { ResolveSignature, ResolveSignatureArgument } from "../resolve/signature";
 import { ResolveType } from "../resolve/type";
 import { CodeActionInsertCast } from "../codeactions/insertCast";
+import { DebugSettings } from "../debugSettings";
+import { debugLogMessage } from "../server";
 
 
 export class ContextVariable extends Context {
@@ -364,6 +366,10 @@ export class ContextVariable extends Context {
 	}
 	
 	public completion(document: TextDocument, position: Position): CompletionItem[] {
+		if (DebugSettings.debugCompletion) {
+			debugLogMessage('ContextVariable.completion');
+		}
+		
 		if (this._firstVariable) {
 			return [];
 		}

@@ -41,6 +41,8 @@ import { Helpers } from "../helpers";
 import { ResolveClass } from "../resolve/class";
 import { Resolved, ResolveUsage } from "../resolve/resolved";
 import { TextDocument } from "vscode-languageserver-textdocument";
+import { DebugSettings } from "../debugSettings";
+import { debugLogMessage } from "../server";
 
 
 export class ContextClassVariable extends Context{
@@ -271,6 +273,10 @@ export class ContextClassVariable extends Context{
 	}
 	
 	public completion(document: TextDocument, position: Position): CompletionItem[] {
+		if (DebugSettings.debugCompletion) {
+			debugLogMessage('ContextVariable.completion');
+		}
+		
 		if (this._firstVariable) {
 			return [];
 		}

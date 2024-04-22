@@ -32,6 +32,8 @@ import { ResolveState } from "../resolve/state";
 import { ResolveNamespace } from "../resolve/namespace";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { CompletionHelper } from "../completionHelper";
+import { DebugSettings } from "../debugSettings";
+import { debugLogMessage } from "../server";
 
 
 export class ContextFor extends Context{
@@ -224,7 +226,11 @@ export class ContextFor extends Context{
 	}
 	
 	public completion(document: TextDocument, position: Position): CompletionItem[] {
-		const range = Range.create(position, position);
+		if (DebugSettings.debugCompletion) {
+			debugLogMessage('ContextFor.completion');
+		}
+		
+		const range = CompletionHelper.wordRange(document, position);
 		let items: CompletionItem[] = [];
 		
 		if (this._posEnd && Helpers.isPositionAfter(position, this._posEnd)) {

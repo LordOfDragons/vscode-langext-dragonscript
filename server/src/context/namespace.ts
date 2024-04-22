@@ -35,6 +35,8 @@ import { Resolved, ResolveUsage } from "../resolve/resolved";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { CompletionHelper } from "../completionHelper";
 import { ContextDocumentationIterator } from "./documentation";
+import { DebugSettings } from "../debugSettings";
+import { debugLogMessage } from "../server";
 
 
 export class ContextNamespace extends Context{
@@ -300,6 +302,10 @@ export class ContextNamespace extends Context{
 	}
 	
 	public completion(document: TextDocument, position: Position): CompletionItem[] {
+		if (DebugSettings.debugCompletion) {
+			debugLogMessage('ContextNamespace.completion');
+		}
+		
 		if (this._typename && Helpers.isPositionInsideRange(this._typename?.range, position)) {
 			return this._typename.completion(document, position, this, [Resolved.Type.Namespace]);
 		}
@@ -313,7 +319,7 @@ export class ContextNamespace extends Context{
 			return [];
 		}
 		
-		const range = Range.create(position, position);
+		const range = CompletionHelper.wordRange(document, position);
 		let items: CompletionItem[] = [];
 		
 		items.push(...CompletionHelper.createNamespace(this, range));

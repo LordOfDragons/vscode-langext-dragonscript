@@ -1205,7 +1205,7 @@ export class ContextFunctionCall extends Context{
 			}
 		}
 		
-		const range = this._name?.range ?? Range.create(position, position);
+		const range = this._name?.range ?? CompletionHelper.wordRange(document, position);
 		
 		if (Helpers.isPositionInsideRange(range, position)) {
 			if (this._object) {

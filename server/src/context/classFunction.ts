@@ -47,6 +47,8 @@ import { TextDocument } from "vscode-languageserver-textdocument";
 import { CodeActionRemove } from "../codeactions/remove";
 import { VisitorAllHasReturn } from "../visitor/allhasreturn";
 import { ResolveClass } from "../resolve/class";
+import { DebugSettings } from "../debugSettings";
+import { debugLogMessage } from "../server";
 
 
 export class ContextFunction extends Context{
@@ -783,6 +785,10 @@ export class ContextFunction extends Context{
 	}
 	
 	public completion(document: TextDocument, position: Position): CompletionItem[] {
+		if (DebugSettings.debugCompletion) {
+			debugLogMessage('ContextFunction.completion');
+		}
+		
 		if (this._argEndPos && Helpers.isPositionAfter(position, this._argEndPos)) {
 			return this._statements?.completion(document, position) ?? [];
 			

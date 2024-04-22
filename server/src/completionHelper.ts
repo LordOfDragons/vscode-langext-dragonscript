@@ -23,6 +23,7 @@
  */
 
 import { CompletionItem, CompletionItemKind, InsertTextFormat, Position, Range, TextEdit } from "vscode-languageserver"
+import { TextDocument } from "vscode-languageserver-textdocument";
 import { ContextFunction } from "./context/classFunction";
 import { ContextFunctionArgument } from "./context/classFunctionArgument";
 import { Context } from "./context/context";
@@ -36,6 +37,7 @@ import { ResolveNamespace } from "./resolve/namespace";
 import { Resolved } from "./resolve/resolved";
 import { ResolveSearch } from "./resolve/search";
 import { ResolveType } from "./resolve/type";
+import { documents } from "./server";
 
 
 export class CompletionHelper {
@@ -377,7 +379,7 @@ export class CompletionHelper {
 	}
 	
 	/** Create completion items for 'class' keyword. */
-	public static createClass(context: Context, range: Range): CompletionItem[] {
+	public static createClass(_context: Context, range: Range): CompletionItem[] {
 		let items: CompletionItem[] = [];
 		
 		items.push({label: 'class',
@@ -1155,5 +1157,34 @@ export class CompletionHelper {
 		let items: CompletionItem[] = [];
 		items.push(...CompletionHelper.createFromSearch(range, context, search, visibleTypes));
 		return items;
+	}
+	
+	private static regexWord = RegExp(/^\p{L}/, 'u');
+	
+	/** Range of word containing position. */
+	public static wordRange(document: TextDocument, position: Position): Range {
+		const offset = document.offsetAt(position);
+		const text = document.getText();
+		const length = text.length;
+		
+		var offsetBegin = offset, offsetEnd = offset;
+		
+		while (offsetBegin > 0) {
+			if (this.regexWord.test(text[offsetBegin - 1])) {
+				offsetBegin--;
+			} else {
+				break;
+			}
+		}
+		
+		while (offsetEnd < length) {
+			if (this.regexWord.test(text[offset])) {
+				offsetEnd++;
+			} else {
+				break;
+			}
+		}
+		
+		return Range.create(document.positionAt(offsetBegin), document.positionAt(offsetEnd));
 	}
 }

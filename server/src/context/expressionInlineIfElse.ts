@@ -142,7 +142,7 @@ export class ContextInlineIfElse extends Context{
 	}
 	
 	public completion(document: TextDocument, position: Position): CompletionItem[] {
-		const range = Range.create(position, position);
+		const range = CompletionHelper.wordRange(document, position);
 		const rangeIf = Helpers.rangeFrom(this._tokenIf);
 		const rangeElse = this._tokenElse ? Helpers.rangeFrom(this._tokenElse) : undefined;
 		
