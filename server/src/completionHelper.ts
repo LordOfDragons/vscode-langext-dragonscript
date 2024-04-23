@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-import { CompletionItem, CompletionItemKind, InsertTextFormat, Position, Range, TextEdit } from "vscode-languageserver"
+import { CompletionItem, CompletionItemKind, InsertTextFormat, MarkupContent, MarkupKind, Position, Range, TextEdit } from "vscode-languageserver"
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { ContextFunction } from "./context/classFunction";
 import { ContextFunctionArgument } from "./context/classFunctionArgument";
@@ -37,7 +37,6 @@ import { ResolveNamespace } from "./resolve/namespace";
 import { Resolved } from "./resolve/resolved";
 import { ResolveSearch } from "./resolve/search";
 import { ResolveType } from "./resolve/type";
-import { documents } from "./server";
 
 
 export class CompletionHelper {
@@ -72,7 +71,9 @@ export class CompletionHelper {
 				kind: CompletionItemKind.Keyword,
 				insertTextFormat: InsertTextFormat.PlainText,
 				textEdit: TextEdit.replace(range, each),
-				commitCharacters: ['.']});
+				commitCharacters: ['.'],
+				documentation: this.createMarkup(['Create boolean literal.'])
+			});
 		};
 		return items;
 	}
@@ -83,7 +84,9 @@ export class CompletionHelper {
 			sortText: `${CompletionHelper.sortPrefixSnippet}null`,
 			kind: CompletionItemKind.Keyword,
 			insertTextFormat: InsertTextFormat.PlainText,
-			textEdit: TextEdit.replace(range, 'null')};
+			textEdit: TextEdit.replace(range, 'null'),
+			documentation: this.createMarkup(['Create null literal representing no object instance.'])
+			};
 	}
 	
 	/** Create completion item for 'cast' keyword. */
@@ -92,7 +95,12 @@ export class CompletionHelper {
 			sortText: `${CompletionHelper.sortPrefixSnippet}cast`,
 			kind: CompletionItemKind.Snippet,
 			insertTextFormat: InsertTextFormat.Snippet,
-			textEdit: TextEdit.replace(range, 'cast ${1:type}')};
+			textEdit: TextEdit.replace(range, 'cast ${1:type}'),
+			documentation: this.createMarkup([
+				['Cast object to another type.',
+				`If object type is not a subclass of __type__ a ${ResolveNamespace.classException.simpleNameLink} is thrown`
+				].join(' ')])
+			};
 	}
 	
 	/** Create completion item for 'castable' keyword. */
@@ -101,7 +109,12 @@ export class CompletionHelper {
 			sortText: `${CompletionHelper.sortPrefixSnippet}castable`,
 			kind: CompletionItemKind.Snippet,
 			insertTextFormat: InsertTextFormat.Snippet,
-			textEdit: TextEdit.replace(range, 'castable ${1:type}')};
+			textEdit: TextEdit.replace(range, 'castable ${1:type}'),
+			documentation: this.createMarkup([
+				['Object is castable to another type.',
+				'Returns _true_ if object type is subclass of __type__ or _false_ otherwise'
+				].join(' ')])
+			};
 	}
 	
 	/** Create completion item for 'typeof' keyword. */
@@ -110,7 +123,12 @@ export class CompletionHelper {
 			sortText: `${CompletionHelper.sortPrefixSnippet}typeof`,
 			kind: CompletionItemKind.Snippet,
 			insertTextFormat: InsertTextFormat.Snippet,
-			textEdit: TextEdit.replace(range, 'typeof ${1:type}')};
+			textEdit: TextEdit.replace(range, 'typeof ${1:type}'),
+			documentation: this.createMarkup([
+				['Object is instance of type.',
+				'Returns _true_ if object is instance of __type__ or _false_ otherwise'
+				].join(' ')])
+			};
 	}
 	
 	/** Create completion items for 'block' keyword. */
@@ -124,7 +142,9 @@ export class CompletionHelper {
 			textEdit: TextEdit.replace(range,
 				'block\n' +
 				'\t\${0}\n' +
-				'end')});
+				'end'),
+			documentation: this.createMarkup(['Create code block with no argument.'])
+			});
 		
 		items.push({label: '🅱 block: 1 argument',
 			sortText: `${CompletionHelper.sortPrefixSnippet}block`,
@@ -134,7 +154,9 @@ export class CompletionHelper {
 			textEdit: TextEdit.replace(range,
 				'block \${1:Object} \${2:argument}\n' +
 				'\t\${0}\n' +
-				'end')});
+				'end'),
+			documentation: this.createMarkup(['Create code block with one argument.'])
+			});
 		
 		items.push({label: '🅱 block: 2 arguments',
 			sortText: `${CompletionHelper.sortPrefixSnippet}block`,
@@ -144,7 +166,21 @@ export class CompletionHelper {
 			textEdit: TextEdit.replace(range,
 				'block \${1:Object} \${2:argument1}, \${3:Object} \${4: argument2}\n' +
 				'\t\${0}\n' +
-				'end')});
+				'end'),
+			documentation: this.createMarkup(['Create code block with two arguments.'])
+			});
+		
+		items.push({label: '🅱 block: 3 arguments',
+			sortText: `${CompletionHelper.sortPrefixSnippet}block`,
+			filterText: 'block',
+			kind: CompletionItemKind.Snippet,
+			insertTextFormat: InsertTextFormat.Snippet,
+			textEdit: TextEdit.replace(range,
+				'block \${1:Object} \${2:argument1}, \${3:Object} \${4: argument2}, \${5:Object} \${6: argument3}\n' +
+				'\t\${0}\n' +
+				'end'),
+			documentation: this.createMarkup(['Create code block with three arguments.'])
+			});
 		
 		return items;
 	}
@@ -156,7 +192,9 @@ export class CompletionHelper {
 			filterText: 'if',
 			kind: CompletionItemKind.Snippet,
 			insertTextFormat: InsertTextFormat.Snippet,
-			textEdit: TextEdit.replace(range, 'if ${1:trueValue} else ${2:falseValue}')};
+			textEdit: TextEdit.replace(range, 'if ${1:trueValue} else ${2:falseValue}'),
+			documentation: this.createMarkup(['Create inline if-else expression.'])
+		};
 	}
 	
 	/** Create completion items for 'if' keyword. */
@@ -171,7 +209,9 @@ export class CompletionHelper {
 			textEdit: TextEdit.replace(range,
 				'if \${1:condition}\n' + 
 				'\t\${0}\n' +
-				'end')});
+				'end'),
+			documentation: this.createMarkup(['Create if statement.'])
+			});
 		
 		items.push({label: 'if else',
 			sortText: `${CompletionHelper.sortPrefixSnippet}if`,
@@ -183,7 +223,9 @@ export class CompletionHelper {
 				'\t\${0}\n' +
 				'else\n' +
 				'\t\n' +
-				'end')});
+				'end'),
+			documentation: this.createMarkup(['Create if statement with else block.'])
+			});
 		
 		return items;
 	}
@@ -198,7 +240,9 @@ export class CompletionHelper {
 			insertTextFormat: InsertTextFormat.Snippet,
 			textEdit: TextEdit.replace(range,
 				'elif \${1:condition}\n' + 
-				'\t\${0}')};
+				'\t\${0}'),
+			documentation: this.createMarkup(['Create elif block which is another condition inside an if statement.'])
+			};
 	}
 	
 	/** Create completion item for 'else' keyword. */
@@ -211,7 +255,9 @@ export class CompletionHelper {
 			insertTextFormat: InsertTextFormat.Snippet,
 			textEdit: TextEdit.replace(range,
 				'else\n' + 
-				'\t\${0}')};
+				'\t\${0}'),
+			documentation: this.createMarkup(['Create else block inside if statement.'])
+			};
 	}
 	
 	/** Create completion item for 'case' keyword. */
@@ -224,7 +270,15 @@ export class CompletionHelper {
 			insertTextFormat: InsertTextFormat.Snippet,
 			textEdit: TextEdit.replace(range,
 				'case \${1:constant}\n' + 
-				'\t\${0}')};
+				'\t\${0}'),
+			documentation: this.createMarkup(['Create case statement.',
+				'',
+				`If value tested in the _select_ statement is of type ${ResolveNamespace.classInt.simpleNameLink} the match values have to be integer literals.`,
+				'',
+				[`If the value tested is of type ${ResolveNamespace.classEnumeration.simpleNameLink} the match values have to be enumeration constants.`,
+				'Technically any object can be tested but matching is done using the == operator not the equals() function.',
+				`In particular this means a ${ResolveNamespace.classString.simpleNameLink} does not match string literals since they are different objects.`].join(' ')])
+			};
 	}
 	
 	/** Create completion item for 'else' keyword. */
@@ -237,7 +291,9 @@ export class CompletionHelper {
 			insertTextFormat: InsertTextFormat.Snippet,
 			textEdit: TextEdit.replace(range,
 				'else\n' + 
-				'\t\${0}')};
+				'\t\${0}'),
+			documentation: this.createMarkup(['Create else block inside if statement.'])
+			};
 	}
 	
 	/** Create completion items for 'for' keyword. */
@@ -251,7 +307,9 @@ export class CompletionHelper {
 			textEdit: TextEdit.replace(range,
 				'for \${1:variable} = ${2:fromIndex} to ${3:toIndex}\n' +
 				'\t\${0}\n' +
-				'end')});
+				'end'),
+			documentation: this.createMarkup(['Create for loop.'])
+			});
 		
 		items.push({label: 'for step',
 			sortText: `${CompletionHelper.sortPrefixSnippet}for`,
@@ -261,7 +319,9 @@ export class CompletionHelper {
 			textEdit: TextEdit.replace(range,
 				'for \${1:variable} = ${2:fromIndex} to ${3:toIndex} step ${4:stepSize}\n' +
 				'\t\${0}\n' +
-				'end')});
+				'end'),
+			documentation: this.createMarkup(['Create for loop using custom step size.'])
+			});
 		
 		items.push({label: 'for downto',
 			sortText: `${CompletionHelper.sortPrefixSnippet}for`,
@@ -271,7 +331,9 @@ export class CompletionHelper {
 			textEdit: TextEdit.replace(range,
 				'for \${1:variable} = ${2:fromIndex} downto ${3:toIndex}\n' +
 				'\t\${0}\n' +
-				'end')});
+				'end'),
+			documentation: this.createMarkup(['Create for loop counting down instead of up.'])
+			});
 		
 		items.push({label: 'for downto step',
 			sortText: `${CompletionHelper.sortPrefixSnippet}for`,
@@ -281,7 +343,9 @@ export class CompletionHelper {
 			textEdit: TextEdit.replace(range,
 				'for \${1:variable} = ${2:fromIndex} downto ${3:toIndex} step ${5:stepSize}\n' +
 				'\t\${0}\n' +
-				'end')});
+				'end'),
+			documentation: this.createMarkup(['Create for loop counting down instead of up using custom step size.'])
+			});
 		
 		return items;
 	}
@@ -298,7 +362,11 @@ export class CompletionHelper {
 				'\t\${0}\n' +
 				'else\n' +
 				'\t\n' +
-				'end')};
+				'end'),
+			documentation: this.createMarkup(['Create select case statement.',
+				'',
+				`Matches the value of an ${ResolveNamespace.classInt.simpleNameLink} or ${ResolveNamespace.classEnumeration.simpleNameLink} against a list of literals or static constants.`])
+			};
 	}
 	
 	/** Create completion item for 'while' keyword. */
@@ -310,7 +378,9 @@ export class CompletionHelper {
 			textEdit: TextEdit.replace(range,
 				'while \${1:condition}\n' +
 				'\t\${0}\n' +
-				'end')};
+				'end'),
+			documentation: this.createMarkup(['Create while loop.'])
+			};
 	}
 	
 	/** Create completion item for 'try' keyword. */
@@ -324,7 +394,9 @@ export class CompletionHelper {
 				'\t\${0}\n' +
 				'catch \${1:Exception} \${2:exception}\n' +
 				'\t\n' +
-				'end')};
+				'end'),
+			documentation: this.createMarkup(['Create try statement catching certain thrown exceptions.'])
+			};
 	}
 	
 	/** Create completion item for 'catch' keyword. */
@@ -337,7 +409,10 @@ export class CompletionHelper {
 			insertTextFormat: InsertTextFormat.Snippet,
 			textEdit: TextEdit.replace(range,
 				'catch \${1:Exception} \${2:exception}\n' +
-				'\t${0}')};
+				'\t${0}'),
+			documentation: this.createMarkup(['Create catch block inside try statement.',
+				'',
+				'Catches only exceptions castable to type'])};
 	}
 	
 	/** Create completion item for 'return' keyword. */
@@ -346,7 +421,9 @@ export class CompletionHelper {
 			sortText: `${CompletionHelper.sortPrefixSnippet}return`,
 			kind: CompletionItemKind.Snippet,
 			insertTextFormat: InsertTextFormat.Snippet,
-			textEdit: TextEdit.replace(range, 'return\n\${0}')};
+			textEdit: TextEdit.replace(range, 'return\n\${0}'),
+			documentation: this.createMarkup(['Create return statement.'])
+			};
 	}
 	
 	/** Create completion item for 'break' keyword. */
@@ -355,7 +432,12 @@ export class CompletionHelper {
 			sortText: `${CompletionHelper.sortPrefixSnippet}break`,
 			kind: CompletionItemKind.Snippet,
 			insertTextFormat: InsertTextFormat.Snippet,
-			textEdit: TextEdit.replace(range, 'break\n\${0}')};
+			textEdit: TextEdit.replace(range, 'break\n\${0}'),
+			documentation: this.createMarkup(['Create break statement.',
+				'',
+				['Exits the inner most for loop, while loop or select statement.',
+				'Does not exit for loop, while loop or select statement outside the inner most one.'].join(' ')])
+			};
 	}
 	
 	/** Create completion item for 'continue' keyword. */
@@ -364,7 +446,13 @@ export class CompletionHelper {
 			sortText: `${CompletionHelper.sortPrefixSnippet}continue`,
 			kind: CompletionItemKind.Snippet,
 			insertTextFormat: InsertTextFormat.Snippet,
-			textEdit: TextEdit.replace(range, 'continue\n\${0}')};
+			textEdit: TextEdit.replace(range, 'continue\n\${0}'),
+			documentation: this.createMarkup(['Create continue statement.',
+				'',
+				['Jumps to the end of the current for or while loop.',
+				'In case of for loop the counter is increment or decrement.',
+				'Afterwards the loop condition is re-evaluated'].join(' ')])
+			};
 	}
 	
 	/** Create completion item for 'end' keyword. */
@@ -375,7 +463,19 @@ export class CompletionHelper {
 			sortText: `${CompletionHelper.sortPrefixSnippet}end`,
 			kind: CompletionItemKind.Snippet,
 			insertTextFormat: InsertTextFormat.Snippet,
-			textEdit: TextEdit.replace(range, 'end\n\${0}')};
+			textEdit: TextEdit.replace(range, 'end\n\${0}'),
+			documentation: this.createMarkup(['Create end statement.',
+				'',
+				'Ends the code body of these language constructs:',
+				'- if / elif / else',
+				'- select / case',
+				'- try / catch',
+				'- block',
+				'- function',
+				'- class',
+				'- interface',
+				'- enum'])
+			};
 	}
 	
 	/** Create completion items for 'class' keyword. */
@@ -397,7 +497,9 @@ export class CompletionHelper {
 				'\tfunc new()\n' +
 				'\tend\n' +
 				'\t\${0}\n' +
-				'end\n')});
+				'end\n'),
+			documentation: this.createMarkup(['Create class.'])
+			});
 		
 		items.push({label: 'class extends',
 			sortText: `${CompletionHelper.sortPrefixSnippet}class`,
@@ -415,7 +517,9 @@ export class CompletionHelper {
 				'\tfunc new()\n' +
 				'\tend\n' +
 				'\t\${0}\n' +
-				'end\n')});
+				'end\n'),
+			documentation: this.createMarkup(['Create class extending another class.'])
+			});
 		
 		items.push({label: 'class extends implements',
 			sortText: `${CompletionHelper.sortPrefixSnippet}class`,
@@ -433,7 +537,9 @@ export class CompletionHelper {
 				'\tfunc new()\n' +
 				'\tend\n' +
 				'\t\${0}\n' +
-				'end\n')});
+				'end\n'),
+			documentation: this.createMarkup(['Create class extending another class and implementing interfaces.'])
+			});
 		
 		return items;
 	}
@@ -447,7 +553,9 @@ export class CompletionHelper {
 			filterText: 'extends',
 			kind: CompletionItemKind.Snippet,
 			insertTextFormat: InsertTextFormat.Snippet,
-			textEdit: TextEdit.replace(range, 'extends \${0}')});
+			textEdit: TextEdit.replace(range, 'extends \${0}'),
+		documentation: this.createMarkup(['Extend supper class.'])
+		});
 		
 		return items;
 	}
@@ -461,7 +569,9 @@ export class CompletionHelper {
 			filterText: 'implements',
 			kind: CompletionItemKind.Snippet,
 			insertTextFormat: InsertTextFormat.Snippet,
-			textEdit: TextEdit.replace(range, 'implements \${0}')});
+			textEdit: TextEdit.replace(range, 'implements \${0}'),
+		documentation: this.createMarkup(['Implement interfaces.'])
+		});
 		
 		return items;
 	}
@@ -480,7 +590,9 @@ export class CompletionHelper {
 				' */\n' +
 				'interface \${1:Name}\n' +
 				'\t\${0}\n' +
-				'end\n')});
+				'end\n'),
+			documentation: this.createMarkup(['Create interface.'])
+			});
 		
 		items.push({label: 'interface implements',
 			sortText: `${CompletionHelper.sortPrefixSnippet}interface`,
@@ -493,7 +605,9 @@ export class CompletionHelper {
 				' */\n' +
 				'interface \${1:Name} implements \${2:Interface}\n' +
 				'\t\${0}\n' +
-				'end\n')});
+				'end\n'),
+			documentation: this.createMarkup(['Create interface extending other interfaces.'])
+			});
 		
 		return items;
 	}
@@ -512,7 +626,9 @@ export class CompletionHelper {
 				' */\n' +
 				'enum \${1:Name}\n' +
 				'\t\${0}\n' +
-				'end\n')});
+				'end\n'),
+			documentation: this.createMarkup(['Create enumeration.'])
+			});
 		
 		return items;
 	}
@@ -531,7 +647,9 @@ export class CompletionHelper {
 				' */\n' +
 				'func \${1:void} \${2:Name}()\n' +
 				'\t\${0}\n' +
-				'end\n')});
+				'end\n'),
+			documentation: this.createMarkup(['Create class function with no argument.'])
+			});
 		
 		items.push({label: 'func(arg)',
 			sortText: `${CompletionHelper.sortPrefixSnippet}func`,
@@ -544,7 +662,9 @@ export class CompletionHelper {
 				' */\n' +
 				'func \${1:void} \${2:Name}(\${3:int} \${4:arg})\n' +
 				'\t\${0}\n' +
-				'end\n')});
+				'end\n'),
+			documentation: this.createMarkup(['Create class function with one argument.'])
+			});
 		
 		items.push({label: 'func(arg1, arg2)',
 			sortText: `${CompletionHelper.sortPrefixSnippet}func`,
@@ -553,12 +673,31 @@ export class CompletionHelper {
 			textEdit: TextEdit.replace(range,
 				'/**\n' +
 				' * Function $\{2}.\n' +
-				' * \\param $\{4} Argument.\n' +
-				' * \\param $\{6} Argument.\n' +
+				' * \\param $\{4} First argument.\n' +
+				' * \\param $\{6} Second argument.\n' +
 				' */\n' +
 				'func \${1:void} \${2:Name}(\${3:int} \${4:arg1}, \${5:int} \${6:arg2})\n' +
 				'\t\${0}\n' +
-				'end\n')});
+				'end\n'),
+			documentation: this.createMarkup(['Create class function with two arguments.'])
+			});
+		
+			items.push({label: 'func(arg1, arg2, arg3)',
+				sortText: `${CompletionHelper.sortPrefixSnippet}func`,
+				kind: CompletionItemKind.Snippet,
+				insertTextFormat: InsertTextFormat.Snippet,
+				textEdit: TextEdit.replace(range,
+					'/**\n' +
+					' * Function $\{2}.\n' +
+					' * \\param $\{4} First argument.\n' +
+					' * \\param $\{6} Second argument.\n' +
+					' * \\param $\{8} Third argument.\n' +
+					' */\n' +
+					'func \${1:void} \${2:Name}(\${3:int} \${4:arg1}, \${5:int} \${6:arg2}, \${7:int} \${8:arg3})\n' +
+					'\t\${0}\n' +
+					'end\n'),
+				documentation: this.createMarkup(['Create class function with three arguments.'])
+				});
 		
 		return items;
 	}
@@ -610,7 +749,9 @@ export class CompletionHelper {
 				' * Variable $\{2}.\n' +
 				' */\n' +
 				'var \${1:void} \${2:Name}\n' +
-				'\${0}')});
+				'\${0}'),
+			documentation: this.createMarkup(['Create variable.'])
+			});
 		
 		items.push({label: 'var constant',
 			sortText: `${CompletionHelper.sortPrefixSnippet}var`,
@@ -620,7 +761,9 @@ export class CompletionHelper {
 				'/**\n' +
 				' * Variable $\{2}.\n' +
 				' */\n' +
-				'static fixed var \${1:int} \${2:Name} = \${0:0}')});
+				'static fixed var \${1:int} \${2:Name} = \${0:0}'),
+			documentation: this.createMarkup(['Create constant class variable.'])
+			});
 			
 		return items;
 	}
@@ -638,7 +781,9 @@ export class CompletionHelper {
 				' * Function $\{2}.\n' +
 				' */\n' +
 				'func \${1:void} \${2:Name}()\n' +
-				'\${0}')});
+				'\${0}'),
+			documentation: this.createMarkup(['Create interface function with no argument.'])
+			});
 		
 		items.push({label: 'func(arg)',
 			sortText: `${CompletionHelper.sortPrefixSnippet}func`,
@@ -650,7 +795,9 @@ export class CompletionHelper {
 				' * \\param $\{4} Argument.\n' +
 				' */\n' +
 				'func \${1:void} \${2:Name}(\${3:int} \${4:arg})\n' +
-				'\${0}')});
+				'\${0}'),
+			documentation: this.createMarkup(['Create interface function with one argument.'])
+			});
 		
 		items.push({label: 'func(arg1, arg2)',
 			sortText: `${CompletionHelper.sortPrefixSnippet}func`,
@@ -659,11 +806,29 @@ export class CompletionHelper {
 			textEdit: TextEdit.replace(range,
 				'/**\n' +
 				' * Function $\{2}.\n' +
-				' * \\param $\{4} Argument.\n' +
-				' * \\param $\{6} Argument.\n' +
+				' * \\param $\{4} First argument.\n' +
+				' * \\param $\{6} Second argument.\n' +
 				' */\n' +
 				'func \${1:void} \${2:Name}(\${3:int} \${4:arg1}, \${5:int} \${6:arg2})\n' +
-				'\${0}')});
+				'\${0}'),
+			documentation: this.createMarkup(['Create interface function with two arguments.'])
+			});
+			
+		items.push({label: 'func(arg1, arg2, arg3)',
+			sortText: `${CompletionHelper.sortPrefixSnippet}func`,
+			kind: CompletionItemKind.Snippet,
+			insertTextFormat: InsertTextFormat.Snippet,
+			textEdit: TextEdit.replace(range,
+				'/**\n' +
+				' * Function $\{2}.\n' +
+				' * \\param $\{4} First argument.\n' +
+				' * \\param $\{6} Second argument.\n' +
+				' * \\param $\{8} Second argument.\n' +
+				' */\n' +
+				'func \${1:void} \${2:Name}(\${3:int} \${4:arg1}, \${5:int} \${6:arg2}, \${7:int} \${8:arg2})\n' +
+				'\${0}'),
+			documentation: this.createMarkup(['Create function with three arguments.'])
+			});
 		
 		return items;
 	}
@@ -676,7 +841,11 @@ export class CompletionHelper {
 			sortText: `${CompletionHelper.sortPrefixSnippet}namespace`,
 			kind: CompletionItemKind.Snippet,
 			insertTextFormat: InsertTextFormat.Snippet,
-			textEdit: TextEdit.replace(range, 'namespace \${0:Name}')});
+			textEdit: TextEdit.replace(range, 'namespace \${0:Name}'),
+			documentation: this.createMarkup(['Create namespace.',
+				'',
+				'Namespace continues until the end of the script or the next _namespace_ statement.'])
+			});
 		
 		return items;
 	}
@@ -689,7 +858,13 @@ export class CompletionHelper {
 			sortText: `${CompletionHelper.sortPrefixSnippet}pin`,
 			kind: CompletionItemKind.Snippet,
 			insertTextFormat: InsertTextFormat.Snippet,
-			textEdit: TextEdit.replace(range, 'pin \${0:Namespace}')});
+			textEdit: TextEdit.replace(range, 'pin \${0:Namespace}'),
+			documentation: this.createMarkup(['Pin namespace for type resolving.',
+				'',
+				['Pinned namespaces are search in the order they are defined.',
+				'Each pinned namespace is search up the entire parent chain.',
+				'Hence the namespace NamespaceA.NamespaceB.NamespaceC would be searched NamespaceC then NamespaceB then NamespaceA before continuing to the next pinned namespace.'].join(' ')])
+			});
 		
 		return items;
 	}
@@ -702,7 +877,119 @@ export class CompletionHelper {
 			sortText: `${CompletionHelper.sortPrefixSnippet}requires`,
 			kind: CompletionItemKind.Snippet,
 			insertTextFormat: InsertTextFormat.Snippet,
-			textEdit: TextEdit.replace(range, 'requires "\${0:Package Name}"')});
+			textEdit: TextEdit.replace(range, 'requires "\${0:Package Name}"'),
+			documentation: this.createMarkup(['Requires script package.',
+				'',
+				['Script packages contain classes required by this script.',
+				'All required packages in all scripts have to be present otherwise running fails'].join(' '),
+				'',
+				[`The package name is a ${ResolveNamespace.classString.simpleNameLink} literal.`,
+				'See the main application for the definition of supported package names and source prefixes.'].join(' ')])
+			});
+		
+		return items;
+	}
+	
+	/** Create completion items for type modifier keyword. */
+	public static createTypeModifiers(context: Context, range: Range,
+			allowed: Set<Context.TypeModifier>, modifiers: Set<Context.TypeModifier>): CompletionItem[] {
+		let items: CompletionItem[] = [];
+		
+		const hasPublic = modifiers.has(Context.TypeModifier.Public);
+		const hasProtected = modifiers.has(Context.TypeModifier.Protected);
+		const hasPrivate = modifiers.has(Context.TypeModifier.Private);
+		const hasStatic = modifiers.has(Context.TypeModifier.Static);
+		const hasFixed = modifiers.has(Context.TypeModifier.Fixed);
+		const hasAbstract = modifiers.has(Context.TypeModifier.Abstract);
+		
+		if (!(hasPublic || hasProtected || hasPrivate) && allowed.has(Context.TypeModifier.Public)) {
+			items.push({label: 'public',
+				sortText: `${CompletionHelper.sortPrefixSnippet}public`,
+				filterText: 'public',
+				kind: CompletionItemKind.Snippet,
+				insertTextFormat: InsertTextFormat.Snippet,
+				textEdit: TextEdit.replace(range, 'public \${0}'),
+				documentation: this.createMarkup([
+					'Public access type modifier',
+					'',
+					'Member is accessible from anywhere.'])
+				});
+		}
+		
+		if (!(hasPublic || hasProtected || hasPrivate) && allowed.has(Context.TypeModifier.Protected)) {
+			items.push({label: 'protected',
+				sortText: `${CompletionHelper.sortPrefixSnippet}protected`,
+				filterText: 'protected',
+				kind: CompletionItemKind.Snippet,
+				insertTextFormat: InsertTextFormat.Snippet,
+				textEdit: TextEdit.replace(range, 'protected \${0}'),
+				documentation: this.createMarkup([
+					'Protected access type modifier',
+					'',
+					'Member is accessible only from inside class and from inside direct and indirect subclasses.'])
+				});
+		}
+		
+		if (!(hasPublic || hasProtected || hasPrivate) && allowed.has(Context.TypeModifier.Private)) {
+			items.push({label: 'private',
+				sortText: `${CompletionHelper.sortPrefixSnippet}private`,
+				filterText: 'private',
+				kind: CompletionItemKind.Snippet,
+				insertTextFormat: InsertTextFormat.Snippet,
+				textEdit: TextEdit.replace(range, 'private \${0}'),
+				documentation: this.createMarkup([
+					'Private access type modifier',
+					'',
+					'Member is accessible only from inside class.'])
+				});
+		}
+		
+		if (!(hasStatic || hasAbstract) && allowed.has(Context.TypeModifier.Static)) {
+			items.push({label: 'static',
+				sortText: `${CompletionHelper.sortPrefixSnippet}static`,
+				filterText: 'static',
+				kind: CompletionItemKind.Snippet,
+				insertTextFormat: InsertTextFormat.Snippet,
+				textEdit: TextEdit.replace(range, 'static \${0}'),
+				documentation: this.createMarkup([
+					'Static access type modifier',
+					'',
+					'Member is a static class member accessible using class type name outside function calls.'])
+				});
+		}
+		
+		if (!hasFixed && allowed.has(Context.TypeModifier.Fixed)) {
+			items.push({label: 'fixed',
+				sortText: `${CompletionHelper.sortPrefixSnippet}fixed`,
+				filterText: 'fixed',
+				kind: CompletionItemKind.Snippet,
+				insertTextFormat: InsertTextFormat.Snippet,
+				textEdit: TextEdit.replace(range, 'fixed \${0}'),
+				documentation: this.createMarkup([
+					'Fixed access type modifier',
+					'',
+					['Member is fixed and can not be assigned after initialization.',
+					'Only allowed for static class members'].join(' ')])
+				});
+		}
+		
+		if (!(hasAbstract || hasStatic) && allowed.has(Context.TypeModifier.Abstract)) {
+			items.push({label: 'abstract',
+				sortText: `${CompletionHelper.sortPrefixSnippet}abstract`,
+				filterText: 'abstract',
+				kind: CompletionItemKind.Snippet,
+				insertTextFormat: InsertTextFormat.Snippet,
+				textEdit: TextEdit.replace(range, 'abstract \${0}'),
+				documentation: this.createMarkup([
+					'Abstract access type modifier',
+					'',
+					['Abstract functions are abstract and and have no implementation in the base class.',
+					'Classes with abstract functions have to be abstract too.'].join(' '),
+					'',
+					['Abstract classes are not required to implement all abstract functions or interface functions.',
+					'Abstract functions can not be instantiated using new() method.'].join(' ')])
+				});
+		}
 		
 		return items;
 	}
@@ -714,17 +1001,24 @@ export class CompletionHelper {
 				detail: `operator: public ${type.name} =(${type.name} value)`,
 				kind: CompletionItemKind.Operator,
 				insertTextFormat: InsertTextFormat.Snippet,
-				textEdit: TextEdit.replace(range, '=')},
+				textEdit: TextEdit.replace(range, '='),
+				documentation: this.createMarkup(['Assign operator.'])},
 			{label: '==',
 				detail: `operator: public bool ==(${type.name} value)`,
 				kind: CompletionItemKind.Operator,
 				insertTextFormat: InsertTextFormat.Snippet,
-				textEdit: TextEdit.replace(range, '==')},
+				textEdit: TextEdit.replace(range, '=='),
+				documentation: this.createMarkup(['Equals operator.',
+					'',
+					'Returns _true_ if the object on both sides of the operator are the same object instance.'])},
 			{label: '!=',
 				detail: `operator: public bool !=(${type.name} value)`,
 				kind: CompletionItemKind.Operator,
 				insertTextFormat: InsertTextFormat.Snippet,
-				textEdit: TextEdit.replace(range, '!=')},
+				textEdit: TextEdit.replace(range, '!='),
+				documentation: this.createMarkup(['Not equals operator.',
+					'',
+					'Returns _true_ if the object on both sides of the operator are not the same object instance.'])},
 		];
 	}
 	
@@ -1186,5 +1480,13 @@ export class CompletionHelper {
 		}
 		
 		return Range.create(document.positionAt(offsetBegin), document.positionAt(offsetEnd));
+	}
+	
+	/** Create markup content from lines. */
+	public static createMarkup(content: string[]): MarkupContent {
+		return {
+			kind: MarkupKind.Markdown,
+			value: content.join('  \n')
+		};
 	}
 }

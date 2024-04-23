@@ -539,6 +539,12 @@ export class ContextClass extends Context{
 			const range = CompletionHelper.wordRange(document, position);
 			let items: CompletionItem[] = [];
 			
+			items.push(...CompletionHelper.createTypeModifiers(this, range,
+				new Set<Context.TypeModifier>([
+					Context.TypeModifier.Public, Context.TypeModifier.Protected,
+					Context.TypeModifier.Private, Context.TypeModifier.Static,
+					Context.TypeModifier.Fixed, Context.TypeModifier.Abstract]),
+				new Set<Context.TypeModifier>()));
 			items.push(...CompletionHelper.createClass(this, range));
 			items.push(...CompletionHelper.createInterface(this, range));
 			items.push(...CompletionHelper.createEnum(this, range));
