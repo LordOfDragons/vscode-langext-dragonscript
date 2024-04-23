@@ -37,6 +37,7 @@ import { ResolveNamespace } from "./resolve/namespace";
 import { Resolved } from "./resolve/resolved";
 import { ResolveSearch } from "./resolve/search";
 import { ResolveType } from "./resolve/type";
+import { documents } from "./server";
 
 
 export class CompletionHelper {
@@ -479,8 +480,10 @@ export class CompletionHelper {
 	}
 	
 	/** Create completion items for 'class' keyword. */
-	public static createClass(_context: Context, range: Range): CompletionItem[] {
-		let items: CompletionItem[] = [];
+	public static createClass(context: Context, range: Range): CompletionItem[] {
+		const prefix = this.lineContentBefore(context, range.start);
+		const additionalEdits = this.createEditRemoveBefore(range.start, prefix);
+		const items: CompletionItem[] = [];
 		
 		items.push({label: 'class',
 			sortText: `${CompletionHelper.sortPrefixSnippet}class`,
@@ -490,7 +493,7 @@ export class CompletionHelper {
 				'/**\n' +
 				' * Class $\{1}.\n' +
 				' */\n' +
-				'class \${1:Name}\n' +
+				`${prefix}class \${1:Name}\n` +
 				'\t/**\n' +
 				'\t * Create new instance of class \${1}.\n' +
 				'\t */\n' +
@@ -498,6 +501,7 @@ export class CompletionHelper {
 				'\tend\n' +
 				'\t\${0}\n' +
 				'end\n'),
+			additionalTextEdits: additionalEdits,
 			documentation: this.createMarkup(['Create class.'])
 			});
 		
@@ -510,7 +514,7 @@ export class CompletionHelper {
 				'/**\n' +
 				' * Class $\{1}.\n' +
 				' */\n' +
-				'class \${1:Name} extends \${2:Subclass}\n' +
+				`${prefix}class \${1:Name} extends \${2:Subclass}\n` +
 				'\t/**\n' +
 				'\t * Create new instance of class \${1}.\n' +
 				'\t */\n' +
@@ -518,6 +522,7 @@ export class CompletionHelper {
 				'\tend\n' +
 				'\t\${0}\n' +
 				'end\n'),
+			additionalTextEdits: additionalEdits,
 			documentation: this.createMarkup(['Create class extending another class.'])
 			});
 		
@@ -530,7 +535,7 @@ export class CompletionHelper {
 				'/**\n' +
 				' * Class $\{1}.\n' +
 				' */\n' +
-				'class \${1:Name} extends \${2:BaseClass} implements \${3:Interface}\n' +
+				`${prefix}class \${1:Name} extends \${2:BaseClass} implements \${3:Interface}\n` +
 				'\t/**\n' +
 				'\t * Create new instance of class \${1}.\n' +
 				'\t */\n' +
@@ -538,6 +543,7 @@ export class CompletionHelper {
 				'\tend\n' +
 				'\t\${0}\n' +
 				'end\n'),
+			additionalTextEdits: additionalEdits,
 			documentation: this.createMarkup(['Create class extending another class and implementing interfaces.'])
 			});
 		
@@ -578,7 +584,9 @@ export class CompletionHelper {
 	
 	/** Create completion items for 'interface' keyword. */
 	public static createInterface(context: Context, range: Range): CompletionItem[] {
-		let items: CompletionItem[] = [];
+		const prefix = this.lineContentBefore(context, range.start);
+		const additionalEdits = this.createEditRemoveBefore(range.start, prefix);
+		const items: CompletionItem[] = [];
 		
 		items.push({label: 'interface',
 			sortText: `${CompletionHelper.sortPrefixSnippet}interface`,
@@ -588,9 +596,10 @@ export class CompletionHelper {
 				'/**\n' +
 				' * Interface $\{1}.\n' +
 				' */\n' +
-				'interface \${1:Name}\n' +
+				`${prefix}interface \${1:Name}\n` +
 				'\t\${0}\n' +
 				'end\n'),
+			additionalTextEdits: additionalEdits,
 			documentation: this.createMarkup(['Create interface.'])
 			});
 		
@@ -603,9 +612,10 @@ export class CompletionHelper {
 				'/**\n' +
 				' * Interface $\{1}.\n' +
 				' */\n' +
-				'interface \${1:Name} implements \${2:Interface}\n' +
+				`${prefix}interface \${1:Name} implements \${2:Interface}\n` +
 				'\t\${0}\n' +
 				'end\n'),
+			additionalTextEdits: additionalEdits,
 			documentation: this.createMarkup(['Create interface extending other interfaces.'])
 			});
 		
@@ -614,7 +624,9 @@ export class CompletionHelper {
 	
 	/** Create completion items for 'enum' keyword. */
 	public static createEnum(context: Context, range: Range): CompletionItem[] {
-		let items: CompletionItem[] = [];
+		const prefix = this.lineContentBefore(context, range.start);
+		const additionalEdits = this.createEditRemoveBefore(range.start, prefix);
+		const items: CompletionItem[] = [];
 		
 		items.push({label: 'enum',
 			sortText: `${CompletionHelper.sortPrefixSnippet}enum`,
@@ -624,9 +636,10 @@ export class CompletionHelper {
 				'/**\n' +
 				' * Enumeration $\{1}.\n' +
 				' */\n' +
-				'enum \${1:Name}\n' +
+				`${prefix}enum \${1:Name}\n` +
 				'\t\${0}\n' +
 				'end\n'),
+			additionalTextEdits: additionalEdits,
 			documentation: this.createMarkup(['Create enumeration.'])
 			});
 		
@@ -635,7 +648,9 @@ export class CompletionHelper {
 	
 	/** Create completion items for 'func' keyword. */
 	public static createFunction(context: Context, range: Range): CompletionItem[] {
-		let items: CompletionItem[] = [];
+		const prefix = this.lineContentBefore(context, range.start);
+		const additionalEdits = this.createEditRemoveBefore(range.start, prefix);
+		const items: CompletionItem[] = [];
 		
 		items.push({label: 'func',
 			sortText: `${CompletionHelper.sortPrefixSnippet}func`,
@@ -645,9 +660,10 @@ export class CompletionHelper {
 				'/**\n' +
 				' * Function $\{2}.\n' +
 				' */\n' +
-				'func \${1:void} \${2:Name}()\n' +
+				`${prefix}func \${1:void} \${2:Name}()\n` +
 				'\t\${0}\n' +
 				'end\n'),
+			additionalTextEdits: additionalEdits,
 			documentation: this.createMarkup(['Create class function with no argument.'])
 			});
 		
@@ -660,9 +676,10 @@ export class CompletionHelper {
 				' * Function $\{2}.\n' +
 				' * \\param $\{4} Argument.\n' +
 				' */\n' +
-				'func \${1:void} \${2:Name}(\${3:int} \${4:arg})\n' +
+				`${prefix}func \${1:void} \${2:Name}(\${3:int} \${4:arg})\n` +
 				'\t\${0}\n' +
 				'end\n'),
+			additionalTextEdits: additionalEdits,
 			documentation: this.createMarkup(['Create class function with one argument.'])
 			});
 		
@@ -676,28 +693,30 @@ export class CompletionHelper {
 				' * \\param $\{4} First argument.\n' +
 				' * \\param $\{6} Second argument.\n' +
 				' */\n' +
-				'func \${1:void} \${2:Name}(\${3:int} \${4:arg1}, \${5:int} \${6:arg2})\n' +
+				`${prefix}func \${1:void} \${2:Name}(\${3:int} \${4:arg1}, \${5:int} \${6:arg2})\n` +
 				'\t\${0}\n' +
 				'end\n'),
+			additionalTextEdits: additionalEdits,
 			documentation: this.createMarkup(['Create class function with two arguments.'])
 			});
 		
-			items.push({label: 'func(arg1, arg2, arg3)',
-				sortText: `${CompletionHelper.sortPrefixSnippet}func`,
-				kind: CompletionItemKind.Snippet,
-				insertTextFormat: InsertTextFormat.Snippet,
-				textEdit: TextEdit.replace(range,
-					'/**\n' +
-					' * Function $\{2}.\n' +
-					' * \\param $\{4} First argument.\n' +
-					' * \\param $\{6} Second argument.\n' +
-					' * \\param $\{8} Third argument.\n' +
-					' */\n' +
-					'func \${1:void} \${2:Name}(\${3:int} \${4:arg1}, \${5:int} \${6:arg2}, \${7:int} \${8:arg3})\n' +
-					'\t\${0}\n' +
-					'end\n'),
-				documentation: this.createMarkup(['Create class function with three arguments.'])
-				});
+		items.push({label: 'func(arg1, arg2, arg3)',
+			sortText: `${CompletionHelper.sortPrefixSnippet}func`,
+			kind: CompletionItemKind.Snippet,
+			insertTextFormat: InsertTextFormat.Snippet,
+			textEdit: TextEdit.replace(range,
+				'/**\n' +
+				' * Function $\{2}.\n' +
+				' * \\param $\{4} First argument.\n' +
+				' * \\param $\{6} Second argument.\n' +
+				' * \\param $\{8} Third argument.\n' +
+				' */\n' +
+				`${prefix}func \${1:void} \${2:Name}(\${3:int} \${4:arg1}, \${5:int} \${6:arg2}, \${7:int} \${8:arg3})\n` +
+				'\t\${0}\n' +
+				'end\n'),
+			additionalTextEdits: additionalEdits,
+			documentation: this.createMarkup(['Create class function with three arguments.'])
+			});
 		
 		return items;
 	}
@@ -738,7 +757,9 @@ export class CompletionHelper {
 	
 	/** Create completion items for class 'var' keyword. */
 	public static createClassVariable(context: Context, range: Range): CompletionItem[] {
-		let items: CompletionItem[] = [];
+		const prefix = this.lineContentBefore(context, range.start);
+		const additionalEdits = this.createEditRemoveBefore(range.start, prefix);
+		const items: CompletionItem[] = [];
 		
 		items.push({label: 'var',
 			sortText: `${CompletionHelper.sortPrefixSnippet}var`,
@@ -748,8 +769,9 @@ export class CompletionHelper {
 				'/**\n' +
 				' * Variable $\{2}.\n' +
 				' */\n' +
-				'var \${1:void} \${2:Name}\n' +
+				`${prefix}var \${1:void} \${2:Name}\n` +
 				'\${0}'),
+			additionalTextEdits: additionalEdits,
 			documentation: this.createMarkup(['Create variable.'])
 			});
 		
@@ -761,7 +783,8 @@ export class CompletionHelper {
 				'/**\n' +
 				' * Variable $\{2}.\n' +
 				' */\n' +
-				'static fixed var \${1:int} \${2:Name} = \${0:0}'),
+				`${prefix}static fixed var \${1:int} \${2:Name} = \${0:0}`),
+			additionalTextEdits: additionalEdits,
 			documentation: this.createMarkup(['Create constant class variable.'])
 			});
 			
@@ -770,7 +793,9 @@ export class CompletionHelper {
 	
 	/** Create completion items for 'func' keyword in interfaces. */
 	public static createFunctionInterface(context: Context, range: Range): CompletionItem[] {
-		let items: CompletionItem[] = [];
+		const prefix = this.lineContentBefore(context, range.start);
+		const additionalEdits = this.createEditRemoveBefore(range.start, prefix);
+		const items: CompletionItem[] = [];
 		
 		items.push({label: 'func',
 			sortText: `${CompletionHelper.sortPrefixSnippet}func`,
@@ -780,8 +805,9 @@ export class CompletionHelper {
 				'/**\n' +
 				' * Function $\{2}.\n' +
 				' */\n' +
-				'func \${1:void} \${2:Name}()\n' +
+				`${prefix}func \${1:void} \${2:Name}()\n` +
 				'\${0}'),
+			additionalTextEdits: additionalEdits,
 			documentation: this.createMarkup(['Create interface function with no argument.'])
 			});
 		
@@ -794,8 +820,9 @@ export class CompletionHelper {
 				' * Function $\{2}.\n' +
 				' * \\param $\{4} Argument.\n' +
 				' */\n' +
-				'func \${1:void} \${2:Name}(\${3:int} \${4:arg})\n' +
+				`${prefix}func \${1:void} \${2:Name}(\${3:int} \${4:arg})\n` +
 				'\${0}'),
+			additionalTextEdits: additionalEdits,
 			documentation: this.createMarkup(['Create interface function with one argument.'])
 			});
 		
@@ -809,8 +836,9 @@ export class CompletionHelper {
 				' * \\param $\{4} First argument.\n' +
 				' * \\param $\{6} Second argument.\n' +
 				' */\n' +
-				'func \${1:void} \${2:Name}(\${3:int} \${4:arg1}, \${5:int} \${6:arg2})\n' +
+				`${prefix}func \${1:void} \${2:Name}(\${3:int} \${4:arg1}, \${5:int} \${6:arg2})\n` +
 				'\${0}'),
+			additionalTextEdits: additionalEdits,
 			documentation: this.createMarkup(['Create interface function with two arguments.'])
 			});
 			
@@ -825,8 +853,9 @@ export class CompletionHelper {
 				' * \\param $\{6} Second argument.\n' +
 				' * \\param $\{8} Second argument.\n' +
 				' */\n' +
-				'func \${1:void} \${2:Name}(\${3:int} \${4:arg1}, \${5:int} \${6:arg2}, \${7:int} \${8:arg2})\n' +
+				`${prefix}func \${1:void} \${2:Name}(\${3:int} \${4:arg1}, \${5:int} \${6:arg2}, \${7:int} \${8:arg2})\n` +
 				'\${0}'),
+			additionalTextEdits: additionalEdits,
 			documentation: this.createMarkup(['Create function with three arguments.'])
 			});
 		
@@ -1488,5 +1517,33 @@ export class CompletionHelper {
 			kind: MarkupKind.Markdown,
 			value: content.join('  \n')
 		};
+	}
+	
+	/** Line content before position trimmed on the start. */
+	public static lineContentBefore(context: Context, position: Position): string {
+		const uri = context.documentUri;
+		if (!uri) {
+			return '';
+		}
+		
+		const document = documents.get(uri);
+		if (!document) {
+			return '';
+		}
+		
+		return document.getText(Range.create(position.line, 0, position.line, position.character)).trimStart();
+	}
+	
+	/** Create array with edit to remove content before position if not empty. */
+	public static createEditRemoveBefore(position: Position, prefix: string): TextEdit[] | undefined {
+		if (prefix.length == 0) {
+			return undefined;
+		}
+		
+		return [
+			TextEdit.del(Range.create(
+				position.line, position.character - prefix.length,
+				position.line, position.character))
+		]
 	}
 }
