@@ -199,7 +199,7 @@ export class CompletionHelper {
 	}
 	
 	/** Create completion items for 'if' keyword. */
-	public static createIf(range: Range): CompletionItem[] {
+	public static createIf(context: Context, range: Range): CompletionItem[] {
 		let items: CompletionItem[] = [];
 		
 		items.push({label: 'if',
@@ -232,8 +232,10 @@ export class CompletionHelper {
 	}
 	
 	/** Create completion item for 'elif' keyword. */
-	public static createElif(range: Range): CompletionItem {
-		range = Range.create(Position.create(range.start.line, Math.max(range.start.character - 1, 0)), range.end);
+	public static createElif(context: Context, range: Range): CompletionItem {
+		const lspos = context.selfOrParentWithTypes(
+			[Context.ContextType.If, Context.ContextType.IfElif])?.range?.start;
+		range = Range.create(lspos ? Position.create(range.start.line, lspos.character) : range.start, range.end);
 		
 		return {label: 'elif',
 			sortText: `${CompletionHelper.sortPrefixSnippet}elif`,
@@ -247,8 +249,10 @@ export class CompletionHelper {
 	}
 	
 	/** Create completion item for 'else' keyword. */
-	public static createElse(range: Range): CompletionItem {
-		range = Range.create(Position.create(range.start.line, Math.max(range.start.character - 1, 0)), range.end);
+	public static createElse(context: Context, range: Range): CompletionItem {
+		const lspos = context.selfOrParentWithTypes(
+			[Context.ContextType.If, Context.ContextType.IfElif])?.range?.start;
+		range = Range.create(lspos ? Position.create(range.start.line, lspos.character) : range.start, range.end);
 		
 		return {label: 'else',
 			sortText: `${CompletionHelper.sortPrefixSnippet}else`,
@@ -262,8 +266,10 @@ export class CompletionHelper {
 	}
 	
 	/** Create completion item for 'case' keyword. */
-	public static createSelectCase(range: Range): CompletionItem {
-		range = Range.create(Position.create(range.start.line, Math.max(range.start.character - 1, 0)), range.end);
+	public static createSelectCase(context: Context, range: Range): CompletionItem {
+		const lspos = context.selfOrParentWithTypes(
+			[Context.ContextType.Select, Context.ContextType.SelectCase])?.range?.start;
+		range = Range.create(lspos ? Position.create(range.start.line, lspos.character) : range.start, range.end);
 		
 		return {label: 'case',
 			sortText: `${CompletionHelper.sortPrefixSnippet}case`,
@@ -283,8 +289,9 @@ export class CompletionHelper {
 	}
 	
 	/** Create completion item for 'else' keyword. */
-	public static createSelectElse(range: Range): CompletionItem {
-		range = Range.create(Position.create(range.start.line, Math.max(range.start.character - 1, 0)), range.end);
+	public static createSelectElse(context: Context, range: Range): CompletionItem {
+		const lspos = context.selfOrParentWithTypes([Context.ContextType.Select, Context.ContextType.SelectCase])?.range?.start;
+		range = Range.create(lspos ? Position.create(range.start.line, lspos.character) : range.start, range.end);
 		
 		return {label: 'else',
 			sortText: `${CompletionHelper.sortPrefixSnippet}else`,
@@ -401,8 +408,9 @@ export class CompletionHelper {
 	}
 	
 	/** Create completion item for 'catch' keyword. */
-	public static createCatch(range: Range): CompletionItem {
-		range = Range.create(Position.create(range.start.line, Math.max(range.start.character - 1, 0)), range.end);
+	public static createCatch(context: Context, range: Range): CompletionItem {
+		const lspos = context.selfOrParentWithTypes([Context.ContextType.Try, Context.ContextType.TryCatch])?.range?.start;
+		range = Range.create(lspos ? Position.create(range.start.line, lspos.character) : range.start, range.end);
 		
 		return {label: 'catch',
 			sortText: `${CompletionHelper.sortPrefixSnippet}catch`,
@@ -457,8 +465,17 @@ export class CompletionHelper {
 	}
 	
 	/** Create completion item for 'end' keyword. */
-	public static createEnd(range: Range): CompletionItem {
-		range = Range.create(Position.create(range.start.line, Math.max(range.start.character - 1, 0)), range.end);
+	public static createEnd(context: Context, range: Range): CompletionItem {
+		const lspos = context.selfOrParentWithTypes([
+			Context.ContextType.If, Context.ContextType.IfElif,
+			Context.ContextType.Select, Context.ContextType.SelectCase,
+			Context.ContextType.Try, Context.ContextType.TryCatch,
+			Context.ContextType.Block,
+			Context.ContextType.Function,
+			Context.ContextType.Class,
+			Context.ContextType.Interface,
+			Context.ContextType.Enumeration])?.range?.start;
+		range = Range.create(lspos ? Position.create(range.start.line, lspos.character) : range.start, range.end);
 		
 		return {label: 'end',
 			sortText: `${CompletionHelper.sortPrefixSnippet}end`,
@@ -481,7 +498,7 @@ export class CompletionHelper {
 	
 	/** Create completion items for 'class' keyword. */
 	public static createClass(context: Context, range: Range): CompletionItem[] {
-		const prefix = this.lineContentBefore(context, range.start);
+		const prefix = this.lineContentBefore(this.getDocument(context), range.start);
 		const additionalEdits = this.createEditRemoveBefore(range.start, prefix);
 		const items: CompletionItem[] = [];
 		
@@ -584,7 +601,7 @@ export class CompletionHelper {
 	
 	/** Create completion items for 'interface' keyword. */
 	public static createInterface(context: Context, range: Range): CompletionItem[] {
-		const prefix = this.lineContentBefore(context, range.start);
+		const prefix = this.lineContentBefore(this.getDocument(context), range.start);
 		const additionalEdits = this.createEditRemoveBefore(range.start, prefix);
 		const items: CompletionItem[] = [];
 		
@@ -624,7 +641,7 @@ export class CompletionHelper {
 	
 	/** Create completion items for 'enum' keyword. */
 	public static createEnum(context: Context, range: Range): CompletionItem[] {
-		const prefix = this.lineContentBefore(context, range.start);
+		const prefix = this.lineContentBefore(this.getDocument(context), range.start);
 		const additionalEdits = this.createEditRemoveBefore(range.start, prefix);
 		const items: CompletionItem[] = [];
 		
@@ -648,7 +665,7 @@ export class CompletionHelper {
 	
 	/** Create completion items for 'func' keyword. */
 	public static createFunction(context: Context, range: Range): CompletionItem[] {
-		const prefix = this.lineContentBefore(context, range.start);
+		const prefix = this.lineContentBefore(this.getDocument(context), range.start);
 		const additionalEdits = this.createEditRemoveBefore(range.start, prefix);
 		const items: CompletionItem[] = [];
 		
@@ -757,7 +774,7 @@ export class CompletionHelper {
 	
 	/** Create completion items for class 'var' keyword. */
 	public static createClassVariable(context: Context, range: Range): CompletionItem[] {
-		const prefix = this.lineContentBefore(context, range.start);
+		const prefix = this.lineContentBefore(this.getDocument(context), range.start);
 		const additionalEdits = this.createEditRemoveBefore(range.start, prefix);
 		const items: CompletionItem[] = [];
 		
@@ -793,7 +810,7 @@ export class CompletionHelper {
 	
 	/** Create completion items for 'func' keyword in interfaces. */
 	public static createFunctionInterface(context: Context, range: Range): CompletionItem[] {
-		const prefix = this.lineContentBefore(context, range.start);
+		const prefix = this.lineContentBefore(this.getDocument(context), range.start);
 		const additionalEdits = this.createEditRemoveBefore(range.start, prefix);
 		const items: CompletionItem[] = [];
 		
@@ -1080,7 +1097,7 @@ export class CompletionHelper {
 	public static createStatementKeywords(context: Context, range: Range): CompletionItem[] {
 		let items: CompletionItem[] = [];
 		
-		items.push(...CompletionHelper.createIf(range));
+		items.push(...CompletionHelper.createIf(context, range));
 		items.push(...CompletionHelper.createFor(range));
 		items.push(CompletionHelper.createSelect(range));
 		items.push(CompletionHelper.createWhile(range));
@@ -1100,39 +1117,39 @@ export class CompletionHelper {
 			case Context.ContextType.If:{
 				const ctxelse = (p.parent as ContextIf).elsestatements;
 				if (ctxelse != p) {
-					items.push(CompletionHelper.createElif(range));
+					items.push(CompletionHelper.createElif(context, range));
 					if (!ctxelse) {
-						items.push(CompletionHelper.createElse(range));
+						items.push(CompletionHelper.createElse(context, range));
 					}
 				}
 				}break;
 				
 			case Context.ContextType.IfElif:
-				items.push(CompletionHelper.createElif(range));
+				items.push(CompletionHelper.createElif(context, range));
 				if (!((p.parent as ContextIfElif).parent as ContextIf).elsestatements) {
-					items.push(CompletionHelper.createElse(range));
+					items.push(CompletionHelper.createElse(context, range));
 				}
 				break;
 				
 			case Context.ContextType.Select:
 				if ((p.parent as ContextSelect).elsestatements != p) {
-					items.push(CompletionHelper.createSelectCase(range));
+					items.push(CompletionHelper.createSelectCase(context, range));
 					if (!(p.parent as ContextSelect).elsestatements) {
-						items.push(CompletionHelper.createSelectElse(range));
+						items.push(CompletionHelper.createSelectElse(context, range));
 					}
 				}
 				break;
 				
 			case Context.ContextType.SelectCase:
-				items.push(CompletionHelper.createSelectCase(range));
+				items.push(CompletionHelper.createSelectCase(context, range));
 				if (!(p.parent as ContextSelect).elsestatements) {
-					items.push(CompletionHelper.createSelectElse(range));
+					items.push(CompletionHelper.createSelectElse(context, range));
 				}
 				break;
 				
 			case Context.ContextType.Try:
 			case Context.ContextType.TryCatch:
-				items.push(CompletionHelper.createCatch(range));
+				items.push(CompletionHelper.createCatch(context, range));
 				break;
 			}
 		}
@@ -1147,7 +1164,7 @@ export class CompletionHelper {
 			items.push(CompletionHelper.createBreak(range));
 		}
 		
-		items.push(CompletionHelper.createEnd(range));
+		items.push(CompletionHelper.createEnd(context, range));
 		
 		return items;
 	}
@@ -1519,19 +1536,14 @@ export class CompletionHelper {
 		};
 	}
 	
-	/** Line content before position trimmed on the start. */
-	public static lineContentBefore(context: Context, position: Position): string {
+	public static getDocument(context: Context): TextDocument | undefined {
 		const uri = context.documentUri;
-		if (!uri) {
-			return '';
-		}
-		
-		const document = documents.get(uri);
-		if (!document) {
-			return '';
-		}
-		
-		return document.getText(Range.create(position.line, 0, position.line, position.character)).trimStart();
+		return uri ? documents.get(uri) : undefined;
+	}
+	
+	/** Line content before position trimmed on the start. */
+	public static lineContentBefore(document: TextDocument | undefined, position: Position): string {
+		return document?.getText(Range.create(position.line, 0, position.line, position.character))?.trimStart() ?? '';
 	}
 	
 	/** Create array with edit to remove content before position if not empty. */

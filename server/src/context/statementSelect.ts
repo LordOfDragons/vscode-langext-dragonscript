@@ -307,9 +307,9 @@ export class ContextSelect extends Context {
 		let items: CompletionItem[] = [];
 		
 		if (Helpers.isPositionAfter(position, this._endBegin)) {
-			items.push(CompletionHelper.createSelectCase(range));
+			items.push(CompletionHelper.createSelectCase(this, range));
 			if (this._cases.length > 0 && !this._elsestatements) {
-				items.push(CompletionHelper.createSelectElse(range));
+				items.push(CompletionHelper.createSelectElse(this, range));
 				items.push(...CompletionHelper.createExpression(range, this));
 			}
 			

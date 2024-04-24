@@ -39,6 +39,7 @@ import { ContextComment } from "./comment";
 import { DSSettings } from "../settings";
 import { DebugSettings } from "../debugSettings";
 import { debugLogMessage } from "../server";
+import { Helpers } from "../helpers";
 
 
 /** Top level script context. */
@@ -166,6 +167,18 @@ export class ContextScript extends Context{
 
 	public get statements(): Context[] {
 		return this._statements;
+	}
+	
+	public statementBefore(position: Position): Context | undefined {
+		var statement: Context | undefined;
+		for (const each of this._statements) {
+			const stapos = each.range?.end;
+			if (stapos && Helpers.isPositionBefore(position, stapos)) {
+				break;
+			}
+			statement = each;
+		}
+		return statement;
 	}
 	
 	public lastStatementWithType(type: Context.ContextType, before?: Context): Context | undefined {
