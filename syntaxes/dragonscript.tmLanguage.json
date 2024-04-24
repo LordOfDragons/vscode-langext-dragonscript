@@ -551,6 +551,14 @@
 					"name": "constant.character.escape"
 				},
 				{
+					"match": "\\\\h[0-9a-fA-F]{1,2}",
+					"name": "constant.character.escape"
+				},
+				{
+					"match": "\\\\0[0-7]{0,2}",
+					"name": "constant.character.escape"
+				},
+				{
 					"match": "\\\\.",
 					"name": "constant.character.escape.dragonscript"
 				}
@@ -563,7 +571,15 @@
 			"end": "\"",
 			"patterns": [
 				{
-					"match": "\\\\u[0-9a-fA-F]{4}",
+					"match": "\\\\u[0-9a-fA-F]{1,6}",
+					"name": "constant.character.escape"
+				},
+				{
+					"match": "\\\\x[0-9a-fA-F]{1,2}",
+					"name": "constant.character.escape"
+				},
+				{
+					"match": "\\\\0[0-7]{0,2}",
 					"name": "constant.character.escape"
 				},
 				{

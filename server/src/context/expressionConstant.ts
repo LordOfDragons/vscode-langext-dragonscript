@@ -80,7 +80,7 @@ export class ContextConstant extends Context{
 		} else if (c.string) {
 			this._name = new Identifier(c.string[0]);
 			this._constantType = ContextConstant.ConstantType.string;
-			this._constantValue = this._name.name;
+			this._constantValue = Helpers.dsLiteralString(this._name.name);
 
 		} else if (c.true) {
 			this._name = new Identifier(c.true[0]);
@@ -273,7 +273,7 @@ export class ContextConstant extends Context{
 			case ContextConstant.ConstantType.string:
 				const v = this._constantValue as string;
 				if (v) {
-					content.push(`: length ${v.length}`);
+					content.push(`: length ${[...v].length}`);
 				}
 				break;
 		}

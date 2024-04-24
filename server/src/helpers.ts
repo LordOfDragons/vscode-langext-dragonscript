@@ -29,6 +29,7 @@ import { Context } from "./context/context";
 import { EndOfCommandCstNode } from "./nodeclasses/endOfCommand";
 import { ResolveFunction } from "./resolve/function";
 import { Resolved, ResolveUsage } from "./resolve/resolved";
+import { debugLogMessage } from "./server";
 
 
 export class Helpers {
@@ -282,5 +283,63 @@ export class Helpers {
 			return parseInt(ds.substring(2), 16);
 		}
 		return undefined;
+	}
+	
+	
+	private static reStringEscape = new RegExp(
+		"(\\\\u[0-9a-fA-F]{1,6})"
+		+ "|"
+		+ "(\\\\x[0-9a-fA-F]{1,2})"
+		+ "|"
+		+ "(\\\\0[0-7]{0,2})"
+		+ "|"
+		+ "(\\\\.)", 'g');
+	
+	public static dsLiteralString(ds: string): string | undefined {
+		if (ds.length < 2 || ds[0] != '"' || ds[ds.length - 1] != '"') {
+			return undefined;
+		}
+		
+		const ds2 = ds.substring(1, ds.length - 1);
+		const result: string[] = [];
+		let match: RegExpMatchArray | null;
+		let index = 0;
+		
+		this.reStringEscape.lastIndex = 0;
+		while ((match = this.reStringEscape.exec(ds2)) !== null) {
+			if (!match.index) {
+				break;
+			}
+			
+			const end = this.reStringEscape.lastIndex;
+			const begin = match.index;
+			if (index < begin) {
+				result.push(ds2.substring(index, begin));
+			}
+			
+			if (match[1]) {
+				result.push(String.fromCodePoint(parseInt(match[1].substring(2), 16)));
+				
+			} else if (match[2]) {
+				result.push(String.fromCodePoint(parseInt(match[2].substring(2), 16)));
+				
+			} else if (match[3]) {
+				result.push(String.fromCodePoint(parseInt(match[3].substring(1), 8)));
+				
+			} else if (match[4]) {
+				result.push(match[4][1]);
+				
+			} else {
+				break;
+			}
+			
+			index = end;
+		}
+		
+		if (index < ds2.length) {
+			result.push(ds2.substring(index));
+		}
+		
+		return result.join('');
 	}
 }
