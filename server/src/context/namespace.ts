@@ -323,7 +323,8 @@ export class ContextNamespace extends Context{
 		let items: CompletionItem[] = [];
 		
 		items.push(...CompletionHelper.createTypeModifiers(this, range,
-			new Set<Context.TypeModifier>([Context.TypeModifier.Abstract]),
+			new Set<Context.TypeModifier>([
+				Context.TypeModifier.Fixed, Context.TypeModifier.Abstract]),
 			new Set<Context.TypeModifier>()));
 		items.push(...CompletionHelper.createNamespace(this, range));
 		items.push(...CompletionHelper.createClass(this, range));
