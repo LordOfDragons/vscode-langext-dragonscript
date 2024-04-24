@@ -23,6 +23,27 @@ C-Call hacks.
 
 The Language is `strong typed`, `object oriented` and uses a `forward parsing only` grammar.
 
+The language server supports:
+- Provide Diagnostics
+- Show Code Completion Proposals
+- Show Hovers
+- Help With Function and Method Signatures
+- Show Definitions of a Symbol
+- Find All References to a Symbol
+- Highlight All Occurrences of a Symbol in a Document
+- Show all Symbol Definitions Within a Document
+- Show all Symbol Definitions in Folder
+- Possible Actions on Errors or Warnings
+- Rename Symbols
+
+
+## Drag[en]gine Game Engine DragonScript Module
+
+This extension supports the `Drag[en]gine Game Engine`. The installed `DragonScript Modules`
+are automatically detected and the latest module version used if the workspace requires
+Drag[en]gine. To enable this support see the extension parameter
+`dragonscriptLanguage.requiresPackageDragengine`.
+
 
 ## Preview Images
 
@@ -88,6 +109,8 @@ Release with language server support:
 - Show all Symbol Definitions in Folder
 - Possible Actions on Errors or Warnings
 - Rename Symbols
+
+Added support to detect and use installed Drag[en]gine Game Engine DragonScript modules
 
 ### 1.0.0
 
