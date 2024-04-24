@@ -38,76 +38,67 @@ import { CompletionHelper } from "../completionHelper";
 export class ContextConstant extends Context{
 	protected _name: Identifier;
 	protected _constantType: ContextConstant.ConstantType = ContextConstant.ConstantType.null;
-	protected _constantValue?: number | string | boolean;
+	protected _constantValue?: number | string | boolean | null = null;
 	protected _resolveType?: ResolveType;
 
 
 	constructor(node: ExpressionConstantCstNode, parent: Context) {
 		super(Context.ContextType.Constant, parent);
-
-		let c = node.children;
-
+		
+		const c = node.children;
+		
 		if (c.literalByte) {
 			this._name = new Identifier(c.literalByte[0]);
 			this._constantType = ContextConstant.ConstantType.literalByte;
-			this._constantValue = Helpers.dsLiteralByteToNum(this._name.name);
-
+			
 		} else if (c.literalIntByte) {
 			this._name = new Identifier(c.literalIntByte[0]);
 			this._constantType = ContextConstant.ConstantType.literalIntByte;
-			this._constantValue = Helpers.dsLiteralIntByteToNum(this._name.name);
-
+			
 		} else if (c.literalIntHex) {
 			this._name = new Identifier(c.literalIntHex[0]);
 			this._constantType = ContextConstant.ConstantType.literalIntHex;
-			this._constantValue = Helpers.dsLiteralIntHexToNum(this._name.name);
-
+			
 		} else if (c.literalIntOct) {
 			this._name = new Identifier(c.literalIntOct[0]);
 			this._constantType = ContextConstant.ConstantType.literalIntOct;
-			this._constantValue = Helpers.dsLiteralOctByteToNum(this._name.name);
-
+			
 		} else if (c.literalInt) {
 			this._name = new Identifier(c.literalInt[0]);
 			this._constantType = ContextConstant.ConstantType.literalInt;
-			this._constantValue = parseInt(this._name.name, 10);
-
+			
 		} else if (c.literalFloat) {
 			this._name = new Identifier(c.literalFloat[0]);
 			this._constantType = ContextConstant.ConstantType.literalFloat;
-			this._constantValue = parseFloat(this._name.name);
-
+			
 		} else if (c.string) {
 			this._name = new Identifier(c.string[0]);
 			this._constantType = ContextConstant.ConstantType.string;
-			this._constantValue = Helpers.dsLiteralString(this._name.name);
-
+			
 		} else if (c.true) {
 			this._name = new Identifier(c.true[0]);
 			this._constantType = ContextConstant.ConstantType.true;
-			this._constantValue = true;
-
+			
 		} else if (c.false) {
 			this._name = new Identifier(c.false[0]);
 			this._constantType = ContextConstant.ConstantType.false;
-			this._constantValue = false;
-
+			
 		} else if (c.null) {
 			this._name = new Identifier(c.null[0]);
 			this._constantType = ContextConstant.ConstantType.null;
-
+			
 		} else if (c.this) {
 			this._name = new Identifier(c.this[0]);
 			this._constantType = ContextConstant.ConstantType.this;
-
+			
 		} else if (c.super) {
 			this._name = new Identifier(c.super[0]);
 			this._constantType = ContextConstant.ConstantType.super;
-
+			
 		} else {
 			this._name = new Identifier(undefined, "??");
 		}
-
+		
 		this.range = this._name.range;
 	}
 
@@ -120,16 +111,61 @@ export class ContextConstant extends Context{
 		return this._constantType;
 	}
 	
+	public get constantValue(): number | string | boolean | undefined {
+		if (this._constantValue === null) {
+			this._constantValue = this.updateConstantValue();
+		}
+		return this._constantValue;
+	}
+	
+	private updateConstantValue(): number | string | boolean | undefined {
+		if (!this._name.name) {
+			return undefined;
+		}
+		
+		switch (this._constantType) {
+		case ContextConstant.ConstantType.literalByte:
+			return Helpers.dsLiteralByteToNum(this._name.name);
+			
+		case ContextConstant.ConstantType.literalIntByte:
+			return Helpers.dsLiteralIntByteToNum(this._name.name);
+			
+		case ContextConstant.ConstantType.literalIntHex:
+			return Helpers.dsLiteralIntHexToNum(this._name.name);
+			
+		case ContextConstant.ConstantType.literalIntOct:
+			return Helpers.dsLiteralOctByteToNum(this._name.name);
+			
+		case ContextConstant.ConstantType.literalInt:
+			return parseInt(this._name.name, 10);
+			
+		case ContextConstant.ConstantType.literalFloat:
+			return parseFloat(this._name.name);
+			
+		case ContextConstant.ConstantType.string:
+			return Helpers.dsLiteralString(this._name.name);
+			
+		case ContextConstant.ConstantType.true:
+			return true;
+			
+		case ContextConstant.ConstantType.false:
+			return false;
+			
+		default:
+			return undefined;
+		}
+	}
+	
 	protected updateResolveTextLong(): string[] {
-		return [`literal '${this._constantValue?.toString() ?? '?'}'`];
+		return [`literal '${this.constantValue?.toString() ?? '?'}'`];
 	}
 	
 	protected updateResolveTextShort(): string {
-		return `literal '${this._constantValue?.toString() ?? '?'}'`;
+		return `literal '${this.constantValue?.toString() ?? '?'}'`;
 	}
 	
 	protected updateReportInfoText(): string {
-		return `literal '${this._constantValue?.toString() ?? '?'}'`;
+		return `literal '${this.constantValue?.toString() ?? '?'}'`;
 	}
 	
 	
@@ -251,7 +287,7 @@ export class ContextConstant extends Context{
 			case ContextConstant.ConstantType.literalIntOct:
 			case ContextConstant.ConstantType.literalIntHex:
 			case ContextConstant.ConstantType.literalInt:{
-				const v = this._constantValue as number;
+				const v = this.constantValue as number;
 				if (v !== undefined) {
 					content.push(`: ${v.toFixed(0)}`);
 
@@ -271,7 +307,7 @@ export class ContextConstant extends Context{
 				}break;
 
 			case ContextConstant.ConstantType.string:
-				const v = this._constantValue as string;
+				const v = this.constantValue as string;
 				if (v) {
 					content.push(`: length ${[...v].length}`);
 				}
@@ -311,7 +347,7 @@ export class ContextConstant extends Context{
 			case ContextConstant.ConstantType.literalIntOct:
 			case ContextConstant.ConstantType.literalInt:
 			case ContextConstant.ConstantType.literalFloat:
-				return m2._constantValue == this._constantValue;
+				return m2.constantValue == this.constantValue;
 				
 			default:
 				return undefined;
@@ -325,7 +361,7 @@ export class ContextConstant extends Context{
 		case ContextConstant.ConstantType.null:
 		case ContextConstant.ConstantType.this:
 		case ContextConstant.ConstantType.super:
-			return m2._constantType === this._constantType && m2._constantValue == this._constantValue;
+			return m2._constantType === this._constantType && m2.constantValue == this.constantValue;
 			
 		default:
 			return undefined;
