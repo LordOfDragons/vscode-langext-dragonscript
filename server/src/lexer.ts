@@ -46,13 +46,13 @@ export class DSLexer extends Lexer{
 
 	public static readonly tokenLineSplicing = createToken({
 		name: "lineSplicing",
-		pattern: /\\(\n|\r|\r\n)/,
+		pattern: /\\(\r\n|\n|\r)/,
 		group: Lexer.SKIPPED
 	})
 
 	public static readonly tokenNewline = createToken({
 		name: "newline",
-		pattern: /\n|\r|\r\n/
+		pattern: /\r\n|\n|\r/
 	})
 
 	public static readonly tokenAnyCharacter = createToken({
@@ -619,8 +619,8 @@ export class DSLexer extends Lexer{
 
 	public static readonly allTokens = [
 		// special
-		DSLexer.tokenLineSplicing,    // \\(\n|\r|\r\n)
-		DSLexer.tokenNewline,         // \n|\r|\r\n
+		DSLexer.tokenLineSplicing,    // \\(|\n|\r)
+		DSLexer.tokenNewline,         // \r\n|\n|\r
 		DSLexer.tokenSpace,           // [ \t\f]+
 		
 		// comments
