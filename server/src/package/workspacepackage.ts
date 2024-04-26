@@ -30,6 +30,7 @@ import { PackageDSLanguage } from "./dslanguage";
 import { Package } from "./package";
 import { Minimatch } from "minimatch";
 import { join } from "path";
+import { fileURLToPath } from "url";
 
 export class PackageWorkspace extends Package {
 	private _uri: string;
@@ -41,7 +42,7 @@ export class PackageWorkspace extends Package {
 	constructor(console: RemoteConsole, folder: WorkspaceFolder) {
 		super(console, PackageWorkspace.PACKAGE_ID);
 		this._uri = folder.uri;
-		this._path = folder.uri.slice(7);
+		this._path = fileURLToPath(folder.uri);
 		this._name = folder.name;
 	}
 	

@@ -71,7 +71,9 @@
 				"dragonscriptLanguage.scriptDirectories": {
 					"scope": "resource",
 					"type": "array",
-					"default": ["."],
+					"default": [
+						"."
+					],
 					"description": "List of directories to scan for source files. Typically scripts are located in one directory (default workspace root). Empty list disabled DragonScript support for workspace."
 				},
 				"dragonscriptLanguage.maxNumberOfProblems": {

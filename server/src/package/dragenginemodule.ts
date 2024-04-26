@@ -94,7 +94,7 @@ export class PackageDEModule extends Package {
 		if (!pathEngine) {
 			switch (platform()) {
 				case 'win32':
-					pathEngine = "C:\\Program Files\\Dragengine\\Data\\Modules\\Scripting\\DragonScript";
+					pathEngine = "C:\\Program Files\\Dragengine\\Share\\Modules\\Scripting\\DragonScript";
 					break;
 
 				default:
