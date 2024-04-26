@@ -30,6 +30,7 @@ import { EndOfCommandCstNode } from "./nodeclasses/endOfCommand";
 import { ResolveFunction } from "./resolve/function";
 import { Resolved, ResolveUsage } from "./resolve/resolved";
 import { debugLogMessage } from "./server";
+import { URI } from "vscode-uri";
 
 
 export class Helpers {
@@ -203,6 +204,13 @@ export class Helpers {
 	public static logRange(range: Range | undefined) {
 		return `[${range?.start.line}:${range?.start.character} -> ${range?.end.line}:${range?.end.character}]`;
 		//return `range(${range?.start.line}:${range?.start.character} -> ${range?.end.line}:${range?.end.character})`;
+	}
+
+	public static linkFromLocation(location: Location, text: string): string {
+		const path = URI.parse(location.uri).fsPath;
+		const uri = URI.file(path).toString();
+		const line = location.range.start.line + 1;
+		return `[${text}](${uri}#L${line})`;
 	}
 
 	public static numToBin(value: number, leadingZeros: boolean = false): string {

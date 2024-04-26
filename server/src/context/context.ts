@@ -216,7 +216,7 @@ export class Context {
 	 */
 	public get simpleNameLink(): string {
 		const l = this.resolveLocationSelf;
-		return l ? `[${this.simpleName}](${encodeURI(l.uri)}#L${l.range.start.line + 1})` : this.simpleName;
+		return l ? Helpers.linkFromLocation(l, this.simpleName) : this.simpleName;
 	}
 	
 	public definition(position: Position): Location[] {

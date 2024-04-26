@@ -32,6 +32,7 @@ import { ResolveSearch } from './search';
 import { CompletionItem, CompletionItemKind, InsertTextFormat, MarkupContent, Position, Range, TextEdit } from 'vscode-languageserver';
 import { Context } from '../context/context';
 import { Resolved } from './resolved';
+import { Helpers } from '../helpers';
 
 
 /**
@@ -98,7 +99,7 @@ export class ResolveType extends Resolved{
 	 */
 	public get simpleNameLink(): string {
 		const l = this.resolveLocation.at(0);
-		return l ? `[${this.simpleName}](${encodeURI(l.uri)}#L${l.range.start.line + 1})` : this.simpleName;
+		return l ? Helpers.linkFromLocation(l, this.simpleName) : this.simpleName;
 	}
 	
 	

@@ -32,6 +32,7 @@ import { ScriptDocument } from "../scriptDocument";
 import { getDocumentSettings, scriptDocuments, validator } from "../server";
 import { DeferredPromiseVoid } from "../deferredPromise";
 import { Minimatch, minimatch } from 'minimatch';
+import { URI } from "vscode-uri";
 
 export class Package {
 	protected _console: RemoteConsole;
@@ -213,7 +214,7 @@ export class Package {
 	protected async loadFile(path: string, reportConfig: ReportConfig): Promise<void> {
 		//let startTime = Date.now();
 
-		let uri = `file://${path}`
+		let uri = URI.file(path).toString();
 		let scriptDocument = scriptDocuments.get(uri);
 		if (scriptDocument) {
 			scriptDocument.package = this;

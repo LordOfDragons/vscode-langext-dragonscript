@@ -686,7 +686,7 @@ export class TypeName {
 	 */
 	public get simpleNameLink(): string {
 		const l = this.resolve?.resolved?.resolveLocation.at(0);
-		return l ? `[${this._name}](${encodeURI(l.uri)}#L${l.range.start.line + 1})` : this._name;
+		return l ? Helpers.linkFromLocation(l, this._name) : this._name;
 	}
 	
 	toString() : string {

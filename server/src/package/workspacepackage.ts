@@ -30,7 +30,7 @@ import { PackageDSLanguage } from "./dslanguage";
 import { Package } from "./package";
 import { Minimatch } from "minimatch";
 import { join } from "path";
-import { fileURLToPath } from "url";
+import { URI } from "vscode-uri";
 
 export class PackageWorkspace extends Package {
 	private _uri: string;
@@ -42,7 +42,7 @@ export class PackageWorkspace extends Package {
 	constructor(console: RemoteConsole, folder: WorkspaceFolder) {
 		super(console, PackageWorkspace.PACKAGE_ID);
 		this._uri = folder.uri;
-		this._path = fileURLToPath(folder.uri);
+		this._path = URI.parse(folder.uri).fsPath;
 		this._name = folder.name;
 	}
 	
