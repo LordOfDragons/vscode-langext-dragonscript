@@ -24,7 +24,7 @@
 
 import { Context } from "./context";
 import { OpenNamespaceCstNode } from "../nodeclasses/openNamespace";
-import { CompletionItem, Definition, DocumentSymbol, Hover, Location, Position, Range, RemoteConsole, SymbolInformation, SymbolKind } from "vscode-languageserver";
+import { CompletionItem, DocumentSymbol, Hover, Location, Position, Range, RemoteConsole, SymbolInformation, SymbolKind } from "vscode-languageserver";
 import { TypeName } from "./typename";
 import { HoverInfo } from "../hoverinfo";
 import { ResolveNamespace } from "../resolve/namespace";

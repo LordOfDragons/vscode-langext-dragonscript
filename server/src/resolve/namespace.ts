@@ -27,6 +27,7 @@ import { Context } from '../context/context';
 import { ContextDocumentation } from '../context/documentation';
 import { ContextNamespace } from '../context/namespace';
 import { ResolveClass } from './class';
+import { ResolveUsage } from './resolved';
 import { ResolveSearch } from './search';
 import { ResolveType } from './type';
 
@@ -64,6 +65,22 @@ export class ResolveNamespace extends ResolveType {
 		if (index != -1) {
 			this._contexts.splice(index, 1);
 		}
+		
+		this.disposeIfEmpty();
+	}
+	
+	public removeFromParent(): void {
+		var parentNS: ResolveNamespace | undefined;
+		if (this.parent?.type === ResolveType.Type.Namespace) {
+			parentNS = this.parent as ResolveNamespace;
+		}
+		
+		super.removeFromParent();
+		
+		if (parentNS) {
+			parentNS._namespaces.delete(this._name);
+			parentNS.disposeIfEmpty();
+		}
 	}
 	
 	
@@ -85,6 +102,22 @@ export class ResolveNamespace extends ResolveType {
 		return ns;
 	}
 	
+	
+	public removeUsage(usage: ResolveUsage): void {
+		super.removeUsage(usage);
+		this.disposeIfEmpty();
+	}
+	
+	protected disposeIfEmpty(): void {
+		if (this._contexts.length == 0
+				/*&& this._classes.size == 0
+				&& this._interfaces.size == 0
+				&& this._enumerations.size == 0
+				&& this._namespaces.size == 0*/
+				&& this._usage.size == 0) {
+			this.dispose();
+		}
+	}
 	
 	public isNamespace(name: string): boolean {
 		return !this._classes.has(name) && !this.interfaces.has(name) && !this._enumerations.has(name);
