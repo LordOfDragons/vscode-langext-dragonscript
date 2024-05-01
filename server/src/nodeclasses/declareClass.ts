@@ -102,7 +102,7 @@ export interface ClassVariableCstNode extends CstNode {
 }
 
 export type ClassVariableCstChildren = {
-	name: IToken[];
+	name?: IToken[];
 	value?: ExpressionCstNode[];
 };
 

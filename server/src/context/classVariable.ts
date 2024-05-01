@@ -65,8 +65,9 @@ export class ContextClassVariable extends Context{
 		this._typeModifiers = new Context.TypeModifierSet(typemodNode,
 			Context.AccessLevel.Private, [Context.TypeModifier.Private]);
 		
-		if (children) {
-			this._name = new Identifier(children.name[0]);
+		const name = children?.name?.at(0);
+		if (name) {
+			this._name = new Identifier(name);
 		}
 		
 		this._typename = new TypeName(typeNode);
