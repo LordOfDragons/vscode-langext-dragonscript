@@ -378,7 +378,7 @@ export class ContextInterface extends Context{
 		
 		if (this._tokenImplements && Helpers.isPositionAfter(position, this._tokenImplements.end)) {
 			const implement = this._implements.find(c => c.isPositionInside(position));
-			const restype = [Resolved.Type.Interface, Resolved.Type.Namespace];
+			const restype = [Resolved.Type.Interface, Resolved.Type.Class, Resolved.Type.Namespace];
 			const range = CompletionHelper.wordRange(document, position);
 			
 			return implement?.completion(document, position, this, restype)

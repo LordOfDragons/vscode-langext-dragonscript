@@ -109,7 +109,7 @@ export class ResolveNamespace extends ResolveType {
 	}
 	
 	protected disposeIfEmpty(): void {
-		if (this._contexts.length == 0
+		if (this._name != '' && this._contexts.length == 0
 				/*&& this._classes.size == 0
 				&& this._interfaces.size == 0
 				&& this._enumerations.size == 0

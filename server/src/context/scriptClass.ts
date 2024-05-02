@@ -109,7 +109,7 @@ export class ContextClass extends Context{
 		
 		this._positionBeginEnd = Helpers.endOfCommandBegin(cdeclBegin.endOfCommand);
 		
-		const decls = cdecl.classBody[0].children.classBodyDeclaration;
+		const decls = cdecl.classBody?.at(0)?.children.classBodyDeclaration;
 		if (decls) {
 			for (const each of decls) {
 				let typemod = each.children.typeModifiers ? each.children.typeModifiers[0] : undefined;
@@ -557,7 +557,7 @@ export class ContextClass extends Context{
 		
 		if (this._tokenImplements && Helpers.isPositionAfter(position, this._tokenImplements.end)) {
 			const implement = this._implements.find(c => c.isPositionInside(position));
-			const restype = [Resolved.Type.Interface, Resolved.Type.Namespace];
+			const restype = [Resolved.Type.Interface, Resolved.Type.Class, Resolved.Type.Namespace];
 			const range = CompletionHelper.wordRange(document, position);
 			
 			return implement?.completion(document, position, this, restype)
