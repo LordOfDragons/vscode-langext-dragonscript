@@ -312,7 +312,18 @@ export class ContextClass extends Context{
 			const t = this._extends.resolveType(state, this);
 			if (t?.resolved?.type === ResolveType.Type.Class) {
 				if (this._extends?.resolve) {
-					this._extends.resolve.inherited = true;
+					if (this._extends.resolve.resolved !== this._resolveClass) {
+						this._extends.resolve.inherited = true;
+						
+					} else {
+						const r = this._extends.range;
+						if (r) {
+							state.reportError(r, `class can not extend itself.`);
+						}
+						
+						this._extends.resolve?.dispose();
+						this._extends.resolve = undefined;
+					}
 				}
 			} else {
 				const r = this._extends.range;

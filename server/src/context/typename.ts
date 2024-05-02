@@ -422,8 +422,7 @@ export class TypeName {
 			}
 
 			const t2 = rclass.context.extends?.resolve?.resolved as ResolveClass;
-			if (t2?.type === ResolveType.Type.Class && rclass !== t2) {
-				// rclass !== t2 to avoid strange recursive bug
+			if (t2?.type === ResolveType.Type.Class) {
 				const t3 = this.resolveTypeInClassChain(state, t2, name, true, true);
 				if (t3) {
 					return t3;
