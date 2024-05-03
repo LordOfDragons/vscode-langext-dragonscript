@@ -138,6 +138,7 @@ export class CompletionHelper {
 		
 		items.push({label: '🅱 block',
 			sortText: `${CompletionHelper.sortPrefixSnippet}block`,
+			filterText: 'block',
 			kind: CompletionItemKind.Snippet,
 			insertTextFormat: InsertTextFormat.Snippet,
 			textEdit: TextEdit.replace(range,
