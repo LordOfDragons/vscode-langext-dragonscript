@@ -49,6 +49,8 @@ Drag[en]gine. To enable this support see the extension parameter
 
 ![Preview Image](https://raw.githubusercontent.com/LordOfDragons/vscode-langext-dragonscript/master/images/preview1.png)
 
+![Preview Image](https://raw.githubusercontent.com/LordOfDragons/vscode-langext-dragonscript/master/images/preview2.png)
+
 
 ## Requirements
 
