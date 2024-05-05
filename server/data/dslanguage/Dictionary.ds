@@ -10,7 +10,7 @@
  * \brief Linear list of objects.
  * 
  * This is a native class. It can not be subclassed.
- * \author Roland Plüss
+ * \author DragonDreams GmbH
  * \version 1.0
  * \date 2015
  */
