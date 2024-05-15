@@ -74,6 +74,7 @@ export class ResolveSearch {
 			this.restrictTypeType = copy.restrictTypeType;
 			this.addToAllList = copy.addToAllList;
 			this.stopAfterFirstMatch = copy.stopAfterFirstMatch;
+			this.inheritedIgnoreSelf = copy.inheritedIgnoreSelf;
 		}
 	}
 	
@@ -153,8 +154,14 @@ export class ResolveSearch {
 	/** If addToAllList is true stop searching after the first match. */
 	public stopAfterFirstMatch = false;
 	
+	/** Ignore self on hinerited class search. */
+	public inheritedIgnoreSelf = false;
+	
 	/** Internal use only. Stop searching. */
 	public stopSearching = false;
+	
+	/** Internal use only. */
+	public isInherited = false;
 	
 	
 	
@@ -171,6 +178,8 @@ export class ResolveSearch {
 		this._types.clear();
 		this.signature = undefined;
 		this.stopSearching = false;
+		this.inheritedIgnoreSelf = false;
+		this.isInherited = false;
 	}
 	
 	/** Local variables. */

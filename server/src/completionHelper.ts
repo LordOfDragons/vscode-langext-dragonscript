@@ -1374,6 +1374,7 @@ export class CompletionHelper {
 		search.allMatchingTypes = true;
 		search.onlyTypes = true;
 		search.restrictTypeType = restrictType;
+		search.inheritedIgnoreSelf = true;
 		if (castable && castable?.length > 0) {
 			search.onlyCastable = castable;
 		}

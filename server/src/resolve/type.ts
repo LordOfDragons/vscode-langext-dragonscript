@@ -410,6 +410,9 @@ export class ResolveType extends Resolved{
 		if (search.onlyVariables || search.onlyFunctions || search.ignoreTypes || search.stopSearching) {
 			return;
 		}
+		if (search.inheritedIgnoreSelf && search.isInherited) {
+			return;
+		}
 		
 		if (search.matchableName) {
 			if (search.matchableName.matches(this.matchableName)) {

@@ -34,6 +34,7 @@ import { ResolveNamespace } from './namespace';
 import { Resolved, ResolveUsage } from './resolved';
 import { ResolveSignature } from './signature';
 import { ResolveType } from './type';
+import { debugLogMessage } from '../server';
 
 
 /**
@@ -497,6 +498,10 @@ export class ResolveFunction extends Resolved{
 		
 		// required pins
 		var pinTypes: Set<ResolveType> = new Set();
+		if (this._returnType && !visibleTypes?.has(this._returnType)) {
+			pinTypes.add(this._returnType);
+		}
+		
 		for (const each of this._signature.arguments) {
 			if (each.type && !visibleTypes?.has(each.type)) {
 				pinTypes.add(each.type);
