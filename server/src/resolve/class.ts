@@ -27,6 +27,7 @@ import { ContextDocumentation } from '../context/documentation';
 import { ContextClass } from '../context/scriptClass';
 import { ResolveSearch } from './search';
 import { ResolveType } from './type'
+import { debugLogMessage } from '../server';
 
 
 export class ResolveClass extends ResolveType {

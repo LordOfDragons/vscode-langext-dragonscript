@@ -328,8 +328,13 @@ export class ContextClass extends Context{
 			} else {
 				const r = this._extends.range;
 				if (r) {
-					state.reportError(r, `${this._extends.name} is not a class.`);
+					const ri: DiagnosticRelatedInformation[] = [];
+					this._extends.resolve?.resolved?.addReportInfo(ri, this._extends.resolve?.resolved.reportInfoText);
+					state.reportError(r, `${this._extends.name} is not a class.`, ri);
 				}
+				
+				this._extends.resolve?.dispose();
+				this._extends.resolve = undefined;
 			}
 		}
 		
@@ -342,8 +347,13 @@ export class ContextClass extends Context{
 			} else {
 				const r = each.range;
 				if (r) {
+					const ri: DiagnosticRelatedInformation[] = [];
+					each.resolve?.resolved?.addReportInfo(ri, each.resolve?.resolved.reportInfoText);
 					state.reportError(r, `${each.name} is not an interface.`);
 				}
+				
+				each.resolve?.dispose();
+				each.resolve = undefined;
 			}
 		}
 		

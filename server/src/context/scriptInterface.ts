@@ -25,7 +25,7 @@
 import { Context } from "./context"
 import { DeclareInterfaceCstNode } from "../nodeclasses/declareInterface";
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
-import { CompletionItem, Definition, DocumentSymbol, Hover, Location, Position, Range, RemoteConsole, SymbolInformation, SymbolKind } from "vscode-languageserver"
+import { CompletionItem, Definition, DiagnosticRelatedInformation, DocumentSymbol, Hover, Location, Position, Range, RemoteConsole, SymbolInformation, SymbolKind } from "vscode-languageserver"
 import { TypeName } from "./typename"
 import { ContextClass } from "./scriptClass";
 import { ContextEnumeration } from "./scriptEnum";
@@ -220,11 +220,29 @@ export class ContextInterface extends Context{
 		
 		for (const each of this._implements) {
 			const t = each.resolveType(state, this);
-			if (t?.resolved && !(t.resolved.type === ResolveType.Type.Interface)) {
+			
+			if (t?.resolved?.type === ResolveType.Type.Interface) {
+				if (each.resolve) {
+					if (each.resolve.resolved === this._resolveInterface) {
+						const r = each.range;
+						if (r) {
+							state.reportError(r, `interface can not implement itself.`);
+						}
+						
+						each.resolve?.dispose();
+						each.resolve = undefined;
+					}
+				}
+			} else {
 				const r = each.range;
 				if (r) {
-					state.reportError(r, `${each.name} is not an interface.`);
+					const ri: DiagnosticRelatedInformation[] = [];
+					each.resolve?.resolved?.addReportInfo(ri, each.resolve?.resolved.reportInfoText);
+					state.reportError(r, `${each.name} is not an interface.`, ri);
 				}
+				
+				each.resolve?.dispose();
+				each.resolve = undefined;
 			}
 		}
 		
