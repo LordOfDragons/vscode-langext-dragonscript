@@ -55,8 +55,11 @@ import {
 	DidChangeWatchedFilesParams,
 	FileChangeType,
 	DefinitionParams,
-	SemanticTokenTypes,
-	SemanticTokenModifiers} from 'vscode-languageserver/node'
+	SemanticTokensParams,
+	SemanticTokens,
+	SemanticTokensBuilder,
+	Range,
+	Position} from 'vscode-languageserver/node'
 
 import {
 	TextDocument
@@ -78,6 +81,7 @@ import { DocumentationValidator } from './documentationValidator';
 import { Package } from './package/package';
 import { Helpers } from './helpers';
 import { DebugSettings } from './debugSettings';
+import { semtokens } from './semanticTokens';
 
 // Create a connection for the server, using Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -179,38 +183,11 @@ connection.onInitialize((params: InitializeParams) => {
 				retriggerCharacters: [',']
 			},
 			codeActionProvider: true,
-			renameProvider: true
-			/*,
+			renameProvider: true,
 			semanticTokensProvider: {
-				legend: {
-					tokenTypes: [
-						SemanticTokenTypes.namespace,
-						SemanticTokenTypes.class,
-						SemanticTokenTypes.enum,
-						SemanticTokenTypes.interface,
-						SemanticTokenTypes.parameter,
-						SemanticTokenTypes.variable,
-						SemanticTokenTypes.property,
-						SemanticTokenTypes.enumMember,
-						SemanticTokenTypes.method,
-						SemanticTokenTypes.comment,
-						SemanticTokenTypes.string,
-						SemanticTokenTypes.keyword,
-						SemanticTokenTypes.number,
-						SemanticTokenTypes.operator],
-					tokenModifiers: [
-						SemanticTokenModifiers.declaration,
-						SemanticTokenModifiers.readonly,
-						SemanticTokenModifiers.static,
-						SemanticTokenModifiers.deprecated,
-						SemanticTokenModifiers.abstract,
-						SemanticTokenModifiers.modification,
-						SemanticTokenModifiers.documentation,
-						SemanticTokenModifiers.defaultLibrary]
-				},
+				legend: semtokens.legend,
 				full: true
 			}
-			*/
 			
 			/*
 			- typeDefinitionProvider
@@ -698,6 +675,17 @@ connection.onRenameRequest(
 			logError(error);
 			return undefined;
 		}
+	}
+)
+
+connection.languages.semanticTokens.on(
+	async (params: SemanticTokensParams): Promise<SemanticTokens> => {
+		const st = new semtokens.Builder();
+		if (false) {
+			st.add(Range.create(Position.create(1, 1), Position.create(1, 5)),
+				semtokens.typeClass, [semtokens.modDeclaration, semtokens.modStatic]);
+		}
+		return st.build();
 	}
 )
 

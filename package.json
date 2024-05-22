@@ -103,6 +103,7 @@
 	"dependencies": {
 		"@vscode/vsce": "^2.24.0",
 		"minimatch": "^9.0.3",
+		"npm": "^10.8.0",
 		"vscode-uri": "^3.0.8"
 	}
 }
