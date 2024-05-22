@@ -54,7 +54,9 @@ import {
 	DidChangeConfigurationParams,
 	DidChangeWatchedFilesParams,
 	FileChangeType,
-	DefinitionParams} from 'vscode-languageserver/node'
+	DefinitionParams,
+	SemanticTokenTypes,
+	SemanticTokenModifiers} from 'vscode-languageserver/node'
 
 import {
 	TextDocument
@@ -178,6 +180,37 @@ connection.onInitialize((params: InitializeParams) => {
 			},
 			codeActionProvider: true,
 			renameProvider: true
+			/*,
+			semanticTokensProvider: {
+				legend: {
+					tokenTypes: [
+						SemanticTokenTypes.namespace,
+						SemanticTokenTypes.class,
+						SemanticTokenTypes.enum,
+						SemanticTokenTypes.interface,
+						SemanticTokenTypes.parameter,
+						SemanticTokenTypes.variable,
+						SemanticTokenTypes.property,
+						SemanticTokenTypes.enumMember,
+						SemanticTokenTypes.method,
+						SemanticTokenTypes.comment,
+						SemanticTokenTypes.string,
+						SemanticTokenTypes.keyword,
+						SemanticTokenTypes.number,
+						SemanticTokenTypes.operator],
+					tokenModifiers: [
+						SemanticTokenModifiers.declaration,
+						SemanticTokenModifiers.readonly,
+						SemanticTokenModifiers.static,
+						SemanticTokenModifiers.deprecated,
+						SemanticTokenModifiers.abstract,
+						SemanticTokenModifiers.modification,
+						SemanticTokenModifiers.documentation,
+						SemanticTokenModifiers.defaultLibrary]
+				},
+				full: true
+			}
+			*/
 			
 			/*
 			- typeDefinitionProvider
@@ -193,7 +226,6 @@ connection.onInitialize((params: InitializeParams) => {
 			- executeCommandProvider
 			- callHierarchyProvider
 			- linkedEditingRangeProvider
-			- semanticTokensProvider
 			*/
 		}
 	};
