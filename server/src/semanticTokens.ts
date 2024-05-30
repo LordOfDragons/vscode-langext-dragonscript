@@ -80,8 +80,8 @@ export namespace semtokens {
 		
 		public add(range: Range, type: Type, modifiers: Modifier[]): void {
 			this.push(range.start.line, range.start.character,
-				range.end.character - range.start.character,
-			type.index, 0);
+				range.end.character - range.start.character, type.index,
+				modifiers.map(m => 1 << m.index).reduce((a,b) => a + b, 0));
 		}
 	}
 };

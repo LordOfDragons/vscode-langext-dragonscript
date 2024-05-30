@@ -682,7 +682,7 @@ connection.languages.semanticTokens.on(
 	async (params: SemanticTokensParams): Promise<SemanticTokens> => {
 		const st = new semtokens.Builder();
 		if (false) {
-			st.add(Range.create(Position.create(1, 1), Position.create(1, 5)),
+			st.add(Range.create(Position.create(3, 0), Position.create(3, 9)),
 				semtokens.typeClass, [semtokens.modDeclaration, semtokens.modStatic]);
 		}
 		return st.build();
