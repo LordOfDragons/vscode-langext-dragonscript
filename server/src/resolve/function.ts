@@ -488,7 +488,7 @@ export class ResolveFunction extends Resolved{
 			parts.push('\t\${0}\n');
 		} else if (hasReturn) {
 			let defval = this._returnType?.completeValue ?? 'null';
-			defval.replace(':', '\:');
+			defval.replace(':', '\\:');
 			parts.push(`\${0:${defval}}\n`);
 		} else {
 			parts.push('\${0}\n');
