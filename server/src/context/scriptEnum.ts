@@ -245,7 +245,7 @@ export class ContextEnumeration extends Context{
 	}
 
 
-	public get name(): Identifier {
+	public get name(): Identifier | undefined {
 		return this._name;
 	}
 
@@ -259,11 +259,11 @@ export class ContextEnumeration extends Context{
 
 	public get fullyQualifiedName(): string {
 		let n = this.parent?.fullyQualifiedName || "";
-		return n ? `${n}.${this._name}` : this._name.name;
+		return n ? `${n}.${this._name}` : this._name?.name ?? "?";
 	}
 
 	public get simpleName(): string {
-		return this._name.name;
+		return this._name?.name ?? "?";
 	}
 	
 	public collectWorkspaceSymbols(list: SymbolInformation[]): void {
@@ -292,7 +292,10 @@ export class ContextEnumeration extends Context{
 	public resolveClasses(state: ResolveState): void {
 		this._resolveEnum?.dispose();
 		this._resolveEnum = undefined;
-
+		if (!this._name) {
+			return;
+		}
+		
 		this._resolveEnum = new ResolveEnumeration(this);
 		if (this.parent) {
 			var container: ResolveType | undefined;
@@ -306,7 +309,7 @@ export class ContextEnumeration extends Context{
 				container = ResolveNamespace.root;
 			}
 
-			if (container) {
+			if (container && this._name) {
 				if (container.findType(this._name.name)) {
 					state.reportError(this._name.range, `Duplicate enumeration ${this._name}`);
 				} else {
@@ -318,7 +321,7 @@ export class ContextEnumeration extends Context{
 
 	public resolveMembers(state: ResolveState): void {
 		super.resolveMembers(state);
-		if (this._resolveEnum) {
+		if (this._resolveEnum && this._name) {
 			// enumerations are a bit special. their script class receives a copy of each
 			// function in Enumeration class but with the type replace to the enum class
 			const ownerTypeName = this._name.name;
@@ -373,7 +376,7 @@ export class ContextEnumeration extends Context{
 	}
 
 	protected updateHover(position: Position): Hover | null {
-		if (!this._name.isPositionInside(position)) {
+		if (!this._name?.isPositionInside(position)) {
 			return null;
 		}
 		
@@ -402,21 +405,21 @@ export class ContextEnumeration extends Context{
 	}
 	
 	public definition(position: Position): Location[] {
-		if (this._name.isPositionInside(position)) {
+		if (this._name?.isPositionInside(position)) {
 			return this.definitionSelf();
 		}
 		return super.definition(position);
 	}
 	
 	public resolvedAtPosition(position: Position): Resolved | undefined {
-		if (this._name.isPositionInside(position)) {
+		if (this._name?.isPositionInside(position)) {
 			return this._resolveEnum;
 		}
 		return super.resolvedAtPosition(position);
 	}
 	
 	public get referenceSelf(): Location | undefined {
-		return this.resolveLocation(this._name.range);
+		return this.resolveLocation(this._name?.range);
 	}
 	
 	public consumeDocumentation(iterator: ContextDocumentationIterator): void {
