@@ -190,7 +190,7 @@ export class ContextEnumEntry extends Context{
 
 
 export class ContextEnumeration extends Context{
-	protected _name: Identifier;
+	protected _name?: Identifier;
 	protected _typeModifiers: Context.TypeModifierSet;
 	protected _entries: ContextEnumEntry[] = [];
 	protected _resolveEnum?: ResolveEnumeration;
@@ -202,8 +202,11 @@ export class ContextEnumeration extends Context{
 
 		let edecl = node.children;
 		let edeclBegin = edecl.enumerationBegin[0].children;
-
-		this._name = new Identifier(edeclBegin.name[0]);
+		
+		const name = edeclBegin.name?.at(0);
+		if (name) {
+			this._name = new Identifier(name);
+		}
 		
 		this._typeModifiers = new Context.TypeModifierSet(typemodNode,
 			Context.AccessLevel.Public, [Context.TypeModifier.Public]);
@@ -214,10 +217,12 @@ export class ContextEnumeration extends Context{
 		this.blockClosed = tokEnd !== undefined;
 		let tokEnum = edeclBegin.enum[0];
 		this.range = Helpers.rangeFrom(tokEnum, tokEnd, true, false);
-		this.documentSymbol = DocumentSymbol.create(this._name.name, undefined,
-			SymbolKind.Enum, this.range, Helpers.rangeFrom(edeclBegin.name[0], tokEnd, true, true));
-
-		let docTextExt = this._name.name;
+		if (this._name && name) {
+			this.documentSymbol = DocumentSymbol.create(this._name.name, undefined,
+				SymbolKind.Enum, this.range, Helpers.rangeFrom(name, tokEnd, true, true));
+		}
+		
+		let docTextExt = this._name?.name;
 		const entries = edecl.enumerationBody[0].children.enumerationEntry;
 		if (entries) {
 			for (const each of entries) {
