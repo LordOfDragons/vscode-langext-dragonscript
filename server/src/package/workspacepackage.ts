@@ -31,6 +31,7 @@ import { Package } from "./package";
 import { Minimatch } from "minimatch";
 import { join } from "path";
 import { URI } from "vscode-uri";
+import { PackageBasePackage } from "./basepackage";
 
 export class PackageWorkspace extends Package {
 	private _uri: string;
@@ -74,8 +75,16 @@ export class PackageWorkspace extends Package {
 		
 		const settings = await getDocumentSettings(this._uri);
 		if (settings.requiresPackageDragengine) {
-			let pkg: Package = packages.get(PackageDEModule.PACKAGE_ID)!;
-			await pkg.load();
+			await packages.get(PackageDEModule.PACKAGE_ID)!.load();
+		}
+		
+		for (const each of settings.basePackages) {
+			let pkg2 = packages.get(`${PackageBasePackage.PACKAGE_PREFIX}${each}`);
+			if (!pkg2) {
+				pkg2 = new PackageBasePackage(this.console, each);
+				packages.add(pkg2);
+			}
+			await pkg2.load();
 		}
 		
 		const fileSettings = await getFileSettings(this._uri);

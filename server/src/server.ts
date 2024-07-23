@@ -138,7 +138,8 @@ const defaultSettings: DSSettings = {
 	maxNumberOfProblems: 1000,
 	pathDragengine: '',
 	requiresPackageDragengine: false,
-	scriptDirectories: ['.']
+	scriptDirectories: ['.'],
+	basePackages: []
 };
 export let globalSettings: DSSettings = defaultSettings;
 

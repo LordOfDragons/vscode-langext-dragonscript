@@ -76,6 +76,12 @@
 					],
 					"description": "List of directories to scan for source files. Typically scripts are located in one directory (default workspace root). Empty list disabled DragonScript support for workspace."
 				},
+				"dragonscriptLanguage.basePackages": {
+					"scope": "resource",
+					"type": "array",
+					"default": [],
+					"description": "List of base packages. If an entry is a directory it is scanned for *.ds files. If the entry is a DELGA file (*.delga) it is scanned for *.ds files."
+				},
 				"dragonscriptLanguage.maxNumberOfProblems": {
 					"scope": "resource",
 					"type": "number",
@@ -95,6 +101,7 @@
 	},
 	"devDependencies": {
 		"@types/node": "^16.11.7",
+		"@types/yauzl-promise": "^4.0.1",
 		"@typescript-eslint/eslint-plugin": "^5.30.0",
 		"@typescript-eslint/parser": "^5.30.0",
 		"eslint": "^8.13.0",
@@ -104,6 +111,7 @@
 		"@vscode/vsce": "^2.24.0",
 		"minimatch": "^9.0.3",
 		"npm": "^10.8.1",
-		"vscode-uri": "^3.0.8"
+		"vscode-uri": "^3.0.8",
+		"yauzl-promise": "^4.0.0"
 	}
 }

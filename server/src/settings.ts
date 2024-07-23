@@ -29,10 +29,13 @@ export interface DSSettings {
 	pathDragengine: string;
 	
 	/** Workspace required Drag[en]gine DragonScript Module Package. */
-	requiresPackageDragengine: boolean
+	requiresPackageDragengine: boolean;
 	
 	/** Source directories. */
-	scriptDirectories: string[]
+	scriptDirectories: string[];
+	
+	/** Base packages. Either directories or DELGA files (*.delga). */
+	basePackages: string[];
 }
 
 export interface FileSettings {

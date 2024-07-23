@@ -88,6 +88,18 @@ Set this parameter on workspace or directory level. If set on directory level yo
 source file scanning on a per directory basis, for example for data directories containing
 no source code.
 
+`dragonscriptLanguage.basePackages`:
+
+List of base packages. If an entry is a directory it is scanned for .ds files. If the entry is
+a DELGA file (.delga) it is scanned for .ds files. The default value is [].
+
+Base packages allow creating projects based on other projects. The _requiresPackageDragengine_
+is such a base package which has a separate parameter. Typically this list contains the .delga
+file of the base game or application project.
+
+Set this parameter on workspace or directory level. If set on directory level you can disable
+base packages on a per directory basis, for example for data directories containing no source code.
+
 
 ## Support
 

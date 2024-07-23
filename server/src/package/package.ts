@@ -210,10 +210,10 @@ export class Package {
 			this.resolveLogDiagnostics(diagnostics, each.uri);
 		}
 	}
-
+	
 	protected async loadFile(path: string, reportConfig: ReportConfig): Promise<void> {
 		//let startTime = Date.now();
-
+		
 		let uri = URI.file(path).toString();
 		let scriptDocument = scriptDocuments.get(uri);
 		if (scriptDocument) {
@@ -225,7 +225,7 @@ export class Package {
 			scriptDocuments.add(scriptDocument);
 		}
 		
-		let text: string = await readFile(path, 'utf8');
+		let text: string = await this.readFile(path);
 		let logs: string[] = [];
 		
 		try {
@@ -243,11 +243,11 @@ export class Package {
 			}
 			throw error;
 		}
-
+		
 		for (const each of logs) {
 			this._console.log(each);
 		}
-
+		
 		if (scriptDocument.node) {
 			let lineCount = (text.match(/\n/g) || '').length + 1;
 			try {
@@ -273,21 +273,25 @@ export class Package {
 		} else {
 			scriptDocument.context = undefined;
 		}
-
+		
 		//let elapsedTime = Date.now() - startTime;
 		
 		//scriptDocument.context?.log(connection.console);
 		
 		this._scriptDocuments.push(scriptDocument);
-
+		
 		//this._finishedCounter++;
 		//scriptDocument.console.info(`Package '${this._id}' (${this._finishedCounter}/${this._files.length}): Parsed '${path}' in ${elapsedTime / 1000}s`);
-
+		
 		// this can run asynchronous
 		scriptDocument.diagnosticsClasses = await scriptDocument.resolveClasses(reportConfig);
 		this.resolveLogDiagnostics(scriptDocument.diagnosticsClasses, scriptDocument.uri);
 	}
-
+	
+	protected async readFile(path: string): Promise<string> {
+		return await readFile(path, 'utf8');
+	}
+	
 	protected resolveLogDiagnostics(diagnostics: Diagnostic[], uri: string): void {
 		for (const each of diagnostics) {
 			var severity;

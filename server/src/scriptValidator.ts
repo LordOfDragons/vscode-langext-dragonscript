@@ -35,6 +35,7 @@ import { DSParser } from "./parser";
 import { ScriptDocument } from "./scriptDocument";
 import { packages } from "./server";
 import { DSSettings } from "./settings";
+import { PackageBasePackage } from "./package/basepackage";
 
 export class ScriptValidator {
 	protected _capabilities: DSCapabilities;
@@ -75,18 +76,26 @@ export class ScriptValidator {
 		scriptDocument.documentationTokens = lexed.groups['documentation'];
 		scriptDocument.commentTokens = lexed.groups['comments'];
 	}
-
-
+	
+	
 	protected async doRequires(scriptDocument: ScriptDocument, diagnostics: Diagnostic[]): Promise<void> {
 		let pkg: Package = packages.get(PackageDSLanguage.PACKAGE_ID)!;
 		await pkg.load();
 		
 		if (scriptDocument.settings.requiresPackageDragengine) {
-			let pkg: Package = packages.get(PackageDEModule.PACKAGE_ID)!;
-			await pkg.load();
+			await packages.get(PackageDEModule.PACKAGE_ID)!.load();
+		}
+		
+		for (const each of scriptDocument.settings.basePackages) {
+			let pkg2 = packages.get(`${PackageBasePackage.PACKAGE_PREFIX}${each}`);
+			if (!pkg2) {
+				pkg2 = new PackageBasePackage(pkg.console, each);
+				packages.add(pkg2);
+			}
+			await pkg2.load();
 		}
 	}
-
+	
 	protected async doRequiresLog(scriptDocument: ScriptDocument, logs: string[]): Promise<void> {
 		//let pkg: Package = packages.get(PackageDSLanguage.PACKAGE_ID)!;
 		//pkg.load();
