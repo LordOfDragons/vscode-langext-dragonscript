@@ -134,12 +134,7 @@ export class PackageBasePackage extends Package {
 			}
 		}
 		
-		for (const each of settings.scriptDirectories) {
-			const path = join(this._path, each);
-			this._console.log(`- '${each}' => '${path}'`);
-			await this.scanPackage(this._files, path, exclude);
-		}
-		//await this.scanPackage(this._files, this._path, exclude);
+		await this.scanPackage(this._files, this._path, exclude);
 	}
 	
 	protected async loadPackageDelga(settings: DSSettings, fileSettings: FileSettings): Promise<void> {
