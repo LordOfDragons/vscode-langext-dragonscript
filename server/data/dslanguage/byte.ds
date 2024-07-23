@@ -269,6 +269,11 @@ fixed class byte
 	public func byte --()
 		return 0
 	end
+	
+	/** \brief Bitwise negated value. */
+	public func byte ~()
+		return 0
+	end
 end
 
 /**

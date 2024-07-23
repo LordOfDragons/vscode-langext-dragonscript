@@ -385,4 +385,9 @@ fixed class int
 	func int -()
 		return 0
 	end
+	
+	/** \brief Bitwise inverted value. */
+	func int ~()
+		return 0
+	end
 end

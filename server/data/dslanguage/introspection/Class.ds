@@ -20,13 +20,13 @@ namespace Introspection
  */
 class Class
 	/** \brief Class type. */
-	public fixed var int CLASS = 0
+	public static fixed var int CLASS = 0
 	
 	/** \brief Interface type. */
-	public fixed var int INTERFACE = 1
+	public static fixed var int INTERFACE = 1
 	
 	/** \brief Namespace type. */
-	public fixed var int NAMESPACE = 2
+	public static fixed var int NAMESPACE = 2
 	
 	
 	
