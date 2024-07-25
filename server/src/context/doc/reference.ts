@@ -35,6 +35,7 @@ import { ContextDocumentationDocState } from "./docState";
 export class ContextDocumentationReference extends ContextDocBase{
 	protected _target?: string;
 	protected _resolved?: Resolved;
+	protected _trailingText?: string;
 	
 	
 	constructor(node: DocumentationReferenceCstNode, parent: Context) {
@@ -58,7 +59,9 @@ export class ContextDocumentationReference extends ContextDocBase{
 		this._resolved = undefined; // no dispose!
 		
 		if (this._target) {
-			this._resolved = this.resolveSymbol(state, this.parseSymbol(this._target));
+			const parsed = this.parseSymbol(this._target);
+			this._trailingText = parsed?.trailingText;
+			this._resolved = this.resolveSymbol(state, parsed);
 		}
 	}
 	
@@ -71,7 +74,11 @@ export class ContextDocumentationReference extends ContextDocBase{
 		if (this._resolved) {
 			const l = this._resolved.resolveLocation.at(0);
 			if (l) {
-				state.addWordEscape(Helpers.linkFromLocation(l, this._resolved.linkName));
+				let text = Helpers.linkFromLocation(l, this._resolved.linkName);
+				if (this._trailingText) {
+					text = text + this._trailingText;
+				}
+				state.addWordEscape(text);
 				return;
 			}
 		}

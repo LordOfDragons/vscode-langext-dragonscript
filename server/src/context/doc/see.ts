@@ -53,7 +53,8 @@ export class ContextDocumentationSee extends ContextDocBaseBlock{
 		
 		for (const each of this._words) {
 			if (each.type == Context.ContextType.DocumentationWord) {
-				this._resolved.push(this.resolveSymbol(state, this.parseSymbol((each as ContextDocumentationWord).text)));
+				this._resolved.push(this.resolveSymbol(state,
+					this.parseSymbol((each as ContextDocumentationWord).text)));
 			} else {
 				this._resolved.push(undefined);
 			}

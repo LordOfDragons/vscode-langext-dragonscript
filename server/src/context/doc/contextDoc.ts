@@ -39,7 +39,8 @@ import { ContextDocumentationDocState } from "./docState";
 export interface ContextDocBaseSymbol {
 	nameClass?: string,
 	nameSymbol?: string,
-	arguments?: string[]
+	arguments?: string[],
+	trailingText?: string
 }
 
 
@@ -56,12 +57,11 @@ export class ContextDocBase extends Context{
 	}
 	
 	
+	public static regexWordEndsWithPunctuation = /[.,:;!?]$/;
+	
+	protected static regexSymbolTrailingText = /\W+$/;
+	
 	protected parseSymbol(word: string): ContextDocBaseSymbol | undefined {
-		// tokens can end with phrase punctiations. remove them
-		if (word.endsWith('.')) {
-			word = word.substring(0, word.length - 1);
-		}
-		
 		const deliHash = word.indexOf('#');
 		const deliLParam = word.indexOf('(');
 		const deliRParam = word.indexOf(')');
@@ -69,15 +69,24 @@ export class ContextDocBase extends Context{
 		var nameClass: string | undefined;
 		var nameSymbol: string | undefined;
 		var args: string[] | undefined;
+		var trailingText: string | undefined;
 		
 		if ((deliLParam != -1 && deliHash > deliLParam) || deliLParam > deliRParam) {
 			return undefined;
 		}
 		
 		if (deliLParam != -1) {
+			trailingText = word.substring(deliRParam + 1);
 			const s = word.substring(deliLParam + 1, deliRParam);
 			args = s != '' ? s.split(',') : [];
 			word = word.substring(0, deliLParam);
+			
+		} else {
+			const matches = ContextDocBase.regexSymbolTrailingText.exec(word);
+			if (matches) {
+				trailingText = matches[0];
+				word = word.substring(0, matches.index);
+			}
 		}
 		
 		if (deliHash != -1) {
@@ -92,7 +101,8 @@ export class ContextDocBase extends Context{
 		return {
 			nameClass: nameClass,
 			nameSymbol: nameSymbol,
-			arguments: args
+			arguments: args,
+			trailingText: trailingText
 		}
 	}
 	
@@ -180,6 +190,7 @@ export class ContextDocBase extends Context{
 		if (symbol.arguments) {
 			let resolveSignature = new ResolveSignature();
 			for (const each of symbol.arguments) {
+				/*
 				let matches2 = new ResolveSearch();
 				matches2.name = each;
 				matches2.onlyTypes = true;
@@ -188,6 +199,34 @@ export class ContextDocBase extends Context{
 					return undefined;
 				}
 				resolveSignature.addArgument(matches2.types.values().next().value, undefined, Context.AutoCast.No);
+				*/
+				
+				var typeName: TypeName;
+				try {
+					typeName = TypeName.typeNamed(each);
+				} catch {
+					return undefined;
+				}
+				
+				const usage = typeName.resolveType(state, this);
+				var argType: ResolveType | undefined;
+				if (usage?.resolved) {
+					switch (usage.resolved.type) {
+					case Resolved.Type.Class:
+					case Resolved.Type.Interface:
+					case Resolved.Type.Enumeration:
+					case Resolved.Type.Namespace:
+						argType = usage.resolved as ResolveType;
+						break;
+					}
+					usage.dispose();
+				}
+				
+				if (!argType) {
+					return undefined;
+				}
+				
+				resolveSignature.addArgument(argType, undefined, Context.AutoCast.No);
 			}
 			
 			matches.ignoreVariables = true;
@@ -210,6 +249,19 @@ export class ContextDocBase extends Context{
 			return matches.types.values().next().value;
 			
 		} else {
+			// if no match is found and no arguments is provided try to find the
+			// first function with the matching name disregarding argument
+			if (matches.signature?.arguments.length === 0) {
+				matches.signature = undefined;
+				if (type) {
+					type.search(matches);
+				} else {
+					state.search(matches, context);
+				}
+				
+				return matches.functionsAll.at(0);
+			}
+			
 			return undefined;
 		}
 	}
