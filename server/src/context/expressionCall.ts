@@ -23,7 +23,7 @@
  */
 
 import { Context } from "./context";
-import { CompletionItem, Definition, DiagnosticRelatedInformation, DocumentSymbol, Hover, integer, Location, Position, Range, RemoteConsole, SignatureHelp, SignatureInformation } from "vscode-languageserver";
+import { CompletionItem, DiagnosticRelatedInformation, DocumentSymbol, Hover, integer, Location, Position, Range, RemoteConsole, SignatureHelp, SignatureInformation } from "vscode-languageserver";
 import { ContextBuilder } from "./contextBuilder";
 import { Identifier } from "./identifier";
 import { ExpressionAdditionCstNode } from "../nodeclasses/expressionAddition";

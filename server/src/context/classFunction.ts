@@ -602,7 +602,25 @@ export class ContextFunction extends Context{
 		
 		return parts.join("");
 	}
-
+	
+	protected updateResolveTextShortLink(): string {
+		let parts = [];
+		parts.push(this._typeModifiers.typestring);
+		parts.push(` *${this._returnType?.simpleNameLink}*`);
+		parts.push(` ${this.parent?.simpleNameLink}.${this.simpleNameLink}(`);
+		
+		var args = [];
+		for (const each of this._arguments) {
+			args.push(`*${each.typename.simpleNameLink}* ${each.name}`);
+		}
+		if (args.length > 0) {
+			parts.push(args.join(", "));
+		}
+		parts.push(")");
+		
+		return parts.join("");
+	}
+	
 	protected updateResolveTextLong(): string[] {
 		let parts = [];
 		parts.push(this._typeModifiers.typestring);
@@ -635,10 +653,52 @@ export class ContextFunction extends Context{
 		
 		let lines = [];
 		lines.push(parts.join(""));
+		
 		this.addHoverParent(lines);
+		
+		const linesInherit = this.reportInheritance;
+		if (linesInherit) {
+			lines.push('___');
+			lines.push(...linesInherit);
+		}
+		
 		return lines;
 	}
-
+	
+	public get reportInheritance(): string[] | undefined {
+		let inherit: ResolveUsage | undefined = this._inheritUsage;
+		if (!inherit) {
+			return undefined;
+		}
+		
+		let lines: string[] = [];
+		while (inherit) {
+			if (inherit.resolved?.type !== Resolved.Type.Function) {
+				break;
+			}
+			
+			const resfun = inherit.resolved as ResolveFunction;
+			if (resfun.context?.type !== Context.ContextType.Function) {
+				break;
+			}
+			
+			const ctxfun = resfun.context as ContextFunction;
+			
+			const parent = resfun.parent as ResolveType;
+			const implement = parent.type == Resolved.Type.Interface
+				|| this.typeModifiers?.has(Context.TypeModifier.Abstract);
+			
+			lines.push([
+				`${implement ? '📝 implements:' : '↪️ overrides:'}`,
+				`${parent.simpleNameLink}.${ctxfun.simpleNameLink}`].join(" "));
+			
+			// lines.push(`${implement ? '📝 implements' : '↪️ overrides'} ${ctxfun.resolveTextShortLink}`);
+			
+			inherit = ctxfun._inheritUsage;
+		}
+		return lines;
+	}
+	
 	protected updateReportInfoText(): string {
 		let parts = [];
 		parts.push(this._typeModifiers.typestring);

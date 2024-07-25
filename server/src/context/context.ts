@@ -49,6 +49,7 @@ export class Context {
 	public expressionTypeType: Context.ExpressionType = Context.ExpressionType.Void;
 	public expressionWriteableResolve?: ResolveUsage;
 	protected _resolveTextShort?: string;
+	protected _resolveTextShortLink?: string;
 	protected _resolveTextLong?: string[];
 	protected _reportInfoText?: string;
 	public documentation?: ContextDocumentation;
@@ -151,6 +152,7 @@ export class Context {
 		this.expressionWriteableResolve?.dispose();
 		this.expressionWriteableResolve = undefined;
 		this._resolveTextShort = undefined;
+		this._resolveTextShortLink = undefined;
 		this._resolveTextLong = undefined;
 		this._reportInfoText = undefined;
 		
@@ -245,7 +247,7 @@ export class Context {
 		return this.resolveLocationSelf;
 	}
 	
-
+	
 	public get resolveTextShort(): string {
 		if (!this._resolveTextShort) {
 			this._resolveTextShort = this.updateResolveTextShort();
@@ -255,6 +257,17 @@ export class Context {
 
 	protected updateResolveTextShort(): string {
 		return "?";
+	}
+	
+	public get resolveTextShortLink(): string {
+		if (!this._resolveTextShortLink) {
+			this._resolveTextShortLink = this.updateResolveTextShortLink();
+		}
+		return this._resolveTextShortLink ?? "?";
+	}
+
+	protected updateResolveTextShortLink(): string {
+		return this.resolveTextShort;
 	}
 
 	public get resolveTextLong(): string[] {
