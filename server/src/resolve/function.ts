@@ -446,13 +446,16 @@ export class ResolveFunction extends Resolved{
 		if (snippetPrefix) {
 			parts.push(snippetPrefix);
 		}
+		
+		/*
 		parts.push('/**\n');
 		if (implement) {
 			parts.push(` * Implement ${parent.fullyQualifiedName}.${this.name}().\n`);
 		} else {
 			parts.push(` * Override ${parent.fullyQualifiedName}.${this.name}().\n`);
 		}
-		parts.push(' */\n');
+		parts.push(' * /\n');
+		*/
 		
 		const tms = this.typeModifiers?.filter(ResolveFunction.filterTypemodOverride);
 		if (tms && tms.size > 0) {
