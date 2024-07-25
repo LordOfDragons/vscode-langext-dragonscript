@@ -49,6 +49,7 @@ import { VisitorAllHasReturn } from "../visitor/allhasreturn";
 import { ResolveClass } from "../resolve/class";
 import { DebugSettings } from "../debugSettings";
 import { debugLogMessage } from "../server";
+import { ContextDocumentation } from "./documentation";
 
 
 export class ContextFunction extends Context{
@@ -573,10 +574,13 @@ export class ContextFunction extends Context{
 		if (this._name?.isPositionInside(position)) {
 			let content: string[] = [];
 			content.push(...this.resolveTextLong);
-			if (this.documentation) {
+			
+			const doc = this.documentation ?? this.documentationInherited;
+			if (doc) {
 				content.push('___');
-				content.push(...this.documentation.resolveTextLong);
+				content.push(...doc.resolveTextLong);
 			}
+			
 			return new HoverInfo(content, this._name.range);
 		}
 		if (this._returnType?.isPositionInside(position)) {
@@ -697,6 +701,28 @@ export class ContextFunction extends Context{
 			inherit = ctxfun._inheritUsage;
 		}
 		return lines;
+	}
+	
+	public get documentationInherited(): ContextDocumentation | undefined {
+		let inherit: ResolveUsage | undefined = this._inheritUsage;
+		let doc: ContextDocumentation | undefined;
+		
+		while (inherit && !doc) {
+			if (inherit.resolved?.type !== Resolved.Type.Function) {
+				break;
+			}
+			
+			const resfun = inherit.resolved as ResolveFunction;
+			if (resfun.context?.type !== Context.ContextType.Function) {
+				break;
+			}
+			
+			const ctxfun = resfun.context as ContextFunction;
+			doc = ctxfun.documentation;
+			inherit = ctxfun._inheritUsage;
+		}
+		
+		return doc;
 	}
 	
 	protected updateReportInfoText(): string {
