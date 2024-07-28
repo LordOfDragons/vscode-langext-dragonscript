@@ -344,6 +344,10 @@ export class Context {
 		return this.parent?.documentUri;
 	}
 	
+	public get realDocumentUri(): URI | undefined {
+		return this.parent?.realDocumentUri;
+	}
+	
 	public getReportLocation(): Location {
 		return Location.create(this.documentUri ?? "",
 			this.documentSymbol?.range ?? this.range ??

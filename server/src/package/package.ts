@@ -43,6 +43,7 @@ export class Package {
 	protected _loadingStartTime?: number;
 	protected _scriptDocuments: ScriptDocument[];
 	protected _files: string[] = [];
+	protected _assignUri: boolean = true;
 	//protected _finishedCounter: number = 0;
 	
 	
@@ -253,7 +254,10 @@ export class Package {
 			try {
 				// the line below required scriptDocument.node, then it can be discarded
 				scriptDocument.context = new ContextScript(scriptDocument, undefined, lineCount);
-				scriptDocument.context.uri = uri;
+				scriptDocument.context.realUri = uri;
+				if (this._assignUri) {
+					scriptDocument.context.uri = uri;
+				}
 			} catch (error) {
 				this._console.error(`Package '${this._id}': Failed syntax '${path}'`);
 				if (error instanceof Error) {

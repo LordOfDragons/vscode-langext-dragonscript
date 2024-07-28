@@ -105,6 +105,7 @@ export class PackageBasePackage extends Package {
 			
 		} else if (stats?.isFile()) {
 			if (this._path.endsWith('.delga')) {
+				this._assignUri = false;
 				await this.loadPackageDelga(settings, fileSettings);
 				
 			} else {

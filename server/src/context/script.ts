@@ -53,6 +53,7 @@ export class ContextScript extends Context{
 	public documentSymbols: DocumentSymbol[] = [];
 	public workspaceSymbols: SymbolInformation[] = [];
 	public uri?: URI;
+	public realUri?: URI;
 
 
 	constructor(document: ScriptDocument, textDocument?: TextDocument, lineCount?: number) {
@@ -160,7 +161,11 @@ export class ContextScript extends Context{
 	public get documentUri(): URI | undefined {
 		return this.uri;
 	}
-
+	
+	public get realDocumentUri(): string | undefined {
+		return this.realUri;
+	}
+	
 	public get requires(): ContextRequiresPackage[] {
 		return this._requires;
 	}

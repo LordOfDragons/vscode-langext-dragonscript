@@ -103,7 +103,7 @@ export class ContextDocumentation extends Context{
 			return;
 		}
 		
-		const uri = this.documentUri;
+		const uri = this.realDocumentUri;
 		if (!uri) {
 			return;
 		}
