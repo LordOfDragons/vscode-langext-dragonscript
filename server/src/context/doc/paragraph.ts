@@ -59,6 +59,8 @@ export class ContextDocumentationParagraph extends ContextDocBaseBlock{
 	
 	
 	public resolveStatements(state: ResolveState): void {
+		super.resolveStatements(state);
+		
 		for (const each of this._title) {
 			each.resolveStatements(state);
 		}

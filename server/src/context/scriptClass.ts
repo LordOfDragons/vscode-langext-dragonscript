@@ -378,9 +378,9 @@ export class ContextClass extends Context{
 			for (const each of this._declarations) {
 				each.resolveStatements(state);
 			}
+			
+			this.documentation?.resolveStatements(state);
 		});
-		
-		this.documentation?.resolveStatements(state);
 		
 		// check for unimplemented interface methods and abstract base class methods.
 		// only done if this class is not abstract

@@ -354,9 +354,9 @@ export class ContextEnumeration extends Context{
 			for (const each of this._entries) {
 				each.resolveStatements(state);
 			}
+			
+			this.documentation?.resolveStatements(state);
 		});
-		
-		this.documentation?.resolveStatements(state);
 	}
 
 	public contextAtPosition(position: Position): Context | undefined {
