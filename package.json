@@ -19,7 +19,7 @@
 		"dragonscript",
 		"dragengine"
 	],
-	"version": "2.0.0",
+	"version": "2.1.0",
 	"engines": {
 		"vscode": "^1.63.0"
 	},
@@ -118,6 +118,7 @@
 		"@vscode/vsce": "^2.24.0",
 		"minimatch": "^9.0.3",
 		"npm": "^10.8.1",
+		"punycode": "^2.3.1",
 		"vscode-uri": "^3.0.8",
 		"yauzl-promise": "^4.0.0"
 	}
