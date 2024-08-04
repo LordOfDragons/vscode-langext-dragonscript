@@ -132,11 +132,11 @@ export class ResolveInterface extends ResolveType {
 	}
 	
 	protected get completionItemMarkup(): MarkupContent | undefined {
-		return this.context?.documentation?.markup;
+		return this.context?.useDocumentation?.markup;
 	}
 	
 	public get documentation(): ContextDocumentation | undefined {
-		return this._context?.documentation;
+		return this._context?.useDocumentation;
 	}
 	
 	protected updateResolveTextLong(): string[] {

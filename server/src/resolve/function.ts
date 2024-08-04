@@ -265,7 +265,7 @@ export class ResolveFunction extends Resolved{
 				commitCharacters.push('.');
 			}
 			
-			if (this._context.documentation?.isDeprecated) {
+			if (this._context.useDocumentation?.isDeprecated) {
 				tags.push(CompletionItemTag.Deprecated);
 			}
 		} else {
@@ -283,7 +283,7 @@ export class ResolveFunction extends Resolved{
 			sortText: this._name,
 			filterText: this._name,
 			detail: `${title}: ${this.context?.resolveTextShort}`,
-			documentation: this.context?.documentation?.markup,
+			documentation: this.context?.useDocumentation?.markup,
 			kind: CompletionItemKind.Function,
 			insertTextFormat: InsertTextFormat.Snippet,
 			textEdit: TextEdit.replace(range, text),
@@ -346,7 +346,7 @@ export class ResolveFunction extends Resolved{
 				break;
 			}
 			
-			documentation = this.context?.documentation?.markup;
+			documentation = this.context?.useDocumentation?.markup;
 			if (documentation) {
 				documentation = {
 					kind: MarkupKind.Markdown,
@@ -365,7 +365,7 @@ export class ResolveFunction extends Resolved{
 	}
 	
 	public createSignatureInformationParameters(text: string, paraminfo: ParameterInformation[]): string {
-		const docparams = this.context?.documentation?.docContext?.params;
+		const docparams = this.context?.useDocumentation?.docContext?.params;
 		const offset = text.length;
 		var first = true;
 		var added = '';
@@ -428,7 +428,7 @@ export class ResolveFunction extends Resolved{
 		var title: string;
 		var tags: CompletionItemTag[] = [];
 		
-		if (this._context.documentation?.isDeprecated) {
+		if (this._context.useDocumentation?.isDeprecated) {
 			tags.push(CompletionItemTag.Deprecated);
 		}
 		
@@ -533,7 +533,7 @@ export class ResolveFunction extends Resolved{
 			sortText: `${sortPrefix}${this._name}`,
 			filterText: this._name,
 			detail: `${title}: ${this.context?.resolveTextShort}`,
-			documentation: this.context?.documentation?.markup,
+			documentation: this.context?.useDocumentation?.markup,
 			kind: CompletionItemKind.Function,
 			insertTextFormat: InsertTextFormat.Snippet,
 			textEdit: TextEdit.replace(range, parts.join('')),
@@ -542,6 +542,6 @@ export class ResolveFunction extends Resolved{
 	}
 	
 	public get documentation(): ContextDocumentation | undefined {
-		return this._context?.documentation;
+		return this._context?.useDocumentation;
 	}
 }

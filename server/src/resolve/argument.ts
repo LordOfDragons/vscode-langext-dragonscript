@@ -95,7 +95,7 @@ export class ResolveArgument extends Resolved{
 			sortText: this._name,
 			filterText: this._name,
 			detail: `${title}: ${this.resolveTextShort}`,
-			documentation: this.context?.documentation?.markup,
+			documentation: this.context?.useDocumentation?.markup,
 			kind: kind,
 			insertTextFormat: InsertTextFormat.Snippet,
 			textEdit: TextEdit.replace(range, text),

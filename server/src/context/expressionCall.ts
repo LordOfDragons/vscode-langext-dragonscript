@@ -1114,7 +1114,7 @@ export class ContextFunctionCall extends Context{
 						
 						if (f?.context) {
 							content.push(...f.context.resolveTextLong);
-							const doc = f.context.documentation;
+							const doc = f.context.useDocumentation;
 							if (doc) {
 								content.push('___');
 								content.push(...doc.resolveTextLong);

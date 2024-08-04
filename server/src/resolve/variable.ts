@@ -139,7 +139,7 @@ export class ResolveVariable extends Resolved{
 	}
 	
 	public get documentation(): ContextDocumentation | undefined {
-		return this._context?.documentation;
+		return this._context?.useDocumentation;
 	}
 	
 	public addReportInfo(relatedInformation: DiagnosticRelatedInformation[], message: string) {
@@ -174,7 +174,7 @@ export class ResolveVariable extends Resolved{
 			sortText: this._name,
 			filterText: this._name,
 			detail: `${title}: ${this.resolveTextShort}`,
-			documentation: this.context?.documentation?.markup,
+			documentation: this.context?.useDocumentation?.markup,
 			kind: kind,
 			insertTextFormat: InsertTextFormat.Snippet,
 			textEdit: TextEdit.replace(range, text),

@@ -137,7 +137,12 @@ export class Context {
 	public get codeActions(): BaseCodeAction[] {
 		return this._codeActions;
 	}
-
+	
+	/** Documentation to use. By default the same as documentation property. */
+	public get useDocumentation(): ContextDocumentation | undefined {
+		return this.documentation;
+	}
+	
 	public resolveClasses(state: ResolveState): void {
 	}
 

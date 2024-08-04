@@ -284,11 +284,11 @@ export class ResolveNamespace extends ResolveType {
 	}
 	
 	protected get completionItemMarkup(): MarkupContent | undefined {
-		return this._contexts.find(c => c.documentation?.markup !== undefined)?.documentation?.markup;
+		return this._contexts.find(c => c.useDocumentation?.markup !== undefined)?.useDocumentation?.markup;
 	}
 	
 	public get documentation(): ContextDocumentation | undefined {
-		return this._contexts.find(c => c.documentation !== undefined)?.documentation;
+		return this._contexts.find(c => c.useDocumentation !== undefined)?.useDocumentation;
 	}
 	
 	protected updateResolveTextLong(): string[] {

@@ -575,7 +575,7 @@ export class ContextFunction extends Context{
 			let content: string[] = [];
 			content.push(...this.resolveTextLong);
 			
-			const doc = this.documentation ?? this.documentationInherited;
+			const doc = this.useDocumentation;
 			if (doc) {
 				content.push('___');
 				content.push(...doc.resolveTextLong);
@@ -723,6 +723,10 @@ export class ContextFunction extends Context{
 		}
 		
 		return doc;
+	}
+	
+	public get useDocumentation(): ContextDocumentation | undefined {
+		return this.documentation ?? this.documentationInherited;
 	}
 	
 	protected updateReportInfoText(): string {
