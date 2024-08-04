@@ -109,6 +109,25 @@ or join the [Discord channel](https://discord.gg/Jeg62ns) to ask for help.
 
 ## Release Notes
 
+### 2.1.0
+
+Various bug fixes, hardenings and these improvements:
+- Added support for defining base packages. Base packages allow referencing installed
+  game or application projects. This is useful to write modifications or extensions
+  for applications. Base packages can be either an directory with source code or a
+  _.delga_ file. Delga files is the typical use case. See the new setting
+  _dragonscript.basePackages_. For Delga files only the documentation is shown.
+  Source code is not shown to protect copyrights of installed applications.
+- Added support for functions without documentation to inherit the base class function
+  documentation. Travels up the inheritance chain until a function with documentation
+  is found.
+- Added support for functions to show their inheritance chain in the hover information
+  panel. Includes all parent functions overwriting base class functions, the base class
+  function itself and the interface function if applicable. Class and function are
+  hyperlinked individually for easy navigation.
+- Improved the "\ref tag" documentation parsing to support more situations.
+- Added icon for _.ds_ files.
+
 ### 2.0.0
 
 Release with language server support:
