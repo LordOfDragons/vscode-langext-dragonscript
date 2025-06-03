@@ -566,7 +566,7 @@ export class DSLexer extends Lexer{
 				+ "|"
 				+ "\\\\."
 				+ "|"
-				+ "[^\"]"
+				+ "[^\"\\\\]"
 			+ ")*"
 			+ "\""
 			)
