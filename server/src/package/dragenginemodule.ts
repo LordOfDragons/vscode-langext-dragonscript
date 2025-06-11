@@ -36,6 +36,7 @@ export class PackageDEModule extends Package {
 	protected _moduleVersion?: string;
 	protected _pathModule?: string;
 	protected _pathDeal?: string;
+	protected _pathDealModule?: string;
 	protected _dealFiles: yauzl.ZipFile[] = [];
 	protected _dealFileEntries: Map<string,yauzl.Entry> = new Map<string,yauzl.Entry>();
 	
@@ -82,13 +83,14 @@ export class PackageDEModule extends Package {
 		super.clear();
 		this._pathModule = undefined;
 		this._pathDeal = undefined;
+		this._pathDealModule = undefined;
 		this.clearDeals();
 	}
 	
 	protected async loadPackage(): Promise<void> {
 		await this.findPathModule();
 		
-		if (!this._pathModule) {
+		if (!this._pathModule && !this._pathDealModule) {
 			this._console.log(`Package '${this._id}': Module path not found.`);
 			return;
 		}
@@ -96,15 +98,16 @@ export class PackageDEModule extends Package {
 		this._console.log(`Package '${this._id}': Scan package`);
 		let startTime = Date.now();
 		
-		if (this._pathDeal) {
-			let matcher = new Minimatch(join(this._pathModule, "@(native|scripts)", "**", "*.ds"));
+		if (this._pathDeal && this._pathDealModule) {
+			let matcher = new Minimatch(join(this._pathDealModule, "@(native|scripts)", "**", "*.ds"));
 			for (const each of this._dealFileEntries) {
 				if (matcher.match(each[0].substring(7))) {
 					this._files.push(each[0]);
 				}
 			}
-			
-		} else {
+		}
+		
+		if (this._pathModule){
 			await Promise.all([
 				this.scanPackage(this._files, join(this._pathModule, "native")),
 				this.scanPackage(this._files, join(this._pathModule, "scripts"))
@@ -122,6 +125,7 @@ export class PackageDEModule extends Package {
 		this._moduleVersion = undefined;
 		this._pathModule = undefined;
 		this._pathDeal = undefined;
+		this._pathDealModule = undefined;
 		this.clearDeals();
 		
 		let pathEngine = this._pathDragengine;
@@ -200,15 +204,15 @@ export class PackageDEModule extends Package {
 					dealDSVersFound.add(modver);
 					
 					this._console.log(`Package '${this._id}': Asset Library: Found Module Version ${modver}`);
-					let better: boolean = false;
+					let betterOrSame: boolean = false;
 					
 					if (this._moduleVersion) {
 						let a = this._moduleVersion.split('.').map(x => parseInt(x));
 						let b = modver.split('.').map(x => parseInt(x));
 						
 						for (let i = 0; i < a.length; i++) {
-							if (i == b.length || b[i] > a[i]) {
-								better = true;
+							if (i == b.length || b[i] >= a[i]) {
+								betterOrSame = true;
 								break;
 							} else if (b[i] < a[i]) {
 								break;
@@ -216,13 +220,16 @@ export class PackageDEModule extends Package {
 						}
 						
 					} else {
-						better = true;
+						betterOrSame = true;
 					}
 					
-					if (better) {
+					if (betterOrSame) {
+						if (this._moduleVersion != modver) {
+							this._pathModule = undefined;
+						}
 						this._moduleVersion = modver;
-						this._pathModule = join(prefixDealDSDir, modver);
 						this._pathDeal = dealpath;
+						this._pathDealModule = join(prefixDealDSDir, modver);
 					}
 				}
 			} catch(err) {
@@ -236,15 +243,15 @@ export class PackageDEModule extends Package {
 			if (stats.isDirectory()) {
 				this._console.log(`Package '${this._id}': Found Module Version ${each}`);
 				
-				let better: boolean = false;
+				let betterOrSame: boolean = false;
 				
 				if (this._moduleVersion) {
 					let a = this._moduleVersion.split('.').map(x => parseInt(x));
 					let b = each.split('.').map(x => parseInt(x));
 					
 					for (let i = 0; i < a.length; i++) {
-						if (i == b.length || b[i] > a[i]) {
-							better = true;
+						if (i == b.length || b[i] >= a[i]) {
+							betterOrSame = true;
 							break;
 						} else if (b[i] < a[i]) {
 							break;
@@ -252,13 +259,16 @@ export class PackageDEModule extends Package {
 					}
 					
 				} else {
-					better = true;
+					betterOrSame = true;
 				}
 				
-				if (better) {
+				if (betterOrSame) {
+					if (this._moduleVersion != each) {
+						this._pathDeal = undefined;
+						this._pathDealModule = undefined;
+					}
 					this._moduleVersion = each;
 					this._pathModule = modpath;
-					this._pathDeal = undefined;
 				}
 			}
 		}
