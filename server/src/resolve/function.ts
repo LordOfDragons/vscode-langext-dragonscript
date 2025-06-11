@@ -34,7 +34,7 @@ import { ResolveNamespace } from './namespace';
 import { Resolved, ResolveUsage } from './resolved';
 import { ResolveSignature } from './signature';
 import { ResolveType } from './type';
-import { debugLogMessage } from '../server';
+import { CompletionHelper } from '../completionHelper';
 
 
 /**
@@ -420,7 +420,8 @@ export class ResolveFunction extends Resolved{
 			return undefined;
 		}
 		
-		const implement = parent.type == Resolved.Type.Interface || this.typeModifiers?.has(Context.TypeModifier.Abstract);
+		const implement = parent.type == Resolved.Type.Interface
+			|| this.typeModifiers?.has(Context.TypeModifier.Abstract);
 		const hasReturn = this._returnType != ResolveNamespace.classVoid;
 		
 		var parts: string[] = [];
@@ -462,12 +463,12 @@ export class ResolveFunction extends Resolved{
 			parts.push(`${tms.typestring} `);
 		}
 		
-		parts.push(`func ${this._returnType?.name ?? 'void'} ${this.name}(`);
+		parts.push(`func ${CompletionHelper.typeNameAutoQualify(this._returnType, visibleTypes)} ${this.name}(`);
 		for (const each of this._signature.arguments) {
 			if (argIndex > 0) {
 				parts.push(', ');
 			}
-			parts.push(`${each.type?.name} ${each.name}`);
+			parts.push(`${CompletionHelper.typeNameAutoQualify(each.type, visibleTypes)} ${each.name}`);
 			argIndex++;
 		}
 		parts.push(')\n');

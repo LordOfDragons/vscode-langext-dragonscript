@@ -1559,4 +1559,31 @@ export class CompletionHelper {
 				position.line, position.character))
 		]
 	}
+	
+	/** Type name with auto-qualify in case it if shadowed. */
+	public static typeNameAutoQualify(type: ResolveType | undefined,
+			visibleTypes: Set<ResolveType> | undefined): string | undefined {
+		if (!type) {
+			return "void";
+		}
+		
+		let name = type.name;
+		if (visibleTypes) {
+			let vtypes = Array.from(visibleTypes.values());
+			while (type?.parent?.name) {
+				let filtered = vtypes.filter(t => t.name == type?.name);
+				if (filtered.length == 0) {
+					break;
+				}
+				if (filtered.length == 1 && visibleTypes.has(type)) {
+					break;
+				}
+				
+				name = `${type?.parent.name}.${name}`;
+				type = type?.parent as ResolveType;
+			}
+		}
+		
+		return name;
+	}
 }
