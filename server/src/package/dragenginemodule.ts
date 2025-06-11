@@ -140,7 +140,7 @@ export class PackageDEModule extends Package {
 			}
 		}
 		
-		let pathScrDS, pathScrDSPart;
+		let pathScrDSPart;
 		switch (platform()) {
 			case 'win32':
 				pathScrDSPart = join("Modules", "Scripting", "DragonScript")
@@ -149,7 +149,7 @@ export class PackageDEModule extends Package {
 			default:
 				pathScrDSPart = join("modules", "scripting", "dragonscript");
 		}
-		pathScrDS = join(pathEngine, pathScrDSPart);
+		let pathScrDS = join(pathEngine, pathScrDSPart);
 		
 		var filesDeals: string[] = [];
 		try {
@@ -166,7 +166,9 @@ export class PackageDEModule extends Package {
 		}
 		
 		let matcherDeal = new Minimatch("dragengine-*.deal");
-		let prefixDealDSDir = `${pathScrDSPart}/`;
+		
+		// no join for deals as this uses backslash on windows!
+		let prefixDealDSDir = "modules/scripting/dragonscript/";
 		let lenPrefixDealDSDir = prefixDealDSDir.length;
 		
 		for (const each of filesDeals) {
