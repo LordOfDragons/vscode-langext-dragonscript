@@ -109,6 +109,18 @@ or join the [Discord channel](https://discord.gg/Jeg62ns) to ask for help.
 
 ## Release Notes
 
+### 2.2.0
+
+- Potential fix for code scanning alert no. 2: Inefficient regular expression
+- Added support to find game engine scripts in deal files. Required for
+  Drag[en]gine 1.26.1 and never
+- Fixed override function completion not qualifying arguments if colliding with type
+  of same name. For example if overriding a function "void onEvent(Instance instance)"
+  in a class where in a parent class something is named "Instance" now qualifying the
+  "Instance" type would use the wrong type and no overriding would happen. This fix
+  avoids this subtle kind of mistake that could otherwise be only noticed by looking
+  at the hover information (override information would be missing)
+
 ### 2.1.0
 
 Various bug fixes, hardenings and these improvements:
