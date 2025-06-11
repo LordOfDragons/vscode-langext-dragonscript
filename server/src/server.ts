@@ -82,6 +82,7 @@ import { Package } from './package/package';
 import { Helpers } from './helpers';
 import { DebugSettings } from './debugSettings';
 import { semtokens } from './semanticTokens';
+import { HoverInfo } from './hoverinfo';
 
 // Create a connection for the server, using Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -478,6 +479,7 @@ connection.onWorkspaceSymbol(
 connection.onHover(
 	async (params: TextDocumentPositionParams): Promise<Hover | null> => {
 		try {
+			// return new HoverInfo(["**TEST**: [name](vscode://dragonscript-language-support/path?say=Testing)"], undefined);
 			const sd = await ensureDocument(params.textDocument.uri);
 			return sd.context?.
 				contextAtPosition(params.position)?.

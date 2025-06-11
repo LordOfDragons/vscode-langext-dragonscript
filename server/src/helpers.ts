@@ -24,12 +24,7 @@
 
 import { IToken } from "chevrotain";
 import { integer, Location, Position, Range } from "vscode-languageserver"
-import { ContextFunction } from "./context/classFunction";
-import { Context } from "./context/context";
 import { EndOfCommandCstNode } from "./nodeclasses/endOfCommand";
-import { ResolveFunction } from "./resolve/function";
-import { Resolved, ResolveUsage } from "./resolve/resolved";
-import { debugLogMessage } from "./server";
 import { URI } from "vscode-uri";
 
 

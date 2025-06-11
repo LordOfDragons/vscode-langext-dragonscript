@@ -23,7 +23,7 @@
  */
 
 import * as path from 'path';
-import { workspace, ExtensionContext } from 'vscode';
+import { workspace, ExtensionContext, Uri, window } from 'vscode';
 
 import {
 	LanguageClient,
@@ -88,6 +88,18 @@ export function activate(context: ExtensionContext) {
 	
 	// Start the client. This will also launch the server
 	client.start();
+	
+	// Special URI handling
+	const handleUri = (uri: Uri) => {
+		console.log(`URI: '${uri.scheme}' '${uri.authority}' '${uri.path}' '${uri.fragment}' '${uri.query}'`);
+		/*
+		const queryParams = new URLSearchParams(uri.query);
+		if (queryParams.has('say')) {
+			window.showInformationMessage(`URI Handler says: ${queryParams.get('say') as string}`);
+		}
+		*/
+	};
+	// context.subscriptions.push(window.registerUriHandler({handleUri}));
 }
 
 export function deactivate(): Thenable<void> | undefined {
