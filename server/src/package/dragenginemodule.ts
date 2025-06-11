@@ -28,60 +28,92 @@ import { platform } from "os";
 import { join } from "path";
 import { RemoteConsole } from "vscode-languageserver";
 import { Package } from "./package";
+import { Minimatch } from "minimatch";
+import yauzl = require('yauzl-promise');
 
 export class PackageDEModule extends Package {
 	protected _pathDragengine: string = "";
 	protected _moduleVersion?: string;
 	protected _pathModule?: string;
-
-
+	protected _pathDeal?: string;
+	protected _dealFiles: yauzl.ZipFile[] = [];
+	protected _dealFileEntries: Map<string,yauzl.Entry> = new Map<string,yauzl.Entry>();
+	
+	
+	public static readonly PACKAGE_ID: string = "DragengineModule";
+	
+	
 	constructor(console: RemoteConsole) {
 		super(console, PackageDEModule.PACKAGE_ID);
 		this._console.log("PackageDEModule: Created");
 	}
-
-
-	public static readonly PACKAGE_ID: string = "DragengineModule";
-
-
+	
+	public dispose(): void {
+		this.clearDeals();
+		super.dispose();
+	}
+	
+	
+	protected clearDeals(): void {
+		this._dealFileEntries.clear();
+		for (const each of this._dealFiles) {
+			each.close();
+		}
+		this._dealFiles.splice(0);
+	}
+	
 	public get pathDragengine(): string {
 		return this._pathDragengine;
 	}
-
+	
 	public set pathDragengine(value: string) {
 		if (value == this._pathDragengine) {
 			return;
 		}
-
+		
 		this._pathDragengine = value;
-
+		
 		if (this._loaded) {
 			this.reload();
 		}
 	}
-
+	
 	protected clear(): void {
 		super.clear();
 		this._pathModule = undefined;
+		this._pathDeal = undefined;
+		this.clearDeals();
 	}
-
+	
 	protected async loadPackage(): Promise<void> {
 		await this.findPathModule();
-
+		
 		if (!this._pathModule) {
 			this._console.log(`Package '${this._id}': Module path not found.`);
 			return;
 		}
-
+		
 		this._console.log(`Package '${this._id}': Scan package`);
 		let startTime = Date.now();
-		await Promise.all([
-			this.scanPackage(this._files, join(this._pathModule, "native")),
-			this.scanPackage(this._files, join(this._pathModule, "scripts"))
-		]);
+		
+		if (this._pathDeal) {
+			let matcher = new Minimatch(join(this._pathModule, "@(native|scripts)", "**", "*.ds"));
+			for (const each of this._dealFileEntries) {
+				if (matcher.match(each[0].substring(7))) {
+					this._files.push(each[0]);
+				}
+			}
+			
+		} else {
+			await Promise.all([
+				this.scanPackage(this._files, join(this._pathModule, "native")),
+				this.scanPackage(this._files, join(this._pathModule, "scripts"))
+			]);
+		}
+		
 		let elapsedTime = Date.now() - startTime;
 		this._console.log(`Package '${this._id}': Package scanned in ${elapsedTime / 1000}s found ${this._files.length} files`);
-
+		
 		await this.loadFiles();
 		this.loadingFinished();
 	}
@@ -89,38 +121,127 @@ export class PackageDEModule extends Package {
 	protected async findPathModule(): Promise<void> {
 		this._moduleVersion = undefined;
 		this._pathModule = undefined;
-
+		this._pathDeal = undefined;
+		this.clearDeals();
+		
 		let pathEngine = this._pathDragengine;
 		if (!pathEngine) {
 			switch (platform()) {
 				case 'win32':
-					pathEngine = "C:\\Program Files\\Dragengine\\Share\\Modules\\Scripting\\DragonScript";
+					pathEngine = "C:\\Program Files\\Dragengine\\Share";
 					break;
-
+					
 				default:
-					pathEngine = "/usr/share/dragengine/modules/scripting/dragonscript";
+					pathEngine = "/usr/share/dragengine";
 			}
 		}
 		
-		var files: string[] = [];
+		let pathScrDS, pathScrDSPart;
+		switch (platform()) {
+			case 'win32':
+				pathScrDSPart = join("Modules", "Scripting", "DragonScript")
+				break;
+				
+			default:
+				pathScrDSPart = join("modules", "scripting", "dragonscript");
+		}
+		pathScrDS = join(pathEngine, pathScrDSPart);
+		
+		var filesDeals: string[] = [];
 		try {
-			files = await readdir(pathEngine);
+			filesDeals = await readdir(pathEngine);
 		} catch {
 			this._console.log(`Package '${this._id}': Failed reading directory '${pathEngine}'`);
 		}
 		
-		for (const each of files) {
-			let modpath = join(pathEngine, each);
+		var filesVerDirs: string[] = [];
+		try {
+			filesVerDirs = await readdir(pathScrDS);
+		} catch {
+			this._console.log(`Package '${this._id}': Failed reading directory '${pathScrDS}'`);
+		}
+		
+		let matcherDeal = new Minimatch("dragengine-*.deal");
+		let prefixDealDSDir = `${pathScrDSPart}/`;
+		let lenPrefixDealDSDir = prefixDealDSDir.length;
+		
+		for (const each of filesDeals) {
+			let dealpath = join(pathEngine, each);
+			let stats = statSync(dealpath);
+			if (!stats.isFile() || !matcherDeal.match(each)) {
+				continue;
+			}
+			this._console.log(`Package '${this._id}': Found Asset Library '${each}'`);
+			
+			try {
+				let dealFile = await yauzl.open(dealpath);
+				this._dealFiles.push(dealFile);
+				
+				let dealDSVersFound = new Set<string>();
+				
+				for await (const each of dealFile) {
+					let filename = each.filename;
+					filename = filename.replace('\\', '/'); // windows zip spec violation protection
+					
+					this._dealFileEntries.set(`deal://${filename}`, each);
+					
+					if (!filename.startsWith(prefixDealDSDir)) {
+						continue;
+					}
+					
+					let index = filename.indexOf('/', lenPrefixDealDSDir);
+					if (index == -1) {
+						index = filename.length;
+					}
+					let modver = filename.substring(lenPrefixDealDSDir, index);
+					if (dealDSVersFound.has(modver)) {
+						continue;
+					}
+					dealDSVersFound.add(modver);
+					
+					this._console.log(`Package '${this._id}': Asset Library: Found Module Version ${modver}`);
+					let better: boolean = false;
+					
+					if (this._moduleVersion) {
+						let a = this._moduleVersion.split('.').map(x => parseInt(x));
+						let b = modver.split('.').map(x => parseInt(x));
+						
+						for (let i = 0; i < a.length; i++) {
+							if (i == b.length || b[i] > a[i]) {
+								better = true;
+								break;
+							} else if (b[i] < a[i]) {
+								break;
+							}
+						}
+						
+					} else {
+						better = true;
+					}
+					
+					if (better) {
+						this._moduleVersion = modver;
+						this._pathModule = join(prefixDealDSDir, modver);
+						this._pathDeal = dealpath;
+					}
+				}
+			} catch(err) {
+				this._console.log(`Package '${this._id}': Reading DEAL file failed.`);
+			}
+		}
+		
+		for (const each of filesVerDirs) {
+			let modpath = join(pathScrDS, each);
 			let stats = statSync(modpath);
 			if (stats.isDirectory()) {
 				this._console.log(`Package '${this._id}': Found Module Version ${each}`);
-
+				
 				let better: boolean = false;
-
+				
 				if (this._moduleVersion) {
 					let a = this._moduleVersion.split('.').map(x => parseInt(x));
 					let b = each.split('.').map(x => parseInt(x));
-
+					
 					for (let i = 0; i < a.length; i++) {
 						if (i == b.length || b[i] > a[i]) {
 							better = true;
@@ -129,18 +250,39 @@ export class PackageDEModule extends Package {
 							break;
 						}
 					}
-
+					
 				} else {
 					better = true;
 				}
-
+				
 				if (better) {
 					this._moduleVersion = each;
 					this._pathModule = modpath;
+					this._pathDeal = undefined;
 				}
 			}
 		}
-
-		this._console.log(`Package '${this._id}': Using Module Version ${this._moduleVersion}`);
+		
+		this._console.log(`Package '${this._id}': Using Module Version ${this._moduleVersion} (${this._pathDeal})`);
+	}
+	
+	protected async readFile(path: string): Promise<string> {
+		if (path.startsWith("deal://")) {
+			const entry = this._dealFileEntries.get(path);
+			if (entry) {
+				const stream = await entry.openReadStream();
+				const chunks = [];
+				for await (const chunk of stream) {
+					chunks.push(Buffer.from(chunk));
+				}
+				return Buffer.concat(chunks).toString("utf-8");
+				
+			} else {
+				throw Error("Entry not find in DELGA file");
+			}
+			
+		} else {
+			return super.readFile(path);
+		}
 	}
 }
