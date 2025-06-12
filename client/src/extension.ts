@@ -122,6 +122,10 @@ function registerXmlSchemaAssociations() {
 		{
 			"pattern": "**/*.desconvo",
 			"systemId": "https://lordofdragons.github.io/dragengine/artifacts/xmlschema/dragengine/latest/simpleConversation.xsd"
+		},
+		{
+			"pattern": "**/*.debt",
+			"systemId": "https://lordofdragons.github.io/dragengine/artifacts/xmlschema/dragengine/latest/behaviorTree.xsd"
 		}
 	]
 	
