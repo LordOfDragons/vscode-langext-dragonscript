@@ -187,7 +187,7 @@ export class PackageDEModule extends Package {
 				
 				for await (const each of dealFile) {
 					let filename = each.filename;
-					filename = filename.replace('\\', '/'); // windows zip spec violation protection
+					filename = filename.replace(/\\/g, '/'); // windows zip spec violation protection
 					
 					this._dealFileEntries.set(`deal://${filename}`, each);
 					
