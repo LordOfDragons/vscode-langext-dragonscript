@@ -23,7 +23,7 @@
  */
 
 import * as path from 'path';
-import { workspace, ExtensionContext, Uri, window } from 'vscode';
+import { workspace, ExtensionContext, Uri, window, ConfigurationTarget } from 'vscode';
 
 import {
 	LanguageClient,
@@ -89,9 +89,11 @@ export function activate(context: ExtensionContext) {
 	// Start the client. This will also launch the server
 	client.start();
 	
+	registerXmlSchemaAssociations();
+	
 	// Special URI handling
 	const handleUri = (uri: Uri) => {
-		console.log(`URI: '${uri.scheme}' '${uri.authority}' '${uri.path}' '${uri.fragment}' '${uri.query}'`);
+		window.showInformationMessage(`URI: '${uri.scheme}' '${uri.authority}' '${uri.path}' '${uri.fragment}' '${uri.query}'`);
 		/*
 		const queryParams = new URLSearchParams(uri.query);
 		if (queryParams.has('say')) {
@@ -104,4 +106,36 @@ export function activate(context: ExtensionContext) {
 
 export function deactivate(): Thenable<void> | undefined {
 	return client?.stop();
+}
+
+interface XmlSchemaAssociationEntry {
+	pattern: string;
+	systemId: string;
+}
+
+function registerXmlSchemaAssociations() {
+	let config = workspace.getConfiguration("xml");
+	let associations: XmlSchemaAssociationEntry[] =
+		config.inspect("fileAssociations")?.globalValue as XmlSchemaAssociationEntry[] ?? [];
+	
+	let mappings: XmlSchemaAssociationEntry[] = [
+		{
+			"pattern": "**/*.desconvo",
+			"systemId": "https://lordofdragons.github.io/dragengine/artifacts/xmlschema/dragengine/latest/simpleConversation.xsd"
+		}
+	]
+	
+	let changed = false;
+	
+	for (const each of mappings) {
+		let association = associations.find(a => a.pattern == each.pattern);
+		if (!association) {
+			associations.push(each);
+			changed = true;
+		}
+	}
+	
+	if (changed) {
+		config.update("fileAssociations", associations, ConfigurationTarget.Global);
+	}
 }
