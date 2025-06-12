@@ -19,7 +19,7 @@
 		"dragonscript",
 		"dragengine"
 	],
-	"version": "2.2.3",
+	"version": "2.2.4",
 	"engines": {
 		"vscode": "^1.63.0"
 	},
