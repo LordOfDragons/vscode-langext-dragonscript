@@ -109,6 +109,10 @@ or join the [Discord channel](https://discord.gg/Jeg62ns) to ask for help.
 
 ## Release Notes
 
+## 2.2.5
+
+- Added support to register various XML Schemas used by Drag[en]gine.
+
 ### 2.2.0
 
 - Potential fix for code scanning alert no. 2: Inefficient regular expression

@@ -114,9 +114,13 @@ interface XmlSchemaAssociationEntry {
 }
 
 function registerXmlSchemaAssociations() {
+	if (!workspace.getConfiguration("dragonscriptLanguage").get("requiresPackageDragengine")) {
+		return;
+	}
+	
 	let config = workspace.getConfiguration("xml");
 	let associations: XmlSchemaAssociationEntry[] =
-		config.inspect("fileAssociations")?.globalValue as XmlSchemaAssociationEntry[] ?? [];
+		config.inspect("fileAssociations")?.workspaceValue as XmlSchemaAssociationEntry[] ?? [];
 	
 	let mappings: XmlSchemaAssociationEntry[] = [
 		{
@@ -126,6 +130,18 @@ function registerXmlSchemaAssociations() {
 		{
 			"pattern": "**/*.debt",
 			"systemId": "https://lordofdragons.github.io/dragengine/artifacts/xmlschema/dragengine/latest/behaviorTree.xsd"
+		},
+		{
+			"pattern": "**/*.desm",
+			"systemId": "https://lordofdragons.github.io/dragengine/artifacts/xmlschema/dragengine/latest/stateMachine.xsd"
+		},
+		{
+			"pattern": "**/*.dept",
+			"systemId": "https://lordofdragons.github.io/dragengine/artifacts/xmlschema/dragengine/latest/parameterTree.xsd"
+		},
+		{
+			"pattern": "**/*.deeclass",
+			"systemId": "https://lordofdragons.github.io/dragengine/artifacts/xmlschema/dragengine/latest/elementClass.xsd"
 		}
 	]
 	
@@ -140,6 +156,6 @@ function registerXmlSchemaAssociations() {
 	}
 	
 	if (changed) {
-		config.update("fileAssociations", associations, ConfigurationTarget.Global);
+		config.update("fileAssociations", associations, ConfigurationTarget.Workspace);
 	}
 }
