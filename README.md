@@ -109,7 +109,11 @@ or join the [Discord channel](https://discord.gg/Jeg62ns) to ask for help.
 
 ## Release Notes
 
-## 2.2.5
+### 2.3.0
+
+- All XML Schemas used by Drag[en]gine added.
+
+### 2.2.5
 
 - Added support to register various XML Schemas used by Drag[en]gine.
 

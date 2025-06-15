@@ -1,5 +1,9 @@
 # Change Log
 
+## 2.3.0
+
+- All XML Schemas used by Drag[en]gine added.
+
 ## 2.2.5
 
 - Added support to register various XML Schemas used by Drag[en]gine.
