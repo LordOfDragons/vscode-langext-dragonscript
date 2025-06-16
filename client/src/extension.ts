@@ -23,7 +23,7 @@
  */
 
 import * as path from 'path';
-import { workspace, ExtensionContext, Uri, window, ConfigurationTarget } from 'vscode';
+import { workspace, ExtensionContext, Uri, ConfigurationTarget } from 'vscode';
 
 import {
 	LanguageClient,
@@ -31,6 +31,15 @@ import {
 	ServerOptions,
 	TransportKind
 } from 'vscode-languageclient/node';
+import { DelgaFileProvider } from './delgaFileProvider';
+
+interface DSInitOptions {
+	globalStoragePath: Uri;
+}
+
+class ImplDSInitOptions implements DSInitOptions {
+	public globalStoragePath: Uri;
+}
 
 let client: LanguageClient;
 
@@ -64,6 +73,9 @@ export function activate(context: ExtensionContext) {
 	};
 	
 	// Options to control the language client
+	let options = new ImplDSInitOptions;
+	options.globalStoragePath = context.globalStorageUri;
+	
 	const clientOptions: LanguageClientOptions = {
 		// Register the server for dragonscript documents
 		documentSelector: [
@@ -75,7 +87,8 @@ export function activate(context: ExtensionContext) {
 		synchronize: {
 			// Notify the server about file changes to '.ds files contained in the workspace
 			fileEvents: workspace.createFileSystemWatcher('**/*.ds')
-		}
+		},
+		initializationOptions: options
 	};
 	
 	// Create the language client and start the client.
@@ -91,17 +104,12 @@ export function activate(context: ExtensionContext) {
 	
 	registerXmlSchemaAssociations();
 	
-	// Special URI handling
-	const handleUri = (uri: Uri) => {
-		window.showInformationMessage(`URI: '${uri.scheme}' '${uri.authority}' '${uri.path}' '${uri.fragment}' '${uri.query}'`);
-		/*
-		const queryParams = new URLSearchParams(uri.query);
-		if (queryParams.has('say')) {
-			window.showInformationMessage(`URI Handler says: ${queryParams.get('say') as string}`);
-		}
-		*/
-	};
-	// context.subscriptions.push(window.registerUriHandler({handleUri}));
+	/*
+	context.subscriptions.push(workspace.registerFileSystemProvider("delga", new DelgaFileProvider(), {
+		isCaseSensitive: false,
+		isReadonly: true
+	}));
+	*/
 }
 
 export function deactivate(): Thenable<void> | undefined {
@@ -144,27 +152,27 @@ function registerXmlSchemaAssociations() {
 			"systemId": "https://lordofdragons.github.io/dragengine/artifacts/xmlschema/dragengine/latest/elementClass.xsd"
 		},
 		{
-			"pattern": "**/*.deccreator",
+			"pattern": "**/*.decc",
 			"systemId": "https://lordofdragons.github.io/dragengine/artifacts/xmlschema/dragengine/latest/canvasCreator.xsd"
 		},
 		{
-			"pattern": "**/*.deborder",
+			"pattern": "**/*.debor",
 			"systemId": "https://lordofdragons.github.io/dragengine/artifacts/xmlschema/dragengine/latest/border.xsd"
 		},
 		{
-			"pattern": "**/*.dedecoration",
+			"pattern": "**/*.dedeco",
 			"systemId": "https://lordofdragons.github.io/dragengine/artifacts/xmlschema/dragengine/latest/decoration.xsd"
 		},
 		{
-			"pattern": "**/*.dempointer",
+			"pattern": "**/*.demp",
 			"systemId": "https://lordofdragons.github.io/dragengine/artifacts/xmlschema/dragengine/latest/mousePointer.xsd"
 		},
 		{
-			"pattern": "**/*.dedesigner",
+			"pattern": "**/*.dedes",
 			"systemId": "https://lordofdragons.github.io/dragengine/artifacts/xmlschema/dragengine/latest/designer.xsd"
 		},
 		{
-			"pattern": "**/*.deguitheme",
+			"pattern": "**/*.degt",
 			"systemId": "https://lordofdragons.github.io/dragengine/artifacts/xmlschema/dragengine/latest/guitheme.xsd"
 		}
 	]

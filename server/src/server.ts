@@ -165,6 +165,7 @@ connection.onInitialize((params: InitializeParams) => {
 	connection.console.log(`- hasConfiguration: ${capabilities.hasConfiguration}`)
 	connection.console.log(`- hasWorkspaceFolder: ${capabilities.hasWorkspaceFolder}`)
 	connection.console.log(`- hasDiagnosticRelatedInformation: ${capabilities.hasDiagnosticRelatedInformation}`)
+	connection.console.log(`- initializationOptions: ${params.initializationOptions}`)
 	
 	const result: InitializeResult = {
 		capabilities: {

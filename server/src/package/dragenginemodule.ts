@@ -30,6 +30,8 @@ import { RemoteConsole } from "vscode-languageserver";
 import { Package } from "./package";
 import { Minimatch } from "minimatch";
 import yauzl = require('yauzl-promise');
+import { Helpers } from "../helpers";
+import { DelgaFileEntry } from "./basepackage";
 
 export class PackageDEModule extends Package {
 	protected _pathDragengine: string = "";
@@ -38,7 +40,7 @@ export class PackageDEModule extends Package {
 	protected _pathDeal?: string;
 	protected _pathDealModule?: string;
 	protected _dealFiles: yauzl.ZipFile[] = [];
-	protected _dealFileEntries: Map<string,yauzl.Entry> = new Map<string,yauzl.Entry>();
+	protected _dealFileEntries: Map<string,DelgaFileEntry> = new Map<string,DelgaFileEntry>();
 	
 	
 	public static readonly PACKAGE_ID: string = "DragengineModule";
@@ -101,7 +103,7 @@ export class PackageDEModule extends Package {
 		if (this._pathDeal && this._pathDealModule) {
 			let matcher = new Minimatch(join(this._pathDealModule, "@(native|scripts)", "**", "*.ds"));
 			for (const each of this._dealFileEntries) {
-				if (matcher.match(each[0].substring(7))) {
+				if (matcher.match(each[1].filename)) {
 					this._files.push(each[0]);
 				}
 			}
@@ -189,7 +191,8 @@ export class PackageDEModule extends Package {
 					let filename = each.filename;
 					filename = filename.replace(/\\/g, '/'); // windows zip spec violation protection
 					
-					this._dealFileEntries.set(`deal://${filename}`, each);
+					const uri = Helpers.createDelgaUri(dealpath, filename);
+					this._dealFileEntries.set(uri, {uri: uri, entry: each, filename: filename});
 					
 					if (!filename.startsWith(prefixDealDSDir)) {
 						continue;
@@ -279,10 +282,10 @@ export class PackageDEModule extends Package {
 	}
 	
 	protected async readFile(path: string): Promise<string> {
-		if (path.startsWith("deal://")) {
+		if (path.startsWith("delga:/")) {
 			const entry = this._dealFileEntries.get(path);
 			if (entry) {
-				const stream = await entry.openReadStream();
+				const stream = await entry.entry.openReadStream();
 				const chunks = [];
 				for await (const chunk of stream) {
 					chunks.push(Buffer.from(chunk));

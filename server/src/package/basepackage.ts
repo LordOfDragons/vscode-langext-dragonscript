@@ -34,6 +34,13 @@ import { Stats, statSync } from "fs";
 import { URI } from "vscode-uri";
 import { DSSettings, FileSettings } from "../settings";
 import yauzl = require('yauzl-promise');
+import { Helpers } from "../helpers";
+
+export interface DelgaFileEntry {
+	uri: string;
+	entry: yauzl.Entry;
+	filename: string;
+};
 
 export class PackageBasePackage extends Package {
 	private _uri: string;
@@ -41,7 +48,7 @@ export class PackageBasePackage extends Package {
 	private _name: string;
 	private _timerResolve?: NodeJS.Timeout;
 	private _delgaFile?: yauzl.ZipFile;
-	private _delgaFileEntries: Map<string,yauzl.Entry> = new Map<string,yauzl.Entry>();
+	private _delgaFileEntries: Map<string,DelgaFileEntry> = new Map<string,DelgaFileEntry>();
 	
 	
 	constructor(console: RemoteConsole, uri: string) {
@@ -153,16 +160,19 @@ export class PackageBasePackage extends Package {
 		try {
 			this._delgaFile = await yauzl.open(this._path);
 			for await (const each of this._delgaFile) {
-				if (exclude.find(m => m.match(each.filename))) {
+				let filename = each.filename;
+				filename = filename.replace(/\\/g, '/'); // windows zip spec violation protection
+				
+				if (exclude.find(m => m.match(filename))) {
 					continue;
 				}
-				if (each.filename.endsWith('/')) {
+				if (filename.endsWith('/')) {
 					continue;
 				}
-				if (each.filename.endsWith('.ds')) {
-					const url = `delga://${each.filename}`;
-					this._files.push(url);
-					this._delgaFileEntries.set(url, each);
+				if (filename.endsWith('.ds')) {
+					const uri = Helpers.createDelgaUri(this._path, filename);
+					this._files.push(uri);
+					this._delgaFileEntries.set(uri, {uri: uri, entry: each, filename: filename});
 				}
 			}
 		} catch(err) {
@@ -171,10 +181,10 @@ export class PackageBasePackage extends Package {
 	}
 	
 	protected async readFile(path: string): Promise<string> {
-		if (path.startsWith("delga://")) {
+		if (path.startsWith("delga:/")) {
 			const entry = this._delgaFileEntries.get(path);
 			if (entry) {
-				const stream = await entry.openReadStream();
+				const stream = await entry.entry.openReadStream();
 				const chunks = [];
 				for await (const chunk of stream) {
 					chunks.push(Buffer.from(chunk));

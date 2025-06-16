@@ -26,6 +26,7 @@ import { IToken } from "chevrotain";
 import { integer, Location, Position, Range } from "vscode-languageserver"
 import { EndOfCommandCstNode } from "./nodeclasses/endOfCommand";
 import { URI } from "vscode-uri";
+import { debugLogMessage } from "./server";
 
 
 export class Helpers {
@@ -202,8 +203,11 @@ export class Helpers {
 	}
 
 	public static linkFromLocation(location: Location, text: string): string {
-		const path = URI.parse(location.uri).fsPath;
-		const uri = URI.file(path).toString();
+		let uri = location.uri;
+		if (!uri.startsWith("delga:/")) {
+			uri = URI.file(URI.parse(location.uri).fsPath).toString();
+		}
+		// debugLogMessage(`linkFromLocation: '${location.uri}' '${uri}'`);
 		const line = location.range.start.line + 1;
 		return `[${text}](${uri}#L${line})`;
 	}
@@ -344,5 +348,13 @@ export class Helpers {
 		}
 		
 		return result.join('');
+	}
+	
+	public static createDelgaUri(pathDelga: string, pathFile: string): string {
+		const url = new URL(`delga:/${pathDelga}`);
+		const searchParams = new URLSearchParams(url.searchParams);
+		searchParams.set("path", pathFile);
+		url.search = searchParams.toString();
+		return url.toString();
 	}
 }

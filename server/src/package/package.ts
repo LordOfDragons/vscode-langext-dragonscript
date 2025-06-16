@@ -29,7 +29,7 @@ import { Diagnostic, DiagnosticSeverity, RemoteConsole } from "vscode-languagese
 import { ContextScript } from "../context/script";
 import { ReportConfig } from "../reportConfig";
 import { ScriptDocument } from "../scriptDocument";
-import { getDocumentSettings, scriptDocuments, validator } from "../server";
+import { debugLogMessage, getDocumentSettings, scriptDocuments, validator } from "../server";
 import { DeferredPromiseVoid } from "../deferredPromise";
 import { Minimatch, minimatch } from 'minimatch';
 import { URI } from "vscode-uri";
@@ -215,7 +215,12 @@ export class Package {
 	protected async loadFile(path: string, reportConfig: ReportConfig): Promise<void> {
 		//let startTime = Date.now();
 		
-		let uri = URI.file(path).toString();
+		let uri: string;
+		if (path.startsWith("delga:/")) {
+			uri = URI.parse(path).toString();
+		} else {
+			uri = URI.file(path).toString();
+		}
 		let scriptDocument = scriptDocuments.get(uri);
 		if (scriptDocument) {
 			scriptDocument.package = this;
