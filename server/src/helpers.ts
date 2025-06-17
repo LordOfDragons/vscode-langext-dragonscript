@@ -26,7 +26,8 @@ import { IToken } from "chevrotain";
 import { integer, Location, Position, Range } from "vscode-languageserver"
 import { EndOfCommandCstNode } from "./nodeclasses/endOfCommand";
 import { URI } from "vscode-uri";
-import { debugLogMessage } from "./server";
+import { existsSync, mkdirSync } from "fs";
+import { dirname } from "path";
 
 
 export class Helpers {
@@ -204,10 +205,9 @@ export class Helpers {
 
 	public static linkFromLocation(location: Location, text: string): string {
 		let uri = location.uri;
-		if (!uri.startsWith("delga:/")) {
+		//if (!uri.startsWith("delga:/")) {
 			uri = URI.file(URI.parse(location.uri).fsPath).toString();
-		}
-		// debugLogMessage(`linkFromLocation: '${location.uri}' '${uri}'`);
+		//}
 		const line = location.range.start.line + 1;
 		return `[${text}](${uri}#L${line})`;
 	}
@@ -356,5 +356,19 @@ export class Helpers {
 		searchParams.set("path", pathFile);
 		url.search = searchParams.toString();
 		return url.toString();
+	}
+	
+	public static ensureDirectory(path: string): void {
+		if (existsSync(path)) {
+			return;
+		}
+		
+		const directory = dirname(path);
+		if (!directory) {
+			throw Error(`Failed to create directory: ${path}`);
+		}
+		
+		this.ensureDirectory(directory);
+		mkdirSync(path);
 	}
 }

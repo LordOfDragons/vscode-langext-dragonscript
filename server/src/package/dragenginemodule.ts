@@ -22,16 +22,60 @@
 * SOFTWARE.
 */
 
-import { statSync } from "fs";
-import { readdir } from "fs/promises";
+import { chmodSync, Mode, statSync } from "fs";
+import { constants, open, readdir, writeFile } from "fs/promises";
 import { platform } from "os";
-import { join } from "path";
+import { dirname, join } from "path";
 import { RemoteConsole } from "vscode-languageserver";
 import { Package } from "./package";
 import { Minimatch } from "minimatch";
 import yauzl = require('yauzl-promise');
 import { Helpers } from "../helpers";
 import { DelgaFileEntry } from "./basepackage";
+import { debugLogMessage, delgaCacher } from "../server";
+import { CacheDelgaHandler } from "../delgaCacher";
+import { URI } from "vscode-uri";
+
+class PackageCacheDelgaHandler implements CacheDelgaHandler {
+	private _entries: Map<string,DelgaFileEntry> = new Map<string,DelgaFileEntry>();
+	private _matcher: Minimatch;
+	
+	constructor (entries: Map<string,DelgaFileEntry>, matcher: Minimatch) {
+		this._entries = entries;
+		this._matcher = matcher;
+	}
+	
+	async cacheDelga(cachePath: string): Promise<void> {
+		let mode: Mode;
+		switch (platform()) {
+			case 'win32':
+				mode = constants.S_IRUSR;
+				break;
+				
+			default:
+				mode = constants.S_IRUSR | constants.S_IRGRP | constants.S_IROTH;
+		}
+		
+		for (const each of this._entries) {
+			if (this._matcher.match(each[1].filename)) {
+				const cacheEntryPath = join(cachePath, ...each[1].filename.split("/"));
+				Helpers.ensureDirectory(dirname(cacheEntryPath))
+				
+				const f = await open(cacheEntryPath, "w");
+				try {
+					const stream = await each[1].entry.openReadStream();
+					for await (const chunk of stream) {
+						await f.write(chunk);
+					}
+				} finally {
+					f.close();
+				}
+				
+				chmodSync(cacheEntryPath, mode);
+			}
+		}
+	}
+}
 
 export class PackageDEModule extends Package {
 	protected _pathDragengine: string = "";
@@ -102,6 +146,26 @@ export class PackageDEModule extends Package {
 		
 		if (this._pathDeal && this._pathDealModule) {
 			let matcher = new Minimatch(join(this._pathDealModule, "@(native|scripts)", "**", "*.ds"));
+			
+			const delgaStats = statSync(this._pathDeal);
+			const cachePath = await delgaCacher.checkCache(
+				this._pathDeal, delgaStats.size, delgaStats.mtime.getTime(),
+				new PackageCacheDelgaHandler(this._dealFileEntries, matcher));
+			
+			if (cachePath) {
+				const prev = new Map<string,DelgaFileEntry>(this._dealFileEntries);
+				this._dealFileEntries.clear();
+				
+				for (const each of prev) {
+					let uri = each[0];
+					if (matcher.match(each[1].filename)) {
+						uri = join(cachePath, ...each[1].filename.split("/"));
+						each[1].uri = uri;
+					}
+					this._dealFileEntries.set(uri, each[1]);
+				}
+			}
+			
 			for (const each of this._dealFileEntries) {
 				if (matcher.match(each[1].filename)) {
 					this._files.push(each[0]);
@@ -120,6 +184,7 @@ export class PackageDEModule extends Package {
 		this._console.log(`Package '${this._id}': Package scanned in ${elapsedTime / 1000}s found ${this._files.length} files`);
 		
 		await this.loadFiles();
+		
 		this.loadingFinished();
 	}
 

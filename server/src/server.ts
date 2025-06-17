@@ -57,7 +57,6 @@ import {
 	DefinitionParams,
 	SemanticTokensParams,
 	SemanticTokens,
-	SemanticTokensBuilder,
 	Range,
 	Position} from 'vscode-languageserver/node'
 
@@ -82,7 +81,9 @@ import { Package } from './package/package';
 import { Helpers } from './helpers';
 import { DebugSettings } from './debugSettings';
 import { semtokens } from './semanticTokens';
-import { HoverInfo } from './hoverinfo';
+import { DelgaCacher } from './delgaCacher';
+import { URI } from 'vscode-uri';
+import { join } from 'path';
 
 // Create a connection for the server, using Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -153,6 +154,11 @@ export const documentationValidator = new DocumentationValidator(capabilities);
 const workspacePackages: PackageWorkspace[] = [];
 export const packages: Packages = new Packages();
 
+export const delgaCacher: DelgaCacher = new DelgaCacher();
+
+interface DSInitOptions {
+	globalStoragePath: string;
+}
 
 connection.onInitialize((params: InitializeParams) => {
 	Error.stackTraceLimit = 50; // 10 is default but too short to debug lexing/parsing problems
@@ -165,7 +171,9 @@ connection.onInitialize((params: InitializeParams) => {
 	connection.console.log(`- hasConfiguration: ${capabilities.hasConfiguration}`)
 	connection.console.log(`- hasWorkspaceFolder: ${capabilities.hasWorkspaceFolder}`)
 	connection.console.log(`- hasDiagnosticRelatedInformation: ${capabilities.hasDiagnosticRelatedInformation}`)
-	connection.console.log(`- initializationOptions: ${params.initializationOptions}`)
+	
+	const iopts = params.initializationOptions as DSInitOptions;
+	delgaCacher.cacheDir = join(URI.parse(iopts.globalStoragePath).fsPath, "delgaCache");
 	
 	const result: InitializeResult = {
 		capabilities: {
@@ -221,6 +229,8 @@ connection.onInitialize((params: InitializeParams) => {
 });
 
 connection.onInitialized(async () => {
+	await delgaCacher.initCache();
+	
 	if (capabilities.hasConfiguration) {
 		connection.client.register(DidChangeConfigurationNotification.type, undefined);
 	}

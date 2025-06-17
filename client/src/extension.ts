@@ -34,11 +34,11 @@ import {
 import { DelgaFileProvider } from './delgaFileProvider';
 
 interface DSInitOptions {
-	globalStoragePath: Uri;
+	globalStoragePath: string;
 }
 
 class ImplDSInitOptions implements DSInitOptions {
-	public globalStoragePath: Uri;
+	public globalStoragePath: string;
 }
 
 let client: LanguageClient;
@@ -74,7 +74,7 @@ export function activate(context: ExtensionContext) {
 	
 	// Options to control the language client
 	let options = new ImplDSInitOptions;
-	options.globalStoragePath = context.globalStorageUri;
+	options.globalStoragePath = context.globalStorageUri.toString();
 	
 	const clientOptions: LanguageClientOptions = {
 		// Register the server for dragonscript documents
