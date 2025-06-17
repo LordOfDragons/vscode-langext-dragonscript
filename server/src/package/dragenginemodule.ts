@@ -247,7 +247,7 @@ export class PackageDEModule extends Package {
 						index = filename.length;
 					}
 					let modver = filename.substring(lenPrefixDealDSDir, index);
-					if (dealDSVersFound.has(modver)) {
+					if (!modver || dealDSVersFound.has(modver)) {
 						continue;
 					}
 					dealDSVersFound.add(modver);
