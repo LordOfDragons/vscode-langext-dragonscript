@@ -22,56 +22,33 @@
 * SOFTWARE.
 */
 
-import { chmodSync, Mode, statSync } from "fs";
-import { constants, open, readdir, writeFile } from "fs/promises";
+import { statSync } from "fs";
+import { readdir } from "fs/promises";
 import { platform } from "os";
-import { dirname, join } from "path";
+import { join } from "path";
 import { RemoteConsole } from "vscode-languageserver";
 import { Package } from "./package";
 import { Minimatch } from "minimatch";
 import yauzl = require('yauzl-promise');
 import { Helpers } from "../helpers";
 import { DelgaFileEntry } from "./basepackage";
-import { debugLogMessage, delgaCacher } from "../server";
-import { CacheDelgaHandler } from "../delgaCacher";
-import { URI } from "vscode-uri";
+import { delgaCacher } from "../server";
+import { BaseCacheDelgaHandler } from "../delgaCacher";
 
-class PackageCacheDelgaHandler implements CacheDelgaHandler {
+class PackageCacheDelgaHandler extends BaseCacheDelgaHandler {
 	private _entries: Map<string,DelgaFileEntry> = new Map<string,DelgaFileEntry>();
 	private _matcher: Minimatch;
 	
 	constructor (entries: Map<string,DelgaFileEntry>, matcher: Minimatch) {
+		super();
 		this._entries = entries;
 		this._matcher = matcher;
 	}
 	
 	async cacheDelga(cachePath: string): Promise<void> {
-		let mode: Mode;
-		switch (platform()) {
-			case 'win32':
-				mode = constants.S_IRUSR;
-				break;
-				
-			default:
-				mode = constants.S_IRUSR | constants.S_IRGRP | constants.S_IROTH;
-		}
-		
 		for (const each of this._entries) {
 			if (this._matcher.match(each[1].filename)) {
-				const cacheEntryPath = join(cachePath, ...each[1].filename.split("/"));
-				Helpers.ensureDirectory(dirname(cacheEntryPath))
-				
-				const f = await open(cacheEntryPath, "w");
-				try {
-					const stream = await each[1].entry.openReadStream();
-					for await (const chunk of stream) {
-						await f.write(chunk);
-					}
-				} finally {
-					f.close();
-				}
-				
-				chmodSync(cacheEntryPath, mode);
+				this.doCacheDelga(cachePath, each[1].entry, each[1].filename);
 			}
 		}
 	}
@@ -95,16 +72,16 @@ export class PackageDEModule extends Package {
 		this._console.log("PackageDEModule: Created");
 	}
 	
-	public dispose(): void {
-		this.clearDeals();
-		super.dispose();
+	public async dispose(): Promise<void> {
+		await this.clearDeals();
+		await super.dispose();
 	}
 	
 	
-	protected clearDeals(): void {
+	protected async clearDeals(): Promise<void> {
 		this._dealFileEntries.clear();
 		for (const each of this._dealFiles) {
-			each.close();
+			await each.close();
 		}
 		this._dealFiles.splice(0);
 	}
@@ -125,12 +102,13 @@ export class PackageDEModule extends Package {
 		}
 	}
 	
-	protected clear(): void {
-		super.clear();
+	protected async clear(): Promise<void> {
+		await super.clear();
 		this._pathModule = undefined;
 		this._pathDeal = undefined;
 		this._pathDealModule = undefined;
-		this.clearDeals();
+		
+		await this.clearDeals();
 	}
 	
 	protected async loadPackage(): Promise<void> {
@@ -193,7 +171,8 @@ export class PackageDEModule extends Package {
 		this._pathModule = undefined;
 		this._pathDeal = undefined;
 		this._pathDealModule = undefined;
-		this.clearDeals();
+		
+		await this.clearDeals();
 		
 		let pathEngine = this._pathDragengine;
 		if (!pathEngine) {

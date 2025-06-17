@@ -154,16 +154,16 @@ export const documentationValidator = new DocumentationValidator(capabilities);
 const workspacePackages: PackageWorkspace[] = [];
 export const packages: Packages = new Packages();
 
-export const delgaCacher: DelgaCacher = new DelgaCacher();
+export const delgaCacher: DelgaCacher = new DelgaCacher(connection.console);
 
 interface DSInitOptions {
 	globalStoragePath: string;
 }
 
-connection.onInitialize((params: InitializeParams) => {
+connection.onInitialize(async (params: InitializeParams) => {
 	Error.stackTraceLimit = 50; // 10 is default but too short to debug lexing/parsing problems
 	
-	workspacePackages.forEach((each) => each.dispose());
+	workspacePackages.forEach(async (each) => await each.dispose());
 	workspacePackages.length = 0;
 	
 	capabilities.init(params.capabilities);
@@ -226,6 +226,15 @@ connection.onInitialize((params: InitializeParams) => {
 		};
 	}
 	return result;
+});
+
+connection.onShutdown(async () => {
+	await packages.dispose();
+	workspacePackages.forEach (async e => await e.dispose());
+	workspacePackages.splice(0);
+	documentationValidator.dispose();
+	scriptDocuments.dispose();
+	validator.dispose();
 });
 
 connection.onInitialized(async () => {
@@ -302,7 +311,7 @@ async function onDidChangeWorkspaceFolders() {
 	workspacePackages.length = 0;
 	workspacePackages.push(...retainPackages);
 	
-	disposePackages.forEach(p => p.dispose());
+	disposePackages.forEach(async p => await p.dispose());
 	
 	// add new packages
 	if (folders) {

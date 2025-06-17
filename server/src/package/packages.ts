@@ -31,9 +31,9 @@ export class Packages {
 	constructor() {
 	}
 	
-	public dispose(): void {
+	public async dispose(): Promise<void> {
 		for (const each of this._packages.values()) {
-			each.dispose();
+			await each.dispose();
 		}
 	}
 	

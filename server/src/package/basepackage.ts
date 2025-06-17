@@ -24,7 +24,7 @@
 
 import { Diagnostic, RemoteConsole } from "vscode-languageserver";
 import { ReportConfig } from "../reportConfig";
-import { debugLogMessage, getDocumentSettings, getFileSettings, packages, reportDiagnostics } from "../server";
+import { debugLogMessage, delgaCacher, getDocumentSettings, getFileSettings, packages, reportDiagnostics } from "../server";
 import { PackageDEModule } from "./dragenginemodule";
 import { PackageDSLanguage } from "./dslanguage";
 import { Package } from "./package";
@@ -35,12 +35,28 @@ import { URI } from "vscode-uri";
 import { DSSettings, FileSettings } from "../settings";
 import yauzl = require('yauzl-promise');
 import { Helpers } from "../helpers";
+import { BaseCacheDelgaHandler } from "../delgaCacher";
 
 export interface DelgaFileEntry {
 	uri: string;
 	entry: yauzl.Entry;
 	filename: string;
 };
+
+class PackageCacheDelgaHandler extends BaseCacheDelgaHandler {
+	private _entries: Map<string,DelgaFileEntry> = new Map<string,DelgaFileEntry>();
+	
+	constructor (entries: Map<string,DelgaFileEntry>) {
+		super();
+		this._entries = entries;
+	}
+	
+	async cacheDelga(cachePath: string): Promise<void> {
+		for (const each of this._entries) {
+			this.doCacheDelga(cachePath, each[1].entry, each[1].filename);
+		}
+	}
+}
 
 export class PackageBasePackage extends Package {
 	private _uri: string;
@@ -58,11 +74,11 @@ export class PackageBasePackage extends Package {
 		this._name = parse(this._path).base;
 	}
 	
-	public dispose(): void {
+	public async dispose(): Promise<void> {
 		this._delgaFileEntries.clear();
-		this._delgaFile?.close();
+		await this._delgaFile?.close();
 		this._delgaFile = undefined;
-		super.dispose();
+		await super.dispose();
 	}
 	
 	public static readonly PACKAGE_PREFIX: string = "BasePackage:";
@@ -171,12 +187,31 @@ export class PackageBasePackage extends Package {
 				}
 				if (filename.endsWith('.ds')) {
 					const uri = Helpers.createDelgaUri(this._path, filename);
-					this._files.push(uri);
 					this._delgaFileEntries.set(uri, {uri: uri, entry: each, filename: filename});
 				}
 			}
 		} catch(err) {
 			this._console.log(`BasePackage '${this._name}': Reading DELGA file failed.`);
+		}
+		
+		const delgaStats = statSync(this._path);
+		const cachePath = await delgaCacher.checkCache(
+			this._path, delgaStats.size, delgaStats.mtime.getTime(),
+			new PackageCacheDelgaHandler(this._delgaFileEntries));
+		
+		if (cachePath) {
+			const prev = new Map<string,DelgaFileEntry>(this._delgaFileEntries);
+			this._delgaFileEntries.clear();
+			
+			for (const each of prev) {
+				let uri = join(cachePath, ...each[1].filename.split("/"));
+				each[1].uri = uri;
+				this._delgaFileEntries.set(uri, each[1]);
+			}
+		}
+		
+		for await (const each of this._delgaFileEntries) {
+			this._files.push(each[1].uri);
 		}
 	}
 	

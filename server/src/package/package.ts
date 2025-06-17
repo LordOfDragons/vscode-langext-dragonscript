@@ -53,7 +53,7 @@ export class Package {
 		this._scriptDocuments = [];
 	}
 	
-	public dispose(): void {
+	public async dispose(): Promise<void> {
 		this._scriptDocuments = [];
 		
 		const promises = [...this._promisesLoading];
@@ -103,7 +103,7 @@ export class Package {
 		if (this._isLoading) {
 			await this.waitFinishLoad();
 		}
-		this.clear();
+		await this.clear();
 		
 		this._loadingStartTime = Date.now();
 		this._isLoading = true;
@@ -155,7 +155,7 @@ export class Package {
 		this._console.log(`Package '${this._id}': Done loading in ${elapsedTime / 1000}s`);
 	}
 	
-	protected clear(): void {
+	protected async clear(): Promise<void> {
 		this._loadingStartTime = undefined;
 		//this._finishedCounter = 0;
 		this._scriptDocuments = [];
