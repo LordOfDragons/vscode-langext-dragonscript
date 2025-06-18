@@ -174,6 +174,18 @@ function registerXmlSchemaAssociations() {
 		{
 			"pattern": "**/*.degt",
 			"systemId": "https://lordofdragons.github.io/dragengine/artifacts/xmlschema/dragengine/latest/guitheme.xsd"
+		},
+		{
+			"pattern": "**/*.decam",
+			"systemId": "https://lordofdragons.github.io/dragengine/artifacts/xmlschema/dragengine/latest/camera.xsd"
+		},
+		{
+			"pattern": "**/*.deskin",
+			"systemId": "https://lordofdragons.github.io/dragengine/artifacts/xmlschema/dragengine/latest/skin.xsd"
+		},
+		{
+			"pattern": "**/*.deskinann",
+			"systemId": "https://lordofdragons.github.io/dragengine/artifacts/xmlschema/dragengine/latest/skinAnnotations.xsd"
 		}
 	]
 	
