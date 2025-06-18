@@ -186,6 +186,10 @@ function registerXmlSchemaAssociations() {
 		{
 			"pattern": "**/*.deskinann",
 			"systemId": "https://lordofdragons.github.io/dragengine/artifacts/xmlschema/dragengine/latest/skinAnnotations.xsd"
+		},
+		{
+			"pattern": "**/*.dest",
+			"systemId": "https://lordofdragons.github.io/dragengine/artifacts/xmlschema/dragengine/latest/styledText.xsd"
 		}
 	]
 	
