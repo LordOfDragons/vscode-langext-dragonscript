@@ -190,6 +190,14 @@ function registerXmlSchemaAssociations() {
 		{
 			"pattern": "**/*.dest",
 			"systemId": "https://lordofdragons.github.io/dragengine/artifacts/xmlschema/dragengine/latest/styledText.xsd"
+		},
+		{
+			"pattern": "**/*.deann",
+			"systemId": "https://lordofdragons.github.io/dragengine/artifacts/xmlschema/dragengine/latest/announcer.xsd"
+		},
+		{
+			"pattern": "**/*.dedm",
+			"systemId": "https://lordofdragons.github.io/dragengine/artifacts/xmlschema/dragengine/latest/dynamicMusic.xsd"
 		}
 	]
 	
