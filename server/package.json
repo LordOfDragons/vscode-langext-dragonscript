@@ -15,7 +15,7 @@
 		"url": "https://github.com/LordOfDragons/vscode-langext-dragonscript"
 	},
 	"dependencies": {
-		"chevrotain": "^10.4.2",
+		"chevrotain": "^11.1.0",
 		"copyfiles": "^2.4.1",
 		"rimraf": "^3.0.2",
 		"vscode-languageserver": "^7.0.0",
