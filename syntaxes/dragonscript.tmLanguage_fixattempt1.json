@@ -1,0 +1,899 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "dragonscript",
+	"patterns": [
+		{"include": "#script"}
+	],
+	"repository": {
+		"script": {
+			"patterns": [
+				{"include": "#whitespace"},
+				{"include": "#comment.singleline"},
+				{"include": "#comment.multiline"},
+				{"include": "#linesplice"},
+				{"include": "#endofcommand"},
+				{
+					"match": "\\b(public|protected|private|native|abstract|fixed|static)\\b",
+					"name": "keyword.control.modifier.dragonscript"
+				},
+				{"include": "#namespace.pin"},
+				{"include": "#requires"},
+				{"include": "#interface"},
+				{"include": "#class"},
+				{"include": "#enumeration"},
+				
+				
+				{"include": "#class.function"},
+				{"include": "#variable"},
+				{"include": "#type.language"},
+				{"include": "#type.language.primitives"},
+				{"include": "#identifier"},
+				{"include": "#comma"},
+				{"include": "#member.selector"},
+				{"include": "#expression"}
+			]
+		},
+		
+		"namespace.pin": {
+			"name": "meta.structure.namespace.pin.dragonscript",
+			"begin": "\\b(namespace|pin)\\b",
+			"beginCaptures": {
+				"1": {"name": "keyword.control.namespace.pin.dragonscript"}
+			},
+			"end": "(:)|(?<!\\\\)(?=\\n)",
+			"endCaptures": {
+				"1": {"name": "keyword.control.endofcommand.dragonscript"}
+			},
+			"patterns": [
+				{"include": "#whitespace"},
+				{"include": "#comment.singleline"},
+				{"include": "#comment.multiline"},
+				{"include": "#linesplice"},
+				{"include": "#endofcommand"},
+				{"include": "#type.custom"},
+				{"include": "#invalid"}
+			]
+		},
+		
+		"requires": {
+			"name": "meta.structure.requires.dragonscript",
+			"begin": "\\b(requires)\\b",
+			"beginCaptures": {
+				"1": {"name": "keyword.control.requires.dragonscript"}
+			},
+			"end": "(:)|(?<!\\\\)(?=\\n)",
+			"endCaptures": {
+				"1": {"name": "keyword.control.endofcommand.dragonscript"}
+			},
+			"patterns": [
+				{"include": "#whitespace"},
+				{"include": "#comment.singleline"},
+				{"include": "#comment.multiline"},
+				{"include": "#linesplice"},
+				{"include": "#endofcommand"},
+				{"include": "#string"},
+				{"include": "#invalid"}
+			]
+		},
+		
+		"interface": {
+			"name": "meta.structure.interface.dragonscript",
+			"begin": "\\b(interface)\\b\\s+([A-Za-z_][A-Za-z0-9_]*)\\b",
+			"beginCaptures": {
+				"1": {"name": "keyword.control.interface.dragonscript"},
+				"2": {"name": "entity.name.type.interface.dragonscript"}
+			},
+			"end": "\\b(end)\\b",
+			"endCaptures": {
+				"1": {"name": "keyword.control.end.dragonscript"}
+			},
+			"patterns": [
+				{"include": "#whitespace"},
+				{"include": "#comment.singleline"},
+				{"include": "#comment.multiline"},
+				{"include": "#linesplice"},
+				{"include": "#endofcommand"},
+				{
+					"match": "\\b(implements|public|protected|private|native)\\b",
+					"name": "keyword.control.modifier.dragonscript"
+				},
+				{"include": "#interface"},
+				{"include": "#enumeration"},
+				{"include": "#interface.function"},
+				{"include": "#invalid"}
+			]
+		},
+		
+		"interface.function": {
+			"name": "meta.structure.interface.function.dragonscript",
+			"begin": "\\b(func)\\b(\\s+\\b[A-Za-z_][A-Za-z0-9_.]*\\b)?\\s+\\b([A-Za-z_][A-Za-z0-9_]*)\\b",
+			"beginCaptures": {
+				"1": {"name": "keyword.control.function.dragonscript"},
+				"2": {"patterns": [{"include": "#type.any"}]},
+				"3": {"name": "entity.name.function.dragonscript"}
+			},
+			"end": "(:)|(?<!\\\\)(?=\\n)",
+			"endCaptures": {
+				"1": {"name": "keyword.control.endofcommand.dragonscript"}
+			},
+			"patterns": [
+				{"include": "#whitespace"},
+				{"include": "#comment.singleline"},
+				{"include": "#comment.multiline"},
+				{"include": "#linesplice"},
+				{"include": "#endofcommand"},
+				{"include": "#function.parameters"},
+				{
+					"match": "\\b(implements)\\b",
+					"name": "keyword.control.modifier.dragonscript"
+				},
+				{"include": "#type.custom"},
+				{"include": "#invalid"}
+			]
+		},
+		
+		"enumeration": {
+			"name": "meta.structure.enumeration.dragonscript",
+			"begin": "\\b(enum)\\b\\s+([A-Za-z_][A-Za-z0-9_]*)\\b",
+			"beginCaptures": {
+				"1": {"name": "keyword.control.enumeration.dragonscript"},
+				"2": {"name": "entity.name.type.enum.dragonscript"}
+			},
+			"end": "\\b(end)\\b",
+			"endCaptures": {
+				"1": {"name": "keyword.control.end.dragonscript"}
+			},
+			"patterns": [
+				{"include": "#whitespace"},
+				{"include": "#comment.singleline"},
+				{"include": "#comment.multiline"},
+				{"include": "#linesplice"},
+				{"include": "#endofcommand"},
+				{
+					"match": "\\b[A-Za-z_][A-Za-z0-9_]*\\b",
+					"name": "variable.other.member.enum.dragonscript"
+				},
+				{"include": "#invalid"}
+			]
+		},
+		
+		"function.parameters": {
+			"name": "meta.structure.function.parameters.dragonscript",
+			"begin": "\\(",
+			"beginCaptures": {
+				"0": {"name": "keyword.control.paranthesis.open.dragonscript"}
+			},
+			"end": "\\)",
+			"endCaptures": {
+				"0": {"name": "keyword.control.paranthesis.close.dragonscript"}
+			},
+			"patterns": [
+				{"include": "#whitespace"},
+				{"include": "#comment.multiline"},
+				{"include": "#comma"},
+				{"include": "#linesplice"},
+				{"include": "#function.parameter"},
+				{"include": "#invalid"}
+			]
+		},
+		
+		"function.parameter": {
+			"name": "meta.structure.function.parameter.dragonscript",
+			"match": "\\b([A-Za-z_][A-Za-z0-9_.]*)\\s+([A-Za-z_][A-Za-z0-9_]*)\\b",
+			"captures": {
+				"1": {"patterns": [{"include": "#type.any"}]},
+				"2": {"name": "variable.parameter.dragonscript"}
+			}
+		},
+		
+		"class": {
+			"name": "meta.structure.class.dragonscript",
+			"begin": "\\b(class)\\b\\s+([A-Za-z_][A-Za-z0-9_]*)\\b",
+			"beginCaptures": {
+				"1": {"name": "keyword.control.class.dragonscript"},
+				"2": {"name": "entity.name.type.class.dragonscript"}
+			},
+			"end": "\\b(end)\\b",
+			"endCaptures": {
+				"1": {"name": "keyword.control.end.dragonscript"}
+			},
+			"patterns": [
+				{"include": "#whitespace"},
+				{"include": "#comment.singleline"},
+				{"include": "#comment.multiline"},
+				{"include": "#linesplice"},
+				{"include": "#endofcommand"},
+				{
+					"match": "\\b(public|protected|private|native|abstract|fixed|static)\\b",
+					"name": "keyword.control.modifier.dragonscript"
+				},
+				{"include": "#interface"},
+				{"include": "#class"},
+				{"include": "#enumeration"},
+				{"include": "#class.function"},
+				{"include": "#class.variable"},
+				{"include": "#class.extends"},
+				{"include": "#class.implements"},
+				{"include": "#invalid"}
+			]
+		},
+		
+		"class.extends": {
+			"name": "meta.structure.class.extends.dragonscript",
+			"match": "\\b(extends)\\b\\s+([A-Za-z_][A-Za-z0-9_.]*)\\b",
+			"captures": {
+				"1": {"name": "keyword.control.extends.dragonscript"},
+				"2": {"patterns": [{"include": "#type.custom"}]}
+			}
+		},
+		
+		"class.implements": {
+			"name": "meta.structure.class.implements.dragonscript",
+			"begin": "\\b(implements)\\b",
+			"beginCaptures": {
+				"1": { "name": "keyword.control.implements.dragonscript" }
+			},
+			"end": "(:)|(?<!\\\\)(?=\\n)",
+			"endCaptures": {
+				"1": { "name": "keyword.control.endofcommand.dragonscript" }
+			},
+			"patterns": [
+				{ "include": "#linesplice" },
+				{ "include": "#endofcommand" },
+				{ "include": "#whitespace" },
+				{ "include": "#comment.singleline" },
+				{ "include": "#comment.multiline" },
+				{ "include": "#type.any" },
+				{ "include": "#comma" },
+				{ "include": "#invalid" }
+			]
+		},
+		
+		"class.function": {
+			"name": "meta.structure.class.function.dragonscript",
+			"begin": "\\b(func)\\b(\\s+\\b[A-Za-z_][A-Za-z0-9_.]*\\b)?\\s+\\b([A-Za-z_][A-Za-z0-9_]*)\\b",
+			"beginCaptures": {
+				"1": {"name": "keyword.control.function.dragonscript"},
+				"2": {"patterns": [{"include": "#type.any"}]},
+				"3": {"name": "entity.name.function.dragonscript"}
+			},
+			"end": "\\b(end)\\b",
+			"endCaptures": {
+				"1": {"name": "keyword.control.end.dragonscript"}
+			},
+			"patterns": [
+				{"include": "#function.parameters"},
+				{
+					"begin": "(?<=|\\))(?=\\s|:|\\\\|\\n)",
+					"end": "(?=\\bend\\b)",
+					"patterns": [
+						{ "include": "#linesplice" },
+						{ "include": "#endofcommand" },
+						{ "include": "#whitespace" },
+						{ "include": "#function.code" }
+					]
+				}
+			]
+		},
+		
+		"class.variable": {
+			"name": "meta.structure.variable.dragonscript",
+			"begin": "\\b(var)\\b\\s+\\b([A-Za-z_][A-Za-z0-9_.]*)\\b",
+			"beginCaptures": {
+				"1": {"name": "keyword.control.variable.dragonscript"},
+				"2": {"patterns": [{"include": "#type.any"}]}
+			},
+			"end": "(:)|(?<!\\\\)(?=\\n)",
+			"endCaptures": {
+				"1": {"name": "keyword.control.endofcommand.dragonscript"}
+			},
+			"patterns": [
+				{ "include": "#linesplice" },
+				{ "include": "#endofcommand" },
+				{ "include": "#whitespace" },
+				{ "include": "#comment.singleline" },
+				{ "include": "#comment.multiline" },
+				{
+					"begin": "\\b([A-Za-z_][A-Za-z0-9_]*)\\b",
+					"beginCaptures": {
+						"1": { "name": "variable.other.member.dragonscript" }
+					},
+					"end": "(?=[,\\n:])",
+					"patterns": [
+						{ "include": "#linesplice" },
+						{ "include": "#whitespace" },
+						{ "include": "#comment.multiline" },
+						{
+							"begin": "=",
+							"beginCaptures": {
+								"0": { "name": "keyword.operator.assignment.dragonscript" }
+							},
+							"end": "(?=[,\\n:])",
+							"patterns": [
+								{ "include": "#expression" }
+							]
+						}
+					]
+				},
+				{"include": "#comma"}
+			]
+		},
+		
+		"variableX": {
+			"name": "meta.structure.variable.dragonscript",
+			"begin": "\\b(var)\\b\\s+\\b([A-Za-z_][A-Za-z0-9_.]*)\\b",
+			"beginCaptures": {
+				"1": {"name": "keyword.control.variable.dragonscript"},
+				"2": {"patterns": [{"include": "#type.any"}]}
+			},
+			"end": "(:)|(?<!\\\\)(?=\\n)",
+			"endCaptures": {
+				"1": {"name": "keyword.control.endofcommand.dragonscript"}
+			},
+			"patterns": [
+				{ "include": "#linesplice" },
+				{ "include": "#endofcommand" },
+				{ "include": "#whitespace" },
+				{ "include": "#comment.singleline" },
+				{ "include": "#comment.multiline" },
+				{
+					"begin": "\\b([A-Za-z_][A-Za-z0-9_]*)\\b",
+					"beginCaptures": {
+						"1": { "name": "variable.other.readwrite.dragonscript" }
+					},
+					"end": "(?=[,:]|(?<!\\\\)(?=\\n))",
+					"patterns": [
+						{ "include": "#linesplice" },
+						{ "include": "#whitespace" },
+						{ "include": "#comment.multiline" },
+						{
+							"begin": "=",
+							"beginCaptures": {
+								"0": { "name": "keyword.operator.assignment.dragonscript" }
+							},
+							"end": "(?=[,:]|(?<!\\\\)(?=\\n))",
+							"patterns": [
+								{ "include": "#expression" }
+							]
+						}
+					]
+				},
+				{"include": "#comma"}
+			]
+		},
+		
+		"variable": {
+			"name": "meta.structure.variable.dragonscript",
+			"begin": "\\b(var)\\b",
+			"beginCaptures": {
+				"1": {"name": "keyword.control.variable.dragonscript"}
+			},
+			"end": "(:)|(?<!\\\\)(?=\\n)",
+			"endCaptures": {
+				"1": {"name": "keyword.control.endofcommand.dragonscript"}
+			},
+			
+			"patterns": [
+				{"include": "#whitespaces"},
+				{
+					"begin": "(?=[A-Za-z_])",
+					"end": "(?=[A-Za-z_]\\w*(\\s+|/\\*|\\\\))",
+					"patterns": [{"include": "#type.any"}]
+				},
+				{
+					"begin": "(?<=\\s|\\*/|\\\\)",
+					"end": "(?=:|(?<!\\\\)\\n)",
+					"patterns": [
+						{"include": "#variable.names"},
+						{"include": "#endofcommand"},
+						{"include": "#comment.singleline"}
+					]
+				},
+				{"include": "#invalid"}
+			]
+		},
+		
+		"variable.names": {
+			"name": "meta.structure.variable.names.dragonscript",
+			"patterns": [
+				{"include": "#whitespaces"},
+				{"include": "#variable.name"},
+				{"include": "#whitespaces"},
+				{
+					"begin": "=",
+					"beginCaptures": {
+						"0": {"name": "keyword.operator.assignment.dragonscript"}
+					},
+					"end": "(?=)",
+					"patterns": [
+						{"include": "#expression"}
+					]
+				},
+				{"include": "#comma"}
+			]
+		},
+		
+		"variable.name": {
+			"name": "meta.structure.variable.name.dragonscript",
+			"patterns": [
+				{
+					"match": "\\b([A-Za-z_][A-Za-z0-9_]*)\\b",
+					"name": "variable.other.readwrite.dragonscript"
+				},
+				{
+					"begin": "=",
+					"beginCaptures": {
+						"0": {"name": "keyword.operator.assignment.dragonscript"}
+					},
+					"end": "(?=)",
+					"patterns": [
+						{"include": "#expression"}
+					]
+				}
+			]
+		},
+		
+		"function.code": {
+			"name": "meta.structure.function.code.dragonscript",
+			"patterns": [
+				{"include": "#whitespace"},
+				{"include": "#comment.multiline"},
+				{"include": "#linesplice"},
+				{"include": "#endofcommand"},
+				{"include": "#comment.singleline"},
+				{"include": "#while"},
+				{"include": "#for"},
+				{"include": "#select"},
+				{"include": "#if"},
+				{"include": "#try"},
+				{"include": "#variable"},
+				{
+					"match": "\\b(if|elif|else|to|downto|step|break|continue|throw|return)\\b",
+					"name": "keyword.control.dragonscript"
+				},
+				{"include": "#expression"}
+			]
+		},
+		
+		"expression": {
+			"name": "meta.structure.expression.dragonscript",
+			"patterns": [
+				{"include": "#whitespace"},
+				{"include": "#comment.multiline"},
+				{"include": "#linesplice"},
+				{"include": "#endofcommand"},
+				{
+					"name": "meta.group.paren.dragonscript",
+					"begin": "\\(",
+					"beginCaptures": {
+						"0": { "name": "keyword.control.paranthesis.open.dragonscript" }
+					},
+					"end": "\\)",
+					"endCaptures": {
+						"0": { "name": "keyword.control.paranthesis.close.dragonscript" }
+					},
+					"patterns": [
+						{ "include": "#expression" }
+					]
+				},
+				{"include": "#block"},
+				{
+					"match": "\\b(if|else|not|isnull|cast|castable|typeof|and|or)\\b",
+					"name": "keyword.control.dragonscript"
+				},
+				{"include": "#function.call.this_super"},
+				{"include": "#function.call"},
+				{"include": "#variable.language"},
+				{"include": "#string"},
+				{"include": "#character"},
+				{"include": "#number"},
+				{"include": "#operator"},
+				{"include": "#member.selector"},
+				{"include": "#identifier"},
+				{"include": "#invalid"}
+			]
+		},
+		
+		"function.call": {
+			"name": "meta.structure.function.call.dragonscript",
+			"begin": "\\b([A-Za-z_][A-Za-z0-9_]*)\\b(\\()",
+			"beginCaptures": {
+				"1": {"name": "variable.function.dragonscript"},
+				"2": {"name": "keyword.control.paranthesis.open.dragonscript"}
+			},
+			"end": "\\)",
+			"endCaptures": {
+				"0": {"name": "keyword.control.paranthesis.close.dragonscript"}
+			},
+			"patterns": [
+				{"include": "#comma"},
+				{"include": "#expression"}
+			]
+		},
+		
+		"function.call.this_super": {
+			"name": "meta.structure.function.call.this_super.dragonscript",
+			"begin": "\\b(this|super)\\b(\\()",
+			"beginCaptures": {
+				"1": {"name": "variable.language.dragonscript"},
+				"2": {"name": "keyword.control.paranthesis.open.dragonscript"}
+			},
+			"end": "\\)",
+			"endCaptures": {
+				"0": {"name": "keyword.control.paranthesis.close.dragonscript"}
+			},
+			"patterns": [
+				{"include": "#comma"},
+				{"include": "#expression"}
+			]
+		},
+		
+		"block": {
+			"name": "meta.structure.block.dragonscript",
+			"begin": "\\b(block)\\b",
+			"beginCaptures": {
+				"1": {"name": "keyword.control.block.dragonscript"}
+			},
+			"end": "\\b(end)\\b",
+			"endCaptures": {
+				"1": {"name": "keyword.control.end.dragonscript"}
+			},
+			"patterns": [
+				{
+					"begin": "(?<=block)",
+					"end": "(:)|(?<!\\\\)(?=\\n)",
+					"endCaptures": {
+						"1": {"patterns": [{"include": "#endofcommand"}]}
+					},
+					"patterns": [
+						{"include": "#whitespace"},
+						{"include": "#comment.multiline"},
+						{"include": "#comma"},
+						{"include": "#linesplice"},
+						{"include": "#function.parameter"}
+					]
+				},
+				{
+					"begin": "(?<=:|\\n)",
+					"end": "(?=\\bend\\b)",
+					"patterns": [
+						{ "include": "#function.code" }
+					]
+				}
+			]
+		},
+		
+		"while": {
+			"name": "meta.structure.while.dragonscript",
+			"begin": "\\b(while)\\b",
+			"beginCaptures": {
+				"0": {"name": "keyword.control.while.dragonscript"}
+			},
+			"end": "\\b(end)\\b",
+			"endCaptures": {
+				"0": {"name": "keyword.control.end.dragonscript"}
+			},
+			"patterns": [
+				{"include": "#function.code"}
+			]
+		},
+		
+		"for": {
+			"name": "meta.structure.for.dragonscript",
+			"begin": "\\b(for)\\b",
+			"beginCaptures": {
+				"0": {"name": "keyword.control.for.dragonscript"}
+			},
+			"end": "\\b(end)\\b",
+			"endCaptures": {
+				"0": {"name": "keyword.control.end.dragonscript"}
+			},
+			"patterns": [
+				{"include": "#function.code"}
+			]
+		},
+		
+		"select": {
+			"name": "meta.structure.select.dragonscript",
+			"begin": "\\b(select)\\b",
+			"beginCaptures": {
+				"0": {"name": "keyword.control.select.dragonscript"}
+			},
+			"end": "\\b(end)\\b",
+			"endCaptures": {
+				"0": {"name": "keyword.control.end.dragonscript"}
+			},
+			"patterns": [
+				{"include": "#select.case"},
+				{"include": "#select.else"},
+				{"include": "#function.code"}
+			]
+		},
+		
+		"select.case": {
+			"name": "meta.structure.select.case.dragonscript",
+			"begin": "\\b(case)\\b",
+			"beginCaptures": {
+				"0": {"name": "keyword.control.select.case.dragonscript"}
+			},
+			"end": "\\b(?=case|else|end)\\b",
+			"patterns": [
+				{"include": "#comma"},
+				{"include": "#function.code"}
+			]
+		},
+		
+		"select.else": {
+			"name": "meta.structure.select.else.dragonscript",
+			"begin": "\\b(else)\\b",
+			"beginCaptures": {
+				"0": {"name": "keyword.control.select.else.dragonscript"}
+			},
+			"end": "\\b(?=case|else|end)\\b",
+			"patterns": [
+				{"include": "#function.code"}
+			]
+		},
+		
+		"if": {
+			"name": "meta.structure.if.dragonscript",
+			"begin": "\\b(if)\\b",
+			"beginCaptures": {
+				"0": {"name": "keyword.control.if.dragonscript"}
+			},
+			"end": "\\b(end)\\b",
+			"endCaptures": {
+				"0": {"name": "keyword.control.end.dragonscript"}
+			},
+			"patterns": [
+				{"include": "#if.elif"},
+				{"include": "#if.else"},
+				{"include": "#function.code"}
+			]
+		},
+		
+		"if.elif": {
+			"name": "meta.structure.if.elif.dragonscript",
+			"begin": "\\b(elif)\\b",
+			"beginCaptures": {
+				"0": {"name": "keyword.control.if.elif.dragonscript"}
+			},
+			"end": "\\b(?=elif|else|end)\\b",
+			"patterns": [
+				{"include": "#function.code"}
+			]
+		},
+		
+		"if.else": {
+			"name": "meta.structure.if.else.dragonscript",
+			"begin": "\\b(else)\\b",
+			"beginCaptures": {
+				"0": {"name": "keyword.control.if.else.dragonscript"}
+			},
+			"end": "\\b(?=end)\\b",
+			"patterns": [
+				{"include": "#function.code"}
+			]
+		},
+		
+		"try": {
+			"name": "meta.structure.try.dragonscript",
+			"begin": "\\b(try)\\b",
+			"beginCaptures": {
+				"0": {"name": "keyword.control.try.dragonscript"}
+			},
+			"end": "\\b(end)\\b",
+			"endCaptures": {
+				"0": {"name": "keyword.control.end.dragonscript"}
+			},
+			"patterns": [
+				{"include": "#try.catch"},
+				{"include": "#function.code"}
+			]
+		},
+		
+		"try.catch": {
+			"name": "meta.structure.try.catch.dragonscript",
+			"begin": "\\b(catch)\\b",
+			"beginCaptures": {
+				"0": {"name": "keyword.control.try.catch.dragonscript"}
+			},
+			"end": "\\b(?=catch|end)\\b",
+			"patterns": [
+				{"include": "#function.code"}
+			]
+		},
+		
+		
+		
+		"type.language": {
+			"match": "\\b(Object|Boolean|Byte|Integer|Float|String|Array|Set|Dictionary|Block|WeakReference|ObjectReference|Exception)\\b",
+			"name": "support.type.dragonscript"
+		},
+		
+		"type.language.primitives": {
+			"match": "\\b(void|bool|byte|int|float)\\b",
+			"name": "storage.type.primitive.dragonscript"
+		},
+		
+		"type.custom": {
+			"name": "meta.type.custom.dragonscript",
+			"begin": "\\b[A-Za-z_]\\w*\\b",
+			"beginCaptures": {
+				"0": {"name": "entity.name.type.dragonscript"}
+			},
+			"end": "(?![\\s\\\\/\\*]*\\.)",
+			"applyEndPatternLast": 1,
+			"patterns": [
+				{"include": "#whitespaces"},
+				{
+					"begin": "\\.",
+					"beginCaptures": {"0": {"name": "punctuation.accessor.dragonscript"}},
+					"end": "\\b([A-Za-z_]\\w*)\\b",
+					"endCaptures": {"1": {"name": "entity.name.type.dragonscript"}},
+					"patterns": [{"include": "#whitespaces"}]
+				}
+			]
+		},
+		
+		"type.any": {
+			"name": "meta.structure.type.any.dragonscript",
+			"patterns": [
+				{ "include": "#type.language.primitives" },
+				{ "include": "#type.language" },
+				{ "include": "#type.custom" }
+			]
+		},
+		
+		"type.any.once": {
+			"name": "meta.structure.type.any.once.dragonscript",
+			"begin": "(?=[A-Za-z_])",
+			"end": "(?![A-Za-z0-9_])",
+			"patterns": [
+				{"include": "#type.any"}
+			]
+		},
+		
+		"variable.language": {
+			"match": "\\b(true|false|null|this|super)\\b",
+			"name": "variable.language.dragonscript"
+		},
+		
+		"identifier": {
+			"match": "\\b([A-Za-z_][A-Za-z0-9_]*)\\b",
+			"name": "variable.name.dragonscript"
+		},
+		
+		"linesplice": {
+			"match": "\\\\$",
+			"name": "keyword.control.linesplice.dragonscript"
+		},
+		
+		"endofcommand": {
+			"match": ":",
+			"name": "keyword.control.endofcommand.dragonscript"
+		},
+		
+		"comma": {
+			"match": ",",
+			"name": "keyword.control.comma.dragonscript"
+		},
+		
+		"member.selector": {
+			"match": "\\.",
+			"name": "punctuation.accessor.dragonscript"
+		},
+		
+		"operator": {
+			"patterns": [
+				{
+					"match": "<<=|>>=",
+					"name": "keyword.operator.dragonscript"
+				},
+				{
+					"match": "\\*=|/=|%=|\\+=|-=|&=|^=|<<|>>|<=|>=|==|!=|\\+\\+|--",
+					"name": "keyword.operator.dragonscript"
+				},
+				{
+					"match": "=|\\*|\\|=|&|\\||\\^|<|>|/|%|\\+|-|~",
+					"name": "keyword.operator.dragonscript"
+				}
+			]
+		},
+		
+		"comment.singleline": {
+			"name": "comment.line.double-slash.dragonscript",
+			"begin": "//",
+			"end": "$"
+		},
+		
+		"comment.multiline": {
+			"name": "comment.block.dragonscript",
+			"begin": "/\\*",
+			"end": "\\*/"
+		},
+		
+		"whitespace": {
+			"match": "\\s+"
+		},
+		
+		"number": {
+			"patterns": [
+				{
+					"match": "\\b([0-9]+(?:\\.[0-9]+)?)\\b",
+					"name": "constant.numeric.dragonscript"
+				},
+				{
+					"match": "\\b(0b[01]+)\\b",
+					"name": "constant.numeric.binary.dragonscript"
+				},
+				{
+					"match": "\\b(0h[0-9a-fA-F]+)\\b",
+					"name": "constant.numeric.hex.dragonscript"
+				}
+			]
+		},
+		
+		"character": {
+			"name": "constant.character.dragonscript",
+			"begin": "'",
+			"end": "'",
+			"patterns": [
+				{
+					"match": "\\\\u[0-9a-fA-F]{4}",
+					"name": "constant.character.escape"
+				},
+				{
+					"match": "\\\\h[0-9a-fA-F]{1,2}",
+					"name": "constant.character.escape"
+				},
+				{
+					"match": "\\\\0[0-7]{0,2}",
+					"name": "constant.character.escape"
+				},
+				{
+					"match": "\\\\.",
+					"name": "constant.character.escape.dragonscript"
+				}
+			]
+		},
+		
+		"string": {
+			"name": "string.quoted.double.dragonscript",
+			"begin": "\"",
+			"end": "\"",
+			"patterns": [
+				{
+					"match": "\\\\u[0-9a-fA-F]{1,6}",
+					"name": "constant.character.escape"
+				},
+				{
+					"match": "\\\\x[0-9a-fA-F]{1,2}",
+					"name": "constant.character.escape"
+				},
+				{
+					"match": "\\\\0[0-7]{0,2}",
+					"name": "constant.character.escape"
+				},
+				{
+					"match": "\\\\.",
+					"name": "constant.character.escape.dragonscript"
+				}
+			]
+		},
+		
+		"whitespaces": {
+			"patterns": [
+				{"include": "#linesplice"},
+				{"include": "#whitespace"},
+				{"include": "#comment.multiline"}
+			]
+		},
+		
+		"invalid": {
+			"name": "invalid.illegal.dragonscript",
+			"match": "[^:]+"
+		}
+	},
+	"scopeName": "source.dragonscript"
+}

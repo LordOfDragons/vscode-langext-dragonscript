@@ -19,7 +19,7 @@
 		"dragonscript",
 		"dragengine"
 	],
-	"version": "2.3.2",
+	"version": "2.3.3",
 	"engines": {
 		"vscode": "^1.63.0"
 	},
@@ -51,6 +51,31 @@
 					"text/x-dragonscript"
 				]
 			}
+		],
+		"semanticTokenTypes": [
+			{ "id": "namespace", "description": "Namespace" },
+			{ "id": "enum", "description": "Enum" },
+			{ "id": "interface", "description": "Interface" },
+			{ "id": "parameter", "description": "Parameter" },
+			{ "id": "variable", "description": "Variable" },
+			{ "id": "property", "description": "Property" },
+			{ "id": "enumMember", "description": "Enum member" },
+			{ "id": "method", "description": "Method" },
+			{ "id": "comment", "description": "Comment" },
+			{ "id": "string", "description": "String" },
+			{ "id": "keyword", "description": "Keyword" },
+			{ "id": "number", "description": "Number" },
+			{ "id": "operator", "description": "Operator" }
+		],
+		"semanticTokenModifiers": [
+			{ "id": "declaration", "description": "Declaration" },
+			{ "id": "readonly", "description": "Readonly" },
+			{ "id": "static", "description": "Static" },
+			{ "id": "deprecated", "description": "Deprecated" },
+			{ "id": "abstract", "description": "Abstract" },
+			{ "id": "modification", "description": "Modification" },
+			{ "id": "documentation", "description": "Documentation" },
+			{ "id": "defaultLibrary", "description": "Default library" }
 		],
 		"grammars": [
 			{
