@@ -35,7 +35,7 @@ import { ContextScript } from "./context/script"
 import { Identifier } from "./context/identifier"
 import { ContextStatements } from "./context/statements"
 import { ContextMember } from "./context/expressionMember"
-import { Resolved } from "./resolve/resolved"
+import { Resolved, ResolveUsage } from "./resolve/resolved"
 
 export namespace semtokens {
 	export class Type {
@@ -193,10 +193,10 @@ export namespace semtokens {
 		/**
 		 * Get the ResolveUsage from a context if it has one.
 		 */
-		protected getResolveUsage(context: Context): any {
-			// ContextMember has resolveUsage
+		protected getResolveUsage(context: Context): ResolveUsage | undefined {
+			// ContextMember has resolveUsage property
 			if (context instanceof ContextMember) {
-				return (context as any).resolveUsage
+				return context.resolveUsage
 			}
 			// Other contexts may store resolveUsage in expressionWriteableResolve
 			return context.expressionWriteableResolve
@@ -208,8 +208,7 @@ export namespace semtokens {
 		protected getReferenceRange(context: Context): Range | undefined {
 			if (context instanceof ContextMember) {
 				// For member access, use the member name range
-				const name = (context as any)._name as Identifier | undefined
-				return name?.range
+				return context.name?.range
 			}
 			return undefined
 		}
@@ -250,22 +249,31 @@ export namespace semtokens {
 		}
 		
 		/**
+		 * Type guard to check if a Resolved has typeModifiers property.
+		 */
+		protected hasTypeModifiers(resolved: Resolved): resolved is Resolved & { typeModifiers: Context.TypeModifierSet | undefined } {
+			return 'typeModifiers' in resolved
+		}
+		
+		/**
 		 * Get modifiers from a Resolved object (without declaration modifier).
 		 */
 		protected getModifiersFromResolved(resolved: Resolved): Modifier[] {
 			const modifiers: Modifier[] = []
 			
-			// Check if the resolved has type modifiers
-			const typeModifiers = (resolved as any).typeModifiers as Context.TypeModifierSet | undefined
-			if (typeModifiers) {
-				if (typeModifiers.isStatic) {
-					modifiers.push(modStatic)
-				}
-				if (typeModifiers.isAbstract) {
-					modifiers.push(modAbstract)
-				}
-				if (typeModifiers.isFixed) {
-					modifiers.push(modReadOnly)
+			// Check if the resolved has type modifiers using type guard
+			if (this.hasTypeModifiers(resolved)) {
+				const typeModifiers = resolved.typeModifiers
+				if (typeModifiers) {
+					if (typeModifiers.isStatic) {
+						modifiers.push(modStatic)
+					}
+					if (typeModifiers.isAbstract) {
+						modifiers.push(modAbstract)
+					}
+					if (typeModifiers.isFixed) {
+						modifiers.push(modReadOnly)
+					}
 				}
 			}
 			
