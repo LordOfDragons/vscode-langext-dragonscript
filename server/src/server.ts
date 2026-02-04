@@ -704,12 +704,15 @@ connection.onRenameRequest(
 
 connection.languages.semanticTokens.on(
 	async (params: SemanticTokensParams): Promise<SemanticTokens> => {
-		const st = new semtokens.Builder();
-		if (false) {
-			st.add(Range.create(Position.create(3, 0), Position.create(3, 9)),
-				semtokens.typeClass, [semtokens.modDeclaration, semtokens.modStatic]);
+		try {
+			const sd = await ensureDocument(params.textDocument.uri);
+			const provider = new semtokens.Provider();
+			return provider.build(sd.context);
+		} catch (error) {
+			logError(error);
+			// Return empty tokens on error
+			return new semtokens.Builder().build();
 		}
-		return st.build();
 	}
 )
 
