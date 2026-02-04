@@ -45,6 +45,7 @@ import { ContextDocumentationIterator } from "./documentation";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { DebugSettings } from "../debugSettings";
 import { debugLogMessage } from "../server";
+import { semtokens } from "../semanticTokens";
 
 
 export class ContextEnumEntry extends Context{
@@ -71,6 +72,11 @@ export class ContextEnumEntry extends Context{
 		this._resolveVariable = undefined;
 
 		super.dispose()
+	}
+
+	public addSemanticTokens(builder: semtokens.Builder): void {
+		// Add token for enum entry name
+		semtokens.addDeclarationToken(builder, this._name, semtokens.typeEnumMember);
 	}
 
 
@@ -242,6 +248,16 @@ export class ContextEnumeration extends Context{
 		this._resolveEnum = undefined;
 		
 		super.dispose();
+	}
+
+	public addSemanticTokens(builder: semtokens.Builder): void {
+		// Add token for enumeration name
+		semtokens.addDeclarationToken(builder, this._name, semtokens.typeEnum, this._typeModifiers);
+		
+		// Add tokens for enum entries
+		for (const entry of this._entries) {
+			entry.addSemanticTokens(builder);
+		}
 	}
 
 

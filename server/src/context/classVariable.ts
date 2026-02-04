@@ -43,6 +43,7 @@ import { Resolved, ResolveUsage } from "../resolve/resolved";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { DebugSettings } from "../debugSettings";
 import { debugLogMessage } from "../server";
+import { semtokens } from "../semanticTokens";
 
 
 export class ContextClassVariable extends Context{
@@ -99,6 +100,16 @@ export class ContextClassVariable extends Context{
 		super.dispose()
 		this._typename.dispose();
 		this._value?.dispose;
+	}
+
+	public addSemanticTokens(builder: semtokens.Builder): void {
+		// Add token for class variable name
+		semtokens.addDeclarationToken(builder, this._name, semtokens.typeProperty, this._typeModifiers);
+		
+		// Add tokens for value expression if it exists
+		if (this._value) {
+			this._value.addSemanticTokens(builder);
+		}
 	}
 
 

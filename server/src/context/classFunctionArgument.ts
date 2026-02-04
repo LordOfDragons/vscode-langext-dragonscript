@@ -33,6 +33,7 @@ import { Helpers } from "../helpers";
 import { Resolved, ResolveUsage } from "../resolve/resolved";
 import { ResolveArgument } from "../resolve/argument";
 import { TextDocument } from "vscode-languageserver-textdocument";
+import { semtokens } from "../semanticTokens";
 
 
 export class ContextFunctionArgument extends Context{
@@ -65,6 +66,11 @@ export class ContextFunctionArgument extends Context{
 		this._resolveArgument?.dispose();
 		this._resolveArgument = undefined;
 		this._typename.dispose();
+	}
+
+	public addSemanticTokens(builder: semtokens.Builder): void {
+		// Add token for function argument name
+		semtokens.addDeclarationToken(builder, this._name, semtokens.typeParameter);
 	}
 	
 	

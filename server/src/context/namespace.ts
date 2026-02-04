@@ -37,6 +37,7 @@ import { CompletionHelper } from "../completionHelper";
 import { ContextDocumentationIterator } from "./documentation";
 import { DebugSettings } from "../debugSettings";
 import { debugLogMessage } from "../server";
+import { semtokens } from "../semanticTokens";
 
 
 export class ContextNamespace extends Context{
@@ -74,6 +75,19 @@ export class ContextNamespace extends Context{
 		this._typename?.dispose();
 		for (const each of this._statements) {
 			each.dispose();
+		}
+	}
+
+	public addSemanticTokens(builder: semtokens.Builder): void {
+		// Add token for namespace name
+		const name = this._typename.lastPart?.name;
+		if (name) {
+			semtokens.addDeclarationToken(builder, name, semtokens.typeNamespace);
+		}
+		
+		// Visit all statements to add their semantic tokens
+		for (const statement of this._statements) {
+			statement.addSemanticTokens(builder);
 		}
 	}
 

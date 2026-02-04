@@ -47,6 +47,7 @@ import { ResolveType } from "../resolve/type";
 import { CodeActionInsertCast } from "../codeactions/insertCast";
 import { DebugSettings } from "../debugSettings";
 import { debugLogMessage } from "../server";
+import { semtokens } from "../semanticTokens";
 
 
 export class ContextVariable extends Context {
@@ -95,6 +96,16 @@ export class ContextVariable extends Context {
 		this._resolveVariable = undefined;
 		this._typename.dispose();
 		this._value?.dispose;
+	}
+
+	public addSemanticTokens(builder: semtokens.Builder): void {
+		// Add token for local variable name
+		semtokens.addDeclarationToken(builder, this._name, semtokens.typeVariable);
+		
+		// Add tokens for value expression if it exists
+		if (this._value) {
+			this._value.addSemanticTokens(builder);
+		}
 	}
 
 
