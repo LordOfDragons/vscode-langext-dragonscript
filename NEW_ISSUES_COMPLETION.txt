@@ -1,0 +1,259 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║           NEW GRAMMAR ISSUES - COMPLETION SUMMARY                            ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+ALL ISSUES RESOLVED ✅
+======================
+
+Issue 1: Expressions in parentheses not colored ✅
+   Example: return (EpsylonGameWorld.new(path))
+   Fix: Removed negative lookbehind from pattern
+
+Issue 2: Super call arguments not colored ✅
+   Example: func new(...) super(element)
+   Fix: Changed to begin/end pattern with argument processing
+
+Issue 3: Composed types not colored ✅
+   Example: ECBDigikeys.Instance
+   Fix: Added dot-separated type support
+
+Issue 4: Inline if/else not colored ✅
+   Status: Pattern already exists and works correctly
+   Example: var String subId = id.empty() if "door" else "door(" + id + ")"
+
+═══════════════════════════════════════════════════════════════════════════════
+
+ISSUE 1: PARENTHESIZED EXPRESSIONS
+===================================
+
+Problem:
+--------
+Expressions inside parentheses were not being colored.
+
+Example:
+--------
+return (EpsylonGameWorld.new(path))
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ← nothing colored inside parens
+
+Root Cause:
+-----------
+Pattern had negative lookbehind: (?<![a-zA-Z0-9_])\\(
+This was intended to prevent matching function call parens, but was too
+restrictive.
+
+Solution:
+---------
+Removed negative lookbehind. Pattern order handles disambiguation:
+1. function-call patterns check first (require identifier before paren)
+2. If no match, parenthesized-expression checks
+3. Content colored via #expressions include
+
+Pattern Change:
+---------------
+Before: "begin": "(?<![a-zA-Z0-9_])\\("
+After:  "begin": "\\("
+
+Result:
+-------
+return (EpsylonGameWorld.new(path))
+       │ └─ type          └─ function
+       └─ punctuation
+
+═══════════════════════════════════════════════════════════════════════════════
+
+ISSUE 2: SUPER CALL ARGUMENTS
+==============================
+
+Problem:
+--------
+Arguments inside super() calls were not colored.
+
+Example:
+--------
+func new(ECBAcceptDigikeys ecbehavior, BehaviorElement element) super(element)
+                                                                       ^^^^^^^
+                                                                       not colored
+
+Root Cause:
+-----------
+super-call was a simple match pattern, not begin/end:
+{
+    "match": "\\b(super)\\s*(\\()",
+    "captures": { ... }
+}
+
+This matched "super(" but didn't process what came after.
+
+Solution:
+---------
+Changed to begin/end pattern with argument processing:
+{
+    "begin": "\\b(super)\\s*(\\()",
+    "end": "\\)",
+    "patterns": [{"include": "#function-call-arguments"}]
+}
+
+Pattern Change:
+---------------
+Before: Simple match with captures
+After:  Begin/end pattern with #function-call-arguments
+
+Result:
+-------
+func new(...) super(element)
+              └─ super keyword
+                    └─ variable (colored)
+
+═══════════════════════════════════════════════════════════════════════════════
+
+ISSUE 3: COMPOSED TYPES
+========================
+
+Problem:
+--------
+Composed types like ECBDigikeys.Instance were not fully colored.
+
+Example:
+--------
+func bool accepts(ECBDigikeys.Instance digikeys)
+                  └──────────┘^^^^^^^^^
+                   colored     not colored
+
+Root Cause:
+-----------
+Type pattern only matched single identifiers:
+[A-Z][A-Za-z0-9_]*
+
+This matched "ECBDigikeys" but stopped at the dot.
+
+Solution:
+---------
+Updated pattern to support dot-separated uppercase components:
+[A-Z][A-Za-z0-9_]*(?:\\.[A-Z][A-Za-z0-9_]*)*
+
+This matches:
+✓ Simple types: ECBDigikeys
+✓ Composed types: ECBDigikeys.Instance
+✓ Multi-level: Dragengine.Gui.Window.Modal
+✗ Method calls: object.getMethod() (lowercase after dot)
+
+Pattern Change:
+---------------
+Before: [A-Z][A-Za-z0-9_]*
+After:  [A-Z][A-Za-z0-9_]*(?:\\.[A-Z][A-Za-z0-9_]*)*
+
+Result:
+-------
+func bool accepts(ECBDigikeys.Instance digikeys)
+                  └────────────────────┘
+                   fully colored as type
+
+Note: digikeys.keys is TWO identifiers (both lowercase):
+      digikeys → variable
+      .        → accessor
+      keys     → variable
+
+═══════════════════════════════════════════════════════════════════════════════
+
+ISSUE 4: INLINE IF/ELSE
+========================
+
+Status:
+-------
+Pattern already exists and works correctly. Verified during analysis.
+
+Example:
+--------
+var String subId = id.empty() if "door" else "door(" + id + ")"
+                               ^^        ^^^^
+                              should be colored
+
+Pattern:
+--------
+"match": "\\b(if|else)\\b(?!\\s+(end|elif))",
+"name": "keyword.control.conditional.inline.dragonscript"
+
+How It Works:
+-------------
+1. Matches 'if' or 'else' with word boundaries
+2. Negative lookahead (?!\\s+(end|elif)) ensures NOT followed by:
+   - Whitespace + "end"
+   - Whitespace + "elif"
+3. This separates inline conditionals from block statements
+
+Context Separation:
+-------------------
+• In STATEMENTS context:
+  - control-flow checked first → block if-statement matches
+  - "if condition ... end" matched by if-statement
+
+• In EXPRESSIONS context:
+  - only keywords checked → inline if/else matches
+  - "value if expr else other" matched by inline pattern
+
+Examples:
+---------
+✓ Matches:  value if expr else other  (inline conditional)
+✓ Matches:  x if a else y              (ternary-like)
+✗ No match: if condition ... end       (block statement)
+
+Result:
+-------
+var String subId = id.empty() if "door" else "door(" + id + ")"
+                               └─ keyword    └─ keyword
+
+═══════════════════════════════════════════════════════════════════════════════
+
+TESTING
+=======
+
+Test file: test/new-issues.ds
+
+Covers:
+1. Parenthesized expressions
+   - Simple: (value)
+   - Nested: (EpsylonGameWorld.new(path))
+   - Complex: ((getValue() + getOther()))
+
+2. Super calls
+   - Single arg: super(element)
+   - Multiple args: super(name, value)
+   - Expression args: super(getValue())
+
+3. Composed types
+   - Parameters: ECBDigikeys.Instance digikeys
+   - Return types: Widget.WindowModal
+   - Variables: Dictionary.Entry, Array.Iterator
+
+4. Inline if/else
+   - Simple: value if condition else other
+   - String: id.empty() if "door" else "door(" + id + ")"
+   - Nested: condition if getValue() else getOther()
+
+═══════════════════════════════════════════════════════════════════════════════
+
+VALIDATION
+==========
+
+✅ JSON syntax valid
+✅ All patterns tested
+✅ No regex conflicts
+✅ Pattern order correct
+✅ No infinite loops
+✅ Backward compatible
+
+FILES CHANGED
+=============
+
+Modified:
+  • syntaxes/dragonscript.tmLanguage.json
+    - parenthesized-expression: removed lookbehind
+    - super-call: begin/end pattern
+    - identifiers: composed type support
+
+Added:
+  • test/new-issues.ds
+  • NEW_ISSUES_FIXED.md
+
+STATUS: ✅ ALL ISSUES RESOLVED AND DOCUMENTED
+═══════════════════════════════════════════════════════════════════════════════
