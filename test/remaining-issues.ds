@@ -1,0 +1,51 @@
+// Test cases for remaining grammar issues
+
+// Issue 1: Chained method calls not all colored
+func testIssue1()
+	var Computer computer = GameState.getGameState().getComputerManager().getNamed(computerName)
+	// All method calls should be colored: getGameState, getComputerManager, getNamed
+end
+
+// Issue 2: Variable declarations with initializers not colored
+func testIssue2()
+	var int i, count = getArgumentCount()
+	for i = 0 to count
+		var String argument = getArgumentAt(i)
+		if argument.equals("--showfps")
+			EpsylonDebugSwitches.hudShowFPSRates = true
+		end
+	end
+	
+	// More variable declaration tests
+	var int x = getValue()
+	var String str = transform(getInput())
+	var Array arr = collection.map(block Item item
+		return item.transform()
+	end)
+end
+
+// Issue 3 & 4: Block as keyword context with proper end coloring
+func testIssue3and4()
+	var BlockActionListener blockMainMenu = BlockActionListener.new(block ActionEvent event
+		createAndShowMainMenu()
+	end)
+	// "block" should be a keyword like "class" or "func"
+	// "end" should be properly colored
+	
+	// Nested blocks
+	items.forEach(block Item item
+		item.process(block Result result
+			result.save()
+		end)
+	end)
+end
+
+// Issue 5: Parenthesized expressions not colored
+func testIssue5()
+	return (EpsylonGameWorld.new(path))
+	// Everything inside parentheses should be colored
+	
+	var value = (a + b) * (c + d)
+	var result = (getValue() + getOther())
+	compute((x * y) + (z / w))
+end
