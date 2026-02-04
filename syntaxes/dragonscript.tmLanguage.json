@@ -637,6 +637,8 @@
 				"1": {"name": "keyword.control.end.dragonscript"}
 			},
 			"patterns": [
+				{"include": "#comments"},
+				{"include": "#line-continuation"},
 				{
 					"match": "\\b(void|bool|byte|int|float)\\s+([a-z][A-Za-z0-9_]*)\\b",
 					"captures": {
@@ -664,11 +666,13 @@
 		
 		"expressions": {
 			"patterns": [
+				{"include": "#comments"},
 				{"include": "#line-continuation"},
 				{"include": "#keywords"},
 				{"include": "#literals"},
 				{"include": "#function-call"},
 				{"include": "#type-cast"},
+				{"include": "#parenthesized-expression"},
 				{"include": "#operators"},
 				{"include": "#identifiers"},
 				{
@@ -864,15 +868,68 @@
 		},
 		
 		"function-call": {
-			"name": "meta.function-call.dragonscript",
-			"begin": "\\b([a-z][A-Za-z0-9_]*)\\s*(\\()",
+			"patterns": [
+				{
+					"name": "meta.function-call.dragonscript",
+					"begin": "\\b([a-z][A-Za-z0-9_]*)\\s*(\\()",
+					"beginCaptures": {
+						"1": {"name": "entity.name.function.dragonscript"},
+						"2": {"name": "punctuation.definition.arguments.begin.dragonscript"}
+					},
+					"end": "\\)",
+					"endCaptures": {
+						"0": {"name": "punctuation.definition.arguments.end.dragonscript"}
+					},
+					"patterns": [
+						{"include": "#function-call-arguments"}
+					]
+				},
+				{
+					"name": "meta.method-call.dragonscript",
+					"begin": "\\.([a-z][A-Za-z0-9_]*)\\s*(\\()",
+					"beginCaptures": {
+						"1": {"name": "entity.name.function.dragonscript"},
+						"2": {"name": "punctuation.definition.arguments.begin.dragonscript"}
+					},
+					"end": "\\)",
+					"endCaptures": {
+						"0": {"name": "punctuation.definition.arguments.end.dragonscript"}
+					},
+					"patterns": [
+						{"include": "#function-call-arguments"}
+					]
+				}
+			]
+		},
+		
+		"function-call-arguments": {
+			"patterns": [
+				{"include": "#comments"},
+				{"include": "#line-continuation"},
+				{"include": "#control-flow"},
+				{"include": "#keywords"},
+				{"include": "#literals"},
+				{"include": "#function-call"},
+				{"include": "#type-cast"},
+				{"include": "#operators"},
+				{"include": "#parenthesized-expression"},
+				{"include": "#identifiers"},
+				{
+					"match": ",",
+					"name": "punctuation.separator.dragonscript"
+				}
+			]
+		},
+		
+		"parenthesized-expression": {
+			"name": "meta.parenthesized.dragonscript",
+			"begin": "\\(",
 			"beginCaptures": {
-				"1": {"name": "entity.name.function.dragonscript"},
-				"2": {"name": "punctuation.definition.arguments.begin.dragonscript"}
+				"0": {"name": "punctuation.definition.expression.begin.dragonscript"}
 			},
 			"end": "\\)",
 			"endCaptures": {
-				"0": {"name": "punctuation.definition.arguments.end.dragonscript"}
+				"0": {"name": "punctuation.definition.expression.end.dragonscript"}
 			},
 			"patterns": [
 				{"include": "#expressions"}

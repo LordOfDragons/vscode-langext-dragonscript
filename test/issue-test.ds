@@ -11,6 +11,11 @@ func testBlockIssue()
 	var result = array.forEach(block Item item
 		item.process()
 	end)
+	
+	// Block with multiple function calls
+	items.map(block String str
+		return transform(str, getValue(), getOther())
+	end)
 end
 
 // Issue 1 & 2: Function call expressions
@@ -29,4 +34,31 @@ func testFunctionCalls()
 	
 	// Method chaining
 	obj.method1().method2().method3()
+	
+	// Method calls after type names
+	MyType.staticMethod()
+	MyClass.new()
+	
+	// Complex nested expressions in function calls
+	compute(
+		calculate(a, b, c),
+		transform(x, y),
+		(d + e) * f,
+		getValue() + getOther()
+	)
+	
+	// Function calls with blocks as arguments
+	collection.filter(block Item item
+		return item.isValid()
+	end).map(block Item item
+		return item.transform()
+	end)
 end
+
+// Test parenthesized expressions
+func testParens()
+	var result = (a + b) * (c + d)
+	var value = ((x * y) + (z / w)) - ((a - b) + (c * d))
+	compute((getValue() + getOther()) * 2)
+end
+
