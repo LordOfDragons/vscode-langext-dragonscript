@@ -132,7 +132,7 @@
 					"match": "\\b(extends)\\s+([A-Z][A-Za-z0-9_\\.]*)\\b",
 					"captures": {
 						"1": {"name": "keyword.control.extends.dragonscript"},
-						"2": {"name": "entity.other.inherited-class.dragonscript"}
+						"2": {"name": "entity.name.type.dragonscript"}
 					}
 				},
 				{
@@ -153,7 +153,7 @@
 					"match": "\\b(implements)\\s+([A-Z][A-Za-z0-9_\\.]*)\\b",
 					"captures": {
 						"1": {"name": "keyword.control.implements.dragonscript"},
-						"2": {"name": "entity.other.inherited-class.dragonscript"}
+						"2": {"name": "entity.name.type.dragonscript"}
 					}
 				},
 				{
@@ -213,7 +213,7 @@
 					"match": "\\b(implements)\\s+([A-Z][A-Za-z0-9_\\.]*)\\b",
 					"captures": {
 						"1": {"name": "keyword.control.implements.dragonscript"},
-						"2": {"name": "entity.other.inherited-class.dragonscript"}
+						"2": {"name": "entity.name.type.dragonscript"}
 					}
 				},
 				{
@@ -256,7 +256,7 @@
 				{
 					"match": "\\b([A-Z][A-Za-z0-9_]*)\\s+([a-z][A-Za-z0-9_]*)\\b(?=\\s*\\()",
 					"captures": {
-						"1": {"name": "storage.type.dragonscript"},
+						"1": {"name": "entity.name.type.dragonscript"},
 						"2": {"name": "entity.name.function.dragonscript"}
 					}
 				},
@@ -326,7 +326,7 @@
 				{
 					"match": "\\b([A-Z][A-Za-z0-9_]*)\\s+([a-z][A-Za-z0-9_]*)\\b(?=\\s*\\()",
 					"captures": {
-						"1": {"name": "storage.type.dragonscript"},
+						"1": {"name": "entity.name.type.dragonscript"},
 						"2": {"name": "entity.name.function.dragonscript"}
 					}
 				},
@@ -377,7 +377,7 @@
 				{
 					"match": "\\b([A-Z][A-Za-z0-9_\\.]*)\\s+([a-z][A-Za-z0-9_]*)\\b",
 					"captures": {
-						"1": {"name": "storage.type.dragonscript"},
+						"1": {"name": "entity.name.type.dragonscript"},
 						"2": {"name": "variable.parameter.dragonscript"}
 					}
 				},
@@ -400,7 +400,7 @@
 				},
 				{
 					"match": "\\b([A-Z][A-Za-z0-9_]*)\\b",
-					"name": "storage.type.dragonscript"
+					"name": "entity.name.type.dragonscript"
 				}
 			]
 		},
@@ -425,7 +425,7 @@
 				},
 				{
 					"match": "\\b([A-Z][A-Za-z0-9_\\.]*)\\b",
-					"name": "storage.type.dragonscript"
+					"name": "entity.name.type.dragonscript"
 				},
 				{
 					"match": "\\b(p[A-Z][A-Za-z0-9_]*)\\b",
@@ -587,7 +587,7 @@
 					"match": "\\b(catch)\\s+([A-Z][A-Za-z0-9_]*)\\b",
 					"captures": {
 						"1": {"name": "keyword.control.exception.catch.dragonscript"},
-						"2": {"name": "storage.type.dragonscript"}
+						"2": {"name": "entity.name.type.dragonscript"}
 					}
 				},
 				{
@@ -650,7 +650,7 @@
 				},
 				{
 					"match": "\\b(cast|castable|typeof|isnull)\\b",
-					"name": "keyword.operator.dragonscript"
+					"name": "keyword.operator.typecheck.dragonscript"
 				},
 				{
 					"match": "\\b(and|or|not)\\b",
@@ -668,22 +668,22 @@
 				{
 					"match": "\\b(cast|castable)\\s+(void|bool|byte|int|float)\\b",
 					"captures": {
-						"1": {"name": "keyword.operator.dragonscript"},
+						"1": {"name": "keyword.operator.typecheck.dragonscript"},
 						"2": {"name": "storage.type.primitive.dragonscript"}
 					}
 				},
 				{
 					"match": "\\b(cast|castable)\\s+(Object|Boolean|Byte|Integer|Float|String|Array|Set|Dictionary|Block|WeakReference|ObjectReference|Exception)\\b",
 					"captures": {
-						"1": {"name": "keyword.operator.dragonscript"},
+						"1": {"name": "keyword.operator.typecheck.dragonscript"},
 						"2": {"name": "storage.type.builtin.dragonscript"}
 					}
 				},
 				{
 					"match": "\\b(cast|castable)\\s+([A-Z][A-Za-z0-9_\\.]*)\\b",
 					"captures": {
-						"1": {"name": "keyword.operator.dragonscript"},
-						"2": {"name": "storage.type.dragonscript"}
+						"1": {"name": "keyword.operator.typecheck.dragonscript"},
+						"2": {"name": "entity.name.type.dragonscript"}
 					}
 				}
 			]
@@ -839,7 +839,7 @@
 				},
 				{
 					"match": "\\b([A-Z][A-Za-z0-9_]*)\\b",
-					"name": "support.class.dragonscript"
+					"name": "entity.name.type.dragonscript"
 				},
 				{
 					"match": "\\b([a-z_][A-Za-z0-9_]*)\\b",
