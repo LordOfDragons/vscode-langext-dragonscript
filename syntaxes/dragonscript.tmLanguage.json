@@ -97,10 +97,15 @@
 		
 		"class-declaration": {
 			"name": "meta.class.dragonscript",
-			"begin": "(?:\\b(public|protected|private|abstract|fixed|static)\\s+)*\\b(class)\\b",
+			"begin": "(?:(\\bpublic\\b)\\s+)?(?:(\\bprotected\\b)\\s+)?(?:(\\bprivate\\b)\\s+)?(?:(\\babstract\\b)\\s+)?(?:(\\bfixed\\b)\\s+)?(?:(\\bstatic\\b)\\s+)?(\\bclass\\b)",
 			"beginCaptures": {
 				"1": {"name": "storage.modifier.dragonscript"},
-				"2": {"name": "storage.type.class.dragonscript"}
+				"2": {"name": "storage.modifier.dragonscript"},
+				"3": {"name": "storage.modifier.dragonscript"},
+				"4": {"name": "storage.modifier.dragonscript"},
+				"5": {"name": "storage.modifier.dragonscript"},
+				"6": {"name": "storage.modifier.dragonscript"},
+				"7": {"name": "storage.type.class.dragonscript"}
 			},
 			"end": "\\b(end)\\b",
 			"endCaptures": {
@@ -136,25 +141,30 @@
 					}
 				},
 				{
-					"match": "\\b(implements)\\s+(void|bool|byte|int|float)\\b",
-					"captures": {
-						"1": {"name": "keyword.control.implements.dragonscript"},
-						"2": {"name": "storage.type.primitive.dragonscript"}
-					}
-				},
-				{
-					"match": "\\b(implements)\\s+(Object|Boolean|Byte|Integer|Float|String|Array|Set|Dictionary|Block|WeakReference|ObjectReference|Exception)\\b",
-					"captures": {
-						"1": {"name": "keyword.control.implements.dragonscript"},
-						"2": {"name": "storage.type.builtin.dragonscript"}
-					}
-				},
-				{
-					"match": "\\b(implements)\\s+([A-Z][A-Za-z0-9_\\.]*)\\b",
-					"captures": {
-						"1": {"name": "keyword.control.implements.dragonscript"},
-						"2": {"name": "entity.name.type.dragonscript"}
-					}
+					"begin": "\\b(implements)\\b",
+					"beginCaptures": {
+						"1": {"name": "keyword.control.implements.dragonscript"}
+					},
+					"end": "(?=\\n|:|\\b(?:end|class|interface|enum|func|var|public|protected|private)\\b)",
+					"patterns": [
+						{
+							"match": "\\b(void|bool|byte|int|float)\\b",
+							"name": "storage.type.primitive.dragonscript"
+						},
+						{
+							"match": "\\b(Object|Boolean|Byte|Integer|Float|String|Array|Set|Dictionary|Block|WeakReference|ObjectReference|Exception)\\b",
+							"name": "storage.type.builtin.dragonscript"
+						},
+						{
+							"match": "[A-Z][A-Za-z0-9_\\.]*",
+							"name": "entity.name.type.dragonscript"
+						},
+						{
+							"match": ",",
+							"name": "punctuation.separator.dragonscript"
+						},
+						{"include": "#comments"}
+					]
 				},
 				{
 					"match": "\\b([A-Z][A-Za-z0-9_]*)(?=\\s|$)",
@@ -178,10 +188,12 @@
 		
 		"interface-declaration": {
 			"name": "meta.interface.dragonscript",
-			"begin": "(?:\\b(public|protected|private)\\s+)*\\b(interface)\\b",
+			"begin": "(?:(\\bpublic\\b)\\s+)?(?:(\\bprotected\\b)\\s+)?(?:(\\bprivate\\b)\\s+)?(\\binterface\\b)",
 			"beginCaptures": {
 				"1": {"name": "storage.modifier.dragonscript"},
-				"2": {"name": "storage.type.interface.dragonscript"}
+				"2": {"name": "storage.modifier.dragonscript"},
+				"3": {"name": "storage.modifier.dragonscript"},
+				"4": {"name": "storage.type.interface.dragonscript"}
 			},
 			"end": "\\b(end)\\b",
 			"endCaptures": {
@@ -196,25 +208,30 @@
 		"interface-header": {
 			"patterns": [
 				{
-					"match": "\\b(implements)\\s+(void|bool|byte|int|float)\\b",
-					"captures": {
-						"1": {"name": "keyword.control.implements.dragonscript"},
-						"2": {"name": "storage.type.primitive.dragonscript"}
-					}
-				},
-				{
-					"match": "\\b(implements)\\s+(Object|Boolean|Byte|Integer|Float|String|Array|Set|Dictionary|Block|WeakReference|ObjectReference|Exception)\\b",
-					"captures": {
-						"1": {"name": "keyword.control.implements.dragonscript"},
-						"2": {"name": "storage.type.builtin.dragonscript"}
-					}
-				},
-				{
-					"match": "\\b(implements)\\s+([A-Z][A-Za-z0-9_\\.]*)\\b",
-					"captures": {
-						"1": {"name": "keyword.control.implements.dragonscript"},
-						"2": {"name": "entity.name.type.dragonscript"}
-					}
+					"begin": "\\b(implements)\\b",
+					"beginCaptures": {
+						"1": {"name": "keyword.control.implements.dragonscript"}
+					},
+					"end": "(?=\\n|:|\\b(?:end|class|interface|enum|func|var|public|protected|private)\\b)",
+					"patterns": [
+						{
+							"match": "\\b(void|bool|byte|int|float)\\b",
+							"name": "storage.type.primitive.dragonscript"
+						},
+						{
+							"match": "\\b(Object|Boolean|Byte|Integer|Float|String|Array|Set|Dictionary|Block|WeakReference|ObjectReference|Exception)\\b",
+							"name": "storage.type.builtin.dragonscript"
+						},
+						{
+							"match": "[A-Z][A-Za-z0-9_\\.]*",
+							"name": "entity.name.type.dragonscript"
+						},
+						{
+							"match": ",",
+							"name": "punctuation.separator.dragonscript"
+						},
+						{"include": "#comments"}
+					]
 				},
 				{
 					"match": "\\b([A-Z][A-Za-z0-9_]*)(?=\\s|$)",
@@ -270,10 +287,12 @@
 		
 		"enum-declaration": {
 			"name": "meta.enum.dragonscript",
-			"begin": "(?:\\b(public|protected|private)\\s+)*\\b(enum)\\b",
+			"begin": "(?:(\\bpublic\\b)\\s+)?(?:(\\bprotected\\b)\\s+)?(?:(\\bprivate\\b)\\s+)?(\\benum\\b)",
 			"beginCaptures": {
 				"1": {"name": "storage.modifier.dragonscript"},
-				"2": {"name": "storage.type.enum.dragonscript"}
+				"2": {"name": "storage.modifier.dragonscript"},
+				"3": {"name": "storage.modifier.dragonscript"},
+				"4": {"name": "storage.type.enum.dragonscript"}
 			},
 			"end": "\\b(end)\\b",
 			"endCaptures": {
@@ -294,10 +313,15 @@
 		
 		"function-declaration": {
 			"name": "meta.function.dragonscript",
-			"begin": "(?:\\b(public|protected|private|native|abstract|static)\\s+)*\\b(func)\\b",
+			"begin": "(?:(\\bpublic\\b)\\s+)?(?:(\\bprotected\\b)\\s+)?(?:(\\bprivate\\b)\\s+)?(?:(\\bnative\\b)\\s+)?(?:(\\babstract\\b)\\s+)?(?:(\\bstatic\\b)\\s+)?(\\bfunc\\b)",
 			"beginCaptures": {
 				"1": {"name": "storage.modifier.dragonscript"},
-				"2": {"name": "storage.type.function.dragonscript"}
+				"2": {"name": "storage.modifier.dragonscript"},
+				"3": {"name": "storage.modifier.dragonscript"},
+				"4": {"name": "storage.modifier.dragonscript"},
+				"5": {"name": "storage.modifier.dragonscript"},
+				"6": {"name": "storage.modifier.dragonscript"},
+				"7": {"name": "storage.type.function.dragonscript"}
 			},
 			"end": "\\b(end)\\b",
 			"endCaptures": {
@@ -407,10 +431,14 @@
 		
 		"variable-declaration": {
 			"name": "meta.variable.dragonscript",
-			"begin": "(?:\\b(public|protected|private|static|fixed)\\s+)*\\b(var)\\b",
+			"begin": "(?:(\\bpublic\\b)\\s+)?(?:(\\bprotected\\b)\\s+)?(?:(\\bprivate\\b)\\s+)?(?:(\\bstatic\\b)\\s+)?(?:(\\bfixed\\b)\\s+)?(\\bvar\\b)",
 			"beginCaptures": {
 				"1": {"name": "storage.modifier.dragonscript"},
-				"2": {"name": "storage.type.variable.dragonscript"}
+				"2": {"name": "storage.modifier.dragonscript"},
+				"3": {"name": "storage.modifier.dragonscript"},
+				"4": {"name": "storage.modifier.dragonscript"},
+				"5": {"name": "storage.modifier.dragonscript"},
+				"6": {"name": "storage.type.variable.dragonscript"}
 			},
 			"end": "(?=\\n|:)",
 			"patterns": [
@@ -619,9 +647,9 @@
 				{"include": "#line-continuation"},
 				{"include": "#keywords"},
 				{"include": "#literals"},
-				{"include": "#operators"},
 				{"include": "#function-call"},
 				{"include": "#type-cast"},
+				{"include": "#operators"},
 				{"include": "#identifiers"},
 				{
 					"match": ":",
