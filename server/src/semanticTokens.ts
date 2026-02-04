@@ -348,10 +348,8 @@ export namespace semtokens {
 		 * Visit children of a script context.
 		 */
 		protected visitScriptChildren(context: Context): void {
-			if (context instanceof ContextScript) {
-				for (const child of context.statements) {
-					this.visitContext(child);
-				}
+			for (const child of (context as ContextScript).statements) {
+				this.visitContext(child);
 			}
 		}
 		
