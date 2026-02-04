@@ -380,6 +380,7 @@
 				{"include": "#member.selector"},
 				{"include": "#function.call"},
 				{"include": "#type"},
+				{"include": "#constant.class"},
 				{"include": "#variable.access"},
 				{"include": "#invalid"}
 			]
@@ -630,6 +631,11 @@
 			"name": "constant.language.dragonscript"
 		},
 		
+		"constant.class": {
+			"match": "\\b([A-Z_][A-Z0-9_]*)\\b",
+			"name": "constant.other.dragonscript"
+		},
+		
 		"variable.access": {
 			"match": "\\b([a-z_][A-Za-z0-9_]*)\\b",
 			"name": "variable.name.dragonscript"
@@ -723,13 +729,14 @@
 				{"include": "#doxygen-dragonscript-block-X"},
 				{"include": "#doxygen-brief-explicit"},
 				{"include": "#doxygen-autobrief-firstline"},
+				{"include": "#doxygen-brief-continuation-X"},
 				{"include": "#doxygen-code-highlight"},
 				{"include": "#doxygen-keywords"}
 			]
 		},
 		
 		"doxygen-keywords": {
-			"match": "(\\\\)(param|return|author|see|note|warning|retval|version|par|throws|em|b)\\b",
+			"match": "(\\\\)(details|param|return|author|see|note|warning|retval|version|par|throws|em|b)\\b",
 			"captures": {
 				"1": {"name": "punctuation.definition.keyword.dragonscript"},
 				"2": {"name": "markup.bold.documentation.dragonscript"}
@@ -742,16 +749,27 @@
 				"1": {"name": "punctuation.definition.keyword.dragonscript"},
 				"2": {"name": "markup.bold.documentation.dragonscript"}
 			},
-			"end": "(?=\\s*\\*?\\s*\\\\)|(?=\\*/)|(^\\s*\\*?\\s*$)",
+			"end": "(?=[\\\\])|(?=\\*/)|$",
 			"contentName": "markup.italic.documentation.dragonscript",
 			"patterns": [
-				{"match": "^\\s*\\*", "name": "punctuation.definition.comment.dragonscript"}
+				{
+					"match": "(?=\\*/)",
+					"name": "punctuation.definition.comment.dragonscript"
+				}
 			]
+		},
+		
+		"doxygen-brief-continuation": {
+			"match": "^(\\s*\\*\\s+)(?![\\\\\\s])(?!\\*/)(?=\\S)(.*)",
+			"captures": {
+				"1": {"name": "punctuation.definition.comment.dragonscript"},
+				"2": {"name": "markup.italic.documentation.dragonscript"}
+			}
 		},
 		
 		"doxygen-autobrief-firstline": {
 			"begin": "(?<=/\\*\\*)\\s*",
-			"end": "(\\.)(?:\\s|$)|(?=\\*/)|(?=\\s*\\\\)",
+			"end": "(\\.)(?:\\s|$)|(?=\\*/)|(?=\\s*[\\\\])|(?=^\\s*\\*?\\s*$)",
 			"endCaptures": {
 				"1": {"name": "punctuation.definition.section.doxygen"}
 			},
