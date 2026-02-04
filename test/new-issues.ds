@@ -1,0 +1,46 @@
+// Test cases for new grammar issues
+
+// Issue 1: Expressions in group parenthesis not colored
+func testIssue1()
+	return (EpsylonGameWorld.new(path))
+	// Everything inside parentheses should be colored
+	var value = (a + b) * (c + d)
+	compute((getValue() + getOther()))
+end
+
+// Issue 2: Super call arguments not colored
+class TestSuper
+	func new(ECBAcceptDigikeys ecbehavior, BehaviorElement element) super(element)
+		// super(element) - "element" should be colored
+	end
+	
+	func anotherConstructor(String name, int value) super(name)
+		// super(name) - "name" should be colored
+	end
+end
+
+// Issue 3: Composed types not properly colored
+class TestComposedTypes
+	func bool accepts(ECBDigikeys.Instance digikeys)
+		return accepts(digikeys.keys)
+	end
+	// ECBDigikeys.Instance - both parts should be colored
+	// digikeys.keys - both parts should be colored
+	
+	func Widget.WindowModal createWindow(Gui.Desktop desktop)
+		return null
+	end
+	
+	var Dictionary.Entry entry
+	var Array.Iterator iterator
+end
+
+// Issue 4: Inline if/else not colored
+func testInlineIfElse()
+	var String subId = id.empty() if "door" else "door(" + id + ")"
+	// "if" and "else" should be colored as keywords
+	
+	var int result = condition if 100 else 200
+	var bool flag = value > 10 if true else false
+	return test if getValue() else getOther()
+end
