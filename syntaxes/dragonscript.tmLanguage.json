@@ -649,7 +649,7 @@
 					"name": "keyword.operator.new.dragonscript"
 				},
 				{
-					"match": "\\b(cast|castable|typeof)\\b",
+					"match": "\\b(cast|castable|typeof|isnull)\\b",
 					"name": "keyword.operator.dragonscript"
 				},
 				{
