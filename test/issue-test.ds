@@ -1,0 +1,32 @@
+// Test case for the reported issues
+
+// Issue 3: Block with function calls and line continuation
+func testBlockIssue()
+	var BlockActionListener blockDragengine = BlockActionListener.new(block ActionEvent event
+		WindowLogo.showImageLogo(getDesktop(), Image.new("/shareddata/images/logoDragengine.jpg"), \
+			1, 2, 2, 1, 2, blockEpsylon)
+	end)
+	
+	// Simpler block test
+	var result = array.forEach(block Item item
+		item.process()
+	end)
+end
+
+// Issue 1 & 2: Function call expressions
+func testFunctionCalls()
+	// Simple function call
+	myFunc()
+	
+	// Function call with expressions
+	calculate(a + b, c * d)
+	
+	// Nested function calls
+	outer(inner(x))
+	
+	// Function calls with various expressions
+	process(getValue(), getOther(), 1 + 2, "string", obj.property)
+	
+	// Method chaining
+	obj.method1().method2().method3()
+end
