@@ -23,84 +23,84 @@
  */
 
 import { Range, SemanticTokenModifiers, SemanticTokenTypes, SemanticTokensBuilder, SemanticTokensLegend, integer } from "vscode-languageserver"
-import { Context } from "./context/context";
-import { ContextClass } from "./context/scriptClass";
-import { ContextInterface } from "./context/scriptInterface";
-import { ContextEnumeration, ContextEnumEntry } from "./context/scriptEnum";
-import { ContextFunction } from "./context/classFunction";
-import { ContextClassVariable } from "./context/classVariable";
-import { ContextFunctionArgument } from "./context/classFunctionArgument";
-import { ContextNamespace } from "./context/namespace";
-import { ContextScript } from "./context/script";
-import { Identifier } from "./context/identifier";
+import { Context } from "./context/context"
+import { ContextClass } from "./context/scriptClass"
+import { ContextInterface } from "./context/scriptInterface"
+import { ContextEnumeration, ContextEnumEntry } from "./context/scriptEnum"
+import { ContextFunction } from "./context/classFunction"
+import { ContextClassVariable } from "./context/classVariable"
+import { ContextFunctionArgument } from "./context/classFunctionArgument"
+import { ContextNamespace } from "./context/namespace"
+import { ContextScript } from "./context/script"
+import { Identifier } from "./context/identifier"
 
 export namespace semtokens {
 	export class Type {
-		private _name: string;
-		private _index: integer;
+		private _name: string
+		private _index: integer
 		
 		public constructor (name: string, index: integer) {
-			this._name = name;
-			this._index = index;
+			this._name = name
+			this._index = index
 		}
 		
 		public get name(): string {
-			return this._name;
+			return this._name
 		}
 		
 		public get index(): integer {
-			return this._index;
+			return this._index
 		}
 	}
 	
 	export class Modifier {
-		private _name: string;
-		private _index: integer;
+		private _name: string
+		private _index: integer
 		
 		public constructor (name: string, index: integer) {
-			this._name = name;
-			this._index = index;
+			this._name = name
+			this._index = index
 		}
 		
 		public get name(): string {
-			return this._name;
+			return this._name
 		}
 		
 		public get index(): integer {
-			return this._index;
+			return this._index
 		}
 	}
 	
-	export const typeNamespace = new Type(SemanticTokenTypes.namespace, 0);
-	export const typeClass = new Type(SemanticTokenTypes.class, 1);
-	export const typeEnum = new Type(SemanticTokenTypes.enum, 2);
-	export const typeInterface = new Type(SemanticTokenTypes.interface, 3);
-	export const typeParameter = new Type(SemanticTokenTypes.parameter, 4);
-	export const typeVariable = new Type(SemanticTokenTypes.variable, 5);
-	export const typeProperty = new Type(SemanticTokenTypes.property, 6);
-	export const typeEnumMember = new Type(SemanticTokenTypes.enumMember, 7);
-	export const typeMethod = new Type(SemanticTokenTypes.method, 8);
-	export const typeComment = new Type(SemanticTokenTypes.comment, 9);
-	export const typeString = new Type(SemanticTokenTypes.string, 10);
-	export const typeKeyword = new Type(SemanticTokenTypes.keyword, 11);
-	export const typeNumber = new Type(SemanticTokenTypes.number, 12);
-	export const typeOperator = new Type(SemanticTokenTypes.operator, 13);
+	export const typeNamespace = new Type(SemanticTokenTypes.namespace, 0)
+	export const typeClass = new Type(SemanticTokenTypes.class, 1)
+	export const typeEnum = new Type(SemanticTokenTypes.enum, 2)
+	export const typeInterface = new Type(SemanticTokenTypes.interface, 3)
+	export const typeParameter = new Type(SemanticTokenTypes.parameter, 4)
+	export const typeVariable = new Type(SemanticTokenTypes.variable, 5)
+	export const typeProperty = new Type(SemanticTokenTypes.property, 6)
+	export const typeEnumMember = new Type(SemanticTokenTypes.enumMember, 7)
+	export const typeMethod = new Type(SemanticTokenTypes.method, 8)
+	export const typeComment = new Type(SemanticTokenTypes.comment, 9)
+	export const typeString = new Type(SemanticTokenTypes.string, 10)
+	export const typeKeyword = new Type(SemanticTokenTypes.keyword, 11)
+	export const typeNumber = new Type(SemanticTokenTypes.number, 12)
+	export const typeOperator = new Type(SemanticTokenTypes.operator, 13)
 	
 	export const allTypes = [typeNamespace, typeClass, typeEnum, typeInterface, typeParameter,
 		typeVariable, typeProperty, typeEnumMember, typeMethod, typeComment, typeString,
-		typeKeyword, typeNumber, typeOperator];
+		typeKeyword, typeNumber, typeOperator]
 	
-	export const modDeclaration = new Modifier(SemanticTokenModifiers.declaration, 0);
-	export const modReadOnly = new Modifier(SemanticTokenModifiers.readonly, 1);
-	export const modStatic = new Modifier(SemanticTokenModifiers.static, 2);
-	export const modDeprecated = new Modifier(SemanticTokenModifiers.deprecated, 3);
-	export const modAbstract = new Modifier(SemanticTokenModifiers.abstract, 4);
-	export const modModification = new Modifier(SemanticTokenModifiers.modification, 5);
-	export const modDocumentation = new Modifier(SemanticTokenModifiers.documentation, 6);
-	export const modDefaultLibrary = new Modifier(SemanticTokenModifiers.defaultLibrary, 7);
+	export const modDeclaration = new Modifier(SemanticTokenModifiers.declaration, 0)
+	export const modReadOnly = new Modifier(SemanticTokenModifiers.readonly, 1)
+	export const modStatic = new Modifier(SemanticTokenModifiers.static, 2)
+	export const modDeprecated = new Modifier(SemanticTokenModifiers.deprecated, 3)
+	export const modAbstract = new Modifier(SemanticTokenModifiers.abstract, 4)
+	export const modModification = new Modifier(SemanticTokenModifiers.modification, 5)
+	export const modDocumentation = new Modifier(SemanticTokenModifiers.documentation, 6)
+	export const modDefaultLibrary = new Modifier(SemanticTokenModifiers.defaultLibrary, 7)
 	
 	export const allModifiers = [modDeclaration, modReadOnly, modStatic, modDeprecated,
-		modAbstract, modModification, modDocumentation, modDefaultLibrary];
+		modAbstract, modModification, modDocumentation, modDefaultLibrary]
 	
 	export const legend: SemanticTokensLegend = {
 		tokenTypes: allTypes.map(t => t.name),
@@ -109,13 +109,13 @@ export namespace semtokens {
 	
 	export class Builder extends SemanticTokensBuilder {
 		public constructor() {
-			super();
+			super()
 		}
 		
 		public add(range: Range, type: Type, modifiers: Modifier[]): void {
 			this.push(range.start.line, range.start.character,
 				range.end.character - range.start.character, type.index,
-				modifiers.map(m => 1 << m.index).reduce((a,b) => a + b, 0));
+				modifiers.map(m => 1 << m.index).reduce((a,b) => a + b, 0))
 		}
 	}
 	
@@ -124,10 +124,10 @@ export namespace semtokens {
 	 * Walks the context tree and generates semantic tokens for identifiers.
 	 */
 	export class Provider {
-		private builder: Builder;
+		private builder: Builder
 		
 		constructor() {
-			this.builder = new Builder();
+			this.builder = new Builder()
 		}
 		
 		/**
@@ -135,29 +135,29 @@ export namespace semtokens {
 		 */
 		public build(context: Context | undefined) {
 			if (context) {
-				this.visitContext(context);
+				this.visitContext(context)
 			}
-			return this.builder.build();
+			return this.builder.build()
 		}
 		
 		/**
 		 * Visit a context and its children recursively.
 		 */
 		protected visitContext(context: Context): void {
-			this.processContext(context);
-			this.visitChildren(context);
+			this.processContext(context)
+			this.visitChildren(context)
 		}
 		
 		/**
 		 * Process a single context and add semantic tokens for its identifier if applicable.
 		 */
 		protected processContext(context: Context): void {
-			const modifiers = this.getModifiers(context);
-			const type = this.getTokenType(context);
-			const range = this.getIdentifierRange(context);
+			const modifiers = this.getModifiers(context)
+			const type = this.getTokenType(context)
+			const range = this.getIdentifierRange(context)
 			
 			if (type && range) {
-				this.builder.add(range, type, modifiers);
+				this.builder.add(range, type, modifiers)
 			}
 		}
 		
@@ -168,34 +168,34 @@ export namespace semtokens {
 			switch (context.type) {
 				case Context.ContextType.Namespace:
 				case Context.ContextType.PinNamespace:
-					return typeNamespace;
+					return typeNamespace
 				
 				case Context.ContextType.Class:
-					return typeClass;
+					return typeClass
 				
 				case Context.ContextType.Interface:
-					return typeInterface;
+					return typeInterface
 				
 				case Context.ContextType.Enumeration:
-					return typeEnum;
+					return typeEnum
 				
 				case Context.ContextType.EnumerationEntry:
-					return typeEnumMember;
+					return typeEnumMember
 				
 				case Context.ContextType.Function:
-					return typeMethod;
+					return typeMethod
 				
 				case Context.ContextType.FunctionArgument:
-					return typeParameter;
+					return typeParameter
 				
 				case Context.ContextType.ClassVariable:
-					return typeProperty;
+					return typeProperty
 				
 				case Context.ContextType.Variable:
-					return typeVariable;
+					return typeVariable
 				
 				default:
-					return undefined;
+					return undefined
 			}
 		}
 		
@@ -203,28 +203,28 @@ export namespace semtokens {
 		 * Get modifiers for a context based on its type modifiers.
 		 */
 		protected getModifiers(context: Context): Modifier[] {
-			const modifiers: Modifier[] = [];
+			const modifiers: Modifier[] = []
 			
 			// Add declaration modifier for declarations
 			if (this.isDeclaration(context)) {
-				modifiers.push(modDeclaration);
+				modifiers.push(modDeclaration)
 			}
 			
 			// Check for type modifiers if context has them
-			const typeModifiers = this.getTypeModifiers(context);
+			const typeModifiers = this.getTypeModifiers(context)
 			if (typeModifiers) {
 				if (typeModifiers.isStatic) {
-					modifiers.push(modStatic);
+					modifiers.push(modStatic)
 				}
 				if (typeModifiers.isAbstract) {
-					modifiers.push(modAbstract);
+					modifiers.push(modAbstract)
 				}
 				if (typeModifiers.isFixed) {
-					modifiers.push(modReadOnly);
+					modifiers.push(modReadOnly)
 				}
 			}
 			
-			return modifiers;
+			return modifiers
 		}
 		
 		/**
@@ -242,9 +242,9 @@ export namespace semtokens {
 				case Context.ContextType.Variable:
 				case Context.ContextType.Namespace:
 				case Context.ContextType.PinNamespace:
-					return true;
+					return true
 				default:
-					return false;
+					return false
 			}
 		}
 		
@@ -253,21 +253,21 @@ export namespace semtokens {
 		 */
 		protected getTypeModifiers(context: Context): Context.TypeModifierSet | undefined {
 			if (context instanceof ContextClass) {
-				return context.typeModifiers;
+				return context.typeModifiers
 			}
 			if (context instanceof ContextInterface) {
-				return context.typeModifiers;
+				return context.typeModifiers
 			}
 			if (context instanceof ContextEnumeration) {
-				return context.typeModifiers;
+				return context.typeModifiers
 			}
 			if (context instanceof ContextFunction) {
-				return context.typeModifiers;
+				return context.typeModifiers
 			}
 			if (context instanceof ContextClassVariable) {
-				return context.typeModifiers;
+				return context.typeModifiers
 			}
-			return undefined;
+			return undefined
 		}
 		
 		/**
@@ -275,11 +275,11 @@ export namespace semtokens {
 		 */
 		protected getIdentifierRange(context: Context): Range | undefined {
 			// Try to get the name identifier if it exists
-			const name = this.getIdentifier(context);
+			const name = this.getIdentifier(context)
 			if (name?.range) {
-				return name.range;
+				return name.range
 			}
-			return undefined;
+			return undefined
 		}
 		
 		/**
@@ -287,30 +287,30 @@ export namespace semtokens {
 		 */
 		protected getIdentifier(context: Context): Identifier | undefined {
 			if (context instanceof ContextClass) {
-				return context.name;
+				return context.name
 			}
 			if (context instanceof ContextInterface) {
-				return context.name;
+				return context.name
 			}
 			if (context instanceof ContextEnumeration) {
-				return context.name;
+				return context.name
 			}
 			if (context instanceof ContextEnumEntry) {
-				return context.name;
+				return context.name
 			}
 			if (context instanceof ContextFunction) {
-				return context.name;
+				return context.name
 			}
 			if (context instanceof ContextClassVariable) {
-				return context.name;
+				return context.name
 			}
 			if (context instanceof ContextFunctionArgument) {
-				return context.name;
+				return context.name
 			}
 			if (context instanceof ContextNamespace) {
-				return context.typename.lastPart?.name;
+				return context.typename.lastPart?.name
 			}
-			return undefined;
+			return undefined
 		}
 		
 		/**
@@ -319,28 +319,32 @@ export namespace semtokens {
 		protected visitChildren(context: Context): void {
 			switch (context.type) {
 				case Context.ContextType.Script:
-					this.visitScriptChildren(context);
-					break;
+					this.visitScriptChildren(context)
+					break
 				
+				case Context.ContextType.Namespace:
+					this.visitNamespaceChildren(context as ContextNamespace)
+					break
+					
 				case Context.ContextType.Class:
-					this.visitClassChildren(context as ContextClass);
-					break;
+					this.visitClassChildren(context as ContextClass)
+					break
 				
 				case Context.ContextType.Interface:
-					this.visitInterfaceChildren(context as ContextInterface);
-					break;
+					this.visitInterfaceChildren(context as ContextInterface)
+					break
 				
 				case Context.ContextType.Enumeration:
-					this.visitEnumerationChildren(context as ContextEnumeration);
-					break;
+					this.visitEnumerationChildren(context as ContextEnumeration)
+					break
 				
 				case Context.ContextType.Function:
-					this.visitFunctionChildren(context as ContextFunction);
-					break;
+					this.visitFunctionChildren(context as ContextFunction)
+					break
 				
 				default:
 					// For other contexts, we don't need to visit children for semantic tokens
-					break;
+					break
 			}
 		}
 		
@@ -349,7 +353,16 @@ export namespace semtokens {
 		 */
 		protected visitScriptChildren(context: Context): void {
 			for (const child of (context as ContextScript).statements) {
-				this.visitContext(child);
+				this.visitContext(child)
+			}
+		}
+		
+		/**
+		 * Visit children of a namespace context.
+		 */
+		protected visitNamespaceChildren(context: ContextNamespace): void {
+			for (const child of context.statements) {
+				this.visitContext(child)
 			}
 		}
 		
@@ -358,7 +371,7 @@ export namespace semtokens {
 		 */
 		protected visitClassChildren(context: ContextClass): void {
 			for (const child of context.declarations) {
-				this.visitContext(child);
+				this.visitContext(child)
 			}
 		}
 		
@@ -367,7 +380,7 @@ export namespace semtokens {
 		 */
 		protected visitInterfaceChildren(context: ContextInterface): void {
 			for (const child of context.declarations) {
-				this.visitContext(child);
+				this.visitContext(child)
 			}
 		}
 		
@@ -376,7 +389,7 @@ export namespace semtokens {
 		 */
 		protected visitEnumerationChildren(context: ContextEnumeration): void {
 			for (const entry of context.entries) {
-				this.visitContext(entry);
+				this.visitContext(entry)
 			}
 		}
 		
@@ -385,8 +398,8 @@ export namespace semtokens {
 		 */
 		protected visitFunctionChildren(context: ContextFunction): void {
 			for (const arg of context.arguments) {
-				this.visitContext(arg);
+				this.visitContext(arg)
 			}
 		}
 	}
-};
+}

@@ -706,12 +706,10 @@ connection.languages.semanticTokens.on(
 	async (params: SemanticTokensParams): Promise<SemanticTokens> => {
 		try {
 			const sd = await ensureDocument(params.textDocument.uri);
-			const provider = new semtokens.Provider();
-			return provider.build(sd.context);
+			return (new semtokens.Provider()).build(sd.context);
 		} catch (error) {
 			logError(error);
-			// Return empty tokens on error
-			return new semtokens.Builder().build();
+			return (new semtokens.Builder()).build();
 		}
 	}
 )

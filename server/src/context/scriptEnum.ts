@@ -198,7 +198,7 @@ export class ContextEnumeration extends Context{
 
 
 	constructor(node: DeclareEnumerationCstNode, typemodNode: TypeModifiersCstNode | undefined, parent: Context) {
-		super(Context.ContextType.Interface, parent);
+		super(Context.ContextType.Enumeration, parent);
 
 		let edecl = node.children;
 		let edeclBegin = edecl.enumerationBegin[0].children;
