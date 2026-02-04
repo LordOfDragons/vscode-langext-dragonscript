@@ -109,7 +109,7 @@
 			},
 			"end": "\\b(end)\\b",
 			"endCaptures": {
-				"1": {"name": "keyword.control.end.dragonscript"}
+				"1": {"name": "storage.type.class.end.dragonscript"}
 			},
 			"patterns": [
 				{"include": "#class-header"},
@@ -197,7 +197,7 @@
 			},
 			"end": "\\b(end)\\b",
 			"endCaptures": {
-				"1": {"name": "keyword.control.end.dragonscript"}
+				"1": {"name": "storage.type.interface.end.dragonscript"}
 			},
 			"patterns": [
 				{"include": "#interface-header"},
@@ -296,7 +296,7 @@
 			},
 			"end": "\\b(end)\\b",
 			"endCaptures": {
-				"1": {"name": "keyword.control.end.dragonscript"}
+				"1": {"name": "storage.type.enum.end.dragonscript"}
 			},
 			"patterns": [
 				{"include": "#comments"},
@@ -325,7 +325,7 @@
 			},
 			"end": "\\b(end)\\b",
 			"endCaptures": {
-				"1": {"name": "keyword.control.end.dragonscript"}
+				"1": {"name": "storage.type.function.end.dragonscript"}
 			},
 			"patterns": [
 				{"include": "#function-header"},
@@ -634,7 +634,7 @@
 			},
 			"end": "\\b(end)\\b",
 			"endCaptures": {
-				"1": {"name": "keyword.control.end.dragonscript"}
+				"1": {"name": "storage.type.block.end.dragonscript"}
 			},
 			"patterns": [
 				{"include": "#comments"},
@@ -701,8 +701,12 @@
 					"name": "keyword.operator.new.dragonscript"
 				},
 				{
-					"match": "\\b(cast|castable|typeof|isnull)\\b",
-					"name": "keyword.operator.typecheck.dragonscript"
+					"match": "\\b(castable|typeof|isnull)\\b",
+					"name": "keyword.operator.logical.dragonscript"
+				},
+				{
+					"match": "\\b(cast)\\b",
+					"name": "keyword.operator.cast.dragonscript"
 				},
 				{
 					"match": "\\b(and|or|not)\\b",
@@ -718,23 +722,44 @@
 		"type-cast": {
 			"patterns": [
 				{
-					"match": "\\b(cast|castable)\\s+(void|bool|byte|int|float)\\b",
+					"match": "\\b(castable)\\s+(void|bool|byte|int|float)\\b",
 					"captures": {
-						"1": {"name": "keyword.operator.typecheck.dragonscript"},
+						"1": {"name": "keyword.operator.logical.dragonscript"},
 						"2": {"name": "storage.type.primitive.dragonscript"}
 					}
 				},
 				{
-					"match": "\\b(cast|castable)\\s+(Object|Boolean|Byte|Integer|Float|String|Array|Set|Dictionary|Block|WeakReference|ObjectReference|Exception)\\b",
+					"match": "\\b(castable)\\s+(Object|Boolean|Byte|Integer|Float|String|Array|Set|Dictionary|Block|WeakReference|ObjectReference|Exception)\\b",
 					"captures": {
-						"1": {"name": "keyword.operator.typecheck.dragonscript"},
+						"1": {"name": "keyword.operator.logical.dragonscript"},
 						"2": {"name": "storage.type.builtin.dragonscript"}
 					}
 				},
 				{
-					"match": "\\b(cast|castable)\\s+([A-Z][A-Za-z0-9_]*)(?:\\.[A-Z][A-Za-z0-9_]*)*\\b",
+					"match": "\\b(castable)\\s+([A-Z][A-Za-z0-9_]*)(?:\\.[A-Z][A-Za-z0-9_]*)*\\b",
 					"captures": {
-						"1": {"name": "keyword.operator.typecheck.dragonscript"},
+						"1": {"name": "keyword.operator.logical.dragonscript"},
+						"2": {"name": "entity.name.type.dragonscript"}
+					}
+				},
+				{
+					"match": "\\b(cast)\\s+(void|bool|byte|int|float)\\b",
+					"captures": {
+						"1": {"name": "keyword.operator.cast.dragonscript"},
+						"2": {"name": "storage.type.primitive.dragonscript"}
+					}
+				},
+				{
+					"match": "\\b(cast)\\s+(Object|Boolean|Byte|Integer|Float|String|Array|Set|Dictionary|Block|WeakReference|ObjectReference|Exception)\\b",
+					"captures": {
+						"1": {"name": "keyword.operator.cast.dragonscript"},
+						"2": {"name": "storage.type.builtin.dragonscript"}
+					}
+				},
+				{
+					"match": "\\b(cast)\\s+([A-Z][A-Za-z0-9_]*)(?:\\.[A-Z][A-Za-z0-9_]*)*\\b",
+					"captures": {
+						"1": {"name": "keyword.operator.cast.dragonscript"},
 						"2": {"name": "entity.name.type.dragonscript"}
 					}
 				}
@@ -955,7 +980,7 @@
 		
 		"line-continuation": {
 			"match": "\\\\$",
-			"name": "punctuation.separator.continuation.dragonscript"
+			"name": "constant.character.escape.line-continuation.dragonscript"
 		}
 	}
 }
