@@ -115,14 +115,42 @@
 		"class-header": {
 			"patterns": [
 				{
-					"match": "\\b(extends)\\b\\s+([A-Za-z_][A-Za-z0-9_\\.]*)",
+					"match": "\\b(extends)\\s+(void|bool|byte|int|float)\\b",
+					"captures": {
+						"1": {"name": "keyword.control.extends.dragonscript"},
+						"2": {"name": "storage.type.primitive.dragonscript"}
+					}
+				},
+				{
+					"match": "\\b(extends)\\s+(Object|Boolean|Byte|Integer|Float|String|Array|Set|Dictionary|Block|WeakReference|ObjectReference|Exception)\\b",
+					"captures": {
+						"1": {"name": "keyword.control.extends.dragonscript"},
+						"2": {"name": "storage.type.builtin.dragonscript"}
+					}
+				},
+				{
+					"match": "\\b(extends)\\s+([A-Z][A-Za-z0-9_\\.]*)\\b",
 					"captures": {
 						"1": {"name": "keyword.control.extends.dragonscript"},
 						"2": {"name": "entity.other.inherited-class.dragonscript"}
 					}
 				},
 				{
-					"match": "\\b(implements)\\b\\s+([A-Za-z_][A-Za-z0-9_\\.]*)",
+					"match": "\\b(implements)\\s+(void|bool|byte|int|float)\\b",
+					"captures": {
+						"1": {"name": "keyword.control.implements.dragonscript"},
+						"2": {"name": "storage.type.primitive.dragonscript"}
+					}
+				},
+				{
+					"match": "\\b(implements)\\s+(Object|Boolean|Byte|Integer|Float|String|Array|Set|Dictionary|Block|WeakReference|ObjectReference|Exception)\\b",
+					"captures": {
+						"1": {"name": "keyword.control.implements.dragonscript"},
+						"2": {"name": "storage.type.builtin.dragonscript"}
+					}
+				},
+				{
+					"match": "\\b(implements)\\s+([A-Z][A-Za-z0-9_\\.]*)\\b",
 					"captures": {
 						"1": {"name": "keyword.control.implements.dragonscript"},
 						"2": {"name": "entity.other.inherited-class.dragonscript"}
@@ -168,7 +196,21 @@
 		"interface-header": {
 			"patterns": [
 				{
-					"match": "\\b(implements)\\b\\s+([A-Za-z_][A-Za-z0-9_\\.]*)",
+					"match": "\\b(implements)\\s+(void|bool|byte|int|float)\\b",
+					"captures": {
+						"1": {"name": "keyword.control.implements.dragonscript"},
+						"2": {"name": "storage.type.primitive.dragonscript"}
+					}
+				},
+				{
+					"match": "\\b(implements)\\s+(Object|Boolean|Byte|Integer|Float|String|Array|Set|Dictionary|Block|WeakReference|ObjectReference|Exception)\\b",
+					"captures": {
+						"1": {"name": "keyword.control.implements.dragonscript"},
+						"2": {"name": "storage.type.builtin.dragonscript"}
+					}
+				},
+				{
+					"match": "\\b(implements)\\s+([A-Z][A-Za-z0-9_\\.]*)\\b",
 					"captures": {
 						"1": {"name": "keyword.control.implements.dragonscript"},
 						"2": {"name": "entity.other.inherited-class.dragonscript"}
@@ -200,10 +242,23 @@
 			"end": "(?=\\n|:)",
 			"patterns": [
 				{"include": "#comments"},
-				{"include": "#type-annotation"},
 				{
 					"match": "\\b(new|destructor)\\b",
 					"name": "entity.name.function.constructor.dragonscript"
+				},
+				{
+					"match": "\\b(void|bool|byte|int|float)\\s+([a-z][A-Za-z0-9_]*)\\b(?=\\s*\\()",
+					"captures": {
+						"1": {"name": "storage.type.primitive.dragonscript"},
+						"2": {"name": "entity.name.function.dragonscript"}
+					}
+				},
+				{
+					"match": "\\b([A-Z][A-Za-z0-9_]*)\\s+([a-z][A-Za-z0-9_]*)\\b(?=\\s*\\()",
+					"captures": {
+						"1": {"name": "storage.type.dragonscript"},
+						"2": {"name": "entity.name.function.dragonscript"}
+					}
 				},
 				{
 					"match": "\\b([a-z][A-Za-z0-9_]*)\\b",
@@ -257,10 +312,23 @@
 		"function-header": {
 			"patterns": [
 				{"include": "#comments"},
-				{"include": "#type-annotation"},
 				{
 					"match": "\\b(new|destructor)\\b",
 					"name": "entity.name.function.constructor.dragonscript"
+				},
+				{
+					"match": "\\b(void|bool|byte|int|float)\\s+([a-z][A-Za-z0-9_]*)\\b(?=\\s*\\()",
+					"captures": {
+						"1": {"name": "storage.type.primitive.dragonscript"},
+						"2": {"name": "entity.name.function.dragonscript"}
+					}
+				},
+				{
+					"match": "\\b([A-Z][A-Za-z0-9_]*)\\s+([a-z][A-Za-z0-9_]*)\\b(?=\\s*\\()",
+					"captures": {
+						"1": {"name": "storage.type.dragonscript"},
+						"2": {"name": "entity.name.function.dragonscript"}
+					}
 				},
 				{
 					"match": "\\b([a-z][A-Za-z0-9_]*)\\b(?=\\s*\\()",
@@ -292,10 +360,26 @@
 			"patterns": [
 				{"include": "#comments"},
 				{"include": "#line-continuation"},
-				{"include": "#type-annotation"},
 				{
-					"match": "\\b([a-z][A-Za-z0-9_]*)\\b",
-					"name": "variable.parameter.dragonscript"
+					"match": "\\b(void|bool|byte|int|float)\\s+([a-z][A-Za-z0-9_]*)\\b",
+					"captures": {
+						"1": {"name": "storage.type.primitive.dragonscript"},
+						"2": {"name": "variable.parameter.dragonscript"}
+					}
+				},
+				{
+					"match": "\\b(Object|Boolean|Byte|Integer|Float|String|Array|Set|Dictionary|Block|WeakReference|ObjectReference|Exception)\\s+([a-z][A-Za-z0-9_]*)\\b",
+					"captures": {
+						"1": {"name": "storage.type.builtin.dragonscript"},
+						"2": {"name": "variable.parameter.dragonscript"}
+					}
+				},
+				{
+					"match": "\\b([A-Z][A-Za-z0-9_\\.]*)\\s+([a-z][A-Za-z0-9_]*)\\b",
+					"captures": {
+						"1": {"name": "storage.type.dragonscript"},
+						"2": {"name": "variable.parameter.dragonscript"}
+					}
 				},
 				{
 					"match": ",",
@@ -331,14 +415,29 @@
 			"end": "(?=\\n|:)",
 			"patterns": [
 				{"include": "#comments"},
-				{"include": "#type-annotation"},
 				{
-					"match": "\\b([a-z][A-Za-z0-9_]*)\\b",
-					"name": "variable.other.dragonscript"
+					"match": "\\b(void|bool|byte|int|float)\\b",
+					"name": "storage.type.primitive.dragonscript"
+				},
+				{
+					"match": "\\b(Object|Boolean|Byte|Integer|Float|String|Array|Set|Dictionary|Block|WeakReference|ObjectReference|Exception)\\b",
+					"name": "storage.type.builtin.dragonscript"
+				},
+				{
+					"match": "\\b([A-Z][A-Za-z0-9_\\.]*)\\b",
+					"name": "storage.type.dragonscript"
+				},
+				{
+					"match": "\\b(p[A-Z][A-Za-z0-9_]*)\\b",
+					"name": "variable.other.member.dragonscript"
 				},
 				{
 					"match": "\\b([A-Z][A-Z0-9_]+)\\b",
 					"name": "variable.other.constant.dragonscript"
+				},
+				{
+					"match": "\\b([a-z_][A-Za-z0-9_]*)\\b",
+					"name": "variable.other.dragonscript"
 				},
 				{
 					"match": ",",
@@ -471,10 +570,30 @@
 			},
 			"patterns": [
 				{
+					"match": "\\b(catch)\\s+(void|bool|byte|int|float)\\b",
+					"captures": {
+						"1": {"name": "keyword.control.exception.catch.dragonscript"},
+						"2": {"name": "storage.type.primitive.dragonscript"}
+					}
+				},
+				{
+					"match": "\\b(catch)\\s+(Object|Boolean|Byte|Integer|Float|String|Array|Set|Dictionary|Block|WeakReference|ObjectReference|Exception|EInvalidParam|EDivisionByZero)\\b",
+					"captures": {
+						"1": {"name": "keyword.control.exception.catch.dragonscript"},
+						"2": {"name": "storage.type.builtin.dragonscript"}
+					}
+				},
+				{
+					"match": "\\b(catch)\\s+([A-Z][A-Za-z0-9_]*)\\b",
+					"captures": {
+						"1": {"name": "keyword.control.exception.catch.dragonscript"},
+						"2": {"name": "storage.type.dragonscript"}
+					}
+				},
+				{
 					"match": "\\b(catch)\\b",
 					"name": "keyword.control.exception.catch.dragonscript"
 				},
-				{"include": "#type-annotation"},
 				{"include": "#statements"}
 			]
 		},
@@ -547,7 +666,21 @@
 		"type-cast": {
 			"patterns": [
 				{
-					"match": "\\b(cast|castable)\\s+([A-Z][A-Za-z0-9_]*)",
+					"match": "\\b(cast|castable)\\s+(void|bool|byte|int|float)\\b",
+					"captures": {
+						"1": {"name": "keyword.operator.dragonscript"},
+						"2": {"name": "storage.type.primitive.dragonscript"}
+					}
+				},
+				{
+					"match": "\\b(cast|castable)\\s+(Object|Boolean|Byte|Integer|Float|String|Array|Set|Dictionary|Block|WeakReference|ObjectReference|Exception)\\b",
+					"captures": {
+						"1": {"name": "keyword.operator.dragonscript"},
+						"2": {"name": "storage.type.builtin.dragonscript"}
+					}
+				},
+				{
+					"match": "\\b(cast|castable)\\s+([A-Z][A-Za-z0-9_\\.]*)\\b",
 					"captures": {
 						"1": {"name": "keyword.operator.dragonscript"},
 						"2": {"name": "storage.type.dragonscript"}
