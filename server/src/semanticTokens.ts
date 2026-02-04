@@ -26,7 +26,7 @@ import { Range, SemanticTokenModifiers, SemanticTokenTypes, SemanticTokensBuilde
 import { Context } from "./context/context";
 import { ContextClass } from "./context/scriptClass";
 import { ContextInterface } from "./context/scriptInterface";
-import { ContextEnumeration } from "./context/scriptEnum";
+import { ContextEnumeration, ContextEnumEntry } from "./context/scriptEnum";
 import { ContextFunction } from "./context/classFunction";
 import { ContextClassVariable } from "./context/classVariable";
 import { ContextFunctionArgument } from "./context/classFunctionArgument";
@@ -251,19 +251,19 @@ export namespace semtokens {
 		 */
 		protected getTypeModifiers(context: Context): Context.TypeModifierSet | undefined {
 			if (context instanceof ContextClass) {
-				return (context as any)._typeModifiers;
+				return context.typeModifiers;
 			}
 			if (context instanceof ContextInterface) {
-				return (context as any)._typeModifiers;
+				return context.typeModifiers;
 			}
 			if (context instanceof ContextEnumeration) {
-				return (context as any)._typeModifiers;
+				return context.typeModifiers;
 			}
 			if (context instanceof ContextFunction) {
-				return (context as any)._typeModifiers;
+				return context.typeModifiers;
 			}
 			if (context instanceof ContextClassVariable) {
-				return (context as any)._typeModifiers;
+				return context.typeModifiers;
 			}
 			return undefined;
 		}
@@ -274,7 +274,7 @@ export namespace semtokens {
 		protected getIdentifierRange(context: Context): Range | undefined {
 			// Try to get the name identifier if it exists
 			const name = this.getIdentifier(context);
-			if (name && name.range) {
+			if (name?.range) {
 				return name.range;
 			}
 			return undefined;
@@ -284,8 +284,31 @@ export namespace semtokens {
 		 * Get the identifier from a context if it has one.
 		 */
 		protected getIdentifier(context: Context): any {
-			// Access the _name property if it exists (it's protected in many contexts)
-			return (context as any)._name;
+			if (context instanceof ContextClass) {
+				return context.name;
+			}
+			if (context instanceof ContextInterface) {
+				return context.name;
+			}
+			if (context instanceof ContextEnumeration) {
+				return context.name;
+			}
+			if (context instanceof ContextEnumEntry) {
+				return context.name;
+			}
+			if (context instanceof ContextFunction) {
+				return context.name;
+			}
+			if (context instanceof ContextClassVariable) {
+				return context.name;
+			}
+			if (context instanceof ContextFunctionArgument) {
+				return context.name;
+			}
+			if (context instanceof ContextNamespace) {
+				return context.typename.lastPart?.name;
+			}
+			return undefined;
 		}
 		
 		/**
@@ -295,11 +318,6 @@ export namespace semtokens {
 			switch (context.type) {
 				case Context.ContextType.Script:
 					this.visitScriptChildren(context);
-					break;
-				
-				case Context.ContextType.Namespace:
-				case Context.ContextType.PinNamespace:
-					this.visitNamespaceChildren(context as ContextNamespace);
 					break;
 				
 				case Context.ContextType.Class:
@@ -337,21 +355,11 @@ export namespace semtokens {
 		}
 		
 		/**
-		 * Visit children of a namespace context.
-		 */
-		protected visitNamespaceChildren(context: ContextNamespace): void {
-			// Namespaces don't have child declarations to visit
-		}
-		
-		/**
 		 * Visit children of a class context.
 		 */
 		protected visitClassChildren(context: ContextClass): void {
-			const declarations = (context as any)._declarations as Context[] | undefined;
-			if (declarations) {
-				for (const child of declarations) {
-					this.visitContext(child);
-				}
+			for (const child of context.declarations) {
+				this.visitContext(child);
 			}
 		}
 		
@@ -359,11 +367,8 @@ export namespace semtokens {
 		 * Visit children of an interface context.
 		 */
 		protected visitInterfaceChildren(context: ContextInterface): void {
-			const declarations = (context as any)._declarations as Context[] | undefined;
-			if (declarations) {
-				for (const child of declarations) {
-					this.visitContext(child);
-				}
+			for (const child of context.declarations) {
+				this.visitContext(child);
 			}
 		}
 		
@@ -371,11 +376,8 @@ export namespace semtokens {
 		 * Visit children of an enumeration context.
 		 */
 		protected visitEnumerationChildren(context: ContextEnumeration): void {
-			const entries = (context as any)._entries as Context[] | undefined;
-			if (entries) {
-				for (const entry of entries) {
-					this.visitContext(entry);
-				}
+			for (const entry of context.entries) {
+				this.visitContext(entry);
 			}
 		}
 		
@@ -383,11 +385,8 @@ export namespace semtokens {
 		 * Visit children of a function context.
 		 */
 		protected visitFunctionChildren(context: ContextFunction): void {
-			const args = (context as any)._arguments as ContextFunctionArgument[] | undefined;
-			if (args) {
-				for (const arg of args) {
-					this.visitContext(arg);
-				}
+			for (const arg of context.arguments) {
+				this.visitContext(arg);
 			}
 		}
 	}
