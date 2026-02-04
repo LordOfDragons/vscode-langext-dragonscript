@@ -1,0 +1,994 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "DragonScript",
+	"scopeName": "source.dragonscript",
+	"patterns": [
+		{"include": "#comments"},
+		{"include": "#namespace-declaration"},
+		{"include": "#pin-declaration"},
+		{"include": "#requires-declaration"},
+		{"include": "#class-declaration"},
+		{"include": "#interface-declaration"},
+		{"include": "#enum-declaration"},
+		{"include": "#statements"}
+	],
+	"repository": {
+		"comments": {
+			"patterns": [
+				{
+					"name": "comment.block.documentation.dragonscript",
+					"begin": "/\\*\\*",
+					"end": "\\*/",
+					"patterns": [
+						{
+							"name": "keyword.other.documentation.dragonscript",
+							"match": "\\\\(brief|param|returns?|throws?|author|version|date|deprecated|note|warning|see|em|ref|since)\\b"
+						}
+					]
+				},
+				{
+					"name": "comment.block.dragonscript",
+					"begin": "/\\*",
+					"end": "\\*/"
+				},
+				{
+					"name": "comment.line.double-slash.dragonscript",
+					"begin": "//",
+					"end": "$"
+				}
+			]
+		},
+		
+		"namespace-declaration": {
+			"name": "meta.namespace.dragonscript",
+			"begin": "\\b(namespace)\\b",
+			"beginCaptures": {
+				"1": {"name": "keyword.control.namespace.dragonscript"}
+			},
+			"end": "(?=\\n|:)",
+			"patterns": [
+				{"include": "#line-continuation"},
+				{"include": "#comments"},
+				{
+					"name": "entity.name.namespace.dragonscript",
+					"match": "[A-Za-z_][A-Za-z0-9_]*"
+				},
+				{
+					"name": "punctuation.accessor.dragonscript",
+					"match": "\\."
+				}
+			]
+		},
+		
+		"pin-declaration": {
+			"name": "meta.pin.dragonscript",
+			"begin": "\\b(pin)\\b",
+			"beginCaptures": {
+				"1": {"name": "keyword.control.import.dragonscript"}
+			},
+			"end": "(?=\\n|:)",
+			"patterns": [
+				{"include": "#line-continuation"},
+				{"include": "#comments"},
+				{
+					"name": "entity.name.namespace.dragonscript",
+					"match": "[A-Za-z_][A-Za-z0-9_]*"
+				},
+				{
+					"name": "punctuation.accessor.dragonscript",
+					"match": "\\."
+				}
+			]
+		},
+		
+		"requires-declaration": {
+			"name": "meta.requires.dragonscript",
+			"begin": "\\b(requires)\\b",
+			"beginCaptures": {
+				"1": {"name": "keyword.control.requires.dragonscript"}
+			},
+			"end": "(?=\\n|:)",
+			"patterns": [
+				{"include": "#line-continuation"},
+				{"include": "#comments"},
+				{"include": "#string"}
+			]
+		},
+		
+		"class-declaration": {
+			"name": "meta.class.dragonscript",
+			"begin": "(?:(\\bpublic\\b)\\s+)?(?:(\\bprotected\\b)\\s+)?(?:(\\bprivate\\b)\\s+)?(?:(\\babstract\\b)\\s+)?(?:(\\bfixed\\b)\\s+)?(?:(\\bstatic\\b)\\s+)?(\\bclass\\b)",
+			"beginCaptures": {
+				"1": {"name": "storage.modifier.dragonscript"},
+				"2": {"name": "storage.modifier.dragonscript"},
+				"3": {"name": "storage.modifier.dragonscript"},
+				"4": {"name": "storage.modifier.dragonscript"},
+				"5": {"name": "storage.modifier.dragonscript"},
+				"6": {"name": "storage.modifier.dragonscript"},
+				"7": {"name": "storage.type.class.dragonscript"}
+			},
+			"end": "\\b(end)\\b",
+			"endCaptures": {
+				"1": {"name": "storage.type.class.end.dragonscript"}
+			},
+			"patterns": [
+				{"include": "#class-header"},
+				{"include": "#class-body"}
+			]
+		},
+		
+		"class-header": {
+			"patterns": [
+				{
+					"match": "\\b(extends)\\s+(void|bool|byte|int|float)\\b",
+					"captures": {
+						"1": {"name": "keyword.control.extends.dragonscript"},
+						"2": {"name": "storage.type.primitive.dragonscript"}
+					}
+				},
+				{
+					"match": "\\b(extends)\\s+(Object|Boolean|Byte|Integer|Float|String|Array|Set|Dictionary|Block|WeakReference|ObjectReference|Exception)\\b",
+					"captures": {
+						"1": {"name": "keyword.control.extends.dragonscript"},
+						"2": {"name": "storage.type.builtin.dragonscript"}
+					}
+				},
+				{
+					"match": "\\b(extends)\\s+([A-Z][A-Za-z0-9_]*)(?:\\.[A-Z][A-Za-z0-9_]*)*\\b",
+					"captures": {
+						"1": {"name": "keyword.control.extends.dragonscript"},
+						"2": {"name": "entity.name.type.dragonscript"}
+					}
+				},
+				{
+					"begin": "\\b(implements)\\b",
+					"beginCaptures": {
+						"1": {"name": "keyword.control.implements.dragonscript"}
+					},
+					"end": "(?=\\n|:|\\b(?:end|class|interface|enum|func|var|public|protected|private)\\b)",
+					"patterns": [
+						{
+							"match": "\\b(void|bool|byte|int|float)\\b",
+							"name": "storage.type.primitive.dragonscript"
+						},
+						{
+							"match": "\\b(Object|Boolean|Byte|Integer|Float|String|Array|Set|Dictionary|Block|WeakReference|ObjectReference|Exception)\\b",
+							"name": "storage.type.builtin.dragonscript"
+						},
+						{
+							"match": "[A-Z][A-Za-z0-9_]*(?:\\.[A-Z][A-Za-z0-9_]*)*",
+							"name": "entity.name.type.dragonscript"
+						},
+						{
+							"match": ",",
+							"name": "punctuation.separator.dragonscript"
+						},
+						{"include": "#comments"}
+					]
+				},
+				{
+					"match": "\\b([A-Z][A-Za-z0-9_]*)(?=\\s|$)",
+					"name": "entity.name.type.class.dragonscript"
+				}
+			]
+		},
+		
+		"class-body": {
+			"patterns": [
+				{"include": "#comments"},
+				{"include": "#class-declaration"},
+				{"include": "#interface-declaration"},
+				{"include": "#enum-declaration"},
+				{"include": "#function-declaration"},
+				{"include": "#variable-declaration"},
+				{"include": "#modifiers"},
+				{"include": "#statements"}
+			]
+		},
+		
+		"interface-declaration": {
+			"name": "meta.interface.dragonscript",
+			"begin": "(?:(\\bpublic\\b)\\s+)?(?:(\\bprotected\\b)\\s+)?(?:(\\bprivate\\b)\\s+)?(\\binterface\\b)",
+			"beginCaptures": {
+				"1": {"name": "storage.modifier.dragonscript"},
+				"2": {"name": "storage.modifier.dragonscript"},
+				"3": {"name": "storage.modifier.dragonscript"},
+				"4": {"name": "storage.type.interface.dragonscript"}
+			},
+			"end": "\\b(end)\\b",
+			"endCaptures": {
+				"1": {"name": "storage.type.interface.end.dragonscript"}
+			},
+			"patterns": [
+				{"include": "#interface-header"},
+				{"include": "#interface-body"}
+			]
+		},
+		
+		"interface-header": {
+			"patterns": [
+				{
+					"begin": "\\b(implements)\\b",
+					"beginCaptures": {
+						"1": {"name": "keyword.control.implements.dragonscript"}
+					},
+					"end": "(?=\\n|:|\\b(?:end|class|interface|enum|func|var|public|protected|private)\\b)",
+					"patterns": [
+						{
+							"match": "\\b(void|bool|byte|int|float)\\b",
+							"name": "storage.type.primitive.dragonscript"
+						},
+						{
+							"match": "\\b(Object|Boolean|Byte|Integer|Float|String|Array|Set|Dictionary|Block|WeakReference|ObjectReference|Exception)\\b",
+							"name": "storage.type.builtin.dragonscript"
+						},
+						{
+							"match": "[A-Z][A-Za-z0-9_]*(?:\\.[A-Z][A-Za-z0-9_]*)*",
+							"name": "entity.name.type.dragonscript"
+						},
+						{
+							"match": ",",
+							"name": "punctuation.separator.dragonscript"
+						},
+						{"include": "#comments"}
+					]
+				},
+				{
+					"match": "\\b([A-Z][A-Za-z0-9_]*)(?=\\s|$)",
+					"name": "entity.name.type.interface.dragonscript"
+				}
+			]
+		},
+		
+		"interface-body": {
+			"patterns": [
+				{"include": "#comments"},
+				{"include": "#interface-declaration"},
+				{"include": "#enum-declaration"},
+				{"include": "#function-signature"},
+				{"include": "#modifiers"}
+			]
+		},
+		
+		"function-signature": {
+			"name": "meta.function.signature.dragonscript",
+			"begin": "\\b(func)\\b",
+			"beginCaptures": {
+				"1": {"name": "storage.type.function.dragonscript"}
+			},
+			"end": "(?=\\n|:)",
+			"patterns": [
+				{"include": "#comments"},
+				{
+					"match": "\\b(new|destructor)\\b",
+					"name": "entity.name.function.constructor.dragonscript"
+				},
+				{
+					"match": "\\b(void|bool|byte|int|float)\\s+([a-z][A-Za-z0-9_]*)\\b(?=\\s*\\()",
+					"captures": {
+						"1": {"name": "storage.type.primitive.dragonscript"},
+						"2": {"name": "entity.name.function.dragonscript"}
+					}
+				},
+				{
+					"match": "\\b([A-Z][A-Za-z0-9_]*)\\s+([a-z][A-Za-z0-9_]*)\\b(?=\\s*\\()",
+					"captures": {
+						"1": {"name": "entity.name.type.dragonscript"},
+						"2": {"name": "entity.name.function.dragonscript"}
+					}
+				},
+				{
+					"match": "\\b([a-z][A-Za-z0-9_]*)\\b",
+					"name": "entity.name.function.dragonscript"
+				},
+				{"include": "#parameter-list"}
+			]
+		},
+		
+		"enum-declaration": {
+			"name": "meta.enum.dragonscript",
+			"begin": "(?:(\\bpublic\\b)\\s+)?(?:(\\bprotected\\b)\\s+)?(?:(\\bprivate\\b)\\s+)?(\\benum\\b)",
+			"beginCaptures": {
+				"1": {"name": "storage.modifier.dragonscript"},
+				"2": {"name": "storage.modifier.dragonscript"},
+				"3": {"name": "storage.modifier.dragonscript"},
+				"4": {"name": "storage.type.enum.dragonscript"}
+			},
+			"end": "\\b(end)\\b",
+			"endCaptures": {
+				"1": {"name": "storage.type.enum.end.dragonscript"}
+			},
+			"patterns": [
+				{"include": "#comments"},
+				{
+					"match": "\\b([A-Z][A-Za-z0-9_]*)(?=\\s|$)",
+					"name": "entity.name.type.enum.dragonscript"
+				},
+				{
+					"match": "\\b([a-z][A-Za-z0-9_]*)\\b",
+					"name": "variable.other.enummember.dragonscript"
+				}
+			]
+		},
+		
+		"function-declaration": {
+			"name": "meta.function.dragonscript",
+			"begin": "(?:(\\bpublic\\b)\\s+)?(?:(\\bprotected\\b)\\s+)?(?:(\\bprivate\\b)\\s+)?(?:(\\bnative\\b)\\s+)?(?:(\\babstract\\b)\\s+)?(?:(\\bstatic\\b)\\s+)?(\\bfunc\\b)",
+			"beginCaptures": {
+				"1": {"name": "storage.modifier.dragonscript"},
+				"2": {"name": "storage.modifier.dragonscript"},
+				"3": {"name": "storage.modifier.dragonscript"},
+				"4": {"name": "storage.modifier.dragonscript"},
+				"5": {"name": "storage.modifier.dragonscript"},
+				"6": {"name": "storage.modifier.dragonscript"},
+				"7": {"name": "storage.type.function.dragonscript"}
+			},
+			"end": "\\b(end)\\b",
+			"endCaptures": {
+				"1": {"name": "storage.type.function.end.dragonscript"}
+			},
+			"patterns": [
+				{"include": "#function-header"},
+				{"include": "#function-body"}
+			]
+		},
+		
+		"function-header": {
+			"patterns": [
+				{"include": "#comments"},
+				{
+					"match": "\\b(new|destructor)\\b",
+					"name": "entity.name.function.constructor.dragonscript"
+				},
+				{
+					"match": "\\b(void|bool|byte|int|float)\\s+([a-z][A-Za-z0-9_]*)\\b(?=\\s*\\()",
+					"captures": {
+						"1": {"name": "storage.type.primitive.dragonscript"},
+						"2": {"name": "entity.name.function.dragonscript"}
+					}
+				},
+				{
+					"match": "\\b([A-Z][A-Za-z0-9_]*)\\s+([a-z][A-Za-z0-9_]*)\\b(?=\\s*\\()",
+					"captures": {
+						"1": {"name": "entity.name.type.dragonscript"},
+						"2": {"name": "entity.name.function.dragonscript"}
+					}
+				},
+				{
+					"match": "\\b([a-z][A-Za-z0-9_]*)\\b(?=\\s*\\()",
+					"name": "entity.name.function.dragonscript"
+				},
+				{"include": "#parameter-list"},
+				{"include": "#super-call"}
+			]
+		},
+		
+		"super-call": {
+			"name": "meta.super-call.dragonscript",
+			"begin": "\\b(super)\\s*(\\()",
+			"beginCaptures": {
+				"1": {"name": "variable.language.super.dragonscript"},
+				"2": {"name": "punctuation.definition.arguments.begin.dragonscript"}
+			},
+			"end": "\\)",
+			"endCaptures": {
+				"0": {"name": "punctuation.definition.arguments.end.dragonscript"}
+			},
+			"patterns": [
+				{"include": "#function-call-arguments"}
+			]
+		},
+		
+		"parameter-list": {
+			"name": "meta.parameters.dragonscript",
+			"begin": "\\(",
+			"beginCaptures": {
+				"0": {"name": "punctuation.definition.parameters.begin.dragonscript"}
+			},
+			"end": "\\)",
+			"endCaptures": {
+				"0": {"name": "punctuation.definition.parameters.end.dragonscript"}
+			},
+			"patterns": [
+				{"include": "#comments"},
+				{"include": "#line-continuation"},
+				{
+					"match": "\\b(void|bool|byte|int|float)\\s+([a-z][A-Za-z0-9_]*)\\b",
+					"captures": {
+						"1": {"name": "storage.type.primitive.dragonscript"},
+						"2": {"name": "variable.parameter.dragonscript"}
+					}
+				},
+				{
+					"match": "\\b(Object|Boolean|Byte|Integer|Float|String|Array|Set|Dictionary|Block|WeakReference|ObjectReference|Exception)\\s+([a-z][A-Za-z0-9_]*)\\b",
+					"captures": {
+						"1": {"name": "storage.type.builtin.dragonscript"},
+						"2": {"name": "variable.parameter.dragonscript"}
+					}
+				},
+				{
+					"match": "\\b([A-Z][A-Za-z0-9_]*)(?:\\.[A-Z][A-Za-z0-9_]*)*\\s+([a-z][A-Za-z0-9_]*)\\b",
+					"captures": {
+						"1": {"name": "entity.name.type.dragonscript"},
+						"2": {"name": "variable.parameter.dragonscript"}
+					}
+				},
+				{
+					"match": ",",
+					"name": "punctuation.separator.parameter.dragonscript"
+				}
+			]
+		},
+		
+		"type-annotation": {
+			"patterns": [
+				{
+					"match": "\\b(void|bool|byte|int|float)\\b",
+					"name": "storage.type.primitive.dragonscript"
+				},
+				{
+					"match": "\\b(Object|Boolean|Byte|Integer|Float|String|Array|Set|Dictionary|Block|WeakReference|ObjectReference|Exception)\\b",
+					"name": "storage.type.builtin.dragonscript"
+				},
+				{
+					"match": "\\b([A-Z][A-Za-z0-9_]*)\\b",
+					"name": "entity.name.type.dragonscript"
+				}
+			]
+		},
+		
+		"variable-declaration": {
+			"name": "meta.variable.dragonscript",
+			"begin": "(?:(\\bpublic\\b)\\s+)?(?:(\\bprotected\\b)\\s+)?(?:(\\bprivate\\b)\\s+)?(?:(\\bstatic\\b)\\s+)?(?:(\\bfixed\\b)\\s+)?(\\bvar\\b)",
+			"beginCaptures": {
+				"1": {"name": "storage.modifier.dragonscript"},
+				"2": {"name": "storage.modifier.dragonscript"},
+				"3": {"name": "storage.modifier.dragonscript"},
+				"4": {"name": "storage.modifier.dragonscript"},
+				"5": {"name": "storage.modifier.dragonscript"},
+				"6": {"name": "storage.type.variable.dragonscript"}
+			},
+			"end": "(?=\\n|:)",
+			"patterns": [
+				{"include": "#comments"},
+				{
+					"match": "\\b(void|bool|byte|int|float)\\b",
+					"name": "storage.type.primitive.dragonscript"
+				},
+				{
+					"match": "\\b(Object|Boolean|Byte|Integer|Float|String|Array|Set|Dictionary|Block|WeakReference|ObjectReference|Exception)\\b",
+					"name": "storage.type.builtin.dragonscript"
+				},
+				{
+					"match": "\\b([A-Z][A-Za-z0-9_]*)(?:\\.[A-Z][A-Za-z0-9_]*)*\\b",
+					"name": "entity.name.type.dragonscript"
+				},
+				{
+					"match": "\\b(p[A-Z][A-Za-z0-9_]*)\\b",
+					"name": "variable.other.member.dragonscript"
+				},
+				{
+					"match": "\\b([A-Z][A-Z0-9_]+)\\b",
+					"name": "variable.other.constant.dragonscript"
+				},
+				{
+					"match": "\\b([a-z_][A-Za-z0-9_]*)\\b",
+					"name": "variable.other.dragonscript"
+				},
+				{
+					"match": ",",
+					"name": "punctuation.separator.variable.dragonscript"
+				},
+				{
+					"match": "=",
+					"name": "keyword.operator.assignment.dragonscript"
+				},
+				{"include": "#expressions"}
+			]
+		},
+		
+		"modifiers": {
+			"match": "\\b(public|protected|private|native|abstract|fixed|static)\\b",
+			"name": "storage.modifier.dragonscript"
+		},
+		
+		"function-body": {
+			"patterns": [
+				{"include": "#statements"}
+			]
+		},
+		
+		"statements": {
+			"patterns": [
+				{"include": "#comments"},
+				{"include": "#control-flow"},
+				{"include": "#variable-declaration"},
+				{"include": "#expressions"}
+			]
+		},
+		
+		"control-flow": {
+			"patterns": [
+				{"include": "#if-statement"},
+				{"include": "#while-statement"},
+				{"include": "#for-statement"},
+				{"include": "#select-statement"},
+				{"include": "#try-statement"},
+				{"include": "#block-statement"},
+				{
+					"match": "\\b(break|continue|return|throw)\\b",
+					"name": "keyword.control.flow.dragonscript"
+				}
+			]
+		},
+		
+		"if-statement": {
+			"name": "meta.if.dragonscript",
+			"begin": "\\b(if)\\b",
+			"beginCaptures": {
+				"1": {"name": "keyword.control.conditional.if.dragonscript"}
+			},
+			"end": "\\b(end)\\b",
+			"endCaptures": {
+				"1": {"name": "keyword.control.end.dragonscript"}
+			},
+			"patterns": [
+				{
+					"match": "\\b(elif|else)\\b",
+					"name": "keyword.control.conditional.dragonscript"
+				},
+				{"include": "#statements"}
+			]
+		},
+		
+		"while-statement": {
+			"name": "meta.while.dragonscript",
+			"begin": "\\b(while)\\b",
+			"beginCaptures": {
+				"1": {"name": "keyword.control.loop.while.dragonscript"}
+			},
+			"end": "\\b(end)\\b",
+			"endCaptures": {
+				"1": {"name": "keyword.control.end.dragonscript"}
+			},
+			"patterns": [
+				{"include": "#statements"}
+			]
+		},
+		
+		"for-statement": {
+			"name": "meta.for.dragonscript",
+			"begin": "\\b(for)\\b",
+			"beginCaptures": {
+				"1": {"name": "keyword.control.loop.for.dragonscript"}
+			},
+			"end": "\\b(end)\\b",
+			"endCaptures": {
+				"1": {"name": "keyword.control.end.dragonscript"}
+			},
+			"patterns": [
+				{
+					"match": "\\b(to|downto|step)\\b",
+					"name": "keyword.control.loop.dragonscript"
+				},
+				{"include": "#statements"}
+			]
+		},
+		
+		"select-statement": {
+			"name": "meta.select.dragonscript",
+			"begin": "\\b(select)\\b",
+			"beginCaptures": {
+				"1": {"name": "keyword.control.switch.select.dragonscript"}
+			},
+			"end": "\\b(end)\\b",
+			"endCaptures": {
+				"1": {"name": "keyword.control.end.dragonscript"}
+			},
+			"patterns": [
+				{
+					"match": "\\b(case|else)\\b",
+					"name": "keyword.control.switch.dragonscript"
+				},
+				{"include": "#statements"}
+			]
+		},
+		
+		"try-statement": {
+			"name": "meta.try.dragonscript",
+			"begin": "\\b(try)\\b",
+			"beginCaptures": {
+				"1": {"name": "keyword.control.exception.try.dragonscript"}
+			},
+			"end": "\\b(end)\\b",
+			"endCaptures": {
+				"1": {"name": "keyword.control.end.dragonscript"}
+			},
+			"patterns": [
+				{
+					"match": "\\b(catch)\\s+(void|bool|byte|int|float)\\b",
+					"captures": {
+						"1": {"name": "keyword.control.exception.catch.dragonscript"},
+						"2": {"name": "storage.type.primitive.dragonscript"}
+					}
+				},
+				{
+					"match": "\\b(catch)\\s+(Object|Boolean|Byte|Integer|Float|String|Array|Set|Dictionary|Block|WeakReference|ObjectReference|Exception|EInvalidParam|EDivisionByZero)\\b",
+					"captures": {
+						"1": {"name": "keyword.control.exception.catch.dragonscript"},
+						"2": {"name": "storage.type.builtin.dragonscript"}
+					}
+				},
+				{
+					"match": "\\b(catch)\\s+([A-Z][A-Za-z0-9_]*)\\b",
+					"captures": {
+						"1": {"name": "keyword.control.exception.catch.dragonscript"},
+						"2": {"name": "entity.name.type.dragonscript"}
+					}
+				},
+				{
+					"match": "\\b(catch)\\b",
+					"name": "keyword.control.exception.catch.dragonscript"
+				},
+				{"include": "#statements"}
+			]
+		},
+		
+		"block-statement": {
+			"name": "meta.block.dragonscript",
+			"begin": "\\b(block)\\b",
+			"beginCaptures": {
+				"1": {"name": "storage.type.block.dragonscript"}
+			},
+			"end": "\\b(end)\\b",
+			"endCaptures": {
+				"1": {"name": "storage.type.block.end.dragonscript"}
+			},
+			"patterns": [
+				{"include": "#comments"},
+				{"include": "#line-continuation"},
+				{
+					"match": "\\b(void|bool|byte|int|float)\\s+([a-z][A-Za-z0-9_]*)\\b",
+					"captures": {
+						"1": {"name": "storage.type.primitive.dragonscript"},
+						"2": {"name": "variable.parameter.dragonscript"}
+					}
+				},
+				{
+					"match": "\\b(Object|Boolean|Byte|Integer|Float|String|Array|Set|Dictionary|Block|WeakReference|ObjectReference|Exception)\\s+([a-z][A-Za-z0-9_]*)\\b",
+					"captures": {
+						"1": {"name": "storage.type.builtin.dragonscript"},
+						"2": {"name": "variable.parameter.dragonscript"}
+					}
+				},
+				{
+					"match": "\\b([A-Z][A-Za-z0-9_]*)\\s+([a-z][A-Za-z0-9_]*)\\b",
+					"captures": {
+						"1": {"name": "entity.name.type.dragonscript"},
+						"2": {"name": "variable.parameter.dragonscript"}
+					}
+				},
+				{"include": "#statements"}
+			]
+		},
+		
+		"expressions": {
+			"patterns": [
+				{"include": "#comments"},
+				{"include": "#line-continuation"},
+				{"include": "#keywords"},
+				{"include": "#literals"},
+				{"include": "#function-call"},
+				{"include": "#type-cast"},
+				{"include": "#parenthesized-expression"},
+				{"include": "#operators"},
+				{"include": "#identifiers"},
+				{
+					"match": ":",
+					"name": "punctuation.terminator.statement.dragonscript"
+				},
+				{
+					"match": ",",
+					"name": "punctuation.separator.dragonscript"
+				},
+				{
+					"match": "\\.",
+					"name": "punctuation.accessor.dragonscript"
+				}
+			]
+		},
+		
+		"keywords": {
+			"patterns": [
+				{
+					"match": "\\b(this|super)\\b",
+					"name": "variable.language.dragonscript"
+				},
+				{
+					"match": "\\b(new)\\b",
+					"name": "keyword.operator.new.dragonscript"
+				},
+				{
+					"match": "\\b(castable|typeof|isnull)\\b",
+					"name": "keyword.operator.logical.dragonscript"
+				},
+				{
+					"match": "\\b(cast)\\b",
+					"name": "keyword.operator.cast.dragonscript"
+				},
+				{
+					"match": "\\b(and|or|not)\\b",
+					"name": "keyword.operator.logical.dragonscript"
+				},
+				{
+					"match": "\\b(if|else)\\b(?!\\s+(end|elif))",
+					"name": "keyword.control.conditional.inline.dragonscript"
+				}
+			]
+		},
+		
+		"type-cast": {
+			"patterns": [
+				{
+					"match": "\\b(castable)\\s+(void|bool|byte|int|float)\\b",
+					"captures": {
+						"1": {"name": "keyword.operator.logical.dragonscript"},
+						"2": {"name": "storage.type.primitive.dragonscript"}
+					}
+				},
+				{
+					"match": "\\b(castable)\\s+(Object|Boolean|Byte|Integer|Float|String|Array|Set|Dictionary|Block|WeakReference|ObjectReference|Exception)\\b",
+					"captures": {
+						"1": {"name": "keyword.operator.logical.dragonscript"},
+						"2": {"name": "storage.type.builtin.dragonscript"}
+					}
+				},
+				{
+					"match": "\\b(castable)\\s+([A-Z][A-Za-z0-9_]*)(?:\\.[A-Z][A-Za-z0-9_]*)*\\b",
+					"captures": {
+						"1": {"name": "keyword.operator.logical.dragonscript"},
+						"2": {"name": "entity.name.type.dragonscript"}
+					}
+				},
+				{
+					"match": "\\b(cast)\\s+(void|bool|byte|int|float)\\b",
+					"captures": {
+						"1": {"name": "keyword.operator.cast.dragonscript"},
+						"2": {"name": "storage.type.primitive.dragonscript"}
+					}
+				},
+				{
+					"match": "\\b(cast)\\s+(Object|Boolean|Byte|Integer|Float|String|Array|Set|Dictionary|Block|WeakReference|ObjectReference|Exception)\\b",
+					"captures": {
+						"1": {"name": "keyword.operator.cast.dragonscript"},
+						"2": {"name": "storage.type.builtin.dragonscript"}
+					}
+				},
+				{
+					"match": "\\b(cast)\\s+([A-Z][A-Za-z0-9_]*)(?:\\.[A-Z][A-Za-z0-9_]*)*\\b",
+					"captures": {
+						"1": {"name": "keyword.operator.cast.dragonscript"},
+						"2": {"name": "entity.name.type.dragonscript"}
+					}
+				}
+			]
+		},
+		
+		"literals": {
+			"patterns": [
+				{
+					"match": "\\b(true|false|null)\\b",
+					"name": "constant.language.dragonscript"
+				},
+				{"include": "#numbers"},
+				{"include": "#string"},
+				{"include": "#character"}
+			]
+		},
+		
+		"numbers": {
+			"patterns": [
+				{
+					"match": "\\b(0b[01]+)\\b",
+					"name": "constant.numeric.binary.dragonscript"
+				},
+				{
+					"match": "\\b(0h[0-9a-fA-F]+)\\b",
+					"name": "constant.numeric.hex.dragonscript"
+				},
+				{
+					"match": "\\b(0o[0-7]+)\\b",
+					"name": "constant.numeric.octal.dragonscript"
+				},
+				{
+					"match": "\\b([0-9]+\\.[0-9]+([eE][+-]?[0-9]+)?|[0-9]+[eE][+-]?[0-9]+)\\b",
+					"name": "constant.numeric.float.dragonscript"
+				},
+				{
+					"match": "\\b([0-9]+)\\b",
+					"name": "constant.numeric.integer.dragonscript"
+				}
+			]
+		},
+		
+		"string": {
+			"name": "string.quoted.double.dragonscript",
+			"begin": "\"",
+			"end": "\"",
+			"patterns": [
+				{
+					"match": "\\\\u[0-9a-fA-F]{1,6}",
+					"name": "constant.character.escape.unicode.dragonscript"
+				},
+				{
+					"match": "\\\\x[0-9a-fA-F]{1,2}",
+					"name": "constant.character.escape.hex.dragonscript"
+				},
+				{
+					"match": "\\\\0[0-7]{0,2}",
+					"name": "constant.character.escape.octal.dragonscript"
+				},
+				{
+					"match": "\\\\[nrtfb\"'\\\\]",
+					"name": "constant.character.escape.dragonscript"
+				}
+			]
+		},
+		
+		"character": {
+			"name": "string.quoted.single.dragonscript",
+			"begin": "'",
+			"end": "'",
+			"patterns": [
+				{
+					"match": "\\\\u[0-9a-fA-F]{1,4}",
+					"name": "constant.character.escape.unicode.dragonscript"
+				},
+				{
+					"match": "\\\\h[0-9a-fA-F]{1,2}",
+					"name": "constant.character.escape.hex.dragonscript"
+				},
+				{
+					"match": "\\\\0[0-7]{0,2}",
+					"name": "constant.character.escape.octal.dragonscript"
+				},
+				{
+					"match": "\\\\[nrtfb'\\\\]",
+					"name": "constant.character.escape.dragonscript"
+				}
+			]
+		},
+		
+		"operators": {
+			"patterns": [
+				{
+					"match": "<<=|>>=",
+					"name": "keyword.operator.assignment.compound.bitwise.dragonscript"
+				},
+				{
+					"match": "\\*=|/=|%=|\\+=|-=|&=|\\^=|\\|=",
+					"name": "keyword.operator.assignment.compound.dragonscript"
+				},
+				{
+					"match": "<<|>>",
+					"name": "keyword.operator.bitwise.shift.dragonscript"
+				},
+				{
+					"match": "<=|>=|==|!=",
+					"name": "keyword.operator.comparison.dragonscript"
+				},
+				{
+					"match": "\\+\\+|--",
+					"name": "keyword.operator.increment-decrement.dragonscript"
+				},
+				{
+					"match": "=",
+					"name": "keyword.operator.assignment.dragonscript"
+				},
+				{
+					"match": "\\+|-|\\*|/|%",
+					"name": "keyword.operator.arithmetic.dragonscript"
+				},
+				{
+					"match": "<|>",
+					"name": "keyword.operator.comparison.dragonscript"
+				},
+				{
+					"match": "&|\\||\\^|~",
+					"name": "keyword.operator.bitwise.dragonscript"
+				}
+			]
+		},
+		
+		"function-call": {
+			"patterns": [
+				{
+					"name": "meta.function-call.dragonscript",
+					"begin": "\\b([a-z][A-Za-z0-9_]*)\\s*(\\()",
+					"beginCaptures": {
+						"1": {"name": "entity.name.function.dragonscript"},
+						"2": {"name": "punctuation.definition.arguments.begin.dragonscript"}
+					},
+					"end": "\\)",
+					"endCaptures": {
+						"0": {"name": "punctuation.definition.arguments.end.dragonscript"}
+					},
+					"patterns": [
+						{"include": "#function-call-arguments"}
+					]
+				},
+				{
+					"name": "meta.method-call.dragonscript",
+					"begin": "\\.([a-z][A-Za-z0-9_]*)\\s*(\\()",
+					"beginCaptures": {
+						"1": {"name": "entity.name.function.dragonscript"},
+						"2": {"name": "punctuation.definition.arguments.begin.dragonscript"}
+					},
+					"end": "\\)",
+					"endCaptures": {
+						"0": {"name": "punctuation.definition.arguments.end.dragonscript"}
+					},
+					"patterns": [
+						{"include": "#function-call-arguments"}
+					]
+				}
+			]
+		},
+		
+		"function-call-arguments": {
+			"patterns": [
+				{"include": "#comments"},
+				{"include": "#line-continuation"},
+				{"include": "#control-flow"},
+				{"include": "#keywords"},
+				{"include": "#literals"},
+				{"include": "#function-call"},
+				{"include": "#type-cast"},
+				{"include": "#operators"},
+				{"include": "#parenthesized-expression"},
+				{"include": "#identifiers"},
+				{
+					"match": ",",
+					"name": "punctuation.separator.dragonscript"
+				}
+			]
+		},
+		
+		"parenthesized-expression": {
+			"name": "meta.parenthesized.dragonscript",
+			"begin": "\\(",
+			"beginCaptures": {
+				"0": {"name": "punctuation.definition.expression.begin.dragonscript"}
+			},
+			"end": "\\)",
+			"endCaptures": {
+				"0": {"name": "punctuation.definition.expression.end.dragonscript"}
+			},
+			"patterns": [
+				{"include": "#expressions"}
+			]
+		},
+		
+		"identifiers": {
+			"patterns": [
+				{
+					"match": "\\b([A-Z][A-Z0-9_]+)\\b",
+					"name": "variable.other.constant.dragonscript"
+				},
+				{
+					"match": "\\b([A-Z][A-Za-z0-9_]*)(?:\\.[A-Z][A-Za-z0-9_]*)*\\b",
+					"name": "entity.name.type.dragonscript"
+				},
+				{
+					"match": "\\b([a-z_][A-Za-z0-9_]*)\\b",
+					"name": "variable.other.dragonscript"
+				}
+			]
+		},
+		
+		"line-continuation": {
+			"match": "\\\\$",
+			"name": "constant.character.escape.line-continuation.dragonscript"
+		}
+	}
+}
