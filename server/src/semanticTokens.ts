@@ -33,6 +33,9 @@ import { ContextFunctionArgument } from "./context/classFunctionArgument"
 import { ContextNamespace } from "./context/namespace"
 import { ContextScript } from "./context/script"
 import { Identifier } from "./context/identifier"
+import { ContextStatements } from "./context/statements"
+import { ContextMember } from "./context/expressionMember"
+import { Resolved } from "./resolve/resolved"
 
 export namespace semtokens {
 	export class Type {
@@ -150,15 +153,123 @@ export namespace semtokens {
 		
 		/**
 		 * Process a single context and add semantic tokens for its identifier if applicable.
+		 * This handles both declarations and references.
 		 */
 		protected processContext(context: Context): void {
-			const modifiers = this.getModifiers(context)
-			const type = this.getTokenType(context)
-			const range = this.getIdentifierRange(context)
+			// Process declaration tokens
+			const declModifiers = this.getModifiers(context)
+			const declType = this.getTokenType(context)
+			const declRange = this.getIdentifierRange(context)
 			
-			if (type && range) {
-				this.builder.add(range, type, modifiers)
+			if (declType && declRange) {
+				this.builder.add(declRange, declType, declModifiers)
 			}
+			
+			// Process reference tokens (for member access and other uses)
+			this.processReference(context)
+		}
+		
+		/**
+		 * Process reference tokens for contexts that reference declarations.
+		 */
+		protected processReference(context: Context): void {
+			// Check if this context has a resolved usage (meaning it references something)
+			const resolveUsage = this.getResolveUsage(context)
+			if (!resolveUsage?.resolved) {
+				return
+			}
+			
+			const resolved = resolveUsage.resolved
+			const refType = this.getTokenTypeFromResolved(resolved)
+			const refRange = this.getReferenceRange(context)
+			
+			if (refType && refRange) {
+				// References should not have the "declaration" modifier
+				const refModifiers = this.getModifiersFromResolved(resolved)
+				this.builder.add(refRange, refType, refModifiers)
+			}
+		}
+		
+		/**
+		 * Get the ResolveUsage from a context if it has one.
+		 */
+		protected getResolveUsage(context: Context): any {
+			// ContextMember has resolveUsage
+			if (context instanceof ContextMember) {
+				return (context as any).resolveUsage
+			}
+			// Other contexts may store resolveUsage in expressionWriteableResolve
+			return context.expressionWriteableResolve
+		}
+		
+		/**
+		 * Get the range for a reference token.
+		 */
+		protected getReferenceRange(context: Context): Range | undefined {
+			if (context instanceof ContextMember) {
+				// For member access, use the member name range
+				const name = (context as any)._name as Identifier | undefined
+				return name?.range
+			}
+			return undefined
+		}
+		
+		/**
+		 * Get semantic token type from a Resolved object.
+		 */
+		protected getTokenTypeFromResolved(resolved: Resolved): Type | undefined {
+			switch (resolved.type) {
+				case Resolved.Type.Namespace:
+					return typeNamespace
+				
+				case Resolved.Type.Class:
+					return typeClass
+				
+				case Resolved.Type.Interface:
+					return typeInterface
+				
+				case Resolved.Type.Enumeration:
+					return typeEnum
+				
+				case Resolved.Type.Function:
+				case Resolved.Type.FunctionGroup:
+					return typeMethod
+				
+				case Resolved.Type.Variable:
+					return typeProperty
+				
+				case Resolved.Type.Argument:
+					return typeParameter
+				
+				case Resolved.Type.LocalVariable:
+					return typeVariable
+				
+				default:
+					return undefined
+			}
+		}
+		
+		/**
+		 * Get modifiers from a Resolved object (without declaration modifier).
+		 */
+		protected getModifiersFromResolved(resolved: Resolved): Modifier[] {
+			const modifiers: Modifier[] = []
+			
+			// Check if the resolved has type modifiers
+			const typeModifiers = (resolved as any).typeModifiers as Context.TypeModifierSet | undefined
+			if (typeModifiers) {
+				if (typeModifiers.isStatic) {
+					modifiers.push(modStatic)
+				}
+				if (typeModifiers.isAbstract) {
+					modifiers.push(modAbstract)
+				}
+				if (typeModifiers.isFixed) {
+					modifiers.push(modReadOnly)
+				}
+			}
+			
+			return modifiers
 		}
 		
 		/**
@@ -342,8 +453,13 @@ export namespace semtokens {
 					this.visitFunctionChildren(context as ContextFunction)
 					break
 				
+				case Context.ContextType.Statements:
+					this.visitStatementsChildren(context as ContextStatements)
+					break
+				
 				default:
-					// For other contexts, we don't need to visit children for semantic tokens
+					// For other context types, visit any child contexts they may contain
+					this.visitGenericChildren(context)
 					break
 			}
 		}
@@ -397,8 +513,102 @@ export namespace semtokens {
 		 * Visit children of a function context.
 		 */
 		protected visitFunctionChildren(context: ContextFunction): void {
+			// Visit function arguments
 			for (const arg of context.arguments) {
 				this.visitContext(arg)
+			}
+			
+			// Visit function body statements (fix for issue 1)
+			if (context.statements) {
+				this.visitContext(context.statements)
+			}
+		}
+		
+		/**
+		 * Visit children of a statements context.
+		 */
+		protected visitStatementsChildren(context: ContextStatements): void {
+			for (const statement of context.statements) {
+				this.visitContext(statement)
+			}
+		}
+		
+		/**
+		 * Visit children of generic contexts that may have nested contexts.
+		 * This handles if/while/for/try/select statements and other control structures.
+		 */
+		protected visitGenericChildren(context: Context): void {
+			// Access child contexts through common properties
+			// Many statement contexts have _statements, _condition, _value, etc.
+			const anyContext = context as any
+			
+			// Visit nested statement blocks
+			if (anyContext._statements && anyContext._statements instanceof Context) {
+				this.visitContext(anyContext._statements)
+			}
+			
+			// Visit condition expressions
+			if (anyContext._condition && anyContext._condition instanceof Context) {
+				this.visitContext(anyContext._condition)
+			}
+			
+			// Visit value expressions
+			if (anyContext._value && anyContext._value instanceof Context) {
+				this.visitContext(anyContext._value)
+			}
+			
+			// Visit object expressions (for member access)
+			if (anyContext._object && anyContext._object instanceof Context) {
+				this.visitContext(anyContext._object)
+			}
+			
+			// Visit arrays of child contexts (like elif, catch blocks, case statements)
+			if (anyContext._elif && Array.isArray(anyContext._elif)) {
+				for (const child of anyContext._elif) {
+					if (child instanceof Context) {
+						this.visitContext(child)
+					}
+				}
+			}
+			
+			if (anyContext._catches && Array.isArray(anyContext._catches)) {
+				for (const child of anyContext._catches) {
+					if (child instanceof Context) {
+						this.visitContext(child)
+					}
+				}
+			}
+			
+			if (anyContext._cases && Array.isArray(anyContext._cases)) {
+				for (const child of anyContext._cases) {
+					if (child instanceof Context) {
+						this.visitContext(child)
+					}
+				}
+			}
+			
+			// Visit else statements
+			if (anyContext._elsestatements && anyContext._elsestatements instanceof Context) {
+				this.visitContext(anyContext._elsestatements)
+			}
+			
+			// Visit if statements
+			if (anyContext._ifstatements && anyContext._ifstatements instanceof Context) {
+				this.visitContext(anyContext._ifstatements)
+			}
+			
+			// Visit for loop properties
+			if (anyContext._variable && anyContext._variable instanceof Context) {
+				this.visitContext(anyContext._variable)
+			}
+			if (anyContext._from && anyContext._from instanceof Context) {
+				this.visitContext(anyContext._from)
+			}
+			if (anyContext._to && anyContext._to instanceof Context) {
+				this.visitContext(anyContext._to)
+			}
+			if (anyContext._step && anyContext._step instanceof Context) {
+				this.visitContext(anyContext._step)
 			}
 		}
 	}
