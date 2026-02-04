@@ -364,11 +364,19 @@
 		},
 		
 		"super-call": {
-			"match": "\\b(super)\\s*(\\()",
-			"captures": {
+			"name": "meta.super-call.dragonscript",
+			"begin": "\\b(super)\\s*(\\()",
+			"beginCaptures": {
 				"1": {"name": "variable.language.super.dragonscript"},
-				"2": {"name": "punctuation.definition.parameters.begin.dragonscript"}
-			}
+				"2": {"name": "punctuation.definition.arguments.begin.dragonscript"}
+			},
+			"end": "\\)",
+			"endCaptures": {
+				"0": {"name": "punctuation.definition.arguments.end.dragonscript"}
+			},
+			"patterns": [
+				{"include": "#function-call-arguments"}
+			]
 		},
 		
 		"parameter-list": {
@@ -948,7 +956,7 @@
 		
 		"parenthesized-expression": {
 			"name": "meta.parenthesized.dragonscript",
-			"begin": "(?<![a-zA-Z0-9_])\\(",
+			"begin": "\\(",
 			"beginCaptures": {
 				"0": {"name": "punctuation.definition.expression.begin.dragonscript"}
 			},
@@ -968,7 +976,7 @@
 					"name": "variable.other.constant.dragonscript"
 				},
 				{
-					"match": "\\b([A-Z][A-Za-z0-9_]*)\\b",
+					"match": "\\b([A-Z][A-Za-z0-9_]*)(?:\\.[A-Z][A-Za-z0-9_]*)*\\b",
 					"name": "entity.name.type.dragonscript"
 				},
 				{
