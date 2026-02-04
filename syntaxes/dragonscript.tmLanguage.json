@@ -923,7 +923,7 @@
 		
 		"parenthesized-expression": {
 			"name": "meta.parenthesized.dragonscript",
-			"begin": "\\(",
+			"begin": "(?<![a-zA-Z0-9_])\\(",
 			"beginCaptures": {
 				"0": {"name": "punctuation.definition.expression.begin.dragonscript"}
 			},
