@@ -31,6 +31,8 @@ import { ContextFunction } from "./context/classFunction";
 import { ContextClassVariable } from "./context/classVariable";
 import { ContextFunctionArgument } from "./context/classFunctionArgument";
 import { ContextNamespace } from "./context/namespace";
+import { ContextScript } from "./context/script";
+import { Identifier } from "./context/identifier";
 
 export namespace semtokens {
 	export class Type {
@@ -283,7 +285,7 @@ export namespace semtokens {
 		/**
 		 * Get the identifier from a context if it has one.
 		 */
-		protected getIdentifier(context: Context): any {
+		protected getIdentifier(context: Context): Identifier | undefined {
 			if (context instanceof ContextClass) {
 				return context.name;
 			}
@@ -346,9 +348,8 @@ export namespace semtokens {
 		 * Visit children of a script context.
 		 */
 		protected visitScriptChildren(context: Context): void {
-			const declarations = (context as any)._declarations as Context[] | undefined;
-			if (declarations) {
-				for (const child of declarations) {
+			if (context instanceof ContextScript) {
+				for (const child of context.statements) {
 					this.visitContext(child);
 				}
 			}
