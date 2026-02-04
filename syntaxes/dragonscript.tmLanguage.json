@@ -637,7 +637,27 @@
 				"1": {"name": "keyword.control.end.dragonscript"}
 			},
 			"patterns": [
-				{"include": "#type-annotation"},
+				{
+					"match": "\\b(void|bool|byte|int|float)\\s+([a-z][A-Za-z0-9_]*)\\b",
+					"captures": {
+						"1": {"name": "storage.type.primitive.dragonscript"},
+						"2": {"name": "variable.parameter.dragonscript"}
+					}
+				},
+				{
+					"match": "\\b(Object|Boolean|Byte|Integer|Float|String|Array|Set|Dictionary|Block|WeakReference|ObjectReference|Exception)\\s+([a-z][A-Za-z0-9_]*)\\b",
+					"captures": {
+						"1": {"name": "storage.type.builtin.dragonscript"},
+						"2": {"name": "variable.parameter.dragonscript"}
+					}
+				},
+				{
+					"match": "\\b([A-Z][A-Za-z0-9_]*)\\s+([a-z][A-Za-z0-9_]*)\\b",
+					"captures": {
+						"1": {"name": "entity.name.type.dragonscript"},
+						"2": {"name": "variable.parameter.dragonscript"}
+					}
+				},
 				{"include": "#statements"}
 			]
 		},

@@ -1,0 +1,57 @@
+// Test file for grammar fixes
+
+// Issue 1: Implements with comma-separated types
+class Test1 implements Interface1, Interface2, Interface3
+end
+
+interface Test2 implements Parent1, Parent2
+end
+
+// Issue 3: Multiple modifiers
+public static func testFunc1()
+end
+
+public abstract static class TestClass1
+end
+
+private static fixed var int testVar = 10
+
+// Issue 2 & 4: Function calls
+func testFunc2()
+	myFunc()
+	myFunc(a)
+	myFunc(a, b)
+	myFunc(a, b, c)
+	
+	// Nested function calls
+	outer(inner(x))
+	outer(inner1(x), inner2(y))
+	
+	// Method chaining
+	obj.method1().method2()
+	obj.method1(a).method2(b)
+	
+	// Complex expressions in arguments
+	func1(a + b, c * d, e / f)
+	func2(obj.prop, arr[0], dict["key"])
+	func3(x > y, a and b, not c)
+end
+
+// Issue 5: Block statements
+func testBlock()
+	arr.forEach(block String each
+		processItem(each)
+	end)
+	
+	// Nested blocks
+	outer.forEach(block Item item
+		item.forEach(block String str
+			process(str)
+		end)
+	end)
+	
+	// Block with complex expression
+	items.collect(block Item each
+		return each.getValue()
+	end)
+end
