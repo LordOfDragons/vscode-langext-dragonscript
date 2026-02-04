@@ -40,6 +40,7 @@ import { DSSettings } from "../settings";
 import { DebugSettings } from "../debugSettings";
 import { debugLogMessage } from "../server";
 import { Helpers } from "../helpers";
+import { semtokens } from "../semanticTokens";
 
 
 /** Top level script context. */

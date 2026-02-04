@@ -24,600 +24,214 @@
 
 import { Range, SemanticTokenModifiers, SemanticTokenTypes, SemanticTokensBuilder, SemanticTokensLegend, integer } from "vscode-languageserver"
 import { Context } from "./context/context"
-import { ContextClass } from "./context/scriptClass"
-import { ContextInterface } from "./context/scriptInterface"
-import { ContextEnumeration, ContextEnumEntry } from "./context/scriptEnum"
-import { ContextFunction } from "./context/classFunction"
-import { ContextClassVariable } from "./context/classVariable"
-import { ContextFunctionArgument } from "./context/classFunctionArgument"
-import { ContextNamespace } from "./context/namespace"
-import { ContextScript } from "./context/script"
 import { Identifier } from "./context/identifier"
-import { ContextStatements } from "./context/statements"
-import { ContextMember } from "./context/expressionMember"
-import { Resolved, ResolveUsage } from "./resolve/resolved"
+import { Resolved } from "./resolve/resolved"
 
 export namespace semtokens {
-	export class Type {
-		private _name: string
-		private _index: integer
-		
-		public constructor (name: string, index: integer) {
-			this._name = name
-			this._index = index
-		}
-		
-		public get name(): string {
-			return this._name
-		}
-		
-		public get index(): integer {
-			return this._index
-		}
-	}
-	
-	export class Modifier {
-		private _name: string
-		private _index: integer
-		
-		public constructor (name: string, index: integer) {
-			this._name = name
-			this._index = index
-		}
-		
-		public get name(): string {
-			return this._name
-		}
-		
-		public get index(): integer {
-			return this._index
-		}
-	}
-	
-	export const typeNamespace = new Type(SemanticTokenTypes.namespace, 0)
-	export const typeClass = new Type(SemanticTokenTypes.class, 1)
-	export const typeEnum = new Type(SemanticTokenTypes.enum, 2)
-	export const typeInterface = new Type(SemanticTokenTypes.interface, 3)
-	export const typeParameter = new Type(SemanticTokenTypes.parameter, 4)
-	export const typeVariable = new Type(SemanticTokenTypes.variable, 5)
-	export const typeProperty = new Type(SemanticTokenTypes.property, 6)
-	export const typeEnumMember = new Type(SemanticTokenTypes.enumMember, 7)
-	export const typeMethod = new Type(SemanticTokenTypes.method, 8)
-	export const typeComment = new Type(SemanticTokenTypes.comment, 9)
-	export const typeString = new Type(SemanticTokenTypes.string, 10)
-	export const typeKeyword = new Type(SemanticTokenTypes.keyword, 11)
-	export const typeNumber = new Type(SemanticTokenTypes.number, 12)
-	export const typeOperator = new Type(SemanticTokenTypes.operator, 13)
-	
-	export const allTypes = [typeNamespace, typeClass, typeEnum, typeInterface, typeParameter,
-		typeVariable, typeProperty, typeEnumMember, typeMethod, typeComment, typeString,
-		typeKeyword, typeNumber, typeOperator]
-	
-	export const modDeclaration = new Modifier(SemanticTokenModifiers.declaration, 0)
-	export const modReadOnly = new Modifier(SemanticTokenModifiers.readonly, 1)
-	export const modStatic = new Modifier(SemanticTokenModifiers.static, 2)
-	export const modDeprecated = new Modifier(SemanticTokenModifiers.deprecated, 3)
-	export const modAbstract = new Modifier(SemanticTokenModifiers.abstract, 4)
-	export const modModification = new Modifier(SemanticTokenModifiers.modification, 5)
-	export const modDocumentation = new Modifier(SemanticTokenModifiers.documentation, 6)
-	export const modDefaultLibrary = new Modifier(SemanticTokenModifiers.defaultLibrary, 7)
-	
-	export const allModifiers = [modDeclaration, modReadOnly, modStatic, modDeprecated,
-		modAbstract, modModification, modDocumentation, modDefaultLibrary]
-	
-	export const legend: SemanticTokensLegend = {
-		tokenTypes: allTypes.map(t => t.name),
-		tokenModifiers: allModifiers.map(t => t.name)
-	}
-	
-	export class Builder extends SemanticTokensBuilder {
-		public constructor() {
-			super()
-		}
-		
-		public add(range: Range, type: Type, modifiers: Modifier[]): void {
-			this.push(range.start.line, range.start.character,
-				range.end.character - range.start.character, type.index,
-				modifiers.map(m => 1 << m.index).reduce((a,b) => a + b, 0))
-		}
-	}
-	
-	/**
-	 * Provider for semantic tokens.
-	 * Walks the context tree and generates semantic tokens for identifiers.
-	 */
-	export class Provider {
-		private builder: Builder
-		
-		constructor() {
-			this.builder = new Builder()
-		}
-		
-		/**
-		 * Build semantic tokens from a context tree.
-		 */
-		public build(context: Context | undefined) {
-			if (context) {
-				this.visitContext(context)
-			}
-			return this.builder.build()
-		}
-		
-		/**
-		 * Visit a context and its children recursively.
-		 */
-		protected visitContext(context: Context): void {
-			this.processContext(context)
-			this.visitChildren(context)
-		}
-		
-		/**
-		 * Process a single context and add semantic tokens for its identifier if applicable.
-		 * This handles both declarations and references.
-		 */
-		protected processContext(context: Context): void {
-			// Process declaration tokens
-			const declModifiers = this.getModifiers(context)
-			const declType = this.getTokenType(context)
-			const declRange = this.getIdentifierRange(context)
-			
-			if (declType && declRange) {
-				this.builder.add(declRange, declType, declModifiers)
-			}
-			
-			// Process reference tokens (for member access and other uses)
-			this.processReference(context)
-		}
-		
-		/**
-		 * Process reference tokens for contexts that reference declarations.
-		 */
-		protected processReference(context: Context): void {
-			// Check if this context has a resolved usage (meaning it references something)
-			const resolveUsage = this.getResolveUsage(context)
-			if (!resolveUsage?.resolved) {
-				return
-			}
-			
-			const resolved = resolveUsage.resolved
-			const refType = this.getTokenTypeFromResolved(resolved)
-			const refRange = this.getReferenceRange(context)
-			
-			if (refType && refRange) {
-				// References should not have the "declaration" modifier
-				const refModifiers = this.getModifiersFromResolved(resolved)
-				this.builder.add(refRange, refType, refModifiers)
-			}
-		}
-		
-		/**
-		 * Get the ResolveUsage from a context if it has one.
-		 */
-		protected getResolveUsage(context: Context): ResolveUsage | undefined {
-			// ContextMember has resolveUsage property
-			if (context instanceof ContextMember) {
-				return context.resolveUsage
-			}
-			// Other contexts may store resolveUsage in expressionWriteableResolve
-			return context.expressionWriteableResolve
-		}
-		
-		/**
-		 * Get the range for a reference token.
-		 */
-		protected getReferenceRange(context: Context): Range | undefined {
-			if (context instanceof ContextMember) {
-				// For member access, use the member name range
-				return context.name?.range
-			}
-			return undefined
-		}
-		
-		/**
-		 * Get semantic token type from a Resolved object.
-		 */
-		protected getTokenTypeFromResolved(resolved: Resolved): Type | undefined {
-			switch (resolved.type) {
-				case Resolved.Type.Namespace:
-					return typeNamespace
-				
-				case Resolved.Type.Class:
-					return typeClass
-				
-				case Resolved.Type.Interface:
-					return typeInterface
-				
-				case Resolved.Type.Enumeration:
-					return typeEnum
-				
-				case Resolved.Type.Function:
-				case Resolved.Type.FunctionGroup:
-					return typeMethod
-				
-				case Resolved.Type.Variable:
-					return typeProperty
-				
-				case Resolved.Type.Argument:
-					return typeParameter
-				
-				case Resolved.Type.LocalVariable:
-					return typeVariable
-				
-				default:
-					return undefined
-			}
-		}
-		
-		/**
-		 * Type guard to check if a Resolved has typeModifiers property.
-		 */
-		protected hasTypeModifiers(resolved: Resolved): resolved is Resolved & { typeModifiers: Context.TypeModifierSet | undefined } {
-			return 'typeModifiers' in resolved
-		}
-		
-		/**
-		 * Get modifiers from a Resolved object (without declaration modifier).
-		 */
-		protected getModifiersFromResolved(resolved: Resolved): Modifier[] {
-			const modifiers: Modifier[] = []
-			
-			// Check if the resolved has type modifiers using type guard
-			if (this.hasTypeModifiers(resolved)) {
-				const typeModifiers = resolved.typeModifiers
-				if (typeModifiers) {
-					if (typeModifiers.isStatic) {
-						modifiers.push(modStatic)
-					}
-					if (typeModifiers.isAbstract) {
-						modifiers.push(modAbstract)
-					}
-					if (typeModifiers.isFixed) {
-						modifiers.push(modReadOnly)
-					}
-				}
-			}
-			
-			return modifiers
-		}
-		
-		/**
-		 * Get the semantic token type for a context.
-		 */
-		protected getTokenType(context: Context): Type | undefined {
-			switch (context.type) {
-				case Context.ContextType.Namespace:
-				case Context.ContextType.PinNamespace:
-					return typeNamespace
-				
-				case Context.ContextType.Class:
-					return typeClass
-				
-				case Context.ContextType.Interface:
-					return typeInterface
-				
-				case Context.ContextType.Enumeration:
-					return typeEnum
-				
-				case Context.ContextType.EnumerationEntry:
-					return typeEnumMember
-				
-				case Context.ContextType.Function:
-					return typeMethod
-				
-				case Context.ContextType.FunctionArgument:
-					return typeParameter
-				
-				case Context.ContextType.ClassVariable:
-					return typeProperty
-				
-				case Context.ContextType.Variable:
-					return typeVariable
-				
-				default:
-					return undefined
-			}
-		}
-		
-		/**
-		 * Get modifiers for a context based on its type modifiers.
-		 */
-		protected getModifiers(context: Context): Modifier[] {
-			const modifiers: Modifier[] = []
-			
-			// Add declaration modifier for declarations
-			if (this.isDeclaration(context)) {
-				modifiers.push(modDeclaration)
-			}
-			
-			// Check for type modifiers if context has them
-			const typeModifiers = this.getTypeModifiers(context)
-			if (typeModifiers) {
-				if (typeModifiers.isStatic) {
-					modifiers.push(modStatic)
-				}
-				if (typeModifiers.isAbstract) {
-					modifiers.push(modAbstract)
-				}
-				if (typeModifiers.isFixed) {
-					modifiers.push(modReadOnly)
-				}
-			}
-			
-			return modifiers
-		}
-		
-		/**
-		 * Check if a context is a declaration.
-		 */
-		protected isDeclaration(context: Context): boolean {
-			switch (context.type) {
-				case Context.ContextType.Class:
-				case Context.ContextType.Interface:
-				case Context.ContextType.Enumeration:
-				case Context.ContextType.EnumerationEntry:
-				case Context.ContextType.Function:
-				case Context.ContextType.FunctionArgument:
-				case Context.ContextType.ClassVariable:
-				case Context.ContextType.Variable:
-				case Context.ContextType.Namespace:
-				case Context.ContextType.PinNamespace:
-					return true
-				default:
-					return false
-			}
-		}
-		
-		/**
-		 * Get type modifiers from a context if it has them.
-		 */
-		protected getTypeModifiers(context: Context): Context.TypeModifierSet | undefined {
-			if (context instanceof ContextClass) {
-				return context.typeModifiers
-			}
-			if (context instanceof ContextInterface) {
-				return context.typeModifiers
-			}
-			if (context instanceof ContextEnumeration) {
-				return context.typeModifiers
-			}
-			if (context instanceof ContextFunction) {
-				return context.typeModifiers
-			}
-			if (context instanceof ContextClassVariable) {
-				return context.typeModifiers
-			}
-			return undefined
-		}
-		
-		/**
-		 * Get the identifier range from a context.
-		 */
-		protected getIdentifierRange(context: Context): Range | undefined {
-			// Try to get the name identifier if it exists
-			const name = this.getIdentifier(context)
-			if (name?.range) {
-				return name.range
-			}
-			return undefined
-		}
-		
-		/**
-		 * Get the identifier from a context if it has one.
-		 */
-		protected getIdentifier(context: Context): Identifier | undefined {
-			if (context instanceof ContextClass) {
-				return context.name
-			}
-			if (context instanceof ContextInterface) {
-				return context.name
-			}
-			if (context instanceof ContextEnumeration) {
-				return context.name
-			}
-			if (context instanceof ContextEnumEntry) {
-				return context.name
-			}
-			if (context instanceof ContextFunction) {
-				return context.name
-			}
-			if (context instanceof ContextClassVariable) {
-				return context.name
-			}
-			if (context instanceof ContextFunctionArgument) {
-				return context.name
-			}
-			if (context instanceof ContextNamespace) {
-				return context.typename.lastPart?.name
-			}
-			return undefined
-		}
-		
-		/**
-		 * Visit children of a context.
-		 */
-		protected visitChildren(context: Context): void {
-			switch (context.type) {
-				case Context.ContextType.Script:
-					this.visitScriptChildren(context)
-					break
-				
-				case Context.ContextType.Namespace:
-					this.visitNamespaceChildren(context as ContextNamespace)
-					break
-					
-				case Context.ContextType.Class:
-					this.visitClassChildren(context as ContextClass)
-					break
-				
-				case Context.ContextType.Interface:
-					this.visitInterfaceChildren(context as ContextInterface)
-					break
-				
-				case Context.ContextType.Enumeration:
-					this.visitEnumerationChildren(context as ContextEnumeration)
-					break
-				
-				case Context.ContextType.Function:
-					this.visitFunctionChildren(context as ContextFunction)
-					break
-				
-				case Context.ContextType.Statements:
-					this.visitStatementsChildren(context as ContextStatements)
-					break
-				
-				default:
-					// For other context types, visit any child contexts they may contain
-					this.visitGenericChildren(context)
-					break
-			}
-		}
-		
-		/**
-		 * Visit children of a script context.
-		 */
-		protected visitScriptChildren(context: Context): void {
-			for (const child of (context as ContextScript).statements) {
-				this.visitContext(child)
-			}
-		}
-		
-		/**
-		 * Visit children of a namespace context.
-		 */
-		protected visitNamespaceChildren(context: ContextNamespace): void {
-			for (const child of context.statements) {
-				this.visitContext(child)
-			}
-		}
-		
-		/**
-		 * Visit children of a class context.
-		 */
-		protected visitClassChildren(context: ContextClass): void {
-			for (const child of context.declarations) {
-				this.visitContext(child)
-			}
-		}
-		
-		/**
-		 * Visit children of an interface context.
-		 */
-		protected visitInterfaceChildren(context: ContextInterface): void {
-			for (const child of context.declarations) {
-				this.visitContext(child)
-			}
-		}
-		
-		/**
-		 * Visit children of an enumeration context.
-		 */
-		protected visitEnumerationChildren(context: ContextEnumeration): void {
-			for (const entry of context.entries) {
-				this.visitContext(entry)
-			}
-		}
-		
-		/**
-		 * Visit children of a function context.
-		 */
-		protected visitFunctionChildren(context: ContextFunction): void {
-			// Visit function arguments
-			for (const arg of context.arguments) {
-				this.visitContext(arg)
-			}
-			
-			// Visit function body statements (fix for issue 1)
-			if (context.statements) {
-				this.visitContext(context.statements)
-			}
-		}
-		
-		/**
-		 * Visit children of a statements context.
-		 */
-		protected visitStatementsChildren(context: ContextStatements): void {
-			for (const statement of context.statements) {
-				this.visitContext(statement)
-			}
-		}
-		
-		/**
-		 * Visit children of generic contexts that may have nested contexts.
-		 * This handles if/while/for/try/select statements and other control structures.
-		 */
-		protected visitGenericChildren(context: Context): void {
-			// Access child contexts through common properties
-			// Many statement contexts have _statements, _condition, _value, etc.
-			const anyContext = context as any
-			
-			// Visit nested statement blocks
-			if (anyContext._statements && anyContext._statements instanceof Context) {
-				this.visitContext(anyContext._statements)
-			}
-			
-			// Visit condition expressions
-			if (anyContext._condition && anyContext._condition instanceof Context) {
-				this.visitContext(anyContext._condition)
-			}
-			
-			// Visit value expressions
-			if (anyContext._value && anyContext._value instanceof Context) {
-				this.visitContext(anyContext._value)
-			}
-			
-			// Visit object expressions (for member access)
-			if (anyContext._object && anyContext._object instanceof Context) {
-				this.visitContext(anyContext._object)
-			}
-			
-			// Visit arrays of child contexts (like elif, catch blocks, case statements)
-			if (anyContext._elif && Array.isArray(anyContext._elif)) {
-				for (const child of anyContext._elif) {
-					if (child instanceof Context) {
-						this.visitContext(child)
-					}
-				}
-			}
-			
-			if (anyContext._catches && Array.isArray(anyContext._catches)) {
-				for (const child of anyContext._catches) {
-					if (child instanceof Context) {
-						this.visitContext(child)
-					}
-				}
-			}
-			
-			if (anyContext._cases && Array.isArray(anyContext._cases)) {
-				for (const child of anyContext._cases) {
-					if (child instanceof Context) {
-						this.visitContext(child)
-					}
-				}
-			}
-			
-			// Visit else statements
-			if (anyContext._elsestatements && anyContext._elsestatements instanceof Context) {
-				this.visitContext(anyContext._elsestatements)
-			}
-			
-			// Visit if statements
-			if (anyContext._ifstatements && anyContext._ifstatements instanceof Context) {
-				this.visitContext(anyContext._ifstatements)
-			}
-			
-			// Visit for loop properties
-			if (anyContext._variable && anyContext._variable instanceof Context) {
-				this.visitContext(anyContext._variable)
-			}
-			if (anyContext._from && anyContext._from instanceof Context) {
-				this.visitContext(anyContext._from)
-			}
-			if (anyContext._to && anyContext._to instanceof Context) {
-				this.visitContext(anyContext._to)
-			}
-			if (anyContext._step && anyContext._step instanceof Context) {
-				this.visitContext(anyContext._step)
-			}
-		}
-	}
+export class Type {
+private _name: string
+private _index: integer
+
+public constructor (name: string, index: integer) {
+this._name = name
+this._index = index
+}
+
+public get name(): string {
+return this._name
+}
+
+public get index(): integer {
+return this._index
+}
+}
+
+export class Modifier {
+private _name: string
+private _index: integer
+
+public constructor (name: string, index: integer) {
+this._name = name
+this._index = index
+}
+
+public get name(): string {
+return this._name
+}
+
+public get index(): integer {
+return this._index
+}
+}
+
+export const typeNamespace = new Type(SemanticTokenTypes.namespace, 0)
+export const typeClass = new Type(SemanticTokenTypes.class, 1)
+export const typeEnum = new Type(SemanticTokenTypes.enum, 2)
+export const typeInterface = new Type(SemanticTokenTypes.interface, 3)
+export const typeParameter = new Type(SemanticTokenTypes.parameter, 4)
+export const typeVariable = new Type(SemanticTokenTypes.variable, 5)
+export const typeProperty = new Type(SemanticTokenTypes.property, 6)
+export const typeEnumMember = new Type(SemanticTokenTypes.enumMember, 7)
+export const typeMethod = new Type(SemanticTokenTypes.method, 8)
+export const typeComment = new Type(SemanticTokenTypes.comment, 9)
+export const typeString = new Type(SemanticTokenTypes.string, 10)
+export const typeKeyword = new Type(SemanticTokenTypes.keyword, 11)
+export const typeNumber = new Type(SemanticTokenTypes.number, 12)
+export const typeOperator = new Type(SemanticTokenTypes.operator, 13)
+
+export const allTypes = [typeNamespace, typeClass, typeEnum, typeInterface, typeParameter,
+typeVariable, typeProperty, typeEnumMember, typeMethod, typeComment, typeString,
+typeKeyword, typeNumber, typeOperator]
+
+export const modDeclaration = new Modifier(SemanticTokenModifiers.declaration, 0)
+export const modReadOnly = new Modifier(SemanticTokenModifiers.readonly, 1)
+export const modStatic = new Modifier(SemanticTokenModifiers.static, 2)
+export const modDeprecated = new Modifier(SemanticTokenModifiers.deprecated, 3)
+export const modAbstract = new Modifier(SemanticTokenModifiers.abstract, 4)
+export const modModification = new Modifier(SemanticTokenModifiers.modification, 5)
+export const modDocumentation = new Modifier(SemanticTokenModifiers.documentation, 6)
+export const modDefaultLibrary = new Modifier(SemanticTokenModifiers.defaultLibrary, 7)
+
+export const allModifiers = [modDeclaration, modReadOnly, modStatic, modDeprecated,
+modAbstract, modModification, modDocumentation, modDefaultLibrary]
+
+export const legend: SemanticTokensLegend = {
+tokenTypes: allTypes.map(t => t.name),
+tokenModifiers: allModifiers.map(t => t.name)
+}
+
+export class Builder extends SemanticTokensBuilder {
+public constructor() {
+super()
+}
+
+public add(range: Range, type: Type, modifiers: Modifier[]): void {
+this.push(range.start.line, range.start.character,
+range.end.character - range.start.character, type.index,
+modifiers.map(m => 1 << m.index).reduce((a,b) => a + b, 0))
+}
+}
+
+/**
+ * Provider for semantic tokens.
+ * Delegates to Context.addSemanticTokens() for each context to add its tokens.
+ */
+export class Provider {
+private builder: Builder
+
+constructor() {
+this.builder = new Builder()
+}
+
+/**
+ * Build semantic tokens from a context tree.
+ * Simply delegates to the context's addSemanticTokens method.
+ */
+public build(context: Context | undefined) {
+if (context) {
+context.addSemanticTokens(this.builder)
+}
+return this.builder.build()
+}
+}
+
+/**
+ * Helper functions for adding semantic tokens.
+ */
+
+/**
+ * Add a declaration token for a context with an identifier.
+ */
+export function addDeclarationToken(builder: Builder, name: Identifier | undefined, 
+tokenType: Type, typeModifiers?: Context.TypeModifierSet): void {
+if (!name?.range) {
+return
+}
+
+const modifiers: Modifier[] = [modDeclaration]
+
+if (typeModifiers) {
+if (typeModifiers.isStatic) {
+modifiers.push(modStatic)
+}
+if (typeModifiers.isAbstract) {
+modifiers.push(modAbstract)
+}
+if (typeModifiers.isFixed) {
+modifiers.push(modReadOnly)
+}
+}
+
+builder.add(name.range, tokenType, modifiers)
+}
+
+/**
+ * Add a reference token for a resolved usage.
+ */
+export function addReferenceToken(builder: Builder, range: Range | undefined,
+resolved: Resolved): void {
+if (!range) {
+return
+}
+
+const tokenType = getTokenTypeFromResolved(resolved)
+if (!tokenType) {
+return
+}
+
+const modifiers: Modifier[] = []
+
+// Check if the resolved has type modifiers
+if ('typeModifiers' in resolved) {
+const typeModifiers = (resolved as any).typeModifiers as Context.TypeModifierSet | undefined
+if (typeModifiers) {
+if (typeModifiers.isStatic) {
+modifiers.push(modStatic)
+}
+if (typeModifiers.isAbstract) {
+modifiers.push(modAbstract)
+}
+if (typeModifiers.isFixed) {
+modifiers.push(modReadOnly)
+}
+}
+}
+
+builder.add(range, tokenType, modifiers)
+}
+
+/**
+ * Get semantic token type from a Resolved object.
+ */
+function getTokenTypeFromResolved(resolved: Resolved): Type | undefined {
+switch (resolved.type) {
+case Resolved.Type.Namespace:
+return typeNamespace
+
+case Resolved.Type.Class:
+return typeClass
+
+case Resolved.Type.Interface:
+return typeInterface
+
+case Resolved.Type.Enumeration:
+return typeEnum
+
+case Resolved.Type.Function:
+case Resolved.Type.FunctionGroup:
+return typeMethod
+
+case Resolved.Type.Variable:
+return typeProperty
+
+case Resolved.Type.Argument:
+return typeParameter
+
+case Resolved.Type.LocalVariable:
+return typeVariable
+
+default:
+return undefined
+}
+}
 }
