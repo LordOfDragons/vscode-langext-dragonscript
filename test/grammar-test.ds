@@ -4,20 +4,34 @@
 class Test1 implements Interface1, Interface2, Interface3
 end
 
-interface Test2 implements Parent1, Parent2
+interface Test2 implements Parent1, Parent2, Parent3
 end
 
-// Issue 3: Multiple modifiers
+class Test3 extends BaseClass implements Interface1, Interface2
+end
+
+// Issue 3: Multiple modifiers (all combinations)
 public static func testFunc1()
+end
+
+static public func testFunc2()
 end
 
 public abstract static class TestClass1
 end
 
-private static fixed var int testVar = 10
+public static abstract class TestClass2
+end
+
+private static fixed var int testVar1 = 10
+static private fixed var String testVar2 = "test"
+
+protected interface TestInterface1
+end
 
 // Issue 2 & 4: Function calls
-func testFunc2()
+func testFunc3()
+	// Simple function calls
 	myFunc()
 	myFunc(a)
 	myFunc(a, b)
@@ -26,21 +40,39 @@ func testFunc2()
 	// Nested function calls
 	outer(inner(x))
 	outer(inner1(x), inner2(y))
+	outer(inner1(inner2(x)))
 	
 	// Method chaining
 	obj.method1().method2()
-	obj.method1(a).method2(b)
+	obj.method1(a).method2(b).method3(c)
+	this.callMe().anotherCall()
 	
 	// Complex expressions in arguments
 	func1(a + b, c * d, e / f)
 	func2(obj.prop, arr[0], dict["key"])
 	func3(x > y, a and b, not c)
+	func4(a if condition else b)
+	
+	// Function calls after operators
+	result = calculate(x, y)
+	value = getValue() + getOther()
+	test = obj.method() * 2
 end
 
 // Issue 5: Block statements
 func testBlock()
+	// Simple block
 	arr.forEach(block String each
 		processItem(each)
+	end)
+	
+	// Block with different types
+	items.forEach(block Item item
+		item.process()
+	end)
+	
+	numbers.forEach(block int num
+		compute(num)
 	end)
 	
 	// Nested blocks
@@ -54,4 +86,36 @@ func testBlock()
 	items.collect(block Item each
 		return each.getValue()
 	end)
+	
+	// Block in complex expression
+	result = data.filter(block Entry e
+		return e.isValid()
+	end).map(block Entry e
+		return e.transform()
+	end)
+	
+	// Multiple blocks in same statement
+	combine(
+		list1.map(block Item i
+			return i.value
+		end),
+		list2.map(block Item i
+			return i.value
+		end)
+	)
 end
+
+// Edge cases
+func edgeCases()
+	// Type that looks like function
+	var MyType obj
+	obj = MyType.new()
+	
+	// Function that looks like type
+	myFunction()
+	
+	// Mixed
+	MyClass.staticMethod()
+	instance.instanceMethod()
+end
+
