@@ -23,19 +23,22 @@
 */
 
 export interface DSSettings {
-	maxNumberOfProblems: number;
+	maxNumberOfProblems: number
 	
 	/** Path to Drag[en]gine installation. Empty string to auto-detect. */
-	pathDragengine: string;
+	pathDragengine: string
 	
 	/** Workspace required Drag[en]gine DragonScript Module Package. */
-	requiresPackageDragengine: boolean;
+	requiresPackageDragengine: boolean
 	
 	/** Source directories. */
-	scriptDirectories: string[];
+	scriptDirectories: string[]
 	
 	/** Base packages. Either directories or DELGA files (*.delga). */
-	basePackages: string[];
+	basePackages: string[]
+	
+	/** Enables semantic highlighting overrides (write variable = underline, deprecated = strike-through). */
+	enableSemanticHighlightingOverrides: boolean
 }
 
 export interface FileSettings {

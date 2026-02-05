@@ -100,6 +100,17 @@ file of the base game or application project.
 Set this parameter on workspace or directory level. If set on directory level you can disable
 base packages on a per directory basis, for example for data directories containing no source code.
 
+`dragonscriptLanguage.enableSemanticHighlightingOverrides`:
+
+Enables semantic highlighting overrides. This adds underline to variables written to and
+strike-through to deprecated elements.
+
+Enabled by default since VSCode does not provide these useful clues in the default themes.
+Disable this setting if you use a theme supporting semantic modifiers or if you want to use
+custom theme overrides for semantic modifiers.
+
+Changing this setting takes effect only after restarting/reloading VSCode.
+
 
 ## Support
 

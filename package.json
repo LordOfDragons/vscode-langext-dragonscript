@@ -119,6 +119,12 @@
 					"type": "number",
 					"default": 100,
 					"description": "Controls the maximum number of problems produced by the server."
+				},
+				"dragonscriptLanguage.enableSemanticHighlightingOverrides": {
+					"scope": "resource",
+					"type": "boolean",
+					"default": true,
+					"description": "Enables semantic highlighting overrides (write variable = underline, deprecated = strike-through)."
 				}
 			}
 		}

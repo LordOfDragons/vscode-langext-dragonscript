@@ -139,7 +139,8 @@ const defaultSettings: DSSettings = {
 	pathDragengine: '',
 	requiresPackageDragengine: false,
 	scriptDirectories: ['.'],
-	basePackages: []
+	basePackages: [],
+	enableSemanticHighlightingOverrides: true
 };
 export let globalSettings: DSSettings = defaultSettings;
 
