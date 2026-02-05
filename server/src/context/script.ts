@@ -215,6 +215,12 @@ export class ContextScript extends Context{
 		}
 	}
 	
+	public addSemanticTokens(builder: semtokens.Builder): void {
+		for (const each of this._statements) {
+			each.addSemanticTokens(builder);
+		}
+	}
+	
 	public contextAtPosition(position: Position): Context | undefined {
 		return this.contextAtPositionList(this._documentations, position)
 			?? this.contextAtPositionList(this._comments, position)

@@ -75,8 +75,8 @@ export class ContextEnumEntry extends Context{
 	}
 
 	public addSemanticTokens(builder: semtokens.Builder): void {
-		// Add token for enum entry name
-		semtokens.addDeclarationToken(builder, this._name, semtokens.typeEnumMember);
+		semtokens.addDeclarationToken(builder, this._name, semtokens.typeEnumMember,
+			ContextEnumEntry.typeModifiers, this.useDocumentation?.isDeprecated);
 	}
 
 
@@ -251,10 +251,9 @@ export class ContextEnumeration extends Context{
 	}
 
 	public addSemanticTokens(builder: semtokens.Builder): void {
-		// Add token for enumeration name
-		semtokens.addDeclarationToken(builder, this._name, semtokens.typeEnum, this._typeModifiers);
+		semtokens.addDeclarationToken(builder, this._name, semtokens.typeEnum,
+			this._typeModifiers, this.useDocumentation?.isDeprecated ?? false);
 		
-		// Add tokens for enum entries
 		for (const entry of this._entries) {
 			entry.addSemanticTokens(builder);
 		}

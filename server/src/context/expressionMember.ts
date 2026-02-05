@@ -126,15 +126,8 @@ export class ContextMember extends Context{
 	}
 
 	public addSemanticTokens(builder: semtokens.Builder): void {
-		// Add tokens for object expression (for chained member access)
-		if (this._object) {
-			this._object.addSemanticTokens(builder);
-		}
-		
-		// Add reference token if this member resolves to something
-		if (this._resolveUsage?.resolved) {
-			semtokens.addReferenceToken(builder, this._name?.range, this._resolveUsage.resolved);
-		}
+		this._object?.addSemanticTokens(builder);
+		semtokens.addReferenceToken(builder, this._name?.range, this._resolveUsage)
 	}
 
 

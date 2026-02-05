@@ -23,7 +23,7 @@
  */
 
 import { IToken } from "chevrotain"
-import { CompletionItem, Definition, Hover, Location, Position, Range } from "vscode-languageserver";
+import { CompletionItem, Hover, Location, Position, Range } from "vscode-languageserver";
 import { HoverInfo } from "../hoverinfo";
 import { FullyQualifiedClassNameCstNode } from "../nodeclasses/fullyQualifiedClassName"
 import { ResolveNamespace } from "../resolve/namespace";
@@ -44,6 +44,8 @@ import { CodeActionUnknownMember } from "../codeactions/unknownMember";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { DebugSettings } from "../debugSettings";
 import { debugLogMessage } from "../server";
+import { semtokens } from "../semanticTokens";
+import { debug } from "console";
 
 
 export class TypeNamePart {
@@ -94,6 +96,10 @@ export class TypeNamePart {
 		this._resolve?.dispose();
 		this._resolve = undefined;
 	}
+	
+	public addSemanticTokens(builder: semtokens.Builder): void {
+		semtokens.addReferenceToken(builder, this._name.range, this._resolve)
+	}
 }
 
 
@@ -102,8 +108,8 @@ export class TypeName {
 	protected _name: string
 	public resolve?: ResolveUsage;
 	protected _range: Range | null | undefined = null;
-
-
+	
+	
 	constructor(node?: FullyQualifiedClassNameCstNode) {
 		this._parts = []
 		
@@ -128,7 +134,7 @@ export class TypeName {
 		
 		this._name = this._parts.map(x => x.name.name).reduce((a, b) => `${a}.${b}`)
 	}
-
+	
 	dispose(): void {
 		for (const each of this._parts) {
 			each.dispose();
@@ -137,8 +143,8 @@ export class TypeName {
 		this.resolve?.dispose();
 		this.resolve = undefined;
 	}
-
-
+	
+	
 	public static typeNamed(name: string): TypeName {
 		var tn = new TypeName();
 		tn._name = name;
@@ -156,31 +162,31 @@ export class TypeName {
 		return tn;
 	}
 	*/
-
+	
 	public static get typeVoid(): TypeName {
 		return this.typeNamed('void');
 	}
-
+	
 	public static get typeObject(): TypeName {
 		return this.typeNamed('Object');
 	}
-
+	
 	public get name(): string {
 		return this._name
 	}
-
+	
 	public get parts(): TypeNamePart[] {
 		return this._parts
 	}
-
+	
 	public get lastPart(): TypeNamePart | undefined {
 		return this._parts.at(this._parts.length - 1);
 	}
-
+	
 	public get firstToken(): IToken | undefined {
 		return this._parts.at(0)?.name.token;
 	}
-
+	
 	public get lastToken(): IToken | undefined {
 		return this.lastPart?.name.token;
 	}
@@ -211,7 +217,7 @@ export class TypeName {
 		
 		return this.resolve;
 	}
-
+	
 	public resolveType(state: ResolveState, context: Context): ResolveUsage | undefined {
 		if (this._parts.length == 0) {
 			return undefined;
@@ -269,7 +275,7 @@ export class TypeName {
 	
 	protected resolveBaseType(state: ResolveState, context: Context, target?: any): ResolveUsage | undefined {
 		var scopeNS: ResolveNamespace | undefined;
-
+		
 		// first part has to be:
 		var part = this._parts[0];
 		const name = part.name.name;
@@ -373,7 +379,7 @@ export class TypeName {
 				return part.setResolve(t, context);
 			}
 		}
-
+		
 		// - a type of a pinned namespace chain
 		for (const pin of state.pins) {
 			const t = this.resolveTypeInNamespaceChain(state, pin, name);
@@ -381,7 +387,7 @@ export class TypeName {
 				return part.setResolve(t, context);
 			}
 		}
-
+		
 		// - a namespace of the parent namespace chain
 		for (let i = sostack.length - 1; i >= 0; --i) {
 			const scope = sostack[i];
@@ -395,7 +401,7 @@ export class TypeName {
 				}
 			}
 		}
-
+		
 		// - a namespace of a pinned namespace chain
 		for (const pin of state.pins) {
 			const t = this.resolveNamespaceInNamespaceChain(state, pin, name);
@@ -403,10 +409,10 @@ export class TypeName {
 				return part.setResolve(t, context);
 			}
 		}
-
+		
 		return undefined;
 	}
-
+	
 	protected resolveTypeInClassChain(state: ResolveState, rclass: ResolveClass, name: string,
 			withParent: boolean, withChain: boolean): ResolveType | undefined {
 		const t = rclass.findType(name);
@@ -420,7 +426,7 @@ export class TypeName {
 			if (!rclass.context.inheritanceResolved) {
 				state.requiresAnotherTurn = true;
 			}
-
+			
 			const t2 = rclass.context.extends?.resolve?.resolved as ResolveClass;
 			if (t2?.type === ResolveType.Type.Class) {
 				const t3 = this.resolveTypeInClassChain(state, t2, name, true, true);
@@ -428,7 +434,7 @@ export class TypeName {
 					return t3;
 				}
 			}
-
+			
 			for (const each of rclass.context.implements) {
 				const t2 = each.resolve?.resolved as ResolveInterface;
 				if (t2?.type === ResolveType.Type.Interface) {
@@ -439,7 +445,7 @@ export class TypeName {
 				}
 			}
 		}
-
+		
 		if (withParent && rclass.parent) {
 			switch (rclass.parent.type) {
 				case ResolveType.Type.Class:
@@ -448,10 +454,10 @@ export class TypeName {
 					return this.resolveTypeInInterfaceChain(state, rclass.parent as ResolveInterface, name, withChain);
 			}
 		}
-
+		
 		return undefined;
 	}
-
+	
 	protected resolveTypeInInterfaceChain(state: ResolveState, iface: ResolveInterface,
 			name: string, withChain: boolean): ResolveType | undefined {
 		const t = iface.findType(name);
@@ -479,37 +485,37 @@ export class TypeName {
 		
 		return undefined;
 	}
-
+	
 	protected resolveTypeInNamespaceChain(state: ResolveState, ns: ResolveNamespace, name: string):
 			ResolveType | undefined {
 		const t = ns.findType(name);
 		if (t) {
 			return t;
 		}
-
+		
 		// TODO: interface, enumeration
-
+		
 		if (ns.parent?.type === ResolveType.Type.Namespace) {
 			return this.resolveTypeInNamespaceChain(state, ns.parent as ResolveNamespace, name);
 		}
-
+		
 		return undefined;
 	}
-
+	
 	protected resolveNamespaceInNamespaceChain(state: ResolveState, ns: ResolveNamespace, name: string):
 			ResolveNamespace | undefined {
 		const ns2 = ns.namespace(name);
 		if (ns2) {
 			return ns2;
 		}
-
+		
 		if (ns.parent?.type === ResolveType.Type.Namespace) {
 			return this.resolveNamespaceInNamespaceChain(state, ns.parent as ResolveNamespace, name);
 		}
-
+		
 		return undefined;
 	}
-
+	
 	public get range(): Range | undefined {
 		if (this._range === null) {
 			this._range = this._updateRange();
@@ -678,6 +684,12 @@ export class TypeName {
 		};
 		
 		return CompletionHelper.createType(Range.create(position, position), context, undefined, restrictType);
+	}
+	
+	addSemanticTokens(builder: semtokens.Builder): void {
+		for (const each of this._parts) {
+			each.addSemanticTokens(builder)
+		}
 	}
 	
 	/**

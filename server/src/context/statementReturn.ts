@@ -35,6 +35,7 @@ import { CodeActionInsertCast } from "../codeactions/insertCast";
 import { CodeActionRemove } from "../codeactions/remove";
 import { ContextFunction } from "./classFunction";
 import { TextDocument } from "vscode-languageserver-textdocument";
+import { semtokens } from "../semanticTokens";
 
 
 export class ContextReturn extends Context{
@@ -155,6 +156,9 @@ export class ContextReturn extends Context{
 		return this._value?.completion(document, position) ?? [];
 	}
 	
+	public addSemanticTokens(builder: semtokens.Builder): void {
+		this._value?.addSemanticTokens(builder)
+	}
 	
 	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
 		if (this._value) {

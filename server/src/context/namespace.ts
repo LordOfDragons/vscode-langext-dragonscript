@@ -79,13 +79,9 @@ export class ContextNamespace extends Context{
 	}
 
 	public addSemanticTokens(builder: semtokens.Builder): void {
-		// Add token for namespace name
-		const name = this._typename.lastPart?.name;
-		if (name) {
-			semtokens.addDeclarationToken(builder, name, semtokens.typeNamespace);
-		}
+		semtokens.addDeclarationToken(builder, this._typename.lastPart?.name,
+			semtokens.typeNamespace, undefined, this.useDocumentation?.isDeprecated);
 		
-		// Visit all statements to add their semantic tokens
 		for (const statement of this._statements) {
 			statement.addSemanticTokens(builder);
 		}

@@ -35,6 +35,7 @@ import { ResolveNamespace } from "../resolve/namespace";
 import { ResolveType } from "../resolve/type";
 import { DebugSettings } from "../debugSettings";
 import { debugLogMessage } from "../server";
+import { semtokens } from "../semanticTokens";
 
 
 export class ContextSelectCase extends Context {
@@ -148,6 +149,12 @@ export class ContextSelectCase extends Context {
 		return this.parent?.expectTypes(context);
 	}
 	
+	public addSemanticTokens(builder: semtokens.Builder): void {
+		for (const each of this._values) {
+			each.addSemanticTokens(builder)
+		}
+		this._statements.addSemanticTokens(builder)
+	}
 	
 	log(console: RemoteConsole, prefix: string = ""): void {
 		console.log(`${prefix}- Case`);
@@ -329,6 +336,13 @@ export class ContextSelect extends Context {
 		}
 	}
 	
+	public addSemanticTokens(builder: semtokens.Builder): void {
+		this._value?.addSemanticTokens(builder)
+		for (const each of this._cases) {
+			each.addSemanticTokens(builder)
+		}
+		this._elsestatements?.addSemanticTokens(builder)
+	}
 	
 	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
 		console.log(`${prefix}Select ${this.logRange}`);

@@ -35,6 +35,7 @@ import { TextDocument } from "vscode-languageserver-textdocument";
 import { CompletionHelper } from "../completionHelper";
 import { DebugSettings } from "../debugSettings";
 import { debugLogMessage } from "../server";
+import { semtokens } from "../semanticTokens";
 
 
 export class ContextIfElif extends Context {
@@ -335,6 +336,14 @@ export class ContextIf extends Context {
 		}
 	}
 	
+	public addSemanticTokens(builder: semtokens.Builder): void {
+		this._condition?.addSemanticTokens(builder)
+		this._ifstatements.addSemanticTokens(builder)
+		for (const each of this._elif) {
+			each.addSemanticTokens(builder)
+		}
+		this._elsestatements?.addSemanticTokens(builder)
+	}
 	
 	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
 		console.log(`${prefix}If-Else ${this.logRange}`);

@@ -75,7 +75,6 @@ export class ContextStatements extends Context{
 	}
 
 	public addSemanticTokens(builder: semtokens.Builder): void {
-		// Visit all child statements to add their semantic tokens
 		for (const statement of this._statements) {
 			statement.addSemanticTokens(builder);
 		}

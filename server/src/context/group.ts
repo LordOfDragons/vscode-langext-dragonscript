@@ -32,6 +32,7 @@ import { TextDocument } from "vscode-languageserver-textdocument";
 import { CompletionHelper } from "../completionHelper";
 import { ExpressionGroupCstNode } from "../nodeclasses/expressionObject";
 import { ResolveType } from "../resolve/type";
+import { semtokens } from "../semanticTokens";
 
 
 export class ContextGroup extends Context{
@@ -132,6 +133,10 @@ export class ContextGroup extends Context{
 	
 	public signatureHelpAtPosition(position: Position): SignatureHelp | undefined {
 		return this.parent?.signatureHelpAtPosition(position);
+	}
+	
+	public addSemanticTokens(builder: semtokens.Builder): void {
+		this._expression.addSemanticTokens(builder)
 	}
 	
 	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {

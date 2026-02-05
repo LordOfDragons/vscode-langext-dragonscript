@@ -318,18 +318,18 @@ export class ContextFunction extends Context{
 	}
 
 	public addSemanticTokens(builder: semtokens.Builder): void {
-		// Add token for function name
-		semtokens.addDeclarationToken(builder, this._name, semtokens.typeMethod, this._typeModifiers);
+		semtokens.addDeclarationToken(builder, this._name, semtokens.typeMethod,
+			this._typeModifiers, this.useDocumentation?.isDeprecated);
 		
-		// Add tokens for function arguments
+		this._returnType?.addSemanticTokens(builder);
+		
 		for (const arg of this._arguments) {
 			arg.addSemanticTokens(builder);
 		}
 		
-		// Add tokens for function body statements
-		if (this._statements) {
-			this._statements.addSemanticTokens(builder);
-		}
+		this._superCall?.addSemanticTokens(builder);
+		
+		this._statements?.addSemanticTokens(builder);
 	}
 
 

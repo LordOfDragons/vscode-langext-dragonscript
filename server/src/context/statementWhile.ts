@@ -35,6 +35,7 @@ import { TextDocument } from "vscode-languageserver-textdocument";
 import { CompletionHelper } from "../completionHelper";
 import { DebugSettings } from "../debugSettings";
 import { debugLogMessage } from "../server";
+import { semtokens } from "../semanticTokens";
 
 
 export class ContextWhile extends Context{
@@ -153,6 +154,10 @@ export class ContextWhile extends Context{
 		}
 	}
 	
+	public addSemanticTokens(builder: semtokens.Builder): void {
+		this._condition?.addSemanticTokens(builder)
+		this._statements.addSemanticTokens(builder)
+	}
 	
 	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
 		console.log(`${prefix}While ${this.logRange}`);

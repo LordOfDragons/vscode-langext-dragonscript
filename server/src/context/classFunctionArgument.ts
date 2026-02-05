@@ -69,8 +69,10 @@ export class ContextFunctionArgument extends Context{
 	}
 
 	public addSemanticTokens(builder: semtokens.Builder): void {
-		// Add token for function argument name
-		semtokens.addDeclarationToken(builder, this._name, semtokens.typeParameter);
+		semtokens.addDeclarationToken(builder, this._name, semtokens.typeParameter,
+			undefined, this.useDocumentation?.isDeprecated);
+		
+		this._typename.addSemanticTokens(builder);
 	}
 	
 	

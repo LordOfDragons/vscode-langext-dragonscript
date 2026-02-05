@@ -26,6 +26,7 @@ import { DiagnosticRelatedInformation, Location, Range } from "vscode-languagese
 import { Context } from "../context/context";
 import { ContextDocumentation } from "../context/documentation";
 import { MatchableName } from "../matchableName";
+import { semtokens } from "../semanticTokens";
 
 /** Resolved usage. */
 export class ResolveUsage{
