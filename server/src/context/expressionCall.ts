@@ -58,6 +58,7 @@ import { CodeActionReplace } from "../codeactions/replace";
 import { CodeActionAssignmentNoEffect } from "../codeactions/assignNoEffect";
 import { ContextFunction } from "./classFunction";
 import { ResolveClass } from "../resolve/class";
+import { semtokens } from "../semanticTokens";
 
 
 export class ContextFunctionCall extends Context{
@@ -1438,6 +1439,17 @@ export class ContextFunctionCall extends Context{
 		return i + 1;
 	}
 	
+	public addSemanticTokens(builder: semtokens.Builder): void {
+		this._object?.addSemanticTokens(builder)
+		
+		semtokens.addReferenceToken(builder, this._name?.range, this._resolveUsage)
+		
+		for (const each of this._arguments) {
+			each.addSemanticTokens(builder);
+		}
+		
+		this._castType?.addSemanticTokens(builder);
+	}
 	
 	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
 		console.log(`${prefix}Call ${this._name ?? '-'} ${this.logRange}`);

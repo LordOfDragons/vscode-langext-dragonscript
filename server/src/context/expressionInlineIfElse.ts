@@ -33,6 +33,7 @@ import { TextDocument } from "vscode-languageserver-textdocument";
 import { CompletionHelper } from "../completionHelper";
 import { ResolveType } from "../resolve/type";
 import { IToken } from "chevrotain";
+import { semtokens } from "../semanticTokens";
 
 
 export class ContextInlineIfElse extends Context{
@@ -176,6 +177,11 @@ export class ContextInlineIfElse extends Context{
 		return this.parent?.signatureHelpAtPosition(position);
 	}
 	
+	public addSemanticTokens(builder: semtokens.Builder): void {
+		this._condition.addSemanticTokens(builder)
+		this._ifvalue.addSemanticTokens(builder)
+		this._elsevalue?.addSemanticTokens(builder)
+	}
 	
 	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
 		console.log(`${prefix}Inline If-Else ${this.logRange}`);

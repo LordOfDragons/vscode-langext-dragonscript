@@ -25,7 +25,7 @@
 import { Context } from "./context"
 import { DeclareClassCstNode } from "../nodeclasses/declareClass";
 import { TypeModifiersCstNode } from "../nodeclasses/typeModifiers";
-import { CompletionItem, Definition, DiagnosticRelatedInformation, DocumentSymbol, Hover, Location, Position, Range, RemoteConsole, SymbolInformation, SymbolKind } from "vscode-languageserver"
+import { CompletionItem, DiagnosticRelatedInformation, DocumentSymbol, Hover, Location, Position, Range, RemoteConsole, SymbolInformation, SymbolKind } from "vscode-languageserver"
 import { TypeName } from "./typename"
 import { ContextInterface } from "./scriptInterface";
 import { ContextEnumeration } from "./scriptEnum";
@@ -48,6 +48,7 @@ import { ResolveFunction } from "../resolve/function";
 import { CodeActionImplementAbstractFunctions } from "../codeactions/implementAbstractFunctions";
 import { DebugSettings } from "../debugSettings";
 import { debugLogMessage } from "../server";
+import { semtokens } from "../semanticTokens";
 
 
 export class ContextClass extends Context{
@@ -222,7 +223,22 @@ export class ContextClass extends Context{
 			each.collectWorkspaceSymbols(list);
 		}
 	}
-
+	
+	public addSemanticTokens(builder: semtokens.Builder): void {
+		semtokens.addDeclarationToken(builder, this._name, semtokens.typeClass,
+			this._typeModifiers, this.useDocumentation?.isDeprecated);
+		
+		semtokens.addReferenceToken(builder, this._extends?.range, this._extends?.resolve);
+		
+		for (const impl of this._implements) {
+			semtokens.addReferenceToken(builder, impl.range, impl.resolve);
+		}
+		
+		for (const statement of this._declarations) {
+			statement.addSemanticTokens(builder);
+		}
+	}
+	
 	public contextAtPosition(position: Position): Context | undefined {
 		if (!Helpers.isPositionInsideRange(this.range, position)) {
 			return undefined;

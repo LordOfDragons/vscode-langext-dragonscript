@@ -40,6 +40,7 @@ import { DSSettings } from "../settings";
 import { DebugSettings } from "../debugSettings";
 import { debugLogMessage } from "../server";
 import { Helpers } from "../helpers";
+import { semtokens } from "../semanticTokens";
 
 
 /** Top level script context. */
@@ -211,6 +212,12 @@ export class ContextScript extends Context{
 		super.collectWorkspaceSymbols(list);
 		for (const each of this._statements) {
 			each.collectWorkspaceSymbols(list);
+		}
+	}
+	
+	public addSemanticTokens(builder: semtokens.Builder): void {
+		for (const each of this._statements) {
+			each.addSemanticTokens(builder);
 		}
 	}
 	

@@ -37,6 +37,7 @@ import { TypeName } from "./typename";
 import { IToken } from "chevrotain";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { CompletionHelper } from "../completionHelper";
+import { semtokens } from "../semanticTokens";
 
 
 export class ContextBlock extends Context{
@@ -333,6 +334,12 @@ export class ContextBlock extends Context{
 		return this.parent?.signatureHelpAtPosition(position);
 	}
 	
+	public addSemanticTokens(builder: semtokens.Builder): void {
+		for (const each of this._arguments) {
+			each.addSemanticTokens(builder)
+		}
+		this._statements.addSemanticTokens(builder)
+	}
 	
 	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
 		var s = `${prefix}Block (`;

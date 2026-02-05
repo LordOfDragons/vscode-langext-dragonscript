@@ -30,6 +30,7 @@ import { Helpers } from "../helpers";
 import { ResolveState } from "../resolve/state";
 import { ResolveNamespace } from "../resolve/namespace";
 import { TextDocument } from "vscode-languageserver-textdocument";
+import { semtokens } from "../semanticTokens";
 
 
 export class ContextThrow extends Context{
@@ -97,6 +98,9 @@ export class ContextThrow extends Context{
 		return this._exception?.completion(document, position) ?? [];
 	}
 	
+	public addSemanticTokens(builder: semtokens.Builder): void {
+		this._exception?.addSemanticTokens(builder)
+	}
 	
 	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
 		if (this._exception) {

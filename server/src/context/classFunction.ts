@@ -50,6 +50,7 @@ import { ResolveClass } from "../resolve/class";
 import { DebugSettings } from "../debugSettings";
 import { debugLogMessage } from "../server";
 import { ContextDocumentation } from "./documentation";
+import { semtokens } from "../semanticTokens";
 
 
 export class ContextFunction extends Context{
@@ -314,6 +315,21 @@ export class ContextFunction extends Context{
 		}
 		this._superCall?.dispose();
 		this._statements?.dispose();
+	}
+
+	public addSemanticTokens(builder: semtokens.Builder): void {
+		semtokens.addDeclarationToken(builder, this._name, semtokens.typeMethod,
+			this._typeModifiers, this.useDocumentation?.isDeprecated);
+		
+		this._returnType?.addSemanticTokens(builder);
+		
+		for (const arg of this._arguments) {
+			arg.addSemanticTokens(builder);
+		}
+		
+		this._superCall?.addSemanticTokens(builder);
+		
+		this._statements?.addSemanticTokens(builder);
 	}
 
 

@@ -34,6 +34,7 @@ import { TextDocument } from "vscode-languageserver-textdocument";
 import { Resolved, ResolveUsage } from "../resolve/resolved";
 import { ContextDocumentation, ContextDocumentationIterator } from "./documentation";
 import { BaseCodeAction } from "../codeactions/base";
+import { semtokens } from "../semanticTokens";
 
 
 /** Base context. */
@@ -168,6 +169,9 @@ export class Context {
 	}
 	
 	public leaveScope(state: ResolveState): void {
+	}
+	
+	public addSemanticTokens(builder: semtokens.Builder): void {
 	}
 	
 	public hover(position: Position): Hover | null {

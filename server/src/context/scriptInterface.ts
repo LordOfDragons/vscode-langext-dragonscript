@@ -45,6 +45,7 @@ import { CompletionHelper } from "../completionHelper";
 import { ContextDocumentationIterator } from "./documentation";
 import { debugLogMessage } from "../server";
 import { DebugSettings } from "../debugSettings";
+import { semtokens } from "../semanticTokens";
 
 
 export class ContextInterface extends Context{
@@ -165,7 +166,20 @@ export class ContextInterface extends Context{
 			each.collectWorkspaceSymbols(list);
 		}
 	}
-
+	
+	public addSemanticTokens(builder: semtokens.Builder): void {
+		semtokens.addDeclarationToken(builder, this._name, semtokens.typeInterface,
+			this._typeModifiers, this.useDocumentation?.isDeprecated);
+		
+		for (const impl of this._implements) {
+			semtokens.addReferenceToken(builder, impl.range, impl.resolve);
+		}
+		
+		for (const statement of this._declarations) {
+			statement.addSemanticTokens(builder);
+		}
+	}
+	
 	public get inheritanceResolved(): boolean {
 		return this._inheritanceResolved;
 	}

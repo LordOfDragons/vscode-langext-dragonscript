@@ -33,6 +33,7 @@ import { TextDocument } from "vscode-languageserver-textdocument";
 import { CompletionHelper } from "../completionHelper";
 import { DebugSettings } from "../debugSettings";
 import { debugLogMessage } from "../server";
+import { semtokens } from "../semanticTokens";
 
 
 export class ContextStatements extends Context{
@@ -70,6 +71,12 @@ export class ContextStatements extends Context{
 		super.dispose();
 		for (const each of this._statements) {
 			each.dispose();
+		}
+	}
+
+	public addSemanticTokens(builder: semtokens.Builder): void {
+		for (const statement of this._statements) {
+			statement.addSemanticTokens(builder);
 		}
 	}
 

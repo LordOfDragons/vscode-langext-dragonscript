@@ -40,6 +40,7 @@ import { ResolveArgument } from "../resolve/argument";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { DebugSettings } from "../debugSettings";
 import { debugLogMessage } from "../server";
+import { semtokens } from "../semanticTokens";
 
 
 export class ContextTryCatch extends Context {
@@ -218,6 +219,11 @@ export class ContextTryCatch extends Context {
 		return super.completion(document, position);
 	}
 	
+	public addSemanticTokens(builder: semtokens.Builder): void {
+		this._typename.addSemanticTokens(builder)
+		semtokens.addDeclarationToken(builder, this._variable, semtokens.typeParameter)
+		this._statements.addSemanticTokens(builder)
+	}
 	
 	public log(console: RemoteConsole, prefix: string = ""): void {
 		console.log(`${prefix}- Catch ${this._typename} ${this._variable} ${this.logRange}`);
@@ -358,6 +364,12 @@ export class ContextTry extends Context {
 		}
 	}
 	
+	public addSemanticTokens(builder: semtokens.Builder): void {
+		this._statements.addSemanticTokens(builder)
+		for (const each of this._catches) {
+			each.addSemanticTokens(builder)
+		}
+	}
 	
 	public log(console: RemoteConsole, prefix: string = "", prefixLines: string = ""): void {
 		console.log(`${prefix}Try ${this.logRange}`);

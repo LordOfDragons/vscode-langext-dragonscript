@@ -34,6 +34,7 @@ import { TextDocument } from "vscode-languageserver-textdocument";
 import { CompletionHelper } from "../completionHelper";
 import { DebugSettings } from "../debugSettings";
 import { debugLogMessage } from "../server";
+import { semtokens } from "../semanticTokens";
 
 
 export class ContextFor extends Context{
@@ -252,6 +253,13 @@ export class ContextFor extends Context{
 		return context === this._variable ? Context.ExpectVariable.Write : Context.ExpectVariable.None;
 	}
 	
+	public addSemanticTokens(builder: semtokens.Builder): void {
+		this._variable?.addSemanticTokens(builder);
+		this._from?.addSemanticTokens(builder);
+		this._to?.addSemanticTokens(builder);
+		this._step?.addSemanticTokens(builder);
+		this._statements?.addSemanticTokens(builder);
+	}
 	
 	log(console: RemoteConsole, prefix: string = "", prefixLines: string = "") {
 		console.log(`${prefix}For`);

@@ -42,6 +42,7 @@ import { CompletionHelper } from "../completionHelper";
 import { IToken } from "chevrotain";
 import { Resolved, ResolveUsage } from "../resolve/resolved";
 import { CodeActionUnknownMember } from "../codeactions/unknownMember";
+import { semtokens } from "../semanticTokens";
 
 
 export class ContextMember extends Context{
@@ -122,6 +123,11 @@ export class ContextMember extends Context{
 		this._resolveType = undefined;
 		this._resolveUsage?.dispose();
 		this._resolveUsage = undefined;
+	}
+
+	public addSemanticTokens(builder: semtokens.Builder): void {
+		this._object?.addSemanticTokens(builder);
+		semtokens.addReferenceToken(builder, this._name?.range, this._resolveUsage)
 	}
 
 

@@ -24,7 +24,7 @@
 
 import { Context } from "./context";
 import { PinNamespaceCstNode } from "../nodeclasses/pinNamespace";
-import { CompletionItem, Definition, DocumentSymbol, Hover, Location, Position, Range, RemoteConsole, SymbolKind } from "vscode-languageserver";
+import { CompletionItem, DocumentSymbol, Hover, Location, Position, Range, RemoteConsole, SymbolKind } from "vscode-languageserver";
 import { TypeName } from "./typename";
 import { HoverInfo } from "../hoverinfo";
 import { ResolveState } from "../resolve/state";
