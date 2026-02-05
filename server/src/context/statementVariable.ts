@@ -99,7 +99,7 @@ export class ContextVariable extends Context {
 	}
 
 	public addSemanticTokens(builder: semtokens.Builder): void {
-		semtokens.addDeclarationToken(builder, this._name, semtokens.typeVariable);
+		builder.addDeclaration(this._name, semtokens.typeVariable);
 		this._typename.addSemanticTokens(builder);
 		this._value?.addSemanticTokens(builder);
 	}

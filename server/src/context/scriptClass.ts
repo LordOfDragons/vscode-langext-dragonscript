@@ -225,13 +225,13 @@ export class ContextClass extends Context{
 	}
 	
 	public addSemanticTokens(builder: semtokens.Builder): void {
-		semtokens.addDeclarationToken(builder, this._name, semtokens.typeClass,
+		builder.addDeclaration(this._name, semtokens.typeClass,
 			this._typeModifiers, this.useDocumentation?.isDeprecated);
 		
-		semtokens.addReferenceToken(builder, this._extends?.range, this._extends?.resolve);
+		builder.addReference(this._extends?.range, this._extends?.resolve);
 		
 		for (const impl of this._implements) {
-			semtokens.addReferenceToken(builder, impl.range, impl.resolve);
+			builder.addReference(impl.range, impl.resolve);
 		}
 		
 		for (const statement of this._declarations) {

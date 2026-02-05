@@ -102,6 +102,7 @@ export namespace semtokens {
 		tokenModifiers: allModifiers.map(t => t.name)
 	}
 	
+	
 	export class Builder {
 		private _builder: SemanticTokensBuilder = new SemanticTokensBuilder()
 		private _tokens: {line: integer, char: integer, length: integer, tokenType: integer, tokenModifiers: integer}[] = []
@@ -118,90 +119,17 @@ export namespace semtokens {
 				tokenModifiers: modifiers.map(m => 1 << m.index).reduce((a, b) => a + b, 0)})
 		}
 		
-		public build(): SemanticTokens {
-			this._tokens.sort((a, b) => a.line - b.line || a.char - b.char)
-			
-			for (const t of this._tokens) {
-				this._builder.push(t.line, t.char, t.length, t.tokenType, t.tokenModifiers)
-			}
-			
-			return this._builder.build()
-		}
-	}
-	
-	/**
-	 * Provider for semantic tokens.
-	 * Delegates to Context.addSemanticTokens() for each context to add its tokens.
-	 */
-	export class Provider {
-		private builder: Builder
-		
-		constructor() {
-			this.builder = new Builder()
-		}
-		
 		/**
-		 * Build semantic tokens from a context tree.
-		 * Simply delegates to the context's addSemanticTokens method.
+		 * Add a declaration token for a context with an identifier.
 		 */
-		public build(context: Context | undefined) {
-			context?.addSemanticTokens(this.builder)
-			return this.builder.build()
-		}
-	}
-	
-	/**
-	 * Add a declaration token for a context with an identifier.
-	 */
-	export function addDeclarationToken(builder: Builder, name: Identifier | undefined,
-		tokenType: Type, typeModifiers?: Context.TypeModifierSet, deprecated?: boolean): void {
-		if (!name?.range) {
-			return
-		}
-		
-		const modifiers: Modifier[] = [modDeclaration]
-		
-		if (typeModifiers) {
-			if (typeModifiers.isStatic) {
-				modifiers.push(modStatic)
+		public addDeclaration(name: Identifier | undefined, tokenType: Type,
+			typeModifiers?: Context.TypeModifierSet, deprecated?: boolean): void {
+			if (!name?.range) {
+				return
 			}
-			if (typeModifiers.isAbstract) {
-				modifiers.push(modAbstract)
-			}
-			if (typeModifiers.isFixed) {
-				modifiers.push(modReadOnly)
-			}
-		}
-		
-		if (deprecated) {
-			modifiers.push(modDeprecated)
-		}
-		
-		builder.add(name.range, tokenType, modifiers)
-	}
-	
-	/**
-	 * Add a reference token for a resolved usage.
-	 */
-	export function addReferenceToken(builder: Builder, range: Range | undefined,
-		usage: ResolveUsage | undefined): void {
-		const r = usage?.resolved
-		if (!range || !r) {
-			return
-		}
-		
-		const tokenType = getTokenTypeFromResolved(r)
-		if (!tokenType) {
-			return
-		}
-		
-		const modifiers: Modifier[] = []
-		if (usage.write) {
-			modifiers.push(modModification)
-		}
-		
-		if ('typeModifiers' in r) {
-			const typeModifiers = r.typeModifiers as Context.TypeModifierSet | undefined
+			
+			const modifiers: Modifier[] = [modDeclaration]
+			
 			if (typeModifiers) {
 				if (typeModifiers.isStatic) {
 					modifiers.push(modStatic)
@@ -213,47 +141,98 @@ export namespace semtokens {
 					modifiers.push(modReadOnly)
 				}
 			}
+			
+			if (deprecated) {
+				modifiers.push(modDeprecated)
+			}
+			
+			this.add(name.range, tokenType, modifiers)
 		}
 		
-		if (r.documentation?.isDeprecated) {
-			modifiers.push(modDeprecated)
+		/**
+		 * Add a reference token for a resolved usage.
+		 */
+		public addReference(range: Range | undefined, usage: ResolveUsage | undefined): void {
+			const r = usage?.resolved
+			if (!range || !r) {
+				return
+			}
+			
+			const tokenType = this.getTokenTypeFromResolved(r)
+			if (!tokenType) {
+				return
+			}
+			
+			const modifiers: Modifier[] = []
+			if (usage.write) {
+				modifiers.push(modModification)
+			}
+			
+			if ('typeModifiers' in r) {
+				const typeModifiers = r.typeModifiers as Context.TypeModifierSet | undefined
+				if (typeModifiers) {
+					if (typeModifiers.isStatic) {
+						modifiers.push(modStatic)
+					}
+					if (typeModifiers.isAbstract) {
+						modifiers.push(modAbstract)
+					}
+					if (typeModifiers.isFixed) {
+						modifiers.push(modReadOnly)
+					}
+				}
+			}
+			
+			if (r.documentation?.isDeprecated) {
+				modifiers.push(modDeprecated)
+			}
+			
+			this.add(range, tokenType, modifiers)
 		}
 		
-		builder.add(range, tokenType, modifiers)
-	}
-	
-	/**
-	 * Get semantic token type from a Resolved object.
-	 */
-	function getTokenTypeFromResolved(resolved: Resolved): Type | undefined {
-		switch (resolved.type) {
-			case Resolved.Type.Namespace:
-				return typeNamespace
+		/**
+		 * Get semantic token type from a Resolved object.
+		 */
+		public getTokenTypeFromResolved(resolved: Resolved): Type | undefined {
+			switch (resolved.type) {
+				case Resolved.Type.Namespace:
+					return typeNamespace
+				
+				case Resolved.Type.Class:
+					return typeClass
+				
+				case Resolved.Type.Interface:
+					return typeInterface
+				
+				case Resolved.Type.Enumeration:
+					return typeEnum
+				
+				case Resolved.Type.Function:
+				case Resolved.Type.FunctionGroup:
+					return typeMethod
+				
+				case Resolved.Type.Variable:
+					return typeProperty
+				
+				case Resolved.Type.Argument:
+					return typeParameter
+				
+				case Resolved.Type.LocalVariable:
+					return typeVariable
+				
+				default:
+					return undefined
+			}
+		}
+		
+		public build(): SemanticTokens {
+			this._tokens.sort((a, b) => a.line - b.line || a.char - b.char)
 			
-			case Resolved.Type.Class:
-				return typeClass
+			for (const t of this._tokens) {
+				this._builder.push(t.line, t.char, t.length, t.tokenType, t.tokenModifiers)
+			}
 			
-			case Resolved.Type.Interface:
-				return typeInterface
-			
-			case Resolved.Type.Enumeration:
-				return typeEnum
-			
-			case Resolved.Type.Function:
-			case Resolved.Type.FunctionGroup:
-				return typeMethod
-			
-			case Resolved.Type.Variable:
-				return typeProperty
-			
-			case Resolved.Type.Argument:
-				return typeParameter
-			
-			case Resolved.Type.LocalVariable:
-				return typeVariable
-			
-			default:
-				return undefined
+			return this._builder.build()
 		}
 	}
 }

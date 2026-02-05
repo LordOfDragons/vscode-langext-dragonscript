@@ -318,7 +318,7 @@ export class ContextFunction extends Context{
 	}
 
 	public addSemanticTokens(builder: semtokens.Builder): void {
-		semtokens.addDeclarationToken(builder, this._name, semtokens.typeMethod,
+		builder.addDeclaration(this._name, semtokens.typeMethod,
 			this._typeModifiers, this.useDocumentation?.isDeprecated);
 		
 		this._returnType?.addSemanticTokens(builder);

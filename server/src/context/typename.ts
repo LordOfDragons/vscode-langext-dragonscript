@@ -98,7 +98,7 @@ export class TypeNamePart {
 	}
 	
 	public addSemanticTokens(builder: semtokens.Builder): void {
-		semtokens.addReferenceToken(builder, this._name.range, this._resolve)
+		builder.addReference(this._name.range, this._resolve)
 	}
 }
 

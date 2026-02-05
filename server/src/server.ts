@@ -56,9 +56,7 @@ import {
 	FileChangeType,
 	DefinitionParams,
 	SemanticTokensParams,
-	SemanticTokens,
-	Range,
-	Position} from 'vscode-languageserver/node'
+	SemanticTokens} from 'vscode-languageserver/node'
 
 import {
 	TextDocument
@@ -704,13 +702,14 @@ connection.onRenameRequest(
 
 connection.languages.semanticTokens.on(
 	async (params: SemanticTokensParams): Promise<SemanticTokens> => {
+		const builder = new semtokens.Builder();
 		try {
 			const sd = await ensureDocument(params.textDocument.uri);
-			return (new semtokens.Provider()).build(sd.context);
+			sd.context?.addSemanticTokens(builder);
 		} catch (error) {
 			logError(error);
-			return (new semtokens.Builder()).build();
 		}
+		return builder.build();
 	}
 )
 

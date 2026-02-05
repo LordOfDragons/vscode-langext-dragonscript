@@ -221,7 +221,7 @@ export class ContextTryCatch extends Context {
 	
 	public addSemanticTokens(builder: semtokens.Builder): void {
 		this._typename.addSemanticTokens(builder)
-		semtokens.addDeclarationToken(builder, this._variable, semtokens.typeParameter)
+		builder.addDeclaration(this._variable, semtokens.typeParameter)
 		this._statements.addSemanticTokens(builder)
 	}
 	

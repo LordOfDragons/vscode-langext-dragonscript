@@ -103,7 +103,7 @@ export class ContextClassVariable extends Context{
 	}
 
 	public addSemanticTokens(builder: semtokens.Builder): void {
-		semtokens.addDeclarationToken(builder, this._name, semtokens.typeProperty,
+		builder.addDeclaration(this._name, semtokens.typeProperty,
 			this._typeModifiers, this.useDocumentation?.isDeprecated);
 		
 		this._typename.addSemanticTokens(builder);

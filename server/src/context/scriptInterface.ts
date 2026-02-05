@@ -168,11 +168,11 @@ export class ContextInterface extends Context{
 	}
 	
 	public addSemanticTokens(builder: semtokens.Builder): void {
-		semtokens.addDeclarationToken(builder, this._name, semtokens.typeInterface,
+		builder.addDeclaration(this._name, semtokens.typeInterface,
 			this._typeModifiers, this.useDocumentation?.isDeprecated);
 		
 		for (const impl of this._implements) {
-			semtokens.addReferenceToken(builder, impl.range, impl.resolve);
+			builder.addReference(impl.range, impl.resolve);
 		}
 		
 		for (const statement of this._declarations) {

@@ -127,7 +127,7 @@ export class ContextMember extends Context{
 
 	public addSemanticTokens(builder: semtokens.Builder): void {
 		this._object?.addSemanticTokens(builder);
-		semtokens.addReferenceToken(builder, this._name?.range, this._resolveUsage)
+		builder.addReference(this._name?.range, this._resolveUsage)
 	}
 
 
