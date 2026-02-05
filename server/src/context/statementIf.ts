@@ -139,8 +139,13 @@ export class ContextIfElif extends Context {
 				?? CompletionHelper.createExpression(Range.create(position, position), this);
 		}
 	}
-
-
+	
+	public addSemanticTokens(builder: semtokens.Builder): void {
+		this._condition?.addSemanticTokens(builder)
+		this._statements.addSemanticTokens(builder)
+	}
+	
+	
 	log(console: RemoteConsole, prefix: string = "") {
 		console.log(`${prefix}- Elif ${this.logRange}`);
 		this._condition?.log(console, `${prefix}  - Cond: `, `${prefix}    `);
