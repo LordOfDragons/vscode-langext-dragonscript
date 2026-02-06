@@ -120,6 +120,15 @@ or join the [Discord channel](https://discord.gg/Jeg62ns) to ask for help.
 
 ## Release Notes
 
+### 2.4.0
+
+- Added theme override to underline written to variables and deprecated elements.
+  Can be disabled if the uses does not want to use this
+- Added support for generating semantic tokens
+- Improved TextMate grammer file
+- Workaround for handling files contained in delga by vscode by unpacking them into
+  a temporary directory (delga/deal caching)
+
 ### 2.3.0
 
 - All XML Schemas used by Drag[en]gine added.
