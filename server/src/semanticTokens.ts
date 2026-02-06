@@ -209,7 +209,11 @@ export namespace semtokens {
 				
 				case Resolved.Type.Function:
 				case Resolved.Type.FunctionGroup:
-					return typeMethod
+					if (resolved.name == 'new') {
+						return typeKeyword
+					} else {
+						return typeMethod
+					}
 				
 				case Resolved.Type.Variable:
 					return typeProperty
