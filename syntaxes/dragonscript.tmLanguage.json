@@ -753,7 +753,7 @@
 			"contentName": "markup.italic.documentation.dragonscript",
 			"patterns": [
 				{
-					"match": "(?=\\*/)",
+					"match": "^\\s*\\*(?!\\/)",
 					"name": "punctuation.definition.comment.dragonscript"
 				}
 			]
@@ -775,7 +775,10 @@
 			},
 			"contentName": "markup.italic.documentation.dragonscript",
 			"patterns": [
-				{"match": "^\\s*\\*", "name": "punctuation.definition.comment.dragonscript"}
+				{
+					"match": "^\\s*\\*(?!\\/)",
+					"name": "punctuation.definition.comment.dragonscript"
+				}
 			]
 		},
 		
