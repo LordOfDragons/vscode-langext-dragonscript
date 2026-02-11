@@ -38,7 +38,7 @@
 			"beginCaptures": {
 				"1": {"name": "keyword.control.namespace.dragonscript"}
 			},
-			"end": "(:)|(?<!\\\\)$",
+			"end": "(:)|(?<!\\\\)\\n",
 			"endCaptures": {
 				"1": {"patterns": [{"include": "#endofcommand"}]}
 			},
@@ -60,7 +60,7 @@
 			"beginCaptures": {
 				"1": {"name": "keyword.control.import.pin.dragonscript"}
 			},
-			"end": "(:)|(?<!\\\\)$",
+			"end": "(:)|(?<!\\\\)\\n",
 			"endCaptures": {
 				"1": {"patterns": [{"include": "#endofcommand"}]}
 			},
@@ -82,7 +82,7 @@
 			"beginCaptures": {
 				"1": {"name": "keyword.control.requires.dragonscript"}
 			},
-			"end": "(:)|(?<!\\\\)$",
+			"end": "(:)|(?<!\\\\)\\n",
 			"endCaptures": {
 				"1": {"patterns": [{"include": "#endofcommand"}]}
 			},
@@ -142,7 +142,7 @@
 			"beginCaptures": {
 				"1": {"name": "storage.type.function.dragonscript"}
 			},
-			"end": "(:)|(?<!\\\\)$",
+			"end": "(:)|(?<!\\\\)\\n",
 			"endCaptures": {
 				"1": {"patterns": [{"include": "#endofcommand"}]}
 			},
@@ -308,7 +308,7 @@
 			"beginCaptures": {
 				"1": {"name": "storage.type.variable.dragonscript"}
 			},
-			"end": "(:)|(?<!\\\\)$",
+			"end": "(:)|(?<!\\\\)\\n",
 			"endCaptures": {
 				"1": {"patterns": [{"include": "#endofcommand"}]}
 			},
@@ -343,6 +343,7 @@
 		"expression": {
 			"patterns": [
 				{"include": "#whitespace"},
+				{"include": "#linesplice"},
 				{"include": "#comment.singleline"},
 				{"include": "#comment.multiline"},
 				{"include": "#grouping.parenthesis"},
@@ -373,7 +374,6 @@
 				},
 				{"include": "#variable.language"},
 				{"include": "#constant.language"},
-				{"include": "#linesplice"},
 				{"include": "#endofcommand"},
 				{"include": "#string"},
 				{"include": "#character"},
@@ -550,7 +550,7 @@
 			"beginCaptures": {
 				"0": {"name": "keyword.control.return.dragonscript"}
 			},
-			"end": "(:)|(?<!\\\\)$",
+			"end": "(:)|(?<!\\\\)\\n",
 			"endCaptures": {
 				"1": {"patterns": [{"include": "#endofcommand"}]}
 			},
