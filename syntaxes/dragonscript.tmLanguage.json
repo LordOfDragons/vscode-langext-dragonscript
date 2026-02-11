@@ -200,6 +200,7 @@
 			},
 			"patterns": [
 				{"include": "#whitespace"},
+				{"include": "#comment.singleline"},
 				{"include": "#comment.multiline"},
 				{"include": "#linesplice"},
 				{"include": "#comma"},
@@ -287,6 +288,7 @@
 			},
 			"patterns": [
 				{"include": "#whitespace"},
+				{"include": "#comment.singleline"},
 				{"include": "#comment.multiline"},
 				{"include": "#linesplice"},
 				{"include": "#endofcommand"},
@@ -341,6 +343,7 @@
 		"expression": {
 			"patterns": [
 				{"include": "#whitespace"},
+				{"include": "#comment.singleline"},
 				{"include": "#comment.multiline"},
 				{"include": "#grouping.parenthesis"},
 				{"include": "#block"},
@@ -736,7 +739,7 @@
 		},
 		
 		"doxygen-keywords": {
-			"match": "(\\\\)(details|param|return|author|see|note|warning|retval|version|par|throws|em|b)\\b",
+			"match": "(\\\\)(details|param|return|author|ref|see|note|warning|retval|version|par|throws|em|b)\\b",
 			"captures": {
 				"1": {"name": "punctuation.definition.keyword.dragonscript"},
 				"2": {"name": "markup.bold.documentation.dragonscript"}
