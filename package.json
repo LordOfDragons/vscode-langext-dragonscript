@@ -149,7 +149,7 @@
 		"@types/proper-lockfile": "^4.1.4",
 		"@vscode/vsce": "^3.5.0",
 		"minimatch": "^9.0.3",
-		"npm": "^11.8.0",
+		"npm": "^11.10.0",
 		"proper-lockfile": "^4.1.2",
 		"punycode": "^2.3.1",
 		"vscode-uri": "^3.0.8",
