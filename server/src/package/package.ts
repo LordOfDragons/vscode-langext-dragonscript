@@ -29,9 +29,9 @@ import { Diagnostic, DiagnosticSeverity, RemoteConsole } from "vscode-languagese
 import { ContextScript } from "../context/script";
 import { ReportConfig } from "../reportConfig";
 import { ScriptDocument } from "../scriptDocument";
-import { debugLogMessage, getDocumentSettings, scriptDocuments, validator } from "../server";
+import { getDocumentSettings, scriptDocuments, validator } from "../server";
 import { DeferredPromiseVoid } from "../deferredPromise";
-import { Minimatch, minimatch } from 'minimatch';
+import { Minimatch } from 'minimatch';
 import { URI } from "vscode-uri";
 
 export class Package {

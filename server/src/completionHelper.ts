@@ -1501,7 +1501,7 @@ export class CompletionHelper {
 		return items;
 	}
 	
-	private static regexWord = RegExp(/^\p{L}/, 'u');
+	private static regexWord = RegExp(/^\p{L}/u, 'u');
 	
 	/** Range of word containing position. */
 	public static wordRange(document: TextDocument, position: Position): Range {
