@@ -1,0 +1,34 @@
+# DragonScript
+lexer: dragonscript
+properties:
+    fold: 1
+keywords:
+    0: >
+        public protected private native abstract fixed static namespace pin
+        requires interface func enum class end extends implements var
+        to downto step break continue throw cast castable typeof isnull
+        not and or if else elif block while for select case try catch return
+        this super true false null
+    1: >
+        void bool byte int float Object Boolean Byte Integer Float String
+        Array Set Dictionary Block WeakReference ObjectReference Exception
+comments:
+    line: "//"
+    block: [ "/*", "*/" ]
+styles:
+    0: 32
+    1: 101
+    2: 101
+    3: 103
+    4: 104
+    5: 105
+    6: 106
+    7: 106
+    8: 106
+    9: 109
+    10: 110
+    11: 32
+    13: 120
+    14: 119
+    15: 121
+    20: 32

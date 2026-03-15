@@ -1,0 +1,4 @@
+name: "DragonScript"
+fileTypes: [ "dragonscript" ]
+binary: "/boot/system/bin/node"
+arguments: [ "-r", "%INSTALLDIR%/haiku-server.js", "%INSTALLDIR%/server.js", "--stdio" ]
