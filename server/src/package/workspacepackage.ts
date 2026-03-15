@@ -24,7 +24,7 @@
 
 import { Diagnostic, RemoteConsole, WorkspaceFolder } from "vscode-languageserver";
 import { ReportConfig } from "../reportConfig";
-import { debugLogContext, debugLogMessage, debugLogObj, getDocumentSettings, getFileSettings, packages, reportDiagnostics } from "../server";
+import { debugLogMessage, getDocumentSettings, getFileSettings, packages, reportDiagnostics } from "../server";
 import { PackageDEModule } from "./dragenginemodule";
 import { PackageDSLanguage } from "./dslanguage";
 import { Package } from "./package";

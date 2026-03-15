@@ -22,48 +22,48 @@
 * SOFTWARE.
 */
 
-import { ClientCapabilities } from "vscode-languageserver";
+import { ClientCapabilities } from "vscode-languageserver"
 
 export class DSCapabilities {
-	protected _hasConfiguration = false;
-	protected _hasWorkspaceFolder = false;
-	protected _hasDiagnosticRelatedInformation = false;
-
-
+	protected _hasConfiguration = false
+	protected _hasWorkspaceFolder = false
+	protected _hasDiagnosticRelatedInformation = false
+	
+	
 	constructor() {
 	}
-
-
+	
+	
 	public init(clientCapabilities: ClientCapabilities): void {
 		// Does the client support the `workspace/configuration` request?
 		// If not, we fall back using global settings.
 		this._hasConfiguration = !!(
 			clientCapabilities.workspace
 			&& !!clientCapabilities.workspace.configuration
-		);
-
+		)
+		
 		this._hasWorkspaceFolder = !!(
 			clientCapabilities.workspace
 			&& !!clientCapabilities.workspace.workspaceFolders
-		);
+		)
 
 		this._hasDiagnosticRelatedInformation = !!(
 			clientCapabilities.textDocument
 			&& clientCapabilities.textDocument.publishDiagnostics
 			&& clientCapabilities.textDocument.publishDiagnostics.relatedInformation
-		);
+		)
 	}
-
-
+	
+	
 	public get hasConfiguration(): boolean {
-		return this._hasConfiguration;
+		return this._hasConfiguration
 	}
-
+	
 	public get hasWorkspaceFolder(): boolean {
-		return this._hasWorkspaceFolder;
+		return this._hasWorkspaceFolder
 	}
-
+	
 	public get hasDiagnosticRelatedInformation(): boolean {
-		return this._hasDiagnosticRelatedInformation;
+		return this._hasDiagnosticRelatedInformation
 	}
 }

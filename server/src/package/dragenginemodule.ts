@@ -181,6 +181,10 @@ export class PackageDEModule extends Package {
 					pathEngine = "C:\\Program Files\\Dragengine\\Share";
 					break;
 					
+				case 'haiku':
+					pathEngine = "/boot/system/data/dragengine";
+					break;
+					
 				default:
 					pathEngine = "/usr/share/dragengine";
 			}
