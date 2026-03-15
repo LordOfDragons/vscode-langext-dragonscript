@@ -345,14 +345,18 @@ export class Package {
 				continue;
 			}
 			
-			let stats = statSync(childpath);
-			if (stats.isDirectory()) {
-				directories.push(childpath);
-				
-			} else if (stats.isFile()) {
-				if (each.endsWith('.ds')) {
-					list.push(childpath);
+			try {
+				let stats = statSync(childpath);
+				if (stats.isDirectory()) {
+					directories.push(childpath);
+					
+				} else if (stats.isFile()) {
+					if (each.endsWith('.ds')) {
+						list.push(childpath);
+					}
 				}
+			} catch {
+				this._console.log(`Package '${this._id}': Failed stating path '${childpath}'`);
 			}
 		}
 		
