@@ -84,6 +84,7 @@ import { semtokens } from './semanticTokens'
 import { DelgaCacher } from './delgaCacher'
 import { URI } from 'vscode-uri'
 import { join } from 'path'
+import { homedir, platform } from 'os'
 
 // Create a connection for the server, using Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -135,8 +136,7 @@ export function remoteConsole() {
 	return connection.console
 }
 
-
-const defaultSettings: DSSettings = {
+let defaultSettings: DSSettings = {
 	maxNumberOfProblems: 1000,
 	pathDragengine: '',
 	requiresPackageDragengine: false,
@@ -160,7 +160,7 @@ export const delgaCacher: DelgaCacher = new DelgaCacher(remoteConsole())
 var fallbackWorkspaceUri: string | undefined = undefined
 
 interface DSInitOptions {
-	globalStoragePath: string
+	globalStoragePath: string | undefined
 }
 
 connection.onInitialize(async (params: InitializeParams) => {
@@ -175,12 +175,34 @@ connection.onInitialize(async (params: InitializeParams) => {
 	debugLogMessage(`- hasWorkspaceFolder: ${capabilities.hasWorkspaceFolder}`)
 	debugLogMessage(`- hasDiagnosticRelatedInformation: ${capabilities.hasDiagnosticRelatedInformation}`)
 	
+	if (!capabilities.hasConfiguration) {
+		defaultSettings.requiresPackageDragengine = true
+	}
 	if (!capabilities.hasWorkspaceFolder) {
 		fallbackWorkspaceUri = params.rootUri || undefined
 	}
 	
 	const iopts = params.initializationOptions as DSInitOptions
-	delgaCacher.cacheDir = join(URI.parse(iopts.globalStoragePath).fsPath, "delgaCache")
+	if (iopts.globalStoragePath) {
+		delgaCacher.cacheDir = join(URI.parse(iopts.globalStoragePath).fsPath, "delgaCache")
+	} else {
+		switch (platform()) {
+			case 'win32':
+				delgaCacher.cacheDir = join(
+					process.env.LOCALAPPDATA || join(homedir(), 'AppData', 'Local'),
+					'LSPDragonScript', 'DelgaCache')
+				break;
+				
+			case 'haiku':
+				delgaCacher.cacheDir = "/boot/home/config/cache/lsp_dragonscript/delgaCache";
+				break;
+				
+			default:
+				delgaCacher.cacheDir = join(
+					process.env.XDG_CACHE_HOME || join(homedir(), '.cache'),
+					'lspDragonScript', 'delgaCache')
+		}
+	}
 	
 	const result: InitializeResult = {
 		capabilities: {
