@@ -26,6 +26,7 @@ import * as path from 'path'
 import {
 	workspace,
 	ExtensionContext,
+	ExtensionMode,
 	ConfigurationTarget,
 	window,
 	TextEditor,
@@ -150,9 +151,12 @@ function activateModifications(context: ExtensionContext) {
 
 export function activate(context: ExtensionContext) {
 	// The server is implemented in node
-	const serverModule = context.asAbsolutePath(
-		path.join('server', 'out', 'server.js')
-	);
+	const serverPath = context.extensionMode === ExtensionMode.Development
+		? path.join('server', 'out', 'server.js')
+		: path.join('server', 'distribute', 'index.js');
+	
+	const serverModule = context.asAbsolutePath(serverPath);
+	
 	// The debug options for the server
 	// --inspect=6009: runs the server in Node's Inspector mode so VS Code can attach to the server for debugging
 	const debugOptions = {

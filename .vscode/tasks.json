@@ -23,8 +23,7 @@
 			"type": "shell",
 			"command": "./node_modules/.bin/vsce",
 			"args": [
-				"package",
-				"--pre-release"
+				"package"
 			],
 			"group": "build",
 			"problemMatcher": [],

@@ -1,7 +1,7 @@
 {
 	"name": "dragonscript-language-server",
 	"description": "DragonScript Language Server.",
-	"version": "2.4.1",
+	"version": "2.4.2",
 	"publisher": "dragondreams",
 	"author": "DragonDreams GmbH",
 	"homepage": "https://dragondreams.ch",
@@ -15,8 +15,12 @@
 		"url": "https://github.com/LordOfDragons/vscode-langext-dragonscript"
 	},
 	"dependencies": {
+		"@node-rs/crc32": "^1.10.6"
+	},
+	"devDependencies": {
 		"chevrotain": "^11.1.1",
 		"copyfiles": "^2.4.1",
+		"crc-32": "^1.2.2",
 		"rimraf": "^3.0.2",
 		"vscode-languageserver": "^7.0.0",
 		"vscode-languageserver-textdocument": "^1.0.8",
@@ -26,6 +30,9 @@
 		"prebuild": "rimraf ./out",
 		"build": "npm run compile && npm run copy-assets",
 		"compile": "tsc",
-		"copy-assets": "copyfiles \"./data/**/*\" ./out"
+		"copy-assets": "copyfiles \"./data/**/*\" ./out",
+		"dist-build": "npm run dist-compile && npm run dist-copy-assets",
+		"dist-compile": "esbuild src/server.ts --bundle --outfile=distribute/index.js --format=cjs --platform=node --minify --inject:./crc32-preload.js --external:crc-32 --external:@node-rs/*",
+		"dist-copy-assets": "copyfiles \"./data/**/*\" ./distribute"
 	}
 }

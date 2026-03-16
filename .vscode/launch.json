@@ -25,7 +25,7 @@
 				"${workspaceRoot}/../scripts.code-workspace"
 				
 			],
-			//"outFiles": ["${workspaceRoot}/client/out/**/*.js"],
+			"outFiles": ["${workspaceRoot}/client/out/**/*.js"],
 			/*
 			// hangs if used
 			"preLaunchTask": {

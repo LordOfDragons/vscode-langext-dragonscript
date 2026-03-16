@@ -22,131 +22,141 @@
 * SOFTWARE.
 */
 
-import { statSync } from "fs";
-import { readdir } from "fs/promises";
-import { platform } from "os";
-import { join } from "path";
-import { RemoteConsole } from "vscode-languageserver";
-import { Package } from "./package";
-import { Minimatch } from "minimatch";
-import yauzl = require('yauzl-promise');
-import { Helpers } from "../helpers";
-import { DelgaFileEntry } from "./basepackage";
-import { delgaCacher } from "../server";
-import { BaseCacheDelgaHandler } from "../delgaCacher";
+import { statSync } from "fs"
+import { readdir } from "fs/promises"
+import { platform } from "os"
+import { join } from "path"
+import { RemoteConsole } from "vscode-languageserver"
+import { Package } from "./package"
+import { Minimatch } from "minimatch"
+import { Helpers } from "../helpers"
+import { delgaCacher } from "../server"
+import { BaseCacheDelgaHandler } from "../delgaCacher"
+import yauzl = require('yauzl-promise')
+
+interface DelgaFileEntry {
+	uri: string
+	entry: yauzl.Entry
+	filename: string
+	pathDelga: string
+}
 
 class PackageCacheDelgaHandler extends BaseCacheDelgaHandler {
-	private _entries: Map<string,DelgaFileEntry> = new Map<string,DelgaFileEntry>();
-	private _matcher: Minimatch;
+	private _entries: Map<string,DelgaFileEntry> = new Map<string,DelgaFileEntry>()
+	private _matcher: Minimatch
+	private _pathDelga: string
 	
-	constructor (entries: Map<string,DelgaFileEntry>, matcher: Minimatch) {
-		super();
-		this._entries = entries;
-		this._matcher = matcher;
+	constructor (entries: Map<string,DelgaFileEntry>, matcher: Minimatch, pathDelga: string) {
+		super()
+		this._entries = entries
+		this._matcher = matcher
+		this._pathDelga = pathDelga
 	}
 	
 	async cacheDelga(cachePath: string): Promise<void> {
+		const promisses = []
 		for (const each of this._entries) {
-			if (this._matcher.match(each[1].filename)) {
-				this.doCacheDelga(cachePath, each[1].entry, each[1].filename);
+			if (this._pathDelga == each[1].pathDelga && this._matcher.match(each[1].filename)) {
+				promisses.push(this.doCacheDelga(cachePath, each[1].entry, each[1].filename))
 			}
 		}
+		await Promise.all(promisses)
 	}
 }
 
 export class PackageDEModule extends Package {
-	protected _pathDragengine: string = "";
-	protected _moduleVersion?: string;
-	protected _pathModule?: string;
-	protected _pathDeal?: string;
-	protected _pathDealModule?: string;
-	protected _dealFiles: yauzl.ZipFile[] = [];
-	protected _dealFileEntries: Map<string,DelgaFileEntry> = new Map<string,DelgaFileEntry>();
+	protected _pathDragengine: string = ""
+	protected _moduleVersion?: string
+	protected _pathModule?: string
+	protected _pathDeal?: string
+	protected _pathDealModule?: string
+	protected _dealFiles: yauzl.ZipFile[] = []
+	protected _dealFileEntries: Map<string,DelgaFileEntry> = new Map<string,DelgaFileEntry>()
 	
 	
-	public static readonly PACKAGE_ID: string = "DragengineModule";
+	public static readonly PACKAGE_ID: string = "DragengineModule"
 	
 	
 	constructor(console: RemoteConsole) {
-		super(console, PackageDEModule.PACKAGE_ID);
-		this._console.log("PackageDEModule: Created");
+		super(console, PackageDEModule.PACKAGE_ID)
+		this._console.log("PackageDEModule: Created")
 	}
 	
 	public async dispose(): Promise<void> {
-		await this.clearDeals();
-		await super.dispose();
+		await this.clearDeals()
+		await super.dispose()
 	}
 	
 	
 	protected async clearDeals(): Promise<void> {
-		this._dealFileEntries.clear();
+		this._dealFileEntries.clear()
 		for (const each of this._dealFiles) {
-			await each.close();
+			await each.close()
 		}
-		this._dealFiles.splice(0);
+		this._dealFiles.splice(0)
 	}
 	
 	public get pathDragengine(): string {
-		return this._pathDragengine;
+		return this._pathDragengine
 	}
 	
 	public set pathDragengine(value: string) {
 		if (value == this._pathDragengine) {
-			return;
+			return
 		}
 		
-		this._pathDragengine = value;
+		this._pathDragengine = value
 		
 		if (this._loaded) {
-			this.reload();
+			this.reload()
 		}
 	}
 	
 	protected async clear(): Promise<void> {
-		await super.clear();
-		this._pathModule = undefined;
-		this._pathDeal = undefined;
-		this._pathDealModule = undefined;
+		await super.clear()
+		this._pathModule = undefined
+		this._pathDeal = undefined
+		this._pathDealModule = undefined
 		
-		await this.clearDeals();
+		await this.clearDeals()
 	}
 	
 	protected async loadPackage(): Promise<void> {
-		await this.findPathModule();
+		await this.findPathModule()
 		
 		if (!this._pathModule && !this._pathDealModule) {
-			this._console.log(`Package '${this._id}': Module path not found.`);
-			return;
+			this._console.log(`Package '${this._id}': Module path not found.`)
+			return
 		}
 		
-		this._console.log(`Package '${this._id}': Scan package`);
-		let startTime = Date.now();
+		this._console.log(`Package '${this._id}': Scan package`)
+		let startTime = Date.now()
 		
 		if (this._pathDeal && this._pathDealModule) {
-			let matcher = new Minimatch(join(this._pathDealModule, "@(native|scripts)", "**", "*.ds"));
+			let matcher = new Minimatch(join(this._pathDealModule, "@(native|scripts)", "**", "*.ds"))
 			
-			const delgaStats = statSync(this._pathDeal);
+			const delgaStats = statSync(this._pathDeal)
 			const cachePath = await delgaCacher.checkCache(
 				this._pathDeal, delgaStats.size, delgaStats.mtime.getTime(),
-				new PackageCacheDelgaHandler(this._dealFileEntries, matcher));
+				new PackageCacheDelgaHandler(this._dealFileEntries, matcher, this._pathDeal))
 			
 			if (cachePath) {
-				const prev = new Map<string,DelgaFileEntry>(this._dealFileEntries);
-				this._dealFileEntries.clear();
+				const prev = new Map<string,DelgaFileEntry>(this._dealFileEntries)
+				this._dealFileEntries.clear()
 				
 				for (const each of prev) {
-					let uri = each[0];
+					let uri = each[0]
 					if (matcher.match(each[1].filename)) {
-						uri = join(cachePath, ...each[1].filename.split("/"));
-						each[1].uri = uri;
+						uri = join(cachePath, ...each[1].filename.split("/"))
+						each[1].uri = uri
 					}
-					this._dealFileEntries.set(uri, each[1]);
+					this._dealFileEntries.set(uri, each[1])
 				}
 			}
 			
 			for (const each of this._dealFileEntries) {
 				if (matcher.match(each[1].filename)) {
-					this._files.push(each[0]);
+					this._files.push(each[0])
 				}
 			}
 		}
@@ -155,197 +165,202 @@ export class PackageDEModule extends Package {
 			await Promise.all([
 				this.scanPackage(this._files, join(this._pathModule, "native")),
 				this.scanPackage(this._files, join(this._pathModule, "scripts"))
-			]);
+			])
 		}
 		
-		let elapsedTime = Date.now() - startTime;
-		this._console.log(`Package '${this._id}': Package scanned in ${elapsedTime / 1000}s found ${this._files.length} files`);
+		let elapsedTime = Date.now() - startTime
+		this._console.log(`Package '${this._id}': Package scanned in ${elapsedTime / 1000}s found ${this._files.length} files`)
 		
-		await this.loadFiles();
+		await this.loadFiles()
 		
-		this.loadingFinished();
+		this.loadingFinished()
 	}
 
 	protected async findPathModule(): Promise<void> {
-		this._moduleVersion = undefined;
-		this._pathModule = undefined;
-		this._pathDeal = undefined;
-		this._pathDealModule = undefined;
+		this._moduleVersion = undefined
+		this._pathModule = undefined
+		this._pathDeal = undefined
+		this._pathDealModule = undefined
 		
-		await this.clearDeals();
+		await this.clearDeals()
 		
-		let pathEngine = this._pathDragengine;
+		let pathEngine = this._pathDragengine
 		if (!pathEngine) {
 			switch (platform()) {
 				case 'win32':
-					pathEngine = "C:\\Program Files\\Dragengine\\Share";
-					break;
+					pathEngine = "C:\\Program Files\\Dragengine\\Share"
+					break
 					
 				case 'haiku':
-					pathEngine = "/boot/system/data/dragengine";
-					break;
+					pathEngine = "/boot/system/data/dragengine"
+					break
 					
 				default:
-					pathEngine = "/usr/share/dragengine";
+					pathEngine = "/usr/share/dragengine"
 			}
 		}
 		
-		let pathScrDSPart;
+		let pathScrDSPart
 		switch (platform()) {
 			case 'win32':
 				pathScrDSPart = join("Modules", "Scripting", "DragonScript")
-				break;
+				break
 				
 			default:
-				pathScrDSPart = join("modules", "scripting", "dragonscript");
+				pathScrDSPart = join("modules", "scripting", "dragonscript")
 		}
-		let pathScrDS = join(pathEngine, pathScrDSPart);
+		let pathScrDS = join(pathEngine, pathScrDSPart)
 		
-		var filesDeals: string[] = [];
+		var filesDeals: string[] = []
 		try {
-			filesDeals = await readdir(pathEngine);
+			filesDeals = await readdir(pathEngine)
 		} catch {
-			this._console.log(`Package '${this._id}': Failed reading directory '${pathEngine}'`);
+			this._console.log(`Package '${this._id}': Failed reading directory '${pathEngine}'`)
 		}
 		
-		var filesVerDirs: string[] = [];
+		var filesVerDirs: string[] = []
 		try {
-			filesVerDirs = await readdir(pathScrDS);
+			filesVerDirs = await readdir(pathScrDS)
 		} catch {
-			this._console.log(`Package '${this._id}': Failed reading directory '${pathScrDS}'`);
+			this._console.log(`Package '${this._id}': Failed reading directory '${pathScrDS}'`)
 		}
 		
-		let matcherDeal = new Minimatch("dragengine-*.deal");
+		let matcherDeal = new Minimatch("dragengine-*.deal")
 		
 		// no join for deals as this uses backslash on windows!
-		let prefixDealDSDir = "modules/scripting/dragonscript/";
-		let lenPrefixDealDSDir = prefixDealDSDir.length;
+		let prefixDealDSDir = "modules/scripting/dragonscript/"
+		let lenPrefixDealDSDir = prefixDealDSDir.length
 		
 		for (const each of filesDeals) {
-			let dealpath = join(pathEngine, each);
-			let stats = statSync(dealpath);
+			let dealpath = join(pathEngine, each)
+			let stats = statSync(dealpath)
 			if (!stats.isFile() || !matcherDeal.match(each)) {
-				continue;
+				continue
 			}
-			this._console.log(`Package '${this._id}': Found Asset Library '${each}'`);
+			this._console.log(`Package '${this._id}': Found Asset Library '${each}'`)
 			
 			try {
-				let dealFile = await yauzl.open(dealpath);
-				this._dealFiles.push(dealFile);
+				let dealFile = await yauzl.open(dealpath)
+				this._dealFiles.push(dealFile)
 				
-				let dealDSVersFound = new Set<string>();
+				let dealDSVersFound = new Set<string>()
 				
 				for await (const each of dealFile) {
-					let filename = each.filename;
-					filename = filename.replace(/\\/g, '/'); // windows zip spec violation protection
+					let filename = each.filename
+					filename = filename.replace(/\\/g, '/') // windows zip spec violation protection
 					
-					const uri = Helpers.createDelgaUri(dealpath, filename);
-					this._dealFileEntries.set(uri, {uri: uri, entry: each, filename: filename});
+					const uri = Helpers.createDelgaUri(dealpath, filename)
+					this._dealFileEntries.set(uri, {
+						uri: uri,
+						entry: each,
+						filename: filename,
+						pathDelga: dealpath
+					})
 					
 					if (!filename.startsWith(prefixDealDSDir)) {
-						continue;
+						continue
 					}
 					
-					let index = filename.indexOf('/', lenPrefixDealDSDir);
+					let index = filename.indexOf('/', lenPrefixDealDSDir)
 					if (index == -1) {
-						index = filename.length;
+						index = filename.length
 					}
-					let modver = filename.substring(lenPrefixDealDSDir, index);
+					let modver = filename.substring(lenPrefixDealDSDir, index)
 					if (!modver || dealDSVersFound.has(modver)) {
-						continue;
+						continue
 					}
-					dealDSVersFound.add(modver);
+					dealDSVersFound.add(modver)
 					
-					this._console.log(`Package '${this._id}': Asset Library: Found Module Version ${modver}`);
-					let betterOrSame: boolean = false;
+					this._console.log(`Package '${this._id}': Asset Library: Found Module Version ${modver}`)
+					let betterOrSame: boolean = false
 					
 					if (this._moduleVersion) {
-						let a = this._moduleVersion.split('.').map(x => parseInt(x));
-						let b = modver.split('.').map(x => parseInt(x));
+						let a = this._moduleVersion.split('.').map(x => parseInt(x))
+						let b = modver.split('.').map(x => parseInt(x))
 						
 						for (let i = 0; i < a.length; i++) {
 							if (i == b.length || b[i] >= a[i]) {
-								betterOrSame = true;
-								break;
+								betterOrSame = true
+								break
 							} else if (b[i] < a[i]) {
-								break;
+								break
 							}
 						}
 						
 					} else {
-						betterOrSame = true;
+						betterOrSame = true
 					}
 					
 					if (betterOrSame) {
 						if (this._moduleVersion != modver) {
-							this._pathModule = undefined;
+							this._pathModule = undefined
 						}
-						this._moduleVersion = modver;
-						this._pathDeal = dealpath;
-						this._pathDealModule = join(prefixDealDSDir, modver);
+						this._moduleVersion = modver
+						this._pathDeal = dealpath
+						this._pathDealModule = join(prefixDealDSDir, modver)
 					}
 				}
 			} catch(err) {
-				this._console.log(`Package '${this._id}': Reading DEAL file failed.`);
+				this._console.log(`Package '${this._id}': Reading DEAL file failed.`)
 			}
 		}
 		
 		for (const each of filesVerDirs) {
-			let modpath = join(pathScrDS, each);
-			let stats = statSync(modpath);
+			let modpath = join(pathScrDS, each)
+			let stats = statSync(modpath)
 			if (stats.isDirectory()) {
-				this._console.log(`Package '${this._id}': Found Module Version ${each}`);
+				this._console.log(`Package '${this._id}': Found Module Version ${each}`)
 				
-				let betterOrSame: boolean = false;
+				let betterOrSame: boolean = false
 				
 				if (this._moduleVersion) {
-					let a = this._moduleVersion.split('.').map(x => parseInt(x));
-					let b = each.split('.').map(x => parseInt(x));
+					let a = this._moduleVersion.split('.').map(x => parseInt(x))
+					let b = each.split('.').map(x => parseInt(x))
 					
 					for (let i = 0; i < a.length; i++) {
 						if (i == b.length || b[i] >= a[i]) {
-							betterOrSame = true;
-							break;
+							betterOrSame = true
+							break
 						} else if (b[i] < a[i]) {
-							break;
+							break
 						}
 					}
 					
 				} else {
-					betterOrSame = true;
+					betterOrSame = true
 				}
 				
 				if (betterOrSame) {
 					if (this._moduleVersion != each) {
-						this._pathDeal = undefined;
-						this._pathDealModule = undefined;
+						this._pathDeal = undefined
+						this._pathDealModule = undefined
 					}
-					this._moduleVersion = each;
-					this._pathModule = modpath;
+					this._moduleVersion = each
+					this._pathModule = modpath
 				}
 			}
 		}
 		
-		this._console.log(`Package '${this._id}': Using Module Version ${this._moduleVersion} (${this._pathDeal})`);
+		this._console.log(`Package '${this._id}': Using Module Version ${this._moduleVersion} (${this._pathDeal})`)
 	}
 	
 	protected async readFile(path: string): Promise<string> {
 		if (path.startsWith("delga:/")) {
-			const entry = this._dealFileEntries.get(path);
+			const entry = this._dealFileEntries.get(path)
 			if (entry) {
-				const stream = await entry.entry.openReadStream();
-				const chunks = [];
+				const stream = await entry.entry.openReadStream()
+				const chunks = []
 				for await (const chunk of stream) {
-					chunks.push(Buffer.from(chunk));
+					chunks.push(Buffer.from(chunk))
 				}
-				return Buffer.concat(chunks).toString("utf-8");
+				return Buffer.concat(chunks).toString("utf-8")
 				
 			} else {
-				throw Error("Entry not find in DELGA file");
+				throw Error("Entry not find in DELGA file")
 			}
 			
 		} else {
-			return super.readFile(path);
+			return super.readFile(path)
 		}
 	}
 }

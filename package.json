@@ -19,7 +19,7 @@
 		"dragonscript",
 		"dragengine"
 	],
-	"version": "2.4.1",
+	"version": "2.4.2",
 	"engines": {
 		"vscode": "^1.63.0"
 	},
@@ -30,7 +30,7 @@
 		"onLanguage:dragonscript",
 		"workspaceContains:**/*.ds"
 	],
-	"main": "./client/out/extension",
+	"main": "./client/distribute/index.js",
 	"contributes": {
 		"languages": [
 			{
@@ -53,29 +53,92 @@
 			}
 		],
 		"semanticTokenTypes": [
-			{ "id": "namespace", "description": "Namespace" },
-			{ "id": "enum", "description": "Enum" },
-			{ "id": "interface", "description": "Interface" },
-			{ "id": "parameter", "description": "Parameter" },
-			{ "id": "variable", "description": "Variable" },
-			{ "id": "property", "description": "Property" },
-			{ "id": "enumMember", "description": "Enum member" },
-			{ "id": "method", "description": "Method" },
-			{ "id": "comment", "description": "Comment" },
-			{ "id": "string", "description": "String" },
-			{ "id": "keyword", "description": "Keyword" },
-			{ "id": "number", "description": "Number" },
-			{ "id": "operator", "description": "Operator" }
+			{
+				"id": "namespace",
+				"description": "Namespace"
+			},
+			{
+				"id": "enum",
+				"description": "Enum"
+			},
+			{
+				"id": "interface",
+				"description": "Interface"
+			},
+			{
+				"id": "parameter",
+				"description": "Parameter"
+			},
+			{
+				"id": "variable",
+				"description": "Variable"
+			},
+			{
+				"id": "property",
+				"description": "Property"
+			},
+			{
+				"id": "enumMember",
+				"description": "Enum member"
+			},
+			{
+				"id": "method",
+				"description": "Method"
+			},
+			{
+				"id": "comment",
+				"description": "Comment"
+			},
+			{
+				"id": "string",
+				"description": "String"
+			},
+			{
+				"id": "keyword",
+				"description": "Keyword"
+			},
+			{
+				"id": "number",
+				"description": "Number"
+			},
+			{
+				"id": "operator",
+				"description": "Operator"
+			}
 		],
 		"semanticTokenModifiers": [
-			{ "id": "declaration", "description": "Declaration" },
-			{ "id": "readonly", "description": "Readonly" },
-			{ "id": "static", "description": "Static" },
-			{ "id": "deprecated", "description": "Deprecated" },
-			{ "id": "abstract", "description": "Abstract" },
-			{ "id": "modification", "description": "Modification" },
-			{ "id": "documentation", "description": "Documentation" },
-			{ "id": "defaultLibrary", "description": "Default library" }
+			{
+				"id": "declaration",
+				"description": "Declaration"
+			},
+			{
+				"id": "readonly",
+				"description": "Readonly"
+			},
+			{
+				"id": "static",
+				"description": "Static"
+			},
+			{
+				"id": "deprecated",
+				"description": "Deprecated"
+			},
+			{
+				"id": "abstract",
+				"description": "Abstract"
+			},
+			{
+				"id": "modification",
+				"description": "Modification"
+			},
+			{
+				"id": "documentation",
+				"description": "Documentation"
+			},
+			{
+				"id": "defaultLibrary",
+				"description": "Default library"
+			}
 		],
 		"grammars": [
 			{
@@ -130,29 +193,35 @@
 		}
 	},
 	"scripts": {
-		"vscode:prepublish": "npm run compile",
+		"vscode:prepublish": "npm run dist-compile",
+		"dist-compile": "cd client && npm run dist-build && cd ../server && npm run dist-build",
 		"compile": "tsc -b",
 		"watch": "tsc -b -w",
 		"lint": "eslint ./client/src ./server/src --ext .ts,.tsx",
 		"postinstall": "cd client && npm install && cd ../server && npm install && cd ..",
-		"test": "sh ./scripts/e2e.sh"
+		"test": "sh ./scripts/e2e.sh",
+		"package-all": "node publish.js"
 	},
 	"devDependencies": {
 		"@types/node": "^16.11.7",
 		"@types/yauzl-promise": "^4.0.1",
 		"@typescript-eslint/eslint-plugin": "^5.30.0",
 		"@typescript-eslint/parser": "^5.30.0",
+		"@vercel/ncc": "^0.38.4",
+		"crc-32": "^1.2.2",
+		"esbuild": "^0.27.4",
 		"eslint": "^8.13.0",
-		"typescript": "^4.7.2"
+		"typescript": "^4.7.2",
+		"yauzl-promise": "^4.0.0"
 	},
 	"dependencies": {
+		"@node-rs/crc32": "^1.10.6",
 		"@types/proper-lockfile": "^4.1.4",
 		"@vscode/vsce": "^3.5.0",
 		"minimatch": "^10.2.4",
 		"npm": "^11.11.1",
 		"proper-lockfile": "^4.1.2",
 		"punycode": "^2.3.1",
-		"vscode-uri": "^3.0.8",
-		"yauzl-promise": "^4.0.0"
+		"vscode-uri": "^3.0.8"
 	}
 }

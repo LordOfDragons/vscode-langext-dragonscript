@@ -29,7 +29,6 @@ import { lock, unlock } from "proper-lockfile";
 import { Helpers } from "./helpers";
 import { randomUUID } from "crypto";
 import { RemoteConsole } from "vscode-languageserver";
-import { Minimatch } from "minimatch";
 import { platform } from "os";
 import yauzl = require('yauzl-promise');
 

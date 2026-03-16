@@ -4,7 +4,7 @@
 	"publisher": "DragonDreams GmbH",
 	"author": "DragonDreams GmbH",
 	"license": "MIT",
-	"version": "2.4.1",
+	"version": "2.4.2",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/LordOfDragons/vscode-langext-dragonscript"
@@ -17,11 +17,14 @@
 	},
 	"devDependencies": {
 		"@types/vscode": "^1.63.0",
-		"@vscode/test-electron": "^2.5.2"
+		"@vscode/test-electron": "^2.5.2",
+		"crc-32": "^1.2.2"
 	},
 	"scripts": {
 		"prebuild": "rimraf ./out",
 		"build": "npm run compile",
-		"compile": "tsc"
+		"compile": "tsc",
+		"dist-build": "npm run dist-compile",
+		"dist-compile": "esbuild src/extension.ts --bundle --outfile=distribute/index.js --external:vscode --format=cjs --platform=node --minify --inject:./crc32-preload.js --external:crc-32 --external:@node-rs/*"
 	}
 }
