@@ -22,6 +22,7 @@
 * SOFTWARE.
 */
 
+import { existsSync } from "fs";
 import { join } from "path";
 import { RemoteConsole } from "vscode-languageserver";
 import { ResolveNamespace } from "../resolve/namespace";
@@ -40,7 +41,12 @@ export class PackageDSLanguage extends Package {
 	protected async loadPackage(): Promise<void> {
 		this._console.log(`Package '${this._id}': Scan package`);
 		let startTime = Date.now();
-		await this.scanPackage(this._files, join(__dirname, "..", "data", "dslanguage"));
+		let datapath = join(__dirname, "data", "dslanguage")
+		if (existsSync(datapath)) {
+			await this.scanPackage(this._files, datapath);
+		} else {
+			await this.scanPackage(this._files, join(__dirname, "..", "data", "dslanguage"));
+		}
 		let elapsedTime = Date.now() - startTime;
 		this._console.log(`Package '${this._id}': Package scanned in ${elapsedTime / 1000}s found ${this._files.length} files`);
 		

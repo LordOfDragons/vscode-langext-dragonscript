@@ -1,0 +1,23 @@
+name	lsp_dragonscript
+version	%VERSION%-%REVISION%
+architecture	x86_64
+summary	"DragonScript LSP"
+description "Language Server Provider for the DragonScript language (.ds)."
+packager	"Dragon Dreams <info@dragondreams.ch>"
+vendor	"Dragon Dreams"
+licenses {
+	"MIT"
+}
+copyrights {
+	"Copyright (C) by Dragon Dreams <info@dragondreams.ch>"
+}
+provides {
+	lsp_dragonscript = %VERSION%-%REVISION%
+}
+requires {
+	haiku
+	nodejs20
+}
+urls {
+	"https://dragondreams.ch"
+}
