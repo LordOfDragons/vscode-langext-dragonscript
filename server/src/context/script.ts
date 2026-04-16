@@ -32,6 +32,7 @@ import { ContextEnumeration } from "./scriptEnum";
 import { ContextRequiresPackage } from "./requiresPackage";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { ResolveState } from "../resolve/state";
+import { ResolveSearch } from "../resolve/search";
 import { CompletionHelper } from "../completionHelper";
 import { ContextDocumentation, ContextDocumentationIterator } from "./documentation";
 import { ScriptDocument } from "../scriptDocument";
@@ -235,6 +236,25 @@ export class ContextScript extends Context{
 			?? this;
 	}
 
+
+	public searchExpression(search: ResolveSearch, moveUp: boolean, before: Context): void {
+		super.searchExpression(search, moveUp, before);
+		if (search.stopSearching) {
+			return;
+		}
+		
+		for (const each of this._statements) {
+			if (each === before) {
+				break;
+			}
+			if (each.type === Context.ContextType.PinNamespace) {
+				each.searchExpression(search, false, this);
+				if (search.stopSearching) {
+					return;
+				}
+			}
+		}
+	}
 
 	public resolveClasses(state: ResolveState): void {
 		for (const each of this._statements) {
