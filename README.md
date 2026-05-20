@@ -120,6 +120,26 @@ or join the [Discord channel](https://discord.gg/Jeg62ns) to ask for help.
 
 ## Release Notes
 
+### 2.5.0
+
+- Added "File -> New..." menu entry "DragonScript Template File" to create new DragonScript
+  files from templates. Templates available:
+  - **Game**: Drag[en]gine game application class (`BaseGameApp` subclass)
+  - **Game Loader**: Drag[en]gine game loader class (`WindowGameWorld.Loader` subclass)
+  - **Behavior**: Drag[en]gine element class behavior (`DefaultECBehavior` subclass)
+  - **Behavior (BT/SM)**: Drag[en]gine element class behavior with behavior tree and
+    state machine support (`DefaultECBehavior` subclass with `ECComposeBTSM`)
+- Fixed type completion inserting superfluous pins
+- Fixed line splicing breaking semantic token contexts
+- Added missing `\ref` highlight in doxygen comments
+- Fixed single line comments not highlighted in all situations
+- Fixed doxygen auto-brief first line spilling over into code if no period at end of line
+- Fixed `new` function call not highlighting as keyword
+- Improved compatibility with non-VSCode LSP clients
+- Hardening of LSP server against client not supporting `globalStoragePath`
+- Hardening against file system failures
+- Added support for Haiku OS
+
 ### 2.4.0
 
 - Added theme override to underline written to variables and deprecated elements.

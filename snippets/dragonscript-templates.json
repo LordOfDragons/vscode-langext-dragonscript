@@ -1,0 +1,22 @@
+[
+	{
+		"label": "Game",
+		"description": "Drag[en]gine game application class",
+		"templateFile": "game_class.ds"
+	},
+	{
+		"label": "Game Loader",
+		"description": "Drag[en]gine game loader class",
+		"templateFile": "game_loader_class.ds"
+	},
+	{
+		"label": "Behavior",
+		"description": "Drag[en]gine element class behavior",
+		"templateFile": "element_class_behavior.ds"
+	},
+	{
+		"label": "Behavior (BT/SM)",
+		"description": "Drag[en]gine element class behavior with behavior tree and state machine support",
+		"templateFile": "element_class_behavior_btsm.ds"
+	}
+]

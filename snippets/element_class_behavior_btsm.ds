@@ -1,0 +1,318 @@
+namespace MyGame
+
+pin Dragengine.Gui
+pin Dragengine.Preloading
+pin Dragengine.LoadSave
+pin Dragengine.Utils
+pin Dragengine.Scenery
+pin Dragengine.BehaviorTreeSystem
+
+
+/**
+ * MyGame element class behavior.
+ * 
+ * Element class properties have the prefix "${2:myGameBehavior}.".
+ */
+class ${1:ECBMyGameBehavior} extends DefaultECBehavior
+	/**
+	 * Element class behavior factory.
+	 * 
+	 * Example XML element class:
+	 * \code{.xml}
+	 * <behavior type='${1:ECBMyGameBehavior}'>
+	 *   <!-- optional: add behavior trees. default adds all behavior trees. -->
+	 *   <list name='behaviorTrees'>
+	 *     <string/> <!-- add behavior with empty identifier -->
+	 *     <string>default</string> <!-- add behavior with 'default' identifier -->
+	 *   </list>
+	 * 
+	 *   <!-- optional: add state machines. default adds all state machines. -->
+	 *   <list name='stateMachines'>
+	 *     <string/> <!-- add behavior with empty identifier -->
+	 *     <string>default</string> <!-- add behavior with 'default' identifier -->
+	 *   </list>
+	 *   
+	 *   <!-- document here what properties that can be set -->
+	 * </behavior>
+	 * 
+	 * <!-- for adding multiple behaviors use unique identifiers -->
+	 * <behavior type='${1:ECBMyGameBehavior}' id='second'/>
+	 * \endcode
+	 * 
+	 * Element class properties added by the behavior can also be set directly inside the tag
+	 * be removing the property name prefix and starting with a "." (for example ".propertyName").
+	 */
+	class Factory extends DefaultBehaviorFactory
+		func new() super("${1:ECBMyGameBehavior}")
+		end
+		
+		func ECBehavior addBehavior(BehaviorElementClass eclass, String id, Dictionary parameters)
+			var ${1:ECBMyGameBehavior} behavior = ${1:ECBMyGameBehavior}.new(eclass, id)
+			
+			// Process here parameters not using the "." prefix
+			
+			getHelper().allBTSM(behavior.btsms, eclass, parameters)
+			
+			getHelper().setPropertiesFromParameters(eclass, parameters, "${2:myGameBehavior}", id)
+			return behavior
+		end
+	end
+	
+	
+	/** Element class behavior instance. */
+	class Instance extends DefaultECBehaviorInstance
+		/**
+		 * Behavior tree action "${2:myGameBehavior}.set".
+		 * 
+		 * This action can be used to set properties of the behavior instance from a behavior tree.
+		 * 
+		 * Example usage in a behavior tree:
+		 * \code{.xml}
+		 * <action type='${2:myGameBehavior}.set'>
+		 *   <parameter name='property1' value='1.5'/>
+		 *   <parameter name='enabled' value='false'/>
+		 * </action>
+		 * \endcode
+		 */
+		private class BTASet extends BTSMActionCondition
+			var Instance pInstance
+			
+			func new(Instance instance)
+				pInstance = instance
+			end
+			
+			func BTResult runActionShared(Object context, Dictionary parameters)
+				var Object value
+				
+				// Example of setting a string property
+				value = parameters.getAt("property1", null)
+				if value != null
+					// pInstance.setProperty1((value cast String).toFloat())
+				end
+				
+				// Example of setting a boolean property
+				value = parameters.getAt("enabled", null)
+				if value != null
+					// pInstance.setEnabled(value.equals("true"))
+				end
+				
+				return BTResult.success
+			end
+		end
+		
+		/**
+		 * Behavior tree action "${2:myGameBehavior}.update".
+		 * 
+		 * This action can be used to trigger actions in the behavior instance from a behavior tree.
+		 * This can be a single action to trigger multiple actions depending on what parameters
+		 * are set or multiple actions with different names. Using a single action is usually
+		 * simpler to use and maintain by adding more parameters if required.
+		 * 
+		 * Example usage in a behavior tree:
+		 * \code{.xml}
+		 * <action type='${2:myGameBehavior}.update'>
+		 *   <!-- do action 'doThis' -->
+		 *   <parameter name='doThis' value='data'/>
+		 *   
+		 *   <!-- if more than one data is necessary add more parameters as needed. -->
+		 *   <parameter name='doThis.param1' value='additional data'/>
+		 * </action>
+		 * \endcode
+		 */
+		private class BTAUpdate extends BTSMActionCondition
+			var Instance pInstance
+			
+			func new(Instance instance)
+				pInstance = instance
+			end
+			
+			func BTResult runActionShared(Object context, Dictionary parameters)
+				if parameters.has("doThis")
+					// var String param1 = parameters.getAt("doThis.param1", "default value") cast String
+					// pInstance.doThis(param1)
+				end
+				
+				return BTResult.success
+			end
+		end
+		
+		/**
+		 * Behavior tree action/condition "actorMover.check".
+		 * 
+		 * This action can be used both as an action and a condition. If used as an action can
+		 * be used to check behavior instance properties to fail a sequence if a precondition
+		 * is not fulfilled.
+		 * 
+		 * Example usage as action in a behavior tree:
+		 * \code{.xml}
+		 * <sequence>
+		 *   <action type='${2:myGameBehavior}.check'>
+		 *     <parameter name='enabled' value='true'/>
+		 *   </action>
+		 *   
+		 *   <!-- actions here run only if the check succeeded -->
+		 * </sequence>
+		 * \endcode
+		 * 
+		 * If used as a condition this allows to fail an action like this:
+		 * \code{.xml}
+		 * <action type='${2:myGameBehavior}.update'>
+		 *   <condition>${2:myGameBehavior}.check</condition>
+		 *   <parameter name='${2:myGameBehavior}.enabled' value='true'/>
+		 * </action>
+		 * \endcode
+		 * 
+		 * If multiple behaviors with different identifiers are present in the element class
+		 * the condition type becomes "${2:myGameBehavior}(id).check" and the respective parameters
+		 * become "${2:myGameBehavior}(id).parameter".
+		 */
+		private class BTACheck extends BTSMActionCondition
+			var Instance pInstance
+			var String pPrefix
+			
+			func new(Instance instance, String prefix)
+				pInstance = instance
+				pPrefix = prefix
+			end
+			
+			func BTResult runActionShared(Object context, Dictionary parameters)
+				return check("", parameters) if BTResult.success else BTResult.failure
+			end
+			
+			func bool evaluateConditionShared(Object context, Dictionary parameters)
+				return check(pPrefix, parameters)
+			end
+			
+			func bool check(String prefix, Dictionary parameters)
+				var bool result = true
+				var Object value
+				
+				value = parameters.getAt(prefix + "enabled", null)
+				if value != null
+					// result &= pInstance.getEnabled() == value.equals("true")
+				end
+				
+				return result
+			end
+		end
+		
+		
+		var ${1:ECBMyGameBehavior} pECBehavior
+		var ECComposeBTSM.Instance pBTSMs
+		
+		
+		/** Create element class behavior instance. */
+		func new(${1:ECBMyGameBehavior} ecbehavior, BehaviorElement element) super(element)
+			pECBehavior = ecbehavior
+		end
+		
+		func void dispose()
+			pBTSMs = null
+			super.dispose()
+		end
+		
+		func void init(StubElement stub)
+			if pECBehavior.btsms.hasAny()
+				var String prefix = pECBehavior.prefix
+				pBTSMs = ECComposeBTSM.Instance.new(getElement(), pECBehavior.btsms)
+				pBTSMs.addAllAction(prefix, "set", BTASet.new(this))
+				pBTSMs.addAllAction(prefix, "update", BTAUpdate.new(this))
+				pBTSMs.addAllActionCondition(prefix, "check", BTACheck.new(this, prefix))
+				pBTSMs.dropBTContexts()
+			end
+			
+			// To send events to the behavior trees or state machines use
+			/*
+			if pBTSMs != null
+				pBTSMs.runEvent(pECBehavior.prefix, "myEvent")
+			end
+			*/
+		end
+		
+		
+		/** Element class behavior. */
+		func ${1:ECBMyGameBehavior} getECBehavior()
+			return pECBehavior
+		end
+	end
+	
+	
+	/** Element class property prefix. */
+	public var String prefix
+	
+	/** Behavior tree and state machine element class behaviors. */
+	public var ECComposeBTSM btsms
+	
+	
+	/** Create element class behavior. */
+	func new(BehaviorElementClass eclass) this(eclass, "")
+	end
+	
+	/** Create element class behavior. */
+	func new(BehaviorElementClass eclass, String id) this(eclass, id,\
+	id.empty() if "${2:myGameBehavior}" else "${2:myGameBehavior}(" + id + ")")
+	end
+	
+	func new(BehaviorElementClass eclass, String id, String subID) this(eclass, id, subID, subID + ".")
+	end
+	
+	func new(BehaviorElementClass eclass, String id, String subID, String prefix) super(eclass, id)
+		this.prefix = prefix
+		
+		// Add element class properties using prefix
+		
+		// myProperty = ECPString.new(prefix + "myProperty", "default value")
+		// eclass.addProperty(myProperty)
+		
+		// Add sub behaviors using subId and prefix
+		
+		// touchSensor = ECBehaviorTouchSensor.new(eclass, collider, subID, prefix + "touchSensor.")
+		
+		btsms = ECComposeBTSM.new()
+		
+		// Add behavior to element class
+		eclass.addBehavior(this)
+	end
+	
+	func void dispose()
+		btsms = null
+		super.dispose()
+	end
+	
+	
+	/** Get instance in element from owner element class. */
+	func Instance instance(BehaviorElement element)
+		return element.getInstanceAt(getInstanceIndex()) cast Instance
+	end
+	
+	
+	/**
+	 * Get instance in element or null if absent.
+	 * 
+	 * Use this method to check if a particular BehaviorElement contains a behavior instance
+	 * of type \ref Instance . If more than one instance is present returns the first instance.
+	 */
+	static func Instance getInstanceIn(BehaviorElement element)
+		return element.findInstance(block Instance each
+			return true
+		end) cast Instance
+	end
+	
+	/**
+	 * Get instance with id in element or null if absent.
+	 * 
+	 * Use this method to check if a particular BehaviorElement contains a behavior instance
+	 * of type \ref Instance with specific identifier.
+	 */
+	static func Instance getInstanceIn(BehaviorElement element, String id)
+		return element.findInstance(block Instance each
+			return each.getECBehavior().getID().equals(id)
+		end) cast Instance
+	end
+	
+	
+	/** Create Behavior instance. */
+	func ECBehaviorInstance createInstance(BehaviorElement element)
+		return Instance.new(this, element)
+	end
+end

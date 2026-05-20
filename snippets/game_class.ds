@@ -1,0 +1,182 @@
+namespace MyGame
+
+pin Dragengine.Gui.Layouts
+pin Dragengine.Gui.Events
+pin Dragengine.Scenery
+pin Dragengine.Utils
+
+
+/**
+ * ${1:Game} Application Class.
+ */
+class ${1:Game} extends BaseGameApp
+	/**
+	 * Create ${1:Game} Application.
+	 * 
+	 * Set here properties used by BaseGameApp during initGame(). All other initialization
+	 * work should be placed inside initGame() or one of the hook methods called by
+	 * BaseGameApp.initGame().
+	 */
+	func new()
+		// Path to the GUI Theme file to use. If not set uses BaseGameApp.defaultPathGuiTheme
+		// 
+		//pathDesktopGuiTheme = "/content/ui/main.degt"
+		
+		// To use translation support create one or more language packs and uncomment the
+		// properties below with the appropriate values.
+		// 
+		//pathLanguagePacks = "/content/langpacks"
+		//defaultLanguagePackName = UnicodeString.newFromUTF8("English")
+	end
+	
+	/**
+	 * Initialize game.
+	 * 
+	 * Create required objects here and start loading. Lengthy loading work should not be
+	 * waited for in this method. Methods like startLoadGameWorld() will notify you when
+	 * the lengthy loading work is done.
+	 * 
+	 * See BaseGameApp.initGame() documentation for the supported hook methods.
+	 */
+	func void initGame()
+		// super-call has to come first
+		super.initGame()
+		
+		// Start game by showing the Drag[en]gine Game Engine logo and optionally other logos
+		// you would like to show. WindowLogo.show*() does all the work of showing a logo or
+		// video with optional sound. Once the window is finished (the user can skip it)
+		// the provided action listener is called. This can be creating a class implementing
+		// ActionListener interface or by using BlockActionListener. This is a convenience
+		// class allowing to use a block as an action and is suitable for quick code insertion
+		// like this. Using a class implementing ActionListener is though favorable since it
+		// makes it easier to chain actions in an understandable way.
+		// 
+		// Showing the Drag[en]gine Game Engine logo is not required at all to use this game
+		// engine but we highly appreciate it if you do so.
+		
+		WindowLogo.showDragengineLogo(getDesktop(), BlockActionListener.new(\
+			block ActionEvent event
+				// You can show more than one logo by chaining another call to
+				// WindowLogo.showImageLogo() or similar here. Inside the action listener
+				// you can then continue with chaining more WindowLogo or going straight
+				// for checking base game services having finished initialize.
+				/*
+				WindowLogo.showImageLogo(getDesktop(), Image.new("/content/logo.webp"),\
+					BlockActionListener.new(block ActionEvent event
+						// Continue here for example with the code block below
+					end)
+				*/
+				
+				// If you have configured game services in your "configuration.dept"
+				// file then you should make sure all services have finished initialize
+				// (either successfully or not). If you show logos chances are high the
+				// initialization finished in time but to be safe set an action listener
+				// to be notified once ready. This is fully valid to be done at any time.
+				// If initialization already finished the action will be called right away.
+				getBaseGameServices().setActionInitialized(BlockActionListener.new(\
+					block ActionEvent event
+						// Now the logos have finished and the game services are ready
+						// (if there are any). It is now safe to launch the application
+						launchApplication()
+					end))
+			end))
+		
+		// By the way. You can wrap the content of the blocks in function calls. This way
+		// it is easier to chain multiple actions with the possibility to alter the flow.
+		// This can be used for example for developer builds to get to action faster.
+	end
+	
+	/**
+	 * \brief Launch example application.
+	 * 
+	 * Called after logo windows are finished.
+	 */
+	func void launchApplication()
+		// BaseGameApp adds a WindowConsole which can be toggled by pressing F1 key. Adding
+		// a ShoutConsole shows the last messages without needing to show the console.
+		getWindowGameWorld().addWidget(ShoutConsole.new(getConsole()))
+		
+		// Logging can be done by adding messages to the console
+		getConsole().addMessage("Loading world...")
+		
+		// startLoadGameWorld is a simple way to start loading a game world into the
+		// WindowGameWorld created by BaseGameApp. StartGame is a script class created
+		// alongside this application class. It will be notified when the world loading
+		// finishes and contains the required code to finish starting the game.
+		// 
+		// To use this create a world file and change the filename
+		
+		// startLoadGameWorld(StartGame.new(getWindowGameWorld(), "/content/world/game.deworld"))
+	end
+	
+	/**
+	 * \brief Create behavior factories adding them to the factory list.
+	 * 
+	 * Behavior factories allow generic \ref BehaviorElementClass to be created using XML element
+	 * class files (*.deeclass) where not only element class properties can be defined but
+	 * also behaviors added. \ref GenericBehaviorElementClass uses the factories added here
+	 * as initial list of allowed factories. See \ref BehaviorFactoryHelper#addAllFactories()
+	 * for the list of factories added by default. Hence by default you can use
+	 * "GenericBehaviorElement" as the jack of all trades class with access to all factories.
+	 * 
+	 * Using \ref GenericBehaviorElementClass is one possibility. Every \ref BehaviorElementClass
+	 * can add supported factories in their constructor. This allows to fine tune for which
+	 * element class which behavior factories are allowed to be used. If you use BehaviorElement
+	 * classes fine tuned in this way it is recommended to either clear
+	 * \ref #getBehaviorFactories() to turn \ref GenericBehaviorElementClass into a simple
+	 * \ref BehaviorElementClass or you remove it as available class in
+	 * \ref #createAndAddElementClasses().
+	 */
+	protected func void createAndAddBehaviorFactories()
+		// Always super-call unless you want to start with an empty factory list
+		super.createAndAddBehaviorFactories()
+		
+		// Add custom behavior factories. See ECBehaviorComponent.Factory for an example on
+		// how a behavior can be added factory support. See ECBehaviorTwoStateAnimated.Factory
+		// for an more complex example using parameters to fine tune behavior construction.
+		
+		// var BehaviorFactoryList factories = getBehaviorFactories()
+		// factories.add(MyBehavior.Factory.new())
+	end
+	
+	/**
+	 * \brief Create element classes and add them to element class list.
+	 * 
+	 * Element classes list contains all element classes world files are allowed to be used.
+	 * See \ref BaseGameApp#createAndAddElementClasses for the list of element classes added
+	 * by default. Undesired element classes can be removed and custom ones added.
+	 */
+	protected func void createAndAddElementClasses()
+		// Always super-call unless you want to start with an empty element class list
+		super.createAndAddElementClasses()
+		
+		// Add scripted element classes. These can be used by XML element classes below
+		
+		var ElementClassList eclist = getElementClassList()
+		// eclist.add(MyElementClass.new())
+		
+		// Add XML element classes by recursively scanning directory for *.deeclass files.
+		// These require scripted element classes as parent classes. Using *.deeclass
+		// files you can easily add content with needing to write scripted classes.
+		getLoaders().getElementClass().addXmlElementClasses(eclist, "/content/models", true)
+		
+		// You will see also the directories /content/materials and /content/skies.
+		// These two directories are only automatically scanned by the IGDE Editor.
+		// For games you do not have to specify them anywhere are they are loaded
+		// by the individual element classes
+	end
+	
+	/**
+	 * Cleaning up.
+	 * 
+	 * Will be called before the game engine shuts down the game. This method will be also
+	 * called if the initGame() threw an exception before finishing. Make sure to check if
+	 * objects have been initialized before cleaning them up.
+	 */
+	func void cleanUp()
+		// Your cleaning up code has to come before the super-call
+		
+		// Super-call has to come last
+		super.cleanUp()
+	end
+end

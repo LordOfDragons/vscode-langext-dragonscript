@@ -190,6 +190,21 @@
 					"description": "Enables semantic highlighting overrides (write variable = underline, deprecated = strike-through)."
 				}
 			}
+		},
+		"commands": [
+			{
+				"command": "dragonscript.createNewFileFromTemplate",
+				"title": "DragonScript File",
+				"category": "DragonScript"
+			}
+		],
+		"menus": {
+			"file/newFile": [
+				{
+				"command": "dragonscript.createNewFileFromTemplate",
+				"group": "file"
+				}
+			]
 		}
 	},
 	"scripts": {

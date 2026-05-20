@@ -23,11 +23,13 @@
  */
 
 import * as path from 'path'
+import * as fs from 'fs'
 import {
 	workspace,
 	ExtensionContext,
 	ExtensionMode,
 	ConfigurationTarget,
+	SnippetString,
 	window,
 	TextEditor,
 	commands,
@@ -221,6 +223,29 @@ export function activate(context: ExtensionContext) {
 	*/
 	
 	activateModifications(context)
+	
+	// register file templates
+	let templateCommand = commands.registerCommand('dragonscript.createNewFileFromTemplate', async () => {
+		const registryPath = path.join(context.extensionPath, 'snippets', 'dragonscript-templates.json');
+		const items: { label: string; description: string; templateFile: string }[] =
+			JSON.parse(fs.readFileSync(registryPath, 'utf8'));
+		
+		const selected = await window.showQuickPick(items, {
+			placeHolder: 'Select a DragonScript file template'
+		});
+		
+		if (!selected) return;
+		
+		const templatePath = path.join(context.extensionPath, 'snippets', selected.templateFile);
+		const content = fs.readFileSync(templatePath, 'utf8');
+		
+		const doc = await workspace.openTextDocument({ language: 'dragonscript' });
+		const editor = await window.showTextDocument(doc);
+		
+		await editor.insertSnippet(new SnippetString(content));
+	});
+	
+	context.subscriptions.push(templateCommand);
 }
 
 export function deactivate(): Thenable<void> | undefined {
