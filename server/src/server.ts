@@ -73,6 +73,7 @@ import { ScriptDocument } from "./scriptDocument"
 import { Packages } from "./package/packages"
 import { PackageDEModule } from "./package/dragenginemodule"
 import { PackageDSLanguage } from "./package/dslanguage"
+import { PackageBasePackage } from "./package/basepackage"
 import { ReportConfig } from './reportConfig'
 import { PackageWorkspace } from './package/workspacepackage'
 import { Context } from './context/context'
@@ -132,6 +133,36 @@ export function reportDiagnostics(uri: string, diagnostics: Diagnostic[]) {
 	connection.sendDiagnostics({uri: uri, diagnostics})
 }
 
+export function notifyScriptVersion(version: string | undefined, projectVersion: string | undefined): void {
+	connection.sendNotification('dragonscript/scriptVersion', {
+		version: version ?? '',
+		projectVersion: projectVersion ?? ''
+	})
+}
+
+export function fullReload(): void {
+	// dispose and remove base packages. workspace loadPackage will recreate them
+	const baseIds: string[] = [];
+	packages.forEach(p => {
+		if (p.id.startsWith(PackageBasePackage.PACKAGE_PREFIX)) {
+			baseIds.push(p.id);
+		}
+	});
+	for (const id of baseIds) {
+		const p = packages.get(id)!;
+		packages.remove(id);
+		p.dispose();
+	}
+	
+	// mark DE module as needing reload so workspace loadPackage picks up the new version
+	packages.get(PackageDEModule.PACKAGE_ID)?.markForReload();
+	
+	// reload all workspace packages; they drive the full dependency chain
+	for (const wp of workspacePackages) {
+		wp.reload();
+	}
+}
+
 export function remoteConsole() {
 	return connection.console
 }
@@ -139,6 +170,7 @@ export function remoteConsole() {
 let defaultSettings: DSSettings = {
 	maxNumberOfProblems: 1000,
 	pathDragengine: '',
+	scriptVersion: '',
 	requiresPackageDragengine: false,
 	scriptDirectories: ['.'],
 	basePackages: [],
@@ -286,7 +318,9 @@ connection.onInitialized(async () => {
 		settings = await connection.workspace.getConfiguration({section: 'dragonscriptLanguage'})
 	}
 	
-	(packages.get(PackageDEModule.PACKAGE_ID) as PackageDEModule).pathDragengine = settings.pathDragengine
+	let pkg = packages.get(PackageDEModule.PACKAGE_ID) as PackageDEModule
+	pkg.pathDragengine = settings.pathDragengine
+	pkg.scriptVersion = settings.scriptVersion
 	
 	await onDidChangeWorkspaceFolders()
 })
@@ -304,7 +338,9 @@ connection.onDidChangeConfiguration(
 			globalSettings = settings
 		}
 		
-		(packages.get(PackageDEModule.PACKAGE_ID) as PackageDEModule).pathDragengine = settings.pathDragengine
+		let pkg = packages.get(PackageDEModule.PACKAGE_ID) as PackageDEModule
+		pkg.pathDragengine = settings.pathDragengine
+		pkg.scriptVersion = settings.scriptVersion
 		
 		// Revalidate all open text documents
 		/*for (const each of documents.all()) {

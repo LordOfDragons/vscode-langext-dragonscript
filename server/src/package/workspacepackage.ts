@@ -29,15 +29,21 @@ import { PackageDEModule } from "./dragenginemodule";
 import { PackageDSLanguage } from "./dslanguage";
 import { Package } from "./package";
 import { Minimatch } from "minimatch";
-import { join } from "path";
+import { dirname, join } from "path";
+import { readdir, readFile } from "fs/promises";
+import { watch, FSWatcher } from "fs";
 import { URI } from "vscode-uri";
 import { PackageBasePackage } from "./basepackage";
+import { XMLParser } from "fast-xml-parser";
 
 export class PackageWorkspace extends Package {
 	private _uri: string;
 	private _path: string;
 	private _name: string;
 	private _timerResolve?: NodeJS.Timeout;
+	private _degpFilePath?: string;
+	private _degpWatcher?: FSWatcher;
+	private _timerDegpChange?: NodeJS.Timeout;
 	
 	
 	constructor(console: RemoteConsole, folder: WorkspaceFolder) {
@@ -64,6 +70,11 @@ export class PackageWorkspace extends Package {
 	}
 	
 	
+	public async dispose(): Promise<void> {
+		this.stopDegpWatcher();
+		await super.dispose();
+	}
+	
 	public resolveAllLater(): void {
 		this.armResolveAll();
 	}
@@ -75,7 +86,20 @@ export class PackageWorkspace extends Package {
 		
 		const settings = await getDocumentSettings(this._uri);
 		if (settings.requiresPackageDragengine) {
+			if (!settings.scriptVersion) {
+				const degpScriptVersion = await this.detectDegpScriptVersion();
+				if (degpScriptVersion) {
+					(packages.get(PackageDEModule.PACKAGE_ID) as PackageDEModule).workspaceScriptVersion = degpScriptVersion;
+				}
+				if (this._degpFilePath) {
+					this.startDegpWatcher();
+				}
+			} else {
+				this.stopDegpWatcher();
+			}
 			await packages.get(PackageDEModule.PACKAGE_ID)!.load();
+		} else {
+			this.stopDegpWatcher();
 		}
 		
 		for (const each of settings.basePackages) {
@@ -112,6 +136,110 @@ export class PackageWorkspace extends Package {
 		
 		await this.loadFiles();
 		this.loadingFinished();
+	}
+	
+	private async detectDegpScriptVersion(): Promise<string | undefined> {
+		// find *.degp file. this is usually located in the workspace root but if the workspace
+		// contains a directory deeper inside the project we search up the directory tree.
+		let degpFilePath: string | undefined;
+		let searchDir = this._path;
+		while (true) {
+			let files: string[];
+			try {
+				files = await readdir(searchDir);
+			} catch {
+				break;
+			}
+			
+			const degpFile = files.find(f => f.endsWith('.degp'));
+			if (degpFile) {
+				degpFilePath = join(searchDir, degpFile);
+				break;
+			}
+			
+			const parentDir = dirname(searchDir);
+			if (parentDir === searchDir) {
+				break;
+			}
+			searchDir = parentDir;
+		}
+		
+		if (!degpFilePath) {
+			this._console.log(`WorkspacePackage '${this._name}': No *.degp file found in workspace directory or parent directories`);
+			this._degpFilePath = undefined;
+			return undefined;
+		}
+		
+		this._degpFilePath = degpFilePath;
+		return this.readDegpScriptVersion(degpFilePath);
+	}
+	
+	private async readDegpScriptVersion(degpFilePath: string): Promise<string | undefined> {
+		try {
+			const content = await readFile(degpFilePath, 'utf8');
+			const parser = new XMLParser({ ignoreAttributes: false });
+			const doc = parser.parse(content);
+			const version = doc?.gameProject?.scriptModule?.['@_version'];
+			if (version) {
+				this._console.log(`WorkspacePackage '${this._name}': Detected required DragonScript version ${version} from '${degpFilePath}'`);
+				return String(version);
+			}
+		} catch (error) {
+			this._console.log(`WorkspacePackage '${this._name}': Failed to read/parse '${degpFilePath}' for DragonScript version detection: ${error}`);
+		}
+		return undefined;
+	}
+	
+	private startDegpWatcher(): void {
+		const filePath = this._degpFilePath;
+		if (!filePath) return;
+		
+		// stop any existing watcher before starting a new one
+		this.stopDegpWatcher();
+		
+		this._console.log(`WorkspacePackage '${this._name}': Watching '${filePath}' for changes`);
+		try {
+			this._degpWatcher = watch(filePath, () => this.onDegpFileChanged());
+			this._degpWatcher.on('error', (err) => {
+				this._console.log(`WorkspacePackage '${this._name}': Watcher error for '${filePath}': ${err}`);
+				this.stopDegpWatcher();
+			});
+		} catch (err) {
+			this._console.log(`WorkspacePackage '${this._name}': Failed to watch '${filePath}': ${err}`);
+		}
+	}
+	
+	private stopDegpWatcher(): void {
+		if (this._timerDegpChange) {
+			clearTimeout(this._timerDegpChange);
+			this._timerDegpChange = undefined;
+		}
+		if (this._degpWatcher) {
+			this._degpWatcher.close();
+			this._degpWatcher = undefined;
+		}
+	}
+	
+	private onDegpFileChanged(): void {
+		// debounce: editors often write files in multiple steps
+		if (this._timerDegpChange) {
+			clearTimeout(this._timerDegpChange);
+		}
+		this._timerDegpChange = setTimeout(() => this.applyDegpChange(), 500);
+	}
+	
+	private async applyDegpChange(): Promise<void> {
+		this._timerDegpChange = undefined;
+		const filePath = this._degpFilePath;
+		if (!filePath) return;
+		
+		this._console.log(`WorkspacePackage '${this._name}': '${filePath}' changed, re-detecting script version`);
+		const newVersion = await this.readDegpScriptVersion(filePath);
+		
+		const deModule = packages.get(PackageDEModule.PACKAGE_ID) as PackageDEModule;
+		if (deModule) {
+			deModule.workspaceScriptVersion = newVersion ?? '';
+		}
 	}
 	
 	private armResolveAll(): void {

@@ -19,9 +19,9 @@
 		"dragonscript",
 		"dragengine"
 	],
-	"version": "2.5.0",
+	"version": "2.6.0",
 	"engines": {
-		"vscode": "^1.63.0"
+		"vscode": "^1.67.0"
 	},
 	"categories": [
 		"Programming Languages"
@@ -156,6 +156,12 @@
 					"type": "string",
 					"default": "",
 					"description": "Path to Drag[en]gine installation. Use empty string to auto-detect."
+				},
+				"dragonscriptLanguage.scriptVersion": {
+					"scope": "resource",
+					"type": "string",
+					"default": "",
+					"description": "Drag[en]gine DragonScript version to validate against (e.g. '1.33'). Use empty string to use the latest available version. If the version is not found in the local Drag[en]gine installation it is downloaded from the online release repository."
 				},
 				"dragonscriptLanguage.requiresPackageDragengine": {
 					"scope": "resource",

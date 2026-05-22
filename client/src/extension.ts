@@ -33,7 +33,9 @@ import {
 	window,
 	TextEditor,
 	commands,
-	Range
+	Range,
+	languages,
+	LanguageStatusSeverity
 } from 'vscode'
 
 import {
@@ -213,6 +215,7 @@ export function activate(context: ExtensionContext) {
 	// Start the client. This will also launch the server
 	client.start();
 	
+	registerLanguageStatus(context);
 	registerXmlSchemaAssociations();
 	
 	/*
@@ -255,6 +258,62 @@ export function deactivate(): Thenable<void> | undefined {
 interface XmlSchemaAssociationEntry {
 	pattern: string;
 	systemId: string;
+}
+
+function registerLanguageStatus(context: ExtensionContext) {
+	// project script version
+	const itemProjectVersion = languages.createLanguageStatusItem(
+		'dragonscript.projectScriptVersion',
+		{ language: 'dragonscript' }
+	);
+	itemProjectVersion.name = 'Project Script Version';
+	itemProjectVersion.text = 'loading...';
+	itemProjectVersion.detail = 'Project Script version';
+	itemProjectVersion.severity = LanguageStatusSeverity.Information;
+	itemProjectVersion.busy = true;
+	context.subscriptions.push(itemProjectVersion);
+	
+	// editor script version
+	const itemVersion = languages.createLanguageStatusItem(
+		'dragonscript.scriptVersion',
+		{ language: 'dragonscript' }
+	);
+	itemVersion.name = 'Editor Script Version';
+	itemVersion.text = 'loading...';
+	itemVersion.detail = 'Editor Script version';
+	itemVersion.severity = LanguageStatusSeverity.Information;
+	itemVersion.busy = true;
+	itemVersion.command = {
+		title: 'Configure',
+		command: 'workbench.action.openSettings',
+		arguments: ['dragonscriptLanguage.scriptVersion']
+	};
+	context.subscriptions.push(itemVersion);
+	
+	// language status
+	client.onReady().then(() => {
+		client.onNotification('dragonscript/scriptVersion', (params: { version: string, projectVersion: string }) => {
+			// project script version
+			if (params.projectVersion) {
+				itemProjectVersion.text = `${params.projectVersion}`;
+				itemProjectVersion.severity = LanguageStatusSeverity.Information;
+			} else {
+				itemProjectVersion.text = '??';
+				itemProjectVersion.severity = LanguageStatusSeverity.Warning;
+			}
+			itemProjectVersion.busy = false;
+			
+			// editor script version
+			if (params.version) {
+				itemVersion.text = `${params.version}`;
+				itemVersion.severity = LanguageStatusSeverity.Information;
+			} else {
+				itemVersion.text = '??';
+				itemVersion.severity = LanguageStatusSeverity.Warning;
+			}
+			itemVersion.busy = false;
+		});
+	});
 }
 
 function registerXmlSchemaAssociations() {

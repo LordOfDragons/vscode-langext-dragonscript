@@ -28,6 +28,9 @@ export interface DSSettings {
 	/** Path to Drag[en]gine installation. Empty string to auto-detect. */
 	pathDragengine: string
 	
+	/** Drag[en]gine DragonScript version to validate against. Empty string to use latest. */
+	scriptVersion: string
+	
 	/** Workspace required Drag[en]gine DragonScript Module Package. */
 	requiresPackageDragengine: boolean
 	

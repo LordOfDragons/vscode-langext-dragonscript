@@ -1,7 +1,7 @@
 {
 	"name": "dragonscript-language-server",
 	"description": "DragonScript Language Server.",
-	"version": "2.5.0",
+	"version": "2.6.0",
 	"publisher": "dragondreams",
 	"author": "DragonDreams GmbH",
 	"homepage": "https://dragondreams.ch",
@@ -15,7 +15,8 @@
 		"url": "https://github.com/LordOfDragons/vscode-langext-dragonscript"
 	},
 	"dependencies": {
-		"@node-rs/crc32": "^1.10.6"
+		"@node-rs/crc32": "^1.10.6",
+		"fast-xml-parser": "^5.8.0"
 	},
 	"devDependencies": {
 		"chevrotain": "^12.0.0",

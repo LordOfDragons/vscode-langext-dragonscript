@@ -38,6 +38,9 @@ export class PackageDSLanguage extends Package {
 	public static readonly PACKAGE_ID: string = "DragonScript";
 	
 	
+	public markForReload(): void {
+	}
+	
 	protected async loadPackage(): Promise<void> {
 		this._console.log(`Package '${this._id}': Scan package`);
 		let startTime = Date.now();

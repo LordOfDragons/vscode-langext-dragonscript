@@ -1,5 +1,48 @@
 # Change Log
 
+## 2.6.0
+
+- Added new setting `dragonscriptLanguage.scriptVersion` to specify the Drag[en]gine
+  DragonScript version to validate against. Use empty string to use the latest available
+  version. If the version is not found locally it is downloaded from the online
+  Drag[en]gine release repository.
+- Added automatic detection of the required DragonScript version from the Drag[en]gine
+  project file (`.degp`). The project file is searched in the workspace directory and
+  parent directories and watched for changes.
+- Added language status bar items for `.ds` files showing the Project Script Version
+  (from `.degp`) and the Editor Script Version (from settings, clickable).
+- If the required DragonScript version is not installed locally it is downloaded from
+  the online Drag[en]gine release repository automatically.
+
+## 2.5.0
+
+- Added "File -> New..." menu entry "DragonScript Template File" to create new DragonScript
+  files from templates. Templates available:
+  - **Game**: Drag[en]gine game application class (`BaseGameApp` subclass)
+  - **Game Loader**: Drag[en]gine game loader class (`WindowGameWorld.Loader` subclass)
+  - **Behavior**: Drag[en]gine element class behavior (`DefaultECBehavior` subclass)
+  - **Behavior (BT/SM)**: Drag[en]gine element class behavior with behavior tree and
+    state machine support (`DefaultECBehavior` subclass with `ECComposeBTSM`)
+- Fixed type completion inserting superfluous pins
+- Fixed line splicing breaking semantic token contexts
+- Added missing `\ref` highlight in doxygen comments
+- Fixed single line comments not highlighted in all situations
+- Fixed doxygen auto-brief first line spilling over into code if no period at end of line
+- Fixed `new` function call not highlighting as keyword
+- Improved compatibility with non-VSCode LSP clients
+- Hardening of LSP server against client not supporting `globalStoragePath`
+- Hardening against file system failures
+- Added support for Haiku OS
+
+## 2.4.0
+
+- Added theme override to underline written to variables and deprecated elements.
+  Can be disabled if the uses does not want to use this
+- Added support for generating semantic tokens
+- Improved TextMate grammer file
+- Workaround for handling files contained in delga by vscode by unpacking them into
+  a temporary directory (delga/deal caching)
+
 ## 2.3.0
 
 - All XML Schemas used by Drag[en]gine added.

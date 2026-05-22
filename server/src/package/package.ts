@@ -84,6 +84,10 @@ export class Package {
 		return this._loaded;
 	}
 	
+	public markForReload(): void {
+		this._loaded = false;
+	}
+	
 	
 	public async load(): Promise<void> {
 		//debugLogMessage(`package(${this._id}).load: isLoading=${this._isLoading} loaded=${this._loaded} promises=${this._promisesLoading.length}`);
@@ -158,6 +162,9 @@ export class Package {
 	protected async clear(): Promise<void> {
 		this._loadingStartTime = undefined;
 		//this._finishedCounter = 0;
+		for (const each of this._scriptDocuments) {
+			scriptDocuments.remove(each);
+		}
 		this._scriptDocuments = [];
 		this._files = [];
 		this._loaded = false;

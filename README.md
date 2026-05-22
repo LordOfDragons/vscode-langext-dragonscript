@@ -70,6 +70,17 @@ Game Engine is not installed in the default path.
 
 It is recommended to set this value on global level.
 
+`dragonscriptLanguage.scriptVersion`:
+
+String type value specifying the Drag[en]gine DragonScript version to validate
+against (e.g. `1.33`). Use empty string to use the latest available version (default).
+If the version is not found in the local Drag[en]gine installation it is downloaded
+from the online release repository. The version can also be detected automatically
+from the Drag[en]gine project file (`.degp`) if present in or above the workspace
+directory.
+
+It is recommended to set this value on workspace level.
+
 `dragonscriptLanguage.requiresPackageDragengine`:
 
 Boolean type value indicating if the workspace requires `Drag[en]gine DragonScript Module Package`.
@@ -119,6 +130,19 @@ or join the [Discord channel](https://discord.gg/Jeg62ns) to ask for help.
 
 
 ## Release Notes
+
+### 2.6.0
+
+- Added new setting `dragonscriptLanguage.scriptVersion` to specify the Drag[en]gine
+  DragonScript version to validate against (e.g. `1.33`) or empty string to use the
+  latest available version. Documentation is retrieved from local Drag[en]gine installation
+  if available otherwise downloaded from the online documentation storage.
+- Added automatic detection of the required DragonScript version from the Drag[en]gine
+  project file (`.degp`) located in the workspace directory or a parent directory.
+  Settings script version overrules project script version if explicitely set.
+- Added language status bar items (visible in the editor status bar for `.ds` files):
+  - **Project Script Version**: DragonScript version required by the project (from `.degp`)
+  - **Editor Script Version**: DragonScript version used for validation
 
 ### 2.5.0
 

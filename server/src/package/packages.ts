@@ -52,6 +52,10 @@ export class Packages {
 		this._packages.set(apackage.id, apackage);
 	}
 	
+	public remove(id: string): void {
+		this._packages.delete(id);
+	}
+	
 	public forEach(visitor: (each: Package) => void): void {
 		for (const each of this._packages.values()) {
 			visitor(each);
