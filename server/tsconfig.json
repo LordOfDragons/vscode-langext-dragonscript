@@ -3,7 +3,6 @@
 		"target": "es2022",
 		"lib": ["es2022"],
 		"module": "commonjs",
-		"moduleResolution": "node",
 		"sourceMap": true,
 		"strict": true,
 		"outDir": "out",
