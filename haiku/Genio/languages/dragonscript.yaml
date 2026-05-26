@@ -1,4 +1,6 @@
 # DragonScript
+name: DragonScript
+extensions: [ ds ]
 lexer: dragonscript
 properties:
     fold: 1

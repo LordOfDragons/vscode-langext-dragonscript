@@ -22,7 +22,7 @@ cp haiku-server.js "$SERVERDIR"/server || exit 1
 
 mkdir -p "$GENIODIR" || exit 1
 cp -a Genio/* "$GENIODIR" || exit 1
-sed -i -e "s@%INSTALLDIR%@/boot/system/$SYSTEMPATH/server@g" "$GENIODIR"/lspServerConfigs/dragonscript.yaml || exit 1
+sed -i -e "s@%INSTALLDIR%@/boot/system/$SYSTEMPATH/server@g" "$GENIODIR"/lsp/dragonscript.yaml || exit 1
 
 cp packageinfo "$PACKAGEDIR"/.PackageInfo || exit 1
 sed -i -e "s/%VERSION%/$VERSION/g" "$PACKAGEDIR"/.PackageInfo || exit 1
