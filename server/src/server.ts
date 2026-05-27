@@ -397,7 +397,7 @@ async function onDidChangeWorkspaceFolders() {
 				
 				const wfpackage = new PackageWorkspace(remoteConsole(), f)
 				workspacePackages.push(wfpackage)
-				console.log(`onDidChangeWorkspaceFolders reload ${f.uri}`)
+				debugLogMessage(`onDidChangeWorkspaceFolders reload ${f.uri}`)
 				wfpackage.reload()
 			}
 		}
@@ -431,7 +431,7 @@ export async function getFileSettings(resource: string): Promise<FileSettings> {
 // The content of a text document has changed. This event is emitted
 // when the text document first opened or when its content has changed.
 documents.onDidChangeContent(async change => {
-	//console.log(`onDidChangeContent ${change.document.uri} ${change.document.version}`)
+	//debugLogMessage(`onDidChangeContent ${change.document.uri} ${change.document.version}`)
 	validateTextDocumentAndReresolve(change.document)
 })
 
@@ -455,7 +455,7 @@ async function validateTextDocumentAndReresolve(textDocument: TextDocument): Pro
 	
 	const pkg = scriptDocument?.package as Package
 	if (!pkg?.isLoaded) {
-		//console.log(`validateTextDocumentAndReresolve(${textDocument.uri}): owner package not loaded yet`)
+		//debugLogMessage(`validateTextDocumentAndReresolve(${textDocument.uri}): owner package not loaded yet`)
 		return
 	}
 	
@@ -465,7 +465,7 @@ async function validateTextDocumentAndReresolve(textDocument: TextDocument): Pro
 }
 
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
-	//console.log(`validateTextDocument ${textDocument.uri} ${textDocument.version}`)
+	//debugLogMessage(`validateTextDocument ${textDocument.uri} ${textDocument.version}`)
 	
 	//let startTime = Date.now()
 	
@@ -521,14 +521,14 @@ connection.onDidChangeWatchedFiles(
 		params.changes.forEach(each => {
 			switch (each.type) {
 			case FileChangeType.Created:
-				console.log(`file created (${each.uri}). reparse all workspace packages`)
+				debugLogMessage(`file created (${each.uri}). reparse all workspace packages`)
 				for (const each of workspacePackages) {
 					each.reload()
 				}
 				break
 				
 			case FileChangeType.Deleted:
-				console.log(`file deleted (${each.uri}). reparse all workspace packages`)
+				debugLogMessage(`file deleted (${each.uri}). reparse all workspace packages`)
 				for (const each of workspacePackages) {
 					each.reload()
 				}
@@ -536,7 +536,7 @@ connection.onDidChangeWatchedFiles(
 			}
 			/*
 			if (each.type === FileChangeType.Changed) {
-				console.log(`onDidChangeWatchedFiles ${each.uri}`)
+				debugLogMessage(`onDidChangeWatchedFiles ${each.uri}`)
 			}
 			*/
 		})
@@ -594,7 +594,7 @@ connection.onCompletion(
 			}
 			
 			if (DebugSettings.debugCompletion) {
-				console.log(`onCompletion ${Helpers.logPosition(params.position)}: ${sd.context.contextAtPosition(params.position)?.constructor.name}`)
+				debugLogMessage(`onCompletion ${Helpers.logPosition(params.position)}: ${sd.context.contextAtPosition(params.position)?.constructor.name}`)
 				// debugLogContext(sd.context.contextAtPosition(params.position))
 			}
 			
