@@ -28,6 +28,15 @@ class ${1:ECBMyGameBehavior} extends DefaultECBehavior
 	 * 
 	 * Element class properties added by the behavior can also be set directly inside the tag
 	 * be removing the property name prefix and starting with a "." (for example ".propertyName").
+	 * 
+	 * Add instance to \ref BaseGameApp#createAndAddBehaviorFactories() to make the behavior
+	 * available for use in XML like this:
+	 * \code{.ds}
+	 * protected func void createAndAddBehaviorFactories()
+	 *   super.createAndAddBehaviorFactories()
+	 *   getBehaviorFactories().add(${1:ECBMyGameBehavior}.Factory.new())
+	 * end
+	 * \endcode
 	 */
 	class Factory extends DefaultBehaviorFactory
 		func new() super("${1:ECBMyGameBehavior}")
@@ -115,7 +124,7 @@ class ${1:ECBMyGameBehavior} extends DefaultECBehavior
 	 */
 	static func Instance getInstanceIn(BehaviorElement element, String id)
 		return element.findInstance(block Instance each
-			return each.getECBehavior().getID().equals(id)
+			return each.ecBehavior.getID().equals(id)
 		end) cast Instance
 	end
 	

@@ -1,0 +1,55 @@
+namespace MyGame
+
+pin Dragengine.Gui
+pin Dragengine.Preloading
+pin Dragengine.LoadSave
+pin Dragengine.Utils
+pin Dragengine.Scenery
+
+
+/**
+ * MyGame attachable element classbehavior.
+ * 
+ * Element class properties have the prefix "${2:myGameBehavior}.".
+ */
+class ${1:ECABMyGameBehavior} extends DefaultECAttachableBehavior
+	/**
+	 * Attachable element class behavior factory.
+	 * 
+	 * Add instance to \ref BaseGameApp#createAndAddAttachableBehaviorFactories() to make the behavior
+	 * available for use in XML like this:
+	 * \code{.ds}
+	 * protected func void createAndAddAttachableBehaviorFactories()
+	 *   super.createAndAddAttachableBehaviorFactories()
+	 *   getAttachableBehaviorFactories().add(${1:ECABMyGameBehavior}.Factory.new())
+	 * end
+	 * \endcode
+	 */
+	class Factory implements AttachableBehaviorFactory
+		func new()
+		end
+		
+		func String factoryId()
+			return "${1:ECABMyGameBehavior}"
+		end
+		
+		func ECAttachableBehavior createAttachableBehavior(BehaviorElement element)
+			return ${1:ECABMyGameBehavior}.new()
+		end
+	end
+	
+	
+	/** Create attachable behavior. */
+	func new()
+	end
+	
+	
+	func void onAddToElement()
+		// You can use stub properties to modify the behavior while adding it to the element
+		/*
+		var StubElement stub = getElement().getStub()
+		var String parameter = stub.getPropertyValueFor("myBehavior.myParameter", null)
+		...
+		*/
+	end
+end

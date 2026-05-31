@@ -1,5 +1,9 @@
 # Change Log
 
+## 2.6.1
+
+- Improved and added more File New templates
+
 ## 2.6.0
 
 - Added new setting `dragonscriptLanguage.scriptVersion` to specify the Drag[en]gine

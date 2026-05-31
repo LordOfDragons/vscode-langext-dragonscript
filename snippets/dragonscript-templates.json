@@ -15,8 +15,18 @@
 		"templateFile": "element_class_behavior.ds"
 	},
 	{
-		"label": "Behavior (BT/SM)",
-		"description": "Drag[en]gine element class behavior with behavior tree and state machine support",
+		"label": "Behavior (Listener)",
+		"description": "Drag[en]gine element class behavior with listener support",
+		"templateFile": "element_class_behavior_listener.ds"
+	},
+	{
+		"label": "Behavior (BT/SM/Listener)",
+		"description": "Drag[en]gine element class behavior with behavior tree, state machine and listener support",
 		"templateFile": "element_class_behavior_btsm.ds"
+	},
+	{
+		"label": "Attachable Behavior",
+		"description": "Drag[en]gine attachable element class behavior",
+		"templateFile": "attachable_element_class_behavior.ds"
 	}
 ]

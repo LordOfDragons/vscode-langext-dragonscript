@@ -131,6 +131,10 @@ or join the [Discord channel](https://discord.gg/Jeg62ns) to ask for help.
 
 ## Release Notes
 
+### 2.6.1
+
+- Improved and added more File New templates
+
 ### 2.6.0
 
 - Added new setting `dragonscriptLanguage.scriptVersion` to specify the Drag[en]gine
