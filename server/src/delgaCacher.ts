@@ -228,7 +228,11 @@ export class DelgaCacher {
 		
 		for (const each of pruneEntries) {
 			this._console.log(`delgaCacher: prune outdated cache for delga file '${each.delga}'`);
-			await rm(join(this.cacheDir, each.slot), {recursive: true});
+			try {
+				await rm(join(this.cacheDir, each.slot), {recursive: true});
+			} catch (e) {
+				this._console.log(`delgaCacher: failed to prune cache slot '${each.slot}': ${e}`);
+			}
 			const index = cacheFile.entries.indexOf(each);
 			if (index > -1) {
 				cacheFile.entries.splice(index, 1);
