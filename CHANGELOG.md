@@ -1,5 +1,9 @@
 # Change Log
 
+## 2.6.2
+
+- Fixed potential server crash on Windows if delga cache can not be deleted
+
 ## 2.6.1
 
 - Improved and added more File New templates
